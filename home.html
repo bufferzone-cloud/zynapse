@@ -215,25 +215,9 @@
                         <button id="video-call-btn" class="chat-action-btn" title="Video call">
                             <i class="fas fa-video"></i>
                         </button>
-                        <div class="dropdown-container">
-                            <button id="chat-info-btn" class="chat-action-btn" title="Chat info">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div class="dropdown chat-dropdown hidden">
-                                <div class="dropdown-item" data-action="view-profile">
-                                    <i class="fas fa-user"></i>
-                                    <span>View Profile</span>
-                                </div>
-                                <div class="dropdown-item" data-action="clear-chat">
-                                    <i class="fas fa-trash"></i>
-                                    <span>Clear Chat</span>
-                                </div>
-                                <div class="dropdown-item" data-action="block-user">
-                                    <i class="fas fa-ban"></i>
-                                    <span>Block User</span>
-                                </div>
-                            </div>
-                        </div>
+                        <button id="chat-info-btn" class="chat-action-btn" title="Chat info">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -302,19 +286,14 @@
                         <div class="search-container">
                             <div class="search-box">
                                 <i class="fas fa-search"></i>
-                                <input type="text" id="new-chat-search" placeholder="Search users by UID, name, or email...">
+                                <input type="text" id="new-chat-search" placeholder="Search users by name, email, or username...">
                                 <button class="search-clear hidden">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="search-results-container">
-                            <div id="user-search-results" class="search-results hidden">
-                                <!-- Search results will appear here -->
-                            </div>
-                        </div>
                         <div class="modal-section">
-                            <h4>Recent Contacts</h4>
+                            <h4>Suggested Contacts</h4>
                             <div class="user-list-modal" id="user-list-modal">
                                 <!-- Users will be populated here -->
                             </div>
@@ -342,9 +321,9 @@
                         <div class="form-group">
                             <label for="contact-search">
                                 <i class="fas fa-search"></i>
-                                Find User by UID
+                                Find User
                             </label>
-                            <input type="text" id="contact-search" placeholder="Enter user's UID">
+                            <input type="text" id="contact-search" placeholder="Enter user's email, username, or User ID">
                             <div class="input-focus-line"></div>
                             <p class="input-hint">
                                 <i class="fas fa-info-circle"></i>
