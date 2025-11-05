@@ -18,6 +18,7 @@ const database = firebase.database();
 // Global variables
 let currentUser = null;
 let currentChat = null;
+let currentChatUser = null;
 let users = {};
 let chats = {};
 let contacts = {};
@@ -28,6 +29,7 @@ let notificationCount = 0;
 let userTypingTimeout = null;
 let messageListeners = {};
 let chatListeners = {};
+let typingListeners = {};
 
 // DOM Elements
 document.addEventListener('DOMContentLoaded', function() {
@@ -635,7 +637,7 @@ function switchPanel(panelName) {
     
     // Hide active chat
     const activeChat = document.getElementById('active-chat');
-    if (activeChat) activeChat.classList.remove('active');
+    if (activeChat) activeChat.classList.add('hidden');
 }
 
 // Toggle user menu
@@ -1354,13 +1356,17 @@ function filterUsers(searchTerm) {
 // Open a chat
 function openChat(chatId, userData) {
     currentChat = chatId;
+    currentChatUser = userData;
     
     // Update UI
     document.querySelectorAll('.content-panel').forEach(panel => {
         panel.classList.remove('active');
     });
     const activeChat = document.getElementById('active-chat');
-    if (activeChat) activeChat.classList.add('active');
+    if (activeChat) {
+        activeChat.classList.remove('hidden');
+        activeChat.classList.add('active');
+    }
     
     // Update chat header
     const activeChatName = document.getElementById('active-chat-name');
@@ -1384,14 +1390,35 @@ function openChat(chatId, userData) {
     
     // Update last seen
     updateLastSeen(userData.uid);
+    
+    // Focus on message input
+    const messageInput = document.getElementById('message-input');
+    if (messageInput) {
+        setTimeout(() => {
+            messageInput.focus();
+        }, 300);
+    }
 }
 
 // Show chat list
 function showChatList() {
     const activeChat = document.getElementById('active-chat');
-    if (activeChat) activeChat.classList.remove('active');
+    if (activeChat) {
+        activeChat.classList.remove('active');
+        activeChat.classList.add('hidden');
+    }
     switchPanel('chats');
     currentChat = null;
+    currentChatUser = null;
+    
+    // Stop typing indicator
+    updateTypingStatus(false);
+    
+    // Clear any existing typing listeners
+    if (typingListeners[currentChat]) {
+        database.ref('chats/' + currentChat + '/typing').off('value', typingListeners[currentChat]);
+        delete typingListeners[currentChat];
+    }
 }
 
 // Load messages for a chat
@@ -1493,12 +1520,19 @@ function loadMessages(chatId) {
         
         // Scroll to bottom
         setTimeout(() => {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            const messagesScrollArea = document.getElementById('messages-scroll-area');
+            if (messagesScrollArea) {
+                messagesScrollArea.scrollTop = messagesScrollArea.scrollHeight;
+            }
         }, 100);
     });
     
     // Listen for typing indicators
-    database.ref('chats/' + currentChat + '/typing').on('value', snapshot => {
+    if (typingListeners[chatId]) {
+        database.ref('chats/' + chatId + '/typing').off('value', typingListeners[chatId]);
+    }
+    
+    typingListeners[chatId] = database.ref('chats/' + chatId + '/typing').on('value', snapshot => {
         const typingData = snapshot.val();
         const typingIndicator = document.getElementById('typing-indicator');
         
@@ -1562,7 +1596,8 @@ function sendMessage() {
             // Update last message in chat
             database.ref('chats/' + currentChat).update({
                 lastMessage: messageContent,
-                lastMessageTime: timestamp
+                lastMessageTime: timestamp,
+                lastMessageSender: currentUser.uid
             });
             
             // Update unread count for other participants
@@ -1570,6 +1605,14 @@ function sendMessage() {
             
             // Stop typing indicator
             updateTypingStatus(false);
+            
+            // Scroll to bottom
+            setTimeout(() => {
+                const messagesScrollArea = document.getElementById('messages-scroll-area');
+                if (messagesScrollArea) {
+                    messagesScrollArea.scrollTop = messagesScrollArea.scrollHeight;
+                }
+            }, 100);
         })
         .catch(error => {
             console.error('Error sending message:', error);
@@ -1625,7 +1668,8 @@ function createNewChat(userId, userData) {
         },
         createdAt: Date.now(),
         lastMessage: '',
-        lastMessageTime: Date.now()
+        lastMessageTime: Date.now(),
+        lastMessageSender: ''
     };
     
     // Save chat to database
@@ -2025,6 +2069,10 @@ function handleLogout() {
         
         Object.keys(chatListeners).forEach(chatId => {
             database.ref('chats/' + chatId + '/messages').off('value', chatListeners[chatId]);
+        });
+        
+        Object.keys(typingListeners).forEach(chatId => {
+            database.ref('chats/' + chatId + '/typing').off('value', typingListeners[chatId]);
         });
         
         // Sign out
