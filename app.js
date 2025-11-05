@@ -62,15 +62,26 @@ const notifMessage = document.getElementById('notif-message');
 const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
+// NEW: Add splash screen button elements
+const goToLoginBtn = document.getElementById('go-to-login-btn');
+const goToRegisterBtn = document.getElementById('go-to-register-btn');
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', initApp);
 
+// Form submissions
 loginForm.addEventListener('submit', handleLogin);
 registerForm.addEventListener('submit', handleRegister);
+
+// Navigation
+goToLoginBtn.addEventListener('click', () => showScreen(loginScreen));
+goToRegisterBtn.addEventListener('click', () => showScreen(registerScreen));
 goToRegister.addEventListener('click', () => showScreen(registerScreen));
 goToLogin.addEventListener('click', () => showScreen(loginScreen));
 backToSplash.addEventListener('click', () => showScreen(splashScreen));
 backToSplash2.addEventListener('click', () => showScreen(splashScreen));
+
+// App functionality
 logoutBtn.addEventListener('click', handleLogout);
 themeToggle.addEventListener('click', toggleTheme);
 settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
@@ -106,14 +117,18 @@ tabBtns.forEach(btn => {
 
 // Initialize the app
 function initApp() {
+    console.log('App initialized');
+    
     // Check if user is already logged in
     auth.onAuthStateChanged(user => {
         if (user) {
+            console.log('User already logged in:', user.email);
             currentUser = user;
             setupUserData();
             showScreen(app);
             loadUserData();
         } else {
+            console.log('No user logged in, showing splash screen');
             showScreen(splashScreen);
         }
     });
@@ -121,6 +136,7 @@ function initApp() {
 
 // Show specific screen
 function showScreen(screen) {
+    console.log('Showing screen:', screen.id);
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     screen.classList.remove('hidden');
 }
@@ -128,18 +144,23 @@ function showScreen(screen) {
 // Handle user login
 function handleLogin(e) {
     e.preventDefault();
+    console.log('Login attempt');
     
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
     
+    console.log('Email:', email);
+    
     auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
             // Login successful
+            console.log('Login successful');
             currentUser = userCredential.user;
             showScreen(app);
             loadUserData();
         })
         .catch((error) => {
+            console.error('Login error:', error);
             alert(`Login failed: ${error.message}`);
         });
 }
@@ -147,15 +168,19 @@ function handleLogin(e) {
 // Handle user registration
 function handleRegister(e) {
     e.preventDefault();
+    console.log('Registration attempt');
     
     const name = document.getElementById('register-name').value;
     const phone = document.getElementById('register-phone').value;
     const email = document.getElementById('register-email').value;
     const password = document.getElementById('register-password').value;
     
+    console.log('Registration data:', { name, phone, email });
+    
     auth.createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
             // Registration successful
+            console.log('Registration successful');
             currentUser = userCredential.user;
             
             // Generate a unique user ID (using Firebase UID)
@@ -176,6 +201,7 @@ function handleRegister(e) {
             loadUserData();
         })
         .catch((error) => {
+            console.error('Registration error:', error);
             alert(`Registration failed: ${error.message}`);
         });
 }
