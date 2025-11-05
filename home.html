@@ -6,78 +6,64 @@
     <title>Zynapse - Chat</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/emoji-picker/1.1.5/emoji-picker.min.css">
 </head>
 <body class="dark-theme">
-    <!-- Main App -->
     <div id="app">
-        <!-- Mobile Header -->
-        <div class="mobile-header">
-            <button id="menu-toggle" class="icon-btn">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="mobile-title">
-                <img src="zynapse.png" alt="Zynapse" class="logo-tiny">
-                <span>Zynapse</span>
+        <!-- Top Navigation Bar -->
+        <div class="top-nav">
+            <div class="nav-left">
+                <div class="app-logo">
+                    <div class="logo-tiny">Z</div>
+                    <span class="app-name">Zynapse</span>
+                </div>
             </div>
-            <button id="new-chat-btn" class="icon-btn">
-                <i class="fas fa-edit"></i>
-            </button>
+            
+            <div class="nav-center">
+                <div class="status-indicator">
+                    <span id="global-status" class="status online">Online</span>
+                </div>
+            </div>
+            
+            <div class="nav-right">
+                <button id="chats-btn" class="nav-btn active" title="Chats">
+                    <i class="fas fa-comment"></i>
+                </button>
+                <button id="contacts-btn" class="nav-btn" title="Contacts">
+                    <i class="fas fa-user-friends"></i>
+                </button>
+                <button id="requests-btn" class="nav-btn" title="Requests">
+                    <i class="fas fa-user-plus"></i>
+                    <span class="nav-badge hidden" id="requests-badge">0</span>
+                </button>
+                <button id="new-chat-btn" class="nav-btn" title="New Chat">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button id="settings-btn" class="nav-btn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <div class="user-menu">
+                    <button id="user-menu-btn" class="user-avatar">
+                        <div class="avatar-small" id="user-avatar">U</div>
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="user-info">
-                    <img src="zynapse.png" alt="Zynapse" class="logo-small">
-                    <div class="user-details">
-                        <span id="current-user-name">User</span>
-                        <span id="current-user-status" class="status online">Online</span>
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Chats Panel -->
+            <div id="chats-panel" class="content-panel active">
+                <div class="panel-header">
+                    <h3>Recent Chats</h3>
+                    <div class="header-actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="chats-search" placeholder="Search chats...">
+                        </div>
                     </div>
                 </div>
-                <div class="sidebar-actions">
-                    <button id="status-toggle" class="icon-btn" title="Change Status">
-                        <i class="fas fa-circle"></i>
-                    </button>
-                    <button id="settings-btn" class="icon-btn" title="Settings">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="search-container">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="user-search" placeholder="Search chats, contacts...">
-                    <button id="search-clear" class="icon-btn hidden">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="sidebar-tabs">
-                <button class="tab-btn active" data-tab="chats">
-                    <i class="fas fa-comment"></i>
-                    <span>Chats</span>
-                    <span class="unread-badge hidden" id="chats-badge">0</span>
-                </button>
-                <button class="tab-btn" data-tab="contacts">
-                    <i class="fas fa-user-friends"></i>
-                    <span>Contacts</span>
-                    <span class="unread-badge hidden" id="contacts-badge">0</span>
-                </button>
-                <button class="tab-btn" data-tab="requests">
-                    <i class="fas fa-user-plus"></i>
-                    <span>Requests</span>
-                    <span class="unread-badge hidden" id="requests-badge">0</span>
-                </button>
-            </div>
-
-            <div class="sidebar-content">
-                <!-- Chats Tab -->
-                <div id="chats-tab" class="tab-content active">
+                <div class="panel-content">
                     <div class="chat-list" id="chat-list">
-                        <!-- Chat items will be populated here -->
                         <div class="empty-state">
                             <i class="fas fa-comments"></i>
                             <p>No chats yet</p>
@@ -85,11 +71,24 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Contacts Tab -->
-                <div id="contacts-tab" class="tab-content">
+            <!-- Contacts Panel -->
+            <div id="contacts-panel" class="content-panel">
+                <div class="panel-header">
+                    <h3>Contacts</h3>
+                    <div class="header-actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="contacts-search" placeholder="Search contacts...">
+                        </div>
+                        <button id="add-contact-btn" class="btn btn-primary btn-small">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-content">
                     <div class="contact-list" id="contact-list">
-                        <!-- Contact items will be populated here -->
                         <div class="empty-state">
                             <i class="fas fa-user-friends"></i>
                             <p>No contacts yet</p>
@@ -97,11 +96,15 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Requests Tab -->
-                <div id="requests-tab" class="tab-content">
+            <!-- Requests Panel -->
+            <div id="requests-panel" class="content-panel">
+                <div class="panel-header">
+                    <h3>Contact Requests</h3>
+                </div>
+                <div class="panel-content">
                     <div class="request-list" id="request-list">
-                        <!-- Request items will be populated here -->
                         <div class="empty-state">
                             <i class="fas fa-user-plus"></i>
                             <p>No pending requests</p>
@@ -109,34 +112,21 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Chat Area -->
-        <div class="chat-area">
-            <!-- Empty State -->
-            <div id="empty-chat" class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-comments"></i>
-                </div>
-                <h3>No chat selected</h3>
-                <p>Select a conversation from the sidebar or start a new chat</p>
-                <button class="btn btn-primary" id="start-chat-empty">Start a chat</button>
-            </div>
-
-            <!-- Active Chat -->
+            <!-- Active Chat Area -->
             <div id="active-chat" class="hidden">
                 <div class="chat-header">
-                    <div class="chat-info">
-                        <button id="back-to-chats" class="icon-btn mobile-only">
-                            <i class="fas fa-arrow-left"></i>
-                        </button>
+                    <button id="back-to-chats" class="icon-btn">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="chat-user-info">
                         <div class="chat-avatar">
-                            <div class="avatar-placeholder"></div>
-                            <span class="presence-indicator online"></span>
+                            <div class="avatar-small" id="active-chat-avatar">U</div>
+                            <span class="presence-indicator online" id="active-chat-status"></span>
                         </div>
-                        <div class="chat-details">
-                            <h3 id="chat-with-name">User Name</h3>
-                            <span id="chat-status" class="status">Online</span>
+                        <div class="chat-user-details">
+                            <h4 id="active-chat-name">User Name</h4>
+                            <span id="active-chat-status-text" class="status">Online</span>
                         </div>
                     </div>
                     <div class="chat-actions">
@@ -145,9 +135,6 @@
                         </button>
                         <button id="video-call-btn" class="icon-btn" title="Video call">
                             <i class="fas fa-video"></i>
-                        </button>
-                        <button id="search-chat-btn" class="icon-btn" title="Search in chat">
-                            <i class="fas fa-search"></i>
                         </button>
                         <button id="chat-info-btn" class="icon-btn" title="Chat info">
                             <i class="fas fa-ellipsis-v"></i>
@@ -171,11 +158,11 @@
 
                 <div class="message-input-container">
                     <div class="input-actions">
-                        <button id="attach-btn" class="icon-btn" title="Attach file">
-                            <i class="fas fa-paperclip"></i>
-                        </button>
                         <button id="emoji-btn" class="icon-btn" title="Emoji">
                             <i class="far fa-smile"></i>
+                        </button>
+                        <button id="attach-btn" class="icon-btn" title="Attach file">
+                            <i class="fas fa-paperclip"></i>
                         </button>
                     </div>
                     <div class="message-input-wrapper">
@@ -187,6 +174,56 @@
                     <button id="send-btn" class="send-btn" title="Send message">
                         <i class="fas fa-paper-plane"></i>
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <!-- New Chat Modal -->
+        <div id="new-chat-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>New Chat</h3>
+                    <button id="close-new-chat" class="icon-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="search-container">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="new-chat-search" placeholder="Search users...">
+                        </div>
+                    </div>
+                    <div class="user-list-modal" id="user-list-modal">
+                        <!-- Users will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Contact Modal -->
+        <div id="add-contact-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add Contact</h3>
+                    <button id="close-add-contact" class="icon-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="contact-email">Email Address</label>
+                        <input type="email" id="contact-email" placeholder="Enter user's email">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-message">Message (Optional)</label>
+                        <textarea id="contact-message" placeholder="Add a personal message"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-add-contact" class="btn btn-secondary">Cancel</button>
+                    <button id="send-contact-request" class="btn btn-primary">Send Request</button>
                 </div>
             </div>
         </div>
@@ -205,47 +242,39 @@
                         <h4>Profile</h4>
                         <div class="profile-preview">
                             <div class="profile-avatar">
-                                <img src="zynapse.png" alt="Profile" class="avatar-img">
-                                <button class="edit-avatar-btn">
-                                    <i class="fas fa-camera"></i>
-                                </button>
+                                <div class="avatar-medium" id="settings-avatar">U</div>
                             </div>
                             <div class="profile-info">
-                                <h5 id="profile-name">User Name</h5>
-                                <p id="profile-username">@username</p>
+                                <h5 id="settings-name">User Name</h5>
+                                <p id="settings-username">@username</p>
+                                <p id="settings-email">user@example.com</p>
                             </div>
                             <button id="edit-profile-btn" class="btn btn-secondary">Edit</button>
                         </div>
                     </div>
+                    
                     <div class="settings-section">
-                        <h4>Account</h4>
-                        <div class="settings-list">
-                            <div class="setting-item" data-setting="privacy">
-                                <i class="fas fa-lock"></i>
-                                <div class="setting-details">
-                                    <span class="setting-title">Privacy & Security</span>
-                                    <span class="setting-description">Manage your privacy settings</span>
-                                </div>
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                            <div class="setting-item" data-setting="notifications">
-                                <i class="fas fa-bell"></i>
-                                <div class="setting-details">
-                                    <span class="setting-title">Notifications</span>
-                                    <span class="setting-description">Customize your notifications</span>
-                                </div>
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                            <div class="setting-item" data-setting="storage">
-                                <i class="fas fa-database"></i>
-                                <div class="setting-details">
-                                    <span class="setting-title">Storage & Data</span>
-                                    <span class="setting-description">Manage storage usage</span>
-                                </div>
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
+                        <h4>Status</h4>
+                        <div class="status-options">
+                            <button class="status-option active" data-status="online">
+                                <span class="status-dot online"></span>
+                                Online
+                            </button>
+                            <button class="status-option" data-status="away">
+                                <span class="status-dot away"></span>
+                                Away
+                            </button>
+                            <button class="status-option" data-status="busy">
+                                <span class="status-dot busy"></span>
+                                Busy
+                            </button>
+                            <button class="status-option" data-status="offline">
+                                <span class="status-dot offline"></span>
+                                Offline
+                            </button>
                         </div>
                     </div>
+                    
                     <div class="settings-section">
                         <h4>Preferences</h4>
                         <div class="setting-item toggle-setting">
@@ -279,33 +308,7 @@
                             </label>
                         </div>
                     </div>
-                    <div class="settings-section">
-                        <h4>Support</h4>
-                        <div class="settings-list">
-                            <div class="setting-item" data-setting="help">
-                                <i class="fas fa-question-circle"></i>
-                                <div class="setting-details">
-                                    <span class="setting-title">Help Center</span>
-                                </div>
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                            <div class="setting-item" data-setting="contact">
-                                <i class="fas fa-headset"></i>
-                                <div class="setting-details">
-                                    <span class="setting-title">Contact Us</span>
-                                </div>
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                            <div class="setting-item" data-setting="about">
-                                <i class="fas fa-info-circle"></i>
-                                <div class="setting-details">
-                                    <span class="setting-title">About Zynapse</span>
-                                    <span class="setting-description">Version 2.0.1</span>
-                                </div>
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                        </div>
-                    </div>
+                    
                     <div class="settings-section">
                         <button id="logout-btn" class="btn btn-secondary btn-full">
                             <i class="fas fa-sign-out-alt"></i> Logout
@@ -315,37 +318,35 @@
             </div>
         </div>
 
-        <!-- New Chat Modal -->
-        <div id="new-chat-modal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>New Chat</h3>
-                    <button id="close-new-chat" class="icon-btn">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="search-container">
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="new-chat-search" placeholder="Search contacts...">
-                        </div>
-                    </div>
-                    <div class="contact-list-modal" id="contact-list-modal">
-                        <!-- Contacts for new chat will be populated here -->
-                    </div>
-                </div>
+        <!-- User Menu Dropdown -->
+        <div id="user-menu-dropdown" class="dropdown hidden">
+            <div class="dropdown-item" data-action="profile">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </div>
+            <div class="dropdown-item" data-action="status">
+                <i class="fas fa-circle"></i>
+                <span>Status</span>
+            </div>
+            <div class="dropdown-item" data-action="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" data-action="logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
             </div>
         </div>
 
         <!-- Emoji Picker -->
         <div id="emoji-picker" class="emoji-picker hidden"></div>
 
-        <!-- New Message Notification -->
+        <!-- Notification -->
         <div id="message-notification" class="notification hidden">
             <div class="notification-content">
                 <div class="notification-avatar">
-                    <div class="avatar-placeholder small"></div>
+                    <div class="avatar-small">U</div>
                 </div>
                 <div class="notification-text">
                     <strong id="notif-sender">User</strong>
@@ -356,16 +357,23 @@
                 </button>
             </div>
         </div>
+
+        <!-- Online Users Indicator -->
+        <div id="online-users" class="online-users hidden">
+            <div class="online-users-header">
+                <span>Online Now</span>
+                <span id="online-count">0</span>
+            </div>
+            <div class="online-users-list" id="online-users-list">
+                <!-- Online users will be populated here -->
+            </div>
+        </div>
     </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-    
-    <!-- Emoji Picker -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/emoji-picker/1.1.5/emoji-picker.min.js"></script>
     
     <!-- App Script -->
     <script src="app.js"></script>
