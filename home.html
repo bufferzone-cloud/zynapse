@@ -12,13 +12,13 @@
     <div id="splash-screen" class="screen">
         <div class="splash-content">
             <div class="logo-container">
-                <img src="zynapse.png" alt="Zynapse Logo" class="logo">
+                <div class="logo">Z</div>
                 <h1 class="app-title">Zynapse</h1>
             </div>
             <p class="tagline">Connect instantly, communicate freely</p>
             <div class="splash-buttons">
-                <button id="login-btn" class="btn btn-primary">Login</button>
-                <button id="register-btn" class="btn btn-secondary">Register</button>
+                <button id="go-to-login-btn" class="btn btn-primary">Login</button>
+                <button id="go-to-register-btn" class="btn btn-secondary">Register</button>
             </div>
         </div>
     </div>
@@ -27,7 +27,7 @@
     <div id="login-screen" class="screen hidden">
         <div class="auth-container">
             <div class="auth-header">
-                <img src="zynapse.png" alt="Zynapse Logo" class="logo-small">
+                <div class="logo">Z</div>
                 <h2>Login to Zynapse</h2>
             </div>
             <form id="login-form" class="auth-form">
@@ -52,7 +52,7 @@
     <div id="register-screen" class="screen hidden">
         <div class="auth-container">
             <div class="auth-header">
-                <img src="zynapse.png" alt="Zynapse Logo" class="logo-small">
+                <div class="logo">Z</div>
                 <h2>Create Account</h2>
             </div>
             <form id="register-form" class="auth-form">
@@ -87,7 +87,7 @@
         <div class="sidebar">
             <div class="sidebar-header">
                 <div class="user-info">
-                    <img src="zynapse.png" alt="Zynapse Logo" class="logo-small">
+                    <div class="logo-small">Z</div>
                     <div class="user-details">
                         <span id="current-user-name">User</span>
                         <span id="current-user-status" class="status online">Online</span>
@@ -270,9 +270,12 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <!-- App Script -->
     <script src="app.js"></script>
 </body>
 </html>
