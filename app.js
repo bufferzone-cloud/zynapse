@@ -165,17 +165,26 @@ function showScreen(screenName) {
     });
     
     // Show the requested screen
-    document.getElementById(`${screenName}-screen`).classList.add('active');
+    const screenElement = document.getElementById(`${screenName}-screen`);
+    if (screenElement) {
+        screenElement.classList.add('active');
+    }
 }
 
 // Show modal
 function showModal(modalId) {
-    document.getElementById(modalId).classList.add('active');
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('active');
+    }
 }
 
 // Hide modal
 function hideModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 // Handle user login
@@ -187,7 +196,12 @@ function handleLogin(e) {
     
     // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
-    submitBtn.classList.add('loading');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoading = submitBtn.querySelector('.btn-loading');
+    
+    if (btnText) btnText.style.opacity = '0';
+    if (btnLoading) btnLoading.style.display = 'block';
+    submitBtn.disabled = true;
     
     auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
@@ -206,7 +220,9 @@ function handleLogin(e) {
             showNotification('error', 'Login Failed', error.message, 5000);
             
             // Reset button
-            submitBtn.classList.remove('loading');
+            if (btnText) btnText.style.opacity = '1';
+            if (btnLoading) btnLoading.style.display = 'none';
+            submitBtn.disabled = false;
         });
 }
 
@@ -229,7 +245,12 @@ function handleRegister(e) {
     
     // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
-    submitBtn.classList.add('loading');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoading = submitBtn.querySelector('.btn-loading');
+    
+    if (btnText) btnText.style.opacity = '0';
+    if (btnLoading) btnLoading.style.display = 'block';
+    submitBtn.disabled = true;
     
     auth.createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
@@ -263,7 +284,9 @@ function handleRegister(e) {
             showNotification('error', 'Registration Failed', error.message, 5000);
             
             // Reset button
-            submitBtn.classList.remove('loading');
+            if (btnText) btnText.style.opacity = '1';
+            if (btnLoading) btnLoading.style.display = 'none';
+            submitBtn.disabled = false;
         });
 }
 
@@ -407,8 +430,11 @@ function setupAppEventListeners() {
             this.classList.add('active');
             
             // Update global status
-            document.getElementById('global-status').textContent = status.charAt(0).toUpperCase() + status.slice(1);
-            document.getElementById('global-status').className = `status ${status}`;
+            const globalStatus = document.getElementById('global-status');
+            if (globalStatus) {
+                globalStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                globalStatus.className = `status ${status}`;
+            }
             
             // Show notification
             showNotification('info', 'Status Updated', `Your status is now set to ${status}`, 2000);
@@ -429,7 +455,10 @@ function setupAppEventListeners() {
             document.querySelectorAll('.settings-tab-content').forEach(content => {
                 content.classList.remove('active');
             });
-            document.getElementById(`${tabName}-tab`).classList.add('active');
+            const tabContent = document.getElementById(`${tabName}-tab`);
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
         });
     });
     
@@ -477,80 +506,146 @@ function switchPanel(panelName) {
     document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.classList.remove('active');
     });
-    document.getElementById(`${panelName}-btn`).classList.add('active');
+    const panelBtn = document.getElementById(`${panelName}-btn`);
+    if (panelBtn) panelBtn.classList.add('active');
     
     // Update panels
     document.querySelectorAll('.content-panel').forEach(panel => {
         panel.classList.remove('active');
     });
-    document.getElementById(`${panelName}-panel`).classList.add('active');
+    const panel = document.getElementById(`${panelName}-panel`);
+    if (panel) panel.classList.add('active');
     
     // Hide active chat
-    document.getElementById('active-chat').classList.remove('active');
+    const activeChat = document.getElementById('active-chat');
+    if (activeChat) activeChat.classList.remove('active');
 }
 
 // Toggle user menu
 function toggleUserMenu() {
     const dropdown = document.getElementById('user-menu-dropdown');
-    dropdown.classList.toggle('hidden');
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
 }
 
 // Load current user data - ENHANCED VERSION
 function loadUserData() {
     if (!currentUser) return;
     
-    database.ref('users/' + currentUser.uid).once('value')
-        .then(snapshot => {
-            const userData = snapshot.val();
-            if (userData) {
-                // Update UI with user data
-                document.getElementById('user-avatar').textContent = userData.name.charAt(0).toUpperCase();
-                document.getElementById('settings-avatar').textContent = userData.name.charAt(0).toUpperCase();
-                document.getElementById('settings-name').textContent = userData.name;
-                document.getElementById('settings-username').textContent = `@${userData.username}`;
-                document.getElementById('settings-phone').textContent = userData.phone || 'Not provided';
-                document.getElementById('settings-email').textContent = userData.email;
-                document.getElementById('settings-user-id').textContent = currentUser.uid;
-                
-                // Update status
-                userStatus = userData.status || 'online';
-                document.getElementById('global-status').textContent = userStatus.charAt(0).toUpperCase() + userStatus.slice(1);
-                document.getElementById('global-status').className = `status ${userStatus}`;
-                
-                // Update status options
-                const statusOption = document.querySelector(`.status-option[data-status="${userStatus}"]`);
-                if (statusOption) {
-                    document.querySelectorAll('.status-option').forEach(opt => opt.classList.remove('active'));
-                    statusOption.classList.add('active');
+    // First, get user data from Firebase Authentication
+    const user = auth.currentUser;
+    
+    if (user) {
+        // Update basic info from Firebase Auth
+        const userEmail = user.email;
+        const userId = user.uid;
+        
+        // Now get additional user data from Realtime Database
+        database.ref('users/' + currentUser.uid).once('value')
+            .then(snapshot => {
+                const userData = snapshot.val();
+                if (userData) {
+                    // Update UI with user data
+                    updateUserProfileUI(userData, userEmail, userId);
+                } else {
+                    // If no user data in database, create basic profile from auth data
+                    const basicUserData = {
+                        name: userEmail.split('@')[0], // Use email prefix as name
+                        username: userEmail.split('@')[0],
+                        email: userEmail,
+                        phone: 'Not provided',
+                        status: 'online'
+                    };
+                    updateUserProfileUI(basicUserData, userEmail, userId);
                 }
-            }
-        })
-        .catch(error => {
-            console.error('Error loading user data:', error);
-            showNotification('error', 'Profile Error', 'Failed to load user data', 4000);
-        });
+            })
+            .catch(error => {
+                console.error('Error loading user data:', error);
+                // Fallback to auth data only
+                const userEmail = user.email;
+                const userId = user.uid;
+                const basicUserData = {
+                    name: userEmail.split('@')[0],
+                    username: userEmail.split('@')[0],
+                    email: userEmail,
+                    phone: 'Not provided',
+                    status: 'online'
+                };
+                updateUserProfileUI(basicUserData, userEmail, userId);
+                showNotification('error', 'Profile Error', 'Failed to load user data', 4000);
+            });
+    }
+}
+
+// Update user profile UI with data
+function updateUserProfileUI(userData, userEmail, userId) {
+    // Update avatar with first letter of name
+    const userAvatar = document.getElementById('user-avatar');
+    const settingsAvatar = document.getElementById('settings-avatar');
+    
+    if (userAvatar) {
+        userAvatar.textContent = userData.name ? userData.name.charAt(0).toUpperCase() : 'U';
+    }
+    if (settingsAvatar) {
+        settingsAvatar.textContent = userData.name ? userData.name.charAt(0).toUpperCase() : 'U';
+    }
+    
+    // Update profile information in settings
+    const settingsName = document.getElementById('settings-name');
+    const settingsUsername = document.getElementById('settings-username');
+    const settingsPhone = document.getElementById('settings-phone');
+    const settingsEmail = document.getElementById('settings-email');
+    const settingsUserId = document.getElementById('settings-user-id');
+    
+    if (settingsName) settingsName.textContent = userData.name || 'User';
+    if (settingsUsername) settingsUsername.textContent = `@${userData.username || userEmail.split('@')[0]}`;
+    if (settingsPhone) settingsPhone.textContent = userData.phone || 'Not provided';
+    if (settingsEmail) settingsEmail.textContent = userData.email || userEmail;
+    if (settingsUserId) settingsUserId.textContent = userId;
+    
+    // Update status
+    userStatus = userData.status || 'online';
+    const globalStatus = document.getElementById('global-status');
+    if (globalStatus) {
+        globalStatus.textContent = userStatus.charAt(0).toUpperCase() + userStatus.slice(1);
+        globalStatus.className = `status ${userStatus}`;
+    }
+    
+    // Update status options
+    const statusOption = document.querySelector(`.status-option[data-status="${userStatus}"]`);
+    if (statusOption) {
+        document.querySelectorAll('.status-option').forEach(opt => opt.classList.remove('active'));
+        statusOption.classList.add('active');
+    }
 }
 
 // Copy User ID to clipboard
 function copyUserIdToClipboard() {
-    const userId = document.getElementById('settings-user-id').textContent;
-    
-    navigator.clipboard.writeText(userId).then(() => {
-        showNotification('success', 'Copied!', 'User ID copied to clipboard', 2000);
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
-        showNotification('error', 'Copy Failed', 'Failed to copy User ID', 3000);
-    });
+    const userId = document.getElementById('settings-user-id');
+    if (userId) {
+        const userIdText = userId.textContent;
+        
+        navigator.clipboard.writeText(userIdText).then(() => {
+            showNotification('success', 'Copied!', 'User ID copied to clipboard', 2000);
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            showNotification('error', 'Copy Failed', 'Failed to copy User ID', 3000);
+        });
+    }
 }
 
 // Search for users by email, username, or ID
 function searchUsers(searchTerm) {
     if (!searchTerm.trim()) {
-        document.getElementById('search-results').classList.add('hidden');
+        const searchResults = document.getElementById('search-results');
+        if (searchResults) searchResults.classList.add('hidden');
         return;
     }
 
     const searchResults = document.getElementById('search-results');
+    if (!searchResults) return;
+    
     searchResults.innerHTML = '<div class="loading-text"><i class="fas fa-spinner fa-spin"></i> Searching users...</div>';
     searchResults.classList.remove('hidden');
 
@@ -604,6 +699,8 @@ function searchUsers(searchTerm) {
 // Display search results
 function displaySearchResults(usersData) {
     const searchResults = document.getElementById('search-results');
+    if (!searchResults) return;
+    
     searchResults.innerHTML = '';
     
     Object.keys(usersData).forEach(userId => {
@@ -616,13 +713,13 @@ function displaySearchResults(usersData) {
         userItem.className = 'search-result-item';
         userItem.innerHTML = `
             <div class="search-result-avatar">
-                <div class="avatar-small">${userData.name.charAt(0).toUpperCase()}</div>
+                <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
             </div>
             <div class="search-result-details">
-                <div class="search-result-name">${userData.name}</div>
+                <div class="search-result-name">${userData.name || 'Unknown User'}</div>
                 <div class="search-result-info">
-                    <span class="search-result-username">@${userData.username}</span>
-                    <span class="search-result-email">${userData.email}</span>
+                    <span class="search-result-username">@${userData.username || 'user'}</span>
+                    <span class="search-result-email">${userData.email || 'No email'}</span>
                 </div>
                 <div class="search-result-id">ID: ${userId}</div>
             </div>
@@ -642,11 +739,13 @@ function displaySearchResults(usersData) {
             database.ref('users/' + userId).once('value')
                 .then(snapshot => {
                     const userData = snapshot.val();
-                    searchInput.value = userData.email;
+                    if (searchInput) {
+                        searchInput.value = userData.email || userData.username || userId;
+                    }
                     searchResults.classList.add('hidden');
                     
                     // Show confirmation
-                    showNotification('success', 'User Selected', `${userData.name} has been selected`, 2000);
+                    showNotification('success', 'User Selected', `${userData.name || 'User'} has been selected`, 2000);
                 });
         });
     });
@@ -666,13 +765,15 @@ function setupRealtimeListeners() {
         const chatList = document.getElementById('chat-list');
         const chatsCount = document.getElementById('chats-count');
         
-        // Clear existing chats (except empty state)
-        const existingChats = chatList.querySelectorAll('.chat-item:not(.empty-state)');
-        existingChats.forEach(chat => chat.remove());
+        if (chatList) {
+            // Clear existing chats (except empty state)
+            const existingChats = chatList.querySelectorAll('.chat-item:not(.empty-state)');
+            existingChats.forEach(chat => chat.remove());
+        }
         
         if (!userChats) {
             // Show empty state if no chats
-            if (!chatList.querySelector('.empty-state')) {
+            if (chatList && !chatList.querySelector('.empty-state')) {
                 chatList.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">
@@ -686,18 +787,23 @@ function setupRealtimeListeners() {
                         </button>
                     </div>
                 `;
-                document.getElementById('start-first-chat').addEventListener('click', () => showModal('new-chat-modal'));
+                const startFirstChatBtn = document.getElementById('start-first-chat');
+                if (startFirstChatBtn) {
+                    startFirstChatBtn.addEventListener('click', () => showModal('new-chat-modal'));
+                }
             }
-            chatsCount.textContent = '0 chats';
+            if (chatsCount) chatsCount.textContent = '0 chats';
             return;
         }
         
         // Hide empty state if it exists
-        const emptyState = chatList.querySelector('.empty-state');
-        if (emptyState) emptyState.remove();
+        if (chatList) {
+            const emptyState = chatList.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+        }
         
         const chatIds = Object.keys(userChats);
-        chatsCount.textContent = `${chatIds.length} ${chatIds.length === 1 ? 'chat' : 'chats'}`;
+        if (chatsCount) chatsCount.textContent = `${chatIds.length} ${chatIds.length === 1 ? 'chat' : 'chats'}`;
         
         // Add chats to the list
         chatIds.forEach(chatId => {
@@ -717,13 +823,15 @@ function setupRealtimeListeners() {
         const contactList = document.getElementById('contact-list');
         const contactsCount = document.getElementById('contacts-count');
         
-        // Clear existing contacts (except empty state)
-        const existingContacts = contactList.querySelectorAll('.contact-item:not(.empty-state)');
-        existingContacts.forEach(contact => contact.remove());
+        if (contactList) {
+            // Clear existing contacts (except empty state)
+            const existingContacts = contactList.querySelectorAll('.contact-item:not(.empty-state)');
+            existingContacts.forEach(contact => contact.remove());
+        }
         
         if (!userContacts) {
             // Show empty state if no contacts
-            if (!contactList.querySelector('.empty-state')) {
+            if (contactList && !contactList.querySelector('.empty-state')) {
                 contactList.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">
@@ -737,18 +845,23 @@ function setupRealtimeListeners() {
                         </button>
                     </div>
                 `;
-                document.getElementById('add-first-contact').addEventListener('click', () => showModal('add-contact-modal'));
+                const addFirstContactBtn = document.getElementById('add-first-contact');
+                if (addFirstContactBtn) {
+                    addFirstContactBtn.addEventListener('click', () => showModal('add-contact-modal'));
+                }
             }
-            contactsCount.textContent = '0 contacts';
+            if (contactsCount) contactsCount.textContent = '0 contacts';
             return;
         }
         
         // Hide empty state if it exists
-        const emptyState = contactList.querySelector('.empty-state');
-        if (emptyState) emptyState.remove();
+        if (contactList) {
+            const emptyState = contactList.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+        }
         
         const contactIds = Object.keys(userContacts);
-        contactsCount.textContent = `${contactIds.length} ${contactIds.length === 1 ? 'contact' : 'contacts'}`;
+        if (contactsCount) contactsCount.textContent = `${contactIds.length} ${contactIds.length === 1 ? 'contact' : 'contacts'}`;
         
         // Add contacts to the list
         contactIds.forEach(contactId => {
@@ -769,15 +882,17 @@ function setupRealtimeListeners() {
         const requestsBadge = document.getElementById('requests-badge');
         const requestsCount = document.getElementById('requests-count');
         
-        // Clear existing requests (except empty state)
-        const existingRequests = requestList.querySelectorAll('.request-item:not(.empty-state)');
-        existingRequests.forEach(request => request.remove());
+        if (requestList) {
+            // Clear existing requests (except empty state)
+            const existingRequests = requestList.querySelectorAll('.request-item:not(.empty-state)');
+            existingRequests.forEach(request => request.remove());
+        }
         
         let pendingCount = 0;
         
         if (!userRequests) {
             // Show empty state if no requests
-            if (!requestList.querySelector('.empty-state')) {
+            if (requestList && !requestList.querySelector('.empty-state')) {
                 requestList.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">
@@ -789,14 +904,16 @@ function setupRealtimeListeners() {
                 `;
             }
             // Update badge and count
-            requestsBadge.classList.add('hidden');
-            requestsCount.textContent = '0 pending';
+            if (requestsBadge) requestsBadge.classList.add('hidden');
+            if (requestsCount) requestsCount.textContent = '0 pending';
             return;
         }
         
         // Hide empty state if it exists
-        const emptyState = requestList.querySelector('.empty-state');
-        if (emptyState) emptyState.remove();
+        if (requestList) {
+            const emptyState = requestList.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+        }
         
         // Add requests to the list and count pending ones
         Object.keys(userRequests).forEach(requestId => {
@@ -814,17 +931,19 @@ function setupRealtimeListeners() {
         
         // Update badge and count
         if (pendingCount > 0) {
-            requestsBadge.textContent = pendingCount;
-            requestsBadge.classList.remove('hidden');
-            requestsCount.textContent = `${pendingCount} pending`;
+            if (requestsBadge) {
+                requestsBadge.textContent = pendingCount;
+                requestsBadge.classList.remove('hidden');
+            }
+            if (requestsCount) requestsCount.textContent = `${pendingCount} pending`;
             
             // Show notification for new requests
             if (pendingCount > Object.keys(requests).length) {
                 showNotification('info', 'New Contact Request', `You have ${pendingCount} pending contact requests`, 4000);
             }
         } else {
-            requestsBadge.classList.add('hidden');
-            requestsCount.textContent = '0 pending';
+            if (requestsBadge) requestsBadge.classList.add('hidden');
+            if (requestsCount) requestsCount.textContent = '0 pending';
         }
         
         requests = userRequests;
@@ -837,7 +956,7 @@ function setupRealtimeListeners() {
         const onlineCount = document.getElementById('online-count');
         const onlineUsersPanel = document.getElementById('online-users');
         
-        onlineUsersList.innerHTML = '';
+        if (onlineUsersList) onlineUsersList.innerHTML = '';
         
         if (onlineUsersData) {
             let count = 0;
@@ -848,22 +967,24 @@ function setupRealtimeListeners() {
                     const onlineUser = document.createElement('div');
                     onlineUser.className = 'online-user';
                     onlineUser.innerHTML = `
-                        <div class="online-user-avatar">${userData.name.charAt(0).toUpperCase()}</div>
-                        <span class="online-user-name">${userData.name}</span>
+                        <div class="online-user-avatar">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
+                        <span class="online-user-name">${userData.name || 'Unknown User'}</span>
                     `;
                     onlineUser.addEventListener('click', () => startChatWithUser(userId, userData));
-                    onlineUsersList.appendChild(onlineUser);
+                    if (onlineUsersList) onlineUsersList.appendChild(onlineUser);
                 }
             });
             
-            onlineCount.textContent = count;
-            if (count > 0) {
-                onlineUsersPanel.classList.remove('hidden');
-            } else {
-                onlineUsersPanel.classList.add('hidden');
+            if (onlineCount) onlineCount.textContent = count;
+            if (onlineUsersPanel) {
+                if (count > 0) {
+                    onlineUsersPanel.classList.remove('hidden');
+                } else {
+                    onlineUsersPanel.classList.add('hidden');
+                }
             }
         } else {
-            onlineUsersPanel.classList.add('hidden');
+            if (onlineUsersPanel) onlineUsersPanel.classList.add('hidden');
         }
     });
     
@@ -885,6 +1006,7 @@ function setupRealtimeListeners() {
 // Add a chat to the chat list
 function addChatToList(chatId, chatData) {
     const chatList = document.getElementById('chat-list');
+    if (!chatList) return;
     
     // Determine the other user in the chat
     const participants = Object.keys(chatData.participants || {});
@@ -920,11 +1042,11 @@ function addChatToList(chatId, chatData) {
             
             chatItem.innerHTML = `
                 <div class="chat-avatar">
-                    <div class="avatar-small">${userData.name.charAt(0).toUpperCase()}</div>
+                    <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
                     <span class="presence-indicator ${userData.status || 'offline'}"></span>
                 </div>
                 <div class="chat-details">
-                    <div class="chat-name">${userData.name}</div>
+                    <div class="chat-name">${userData.name || 'Unknown User'}</div>
                     <div class="chat-preview">${lastMessageText}</div>
                 </div>
                 <div class="chat-meta">
@@ -943,6 +1065,7 @@ function addChatToList(chatId, chatData) {
 // Add a contact to the contact list
 function addContactToList(contactId, userData) {
     const contactList = document.getElementById('contact-list');
+    if (!contactList) return;
     
     const contactItem = document.createElement('div');
     contactItem.className = 'contact-item';
@@ -950,11 +1073,11 @@ function addContactToList(contactId, userData) {
     
     contactItem.innerHTML = `
         <div class="chat-avatar">
-            <div class="avatar-small">${userData.name.charAt(0).toUpperCase()}</div>
+            <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
             <span class="presence-indicator ${userData.status || 'offline'}"></span>
         </div>
         <div class="contact-details">
-            <div class="contact-name">${userData.name}</div>
+            <div class="contact-name">${userData.name || 'Unknown User'}</div>
             <div class="contact-status">${userData.status || 'offline'}</div>
         </div>
     `;
@@ -968,6 +1091,7 @@ function addContactToList(contactId, userData) {
 // Add a request to the request list
 function addRequestToList(requestId, userData, requestData) {
     const requestList = document.getElementById('request-list');
+    if (!requestList) return;
     
     const requestItem = document.createElement('div');
     requestItem.className = 'request-item';
@@ -975,10 +1099,10 @@ function addRequestToList(requestId, userData, requestData) {
     
     requestItem.innerHTML = `
         <div class="chat-avatar">
-            <div class="avatar-small">${userData.name.charAt(0).toUpperCase()}</div>
+            <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
         </div>
         <div class="request-details">
-            <div class="request-name">${userData.name}</div>
+            <div class="request-name">${userData.name || 'Unknown User'}</div>
             <div class="request-info">${requestData.message || 'Wants to connect with you'}</div>
             <div class="request-actions">
                 <button class="request-btn accept">Accept</button>
@@ -991,8 +1115,8 @@ function addRequestToList(requestId, userData, requestData) {
     const acceptBtn = requestItem.querySelector('.request-btn.accept');
     const declineBtn = requestItem.querySelector('.request-btn.decline');
     
-    acceptBtn.addEventListener('click', () => handleContactRequest(requestId, 'accepted'));
-    declineBtn.addEventListener('click', () => handleContactRequest(requestId, 'declined'));
+    if (acceptBtn) acceptBtn.addEventListener('click', () => handleContactRequest(requestId, 'accepted'));
+    if (declineBtn) declineBtn.addEventListener('click', () => handleContactRequest(requestId, 'declined'));
     
     requestList.appendChild(requestItem);
 }
@@ -1005,6 +1129,7 @@ function loadUsersForNewChat() {
         .then(snapshot => {
             const usersData = snapshot.val();
             const userListModal = document.getElementById('user-list-modal');
+            if (!userListModal) return;
             
             userListModal.innerHTML = '';
             
@@ -1020,11 +1145,11 @@ function loadUsersForNewChat() {
                     userItem.className = 'contact-item';
                     userItem.innerHTML = `
                         <div class="chat-avatar">
-                            <div class="avatar-small">${userData.name.charAt(0).toUpperCase()}</div>
+                            <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
                             <span class="presence-indicator ${userData.status || 'offline'}"></span>
                         </div>
                         <div class="contact-details">
-                            <div class="contact-name">${userData.name}</div>
+                            <div class="contact-name">${userData.name || 'Unknown User'}</div>
                             <div class="contact-status">${userData.status || 'offline'}</div>
                         </div>
                     `;
@@ -1099,14 +1224,22 @@ function openChat(chatId, userData) {
     document.querySelectorAll('.content-panel').forEach(panel => {
         panel.classList.remove('active');
     });
-    document.getElementById('active-chat').classList.add('active');
+    const activeChat = document.getElementById('active-chat');
+    if (activeChat) activeChat.classList.add('active');
     
     // Update chat header
-    document.getElementById('active-chat-name').textContent = userData.name;
-    document.getElementById('active-chat-status-text').textContent = userData.status || 'offline';
-    document.getElementById('active-chat-status-text').className = `status ${userData.status || 'offline'}`;
-    document.getElementById('active-chat-status').className = `presence-indicator ${userData.status || 'offline'}`;
-    document.getElementById('active-chat-avatar').textContent = userData.name.charAt(0).toUpperCase();
+    const activeChatName = document.getElementById('active-chat-name');
+    const activeChatStatusText = document.getElementById('active-chat-status-text');
+    const activeChatStatus = document.getElementById('active-chat-status');
+    const activeChatAvatar = document.getElementById('active-chat-avatar');
+    
+    if (activeChatName) activeChatName.textContent = userData.name || 'Unknown User';
+    if (activeChatStatusText) {
+        activeChatStatusText.textContent = userData.status || 'offline';
+        activeChatStatusText.className = `status ${userData.status || 'offline'}`;
+    }
+    if (activeChatStatus) activeChatStatus.className = `presence-indicator ${userData.status || 'offline'}`;
+    if (activeChatAvatar) activeChatAvatar.textContent = userData.name ? userData.name.charAt(0).toUpperCase() : 'U';
     
     // Load messages
     loadMessages(chatId);
@@ -1117,7 +1250,8 @@ function openChat(chatId, userData) {
 
 // Show chat list
 function showChatList() {
-    document.getElementById('active-chat').classList.remove('active');
+    const activeChat = document.getElementById('active-chat');
+    if (activeChat) activeChat.classList.remove('active');
     switchPanel('chats');
     currentChat = null;
 }
@@ -1125,6 +1259,8 @@ function showChatList() {
 // Load messages for a chat
 function loadMessages(chatId) {
     const messagesContainer = document.getElementById('messages');
+    if (!messagesContainer) return;
+    
     messagesContainer.innerHTML = '';
     
     database.ref('chats/' + chatId + '/messages').on('value', snapshot => {
@@ -1205,7 +1341,7 @@ function loadMessages(chatId) {
                 <div class="message-time">${formatTime(message.timestamp)}</div>
             `;
             
-            messageGroup.appendChild(messageElement);
+            if (messageGroup) messageGroup.appendChild(messageElement);
         });
         
         // Scroll to bottom
@@ -1217,22 +1353,28 @@ function loadMessages(chatId) {
         const typingData = snapshot.val();
         const typingIndicator = document.getElementById('typing-indicator');
         
-        if (typingData) {
+        if (typingData && typingIndicator) {
             const typingUsers = Object.keys(typingData).filter(id => id !== currentUser.uid);
             if (typingUsers.length > 0) {
                 // Get typing user names
                 Promise.all(typingUsers.map(userId => 
                     database.ref('users/' + userId).once('value')
                 )).then(userSnapshots => {
-                    const names = userSnapshots.map(snapshot => snapshot.val().name);
-                    document.getElementById('typing-user').textContent = 
-                        `${names.join(', ')} ${names.length > 1 ? 'are' : 'is'} typing...`;
+                    const names = userSnapshots.map(snapshot => {
+                        const userData = snapshot.val();
+                        return userData ? userData.name : 'Unknown User';
+                    });
+                    const typingUser = document.getElementById('typing-user');
+                    if (typingUser) {
+                        typingUser.textContent = 
+                            `${names.join(', ')} ${names.length > 1 ? 'are' : 'is'} typing...`;
+                    }
                     typingIndicator.classList.remove('hidden');
                 });
             } else {
                 typingIndicator.classList.add('hidden');
             }
-        } else {
+        } else if (typingIndicator) {
             typingIndicator.classList.add('hidden');
         }
     });
@@ -1240,7 +1382,10 @@ function loadMessages(chatId) {
 
 // Send a message
 function sendMessage() {
-    if (!currentChat || !messageInput.value.trim()) return;
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    
+    if (!currentChat || !messageInput || !messageInput.value.trim()) return;
     
     const messageContent = messageInput.value.trim();
     const timestamp = Date.now();
@@ -1260,7 +1405,7 @@ function sendMessage() {
         .then(() => {
             // Clear input
             messageInput.value = '';
-            sendBtn.disabled = true;
+            if (sendBtn) sendBtn.disabled = true;
             
             // Update last message in chat
             database.ref('chats/' + currentChat).update({
@@ -1337,7 +1482,7 @@ function createNewChat(userId, userData) {
             openChat(chatId, userData);
             
             // Show success notification
-            showNotification('success', 'Chat Started', `You started a chat with ${userData.name}`, 3000);
+            showNotification('success', 'Chat Started', `You started a chat with ${userData.name || 'User'}`, 3000);
         })
         .catch(error => {
             console.error('Error creating chat:', error);
@@ -1347,10 +1492,10 @@ function createNewChat(userId, userData) {
 
 // Handle contact request
 function handleSendContactRequest() {
-    const searchInput = document.getElementById('contact-search').value;
-    const message = document.getElementById('contact-message').value;
+    const searchInput = document.getElementById('contact-search');
+    const message = document.getElementById('contact-message');
     
-    if (!searchInput) {
+    if (!searchInput || !searchInput.value) {
         showNotification('error', 'Missing Information', 'Please enter an email address or User ID', 4000);
         return;
     }
@@ -1358,16 +1503,16 @@ function handleSendContactRequest() {
     // Find user by email or ID
     let searchPromise;
     
-    if (searchInput.includes('@')) {
+    if (searchInput.value.includes('@')) {
         // Search by email
-        searchPromise = database.ref('users').orderByChild('email').equalTo(searchInput).once('value');
+        searchPromise = database.ref('users').orderByChild('email').equalTo(searchInput.value).once('value');
     } else {
         // Search by user ID
-        searchPromise = database.ref('users/' + searchInput).once('value')
+        searchPromise = database.ref('users/' + searchInput.value).once('value')
             .then(snapshot => {
                 const result = {};
                 if (snapshot.exists()) {
-                    result[searchInput] = snapshot.val();
+                    result[searchInput.value] = snapshot.val();
                 }
                 return { val: () => result };
             });
@@ -1412,18 +1557,19 @@ function handleSendContactRequest() {
                             from: currentUser.uid,
                             fromName: currentUser.displayName || 'Unknown User',
                             to: userId,
-                            message: message,
+                            message: message ? message.value : '',
                             status: 'pending',
                             timestamp: Date.now()
                         };
                         
                         database.ref('contactRequests/' + userId + '/' + currentUser.uid).set(requestData)
                             .then(() => {
-                                showNotification('success', 'Request Sent', `Contact request sent to ${userData.name}`, 3000);
+                                showNotification('success', 'Request Sent', `Contact request sent to ${userData.name || 'User'}`, 3000);
                                 hideModal('add-contact-modal');
-                                document.getElementById('contact-search').value = '';
-                                document.getElementById('contact-message').value = '';
-                                document.getElementById('search-results').classList.add('hidden');
+                                searchInput.value = '';
+                                if (message) message.value = '';
+                                const searchResults = document.getElementById('search-results');
+                                if (searchResults) searchResults.classList.add('hidden');
                             })
                             .catch(error => {
                                 console.error('Error sending contact request:', error);
@@ -1464,7 +1610,7 @@ function handleContactRequest(requestId, response) {
             .then(snapshot => {
                 const userData = snapshot.val();
                 if (userData) {
-                    showNotification('success', 'Contact Added', `${userData.name} has been added to your contacts`, 3000);
+                    showNotification('success', 'Contact Added', `${userData.name || 'User'} has been added to your contacts`, 3000);
                 }
             });
     } else {
@@ -1541,12 +1687,16 @@ function initializeEmojiPicker() {
 // Toggle emoji picker visibility
 function toggleEmojiPicker() {
     const emojiPicker = document.getElementById('emoji-picker');
-    emojiPicker.classList.toggle('hidden');
+    if (emojiPicker) {
+        emojiPicker.classList.toggle('hidden');
+    }
 }
 
 // Insert emoji into message input
 function insertEmoji(emoji) {
     const messageInput = document.getElementById('message-input');
+    if (!messageInput) return;
+    
     const cursorPos = messageInput.selectionStart;
     const textBefore = messageInput.value.substring(0, cursorPos);
     const textAfter = messageInput.value.substring(cursorPos);
@@ -1556,12 +1706,15 @@ function insertEmoji(emoji) {
     messageInput.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
     
     // Close emoji picker
-    document.getElementById('emoji-picker').classList.add('hidden');
+    const emojiPicker = document.getElementById('emoji-picker');
+    if (emojiPicker) emojiPicker.classList.add('hidden');
 }
 
 // Enhanced Notification System
 function showNotification(type, title, message, duration = 5000) {
     const notificationContainer = document.getElementById('notification-container');
+    if (!notificationContainer) return null;
+    
     const notificationId = 'notification-' + Date.now();
     
     const icons = {
@@ -1597,9 +1750,11 @@ function showNotification(type, title, message, duration = 5000) {
     
     // Add close event
     const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.addEventListener('click', () => {
-        removeNotification(notificationId);
-    });
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            removeNotification(notificationId);
+        });
+    }
     
     // Auto remove after duration
     if (duration > 0) {
@@ -1647,7 +1802,7 @@ function showMessageNotification(chatId, message) {
                 messageText = 'Sent a file';
             }
             
-            const notificationId = showNotification('info', userData.name, messageText, 5000);
+            const notificationId = showNotification('info', userData.name || 'User', messageText, 5000);
             
             // Add click event to open the chat
             const notification = document.getElementById(notificationId);
@@ -1667,27 +1822,29 @@ function handleLogout() {
     
     // Show loading state
     const logoutBtn = document.getElementById('logout-btn');
-    const originalText = logoutBtn.innerHTML;
-    logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
-    logoutBtn.disabled = true;
-    
-    // Sign out
-    auth.signOut()
-        .then(() => {
-            currentUser = null;
-            showNotification('success', 'Logged Out', 'You have been successfully logged out', 2000);
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 1000);
-        })
-        .catch(error => {
-            console.error('Logout error:', error);
-            showNotification('error', 'Logout Failed', 'Failed to logout. Please try again.', 4000);
-            
-            // Reset button
-            logoutBtn.innerHTML = originalText;
-            logoutBtn.disabled = false;
-        });
+    if (logoutBtn) {
+        const originalHTML = logoutBtn.innerHTML;
+        logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
+        logoutBtn.disabled = true;
+        
+        // Sign out
+        auth.signOut()
+            .then(() => {
+                currentUser = null;
+                showNotification('success', 'Logged Out', 'You have been successfully logged out', 2000);
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+                showNotification('error', 'Logout Failed', 'Failed to logout. Please try again.', 4000);
+                
+                // Reset button
+                logoutBtn.innerHTML = originalHTML;
+                logoutBtn.disabled = false;
+            });
+    }
 }
 
 // Handle edit profile
@@ -1707,7 +1864,10 @@ function toggleDarkMode() {
 
 // Handle password reset
 function handlePasswordReset() {
-    const email = document.getElementById('reset-email').value;
+    const emailInput = document.getElementById('reset-email');
+    if (!emailInput) return;
+    
+    const email = emailInput.value;
     
     if (!email) {
         showNotification('error', 'Missing Email', 'Please enter your email address', 4000);
@@ -1716,26 +1876,38 @@ function handlePasswordReset() {
     
     // Show loading state
     const sendBtn = document.getElementById('send-reset-link');
-    sendBtn.classList.add('loading');
-    
-    auth.sendPasswordResetEmail(email)
-        .then(() => {
-            showNotification('success', 'Reset Email Sent', 'Password reset email sent! Check your inbox.', 5000);
-            hideModal('forgot-password-modal');
-            document.getElementById('reset-email').value = '';
-        })
-        .catch(error => {
-            console.error('Password reset error:', error);
-            showNotification('error', 'Reset Failed', `Failed to send reset email: ${error.message}`, 5000);
-        })
-        .finally(() => {
-            sendBtn.classList.remove('loading');
-        });
+    if (sendBtn) {
+        const btnText = sendBtn.querySelector('.btn-text');
+        const btnLoading = sendBtn.querySelector('.btn-loading');
+        
+        if (btnText) btnText.style.opacity = '0';
+        if (btnLoading) btnLoading.style.display = 'block';
+        sendBtn.disabled = true;
+        
+        auth.sendPasswordResetEmail(email)
+            .then(() => {
+                showNotification('success', 'Reset Email Sent', 'Password reset email sent! Check your inbox.', 5000);
+                hideModal('forgot-password-modal');
+                emailInput.value = '';
+            })
+            .catch(error => {
+                console.error('Password reset error:', error);
+                showNotification('error', 'Reset Failed', `Failed to send reset email: ${error.message}`, 5000);
+            })
+            .finally(() => {
+                if (btnText) btnText.style.opacity = '1';
+                if (btnLoading) btnLoading.style.display = 'none';
+                sendBtn.disabled = false;
+            });
+    }
 }
 
 // Check password strength
 function checkPasswordStrength() {
-    const password = document.getElementById('register-password').value;
+    const passwordInput = document.getElementById('register-password');
+    if (!passwordInput) return;
+    
+    const password = passwordInput.value;
     const strengthFill = document.getElementById('password-strength-fill');
     const strengthText = document.getElementById('password-strength-text');
     const requirements = document.querySelectorAll('.requirement');
@@ -1744,9 +1916,11 @@ function checkPasswordStrength() {
     requirements.forEach(req => req.classList.remove('met'));
     
     if (!password) {
-        strengthFill.style.width = '0%';
-        strengthText.textContent = 'Weak';
-        strengthText.style.color = 'var(--primary-red)';
+        if (strengthFill) strengthFill.style.width = '0%';
+        if (strengthText) {
+            strengthText.textContent = 'Weak';
+            strengthText.style.color = 'var(--primary-red)';
+        }
         return;
     }
     
@@ -1758,57 +1932,70 @@ function checkPasswordStrength() {
     if (password.length >= 8) {
         strength += 20;
         requirementsMet.length = true;
-        document.querySelector('.requirement[data-requirement="length"]').classList.add('met');
+        const lengthReq = document.querySelector('.requirement[data-requirement="length"]');
+        if (lengthReq) lengthReq.classList.add('met');
     }
     
     // Uppercase requirement
     if (/[A-Z]/.test(password)) {
         strength += 20;
         requirementsMet.uppercase = true;
-        document.querySelector('.requirement[data-requirement="uppercase"]').classList.add('met');
+        const uppercaseReq = document.querySelector('.requirement[data-requirement="uppercase"]');
+        if (uppercaseReq) uppercaseReq.classList.add('met');
     }
     
     // Lowercase requirement
     if (/[a-z]/.test(password)) {
         strength += 20;
         requirementsMet.lowercase = true;
-        document.querySelector('.requirement[data-requirement="lowercase"]').classList.add('met');
+        const lowercaseReq = document.querySelector('.requirement[data-requirement="lowercase"]');
+        if (lowercaseReq) lowercaseReq.classList.add('met');
     }
     
     // Number requirement
     if (/[0-9]/.test(password)) {
         strength += 20;
         requirementsMet.number = true;
-        document.querySelector('.requirement[data-requirement="number"]').classList.add('met');
+        const numberReq = document.querySelector('.requirement[data-requirement="number"]');
+        if (numberReq) numberReq.classList.add('met');
     }
     
     // Special character requirement
     if (/[^a-zA-Z0-9]/.test(password)) {
         strength += 20;
         requirementsMet.special = true;
-        document.querySelector('.requirement[data-requirement="special"]').classList.add('met');
+        const specialReq = document.querySelector('.requirement[data-requirement="special"]');
+        if (specialReq) specialReq.classList.add('met');
     }
     
     // Update UI
-    strengthFill.style.width = strength + '%';
+    if (strengthFill) strengthFill.style.width = strength + '%';
     
-    if (strength <= 40) {
-        strengthText.textContent = 'Weak';
-        strengthText.style.color = 'var(--primary-red)';
-    } else if (strength <= 80) {
-        strengthText.textContent = 'Medium';
-        strengthText.style.color = 'var(--warning)';
-    } else {
-        strengthText.textContent = 'Strong';
-        strengthText.style.color = 'var(--success)';
+    if (strengthText) {
+        if (strength <= 40) {
+            strengthText.textContent = 'Weak';
+            strengthText.style.color = 'var(--primary-red)';
+        } else if (strength <= 80) {
+            strengthText.textContent = 'Medium';
+            strengthText.style.color = 'var(--warning)';
+        } else {
+            strengthText.textContent = 'Strong';
+            strengthText.style.color = 'var(--success)';
+        }
     }
 }
 
 // Check if passwords match
 function checkPasswordMatch() {
-    const password = document.getElementById('register-password').value;
-    const confirmPassword = document.getElementById('register-confirm-password').value;
+    const passwordInput = document.getElementById('register-password');
+    const confirmPasswordInput = document.getElementById('register-confirm-password');
+    if (!passwordInput || !confirmPasswordInput) return;
+    
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
     const messageElement = document.getElementById('password-match-message');
+    
+    if (!messageElement) return;
     
     if (!confirmPassword) {
         messageElement.textContent = '';
@@ -1890,8 +2077,9 @@ window.addEventListener('DOMContentLoaded', function() {
     const darkMode = localStorage.getItem('darkMode');
     if (darkMode === 'false') {
         document.body.classList.remove('dark-theme');
-        if (document.getElementById('dark-mode-toggle')) {
-            document.getElementById('dark-mode-toggle').checked = false;
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        if (darkModeToggle) {
+            darkModeToggle.checked = false;
         }
     }
 });
