@@ -295,7 +295,18 @@ function setupAppEventListeners() {
     const logoutBtn = document.getElementById('logout-btn');
     const editProfileBtn = document.getElementById('edit-profile-btn');
     const darkModeToggle = document.getElementById('dark-mode-toggle');
-    
+
+  // Add contact search functionality
+const contactSearch = document.getElementById('contact-search');
+if (contactSearch) {
+    let searchTimeout;
+    contactSearch.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            searchUsers(this.value);
+        }, 500);
+    });
+}
     // Navigation
     if (chatsBtn) chatsBtn.addEventListener('click', () => switchPanel('chats'));
     if (contactsBtn) contactsBtn.addEventListener('click', () => switchPanel('contacts'));
@@ -447,6 +458,7 @@ function toggleUserMenu() {
 }
 
 // Load current user data
+// Load current user data - ENHANCED VERSION
 function loadUserData() {
     if (!currentUser) return;
     
@@ -459,7 +471,9 @@ function loadUserData() {
                 document.getElementById('settings-avatar').textContent = userData.name.charAt(0).toUpperCase();
                 document.getElementById('settings-name').textContent = userData.name;
                 document.getElementById('settings-username').textContent = `@${userData.username}`;
+                document.getElementById('settings-phone').textContent = userData.phone || 'Not provided';
                 document.getElementById('settings-email').textContent = userData.email;
+                document.getElementById('settings-user-id').textContent = currentUser.uid;
                 
                 // Update status
                 userStatus = userData.status || 'online';
@@ -477,6 +491,106 @@ function loadUserData() {
         .catch(error => {
             console.error('Error loading user data:', error);
         });
+}
+
+// Search for users by email or ID
+function searchUsers(searchTerm) {
+    if (!searchTerm.trim()) {
+        document.getElementById('search-results').classList.add('hidden');
+        return;
+    }
+
+    const searchResults = document.getElementById('search-results');
+    searchResults.innerHTML = '<div class="loading-text">Searching...</div>';
+    searchResults.classList.remove('hidden');
+
+    // Search by email
+    database.ref('users').orderByChild('email').equalTo(searchTerm).once('value')
+        .then(snapshot => {
+            const usersData = snapshot.val();
+            
+            if (usersData) {
+                displaySearchResults(usersData);
+                return;
+            }
+            
+            // If not found by email, search by user ID
+            database.ref('users/' + searchTerm).once('value')
+                .then(userSnapshot => {
+                    if (userSnapshot.exists()) {
+                        const userData = {};
+                        userData[searchTerm] = userSnapshot.val();
+                        displaySearchResults(userData);
+                    } else {
+                        // If still not found, search by username
+                        database.ref('users').orderByChild('username').equalTo(searchTerm.replace('@', '')).once('value')
+                            .then(usernameSnapshot => {
+                                const usernameUsers = usernameSnapshot.val();
+                                if (usernameUsers) {
+                                    displaySearchResults(usernameUsers);
+                                } else {
+                                    searchResults.innerHTML = '<div class="no-results">No user found with that email or ID</div>';
+                                }
+                            });
+                    }
+                });
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            searchResults.innerHTML = '<div class="error-text">Search failed. Please try again.</div>';
+        });
+}
+
+// Display search results
+function displaySearchResults(usersData) {
+    const searchResults = document.getElementById('search-results');
+    searchResults.innerHTML = '';
+    
+    Object.keys(usersData).forEach(userId => {
+        const userData = usersData[userId];
+        
+        // Don't show current user in search results
+        if (userId === currentUser.uid) return;
+        
+        const userItem = document.createElement('div');
+        userItem.className = 'search-result-item';
+        userItem.innerHTML = `
+            <div class="search-result-avatar">
+                <div class="avatar-small">${userData.name.charAt(0).toUpperCase()}</div>
+            </div>
+            <div class="search-result-details">
+                <div class="search-result-name">${userData.name}</div>
+                <div class="search-result-info">
+                    <span class="search-result-username">@${userData.username}</span>
+                    <span class="search-result-email">${userData.email}</span>
+                </div>
+                <div class="search-result-id">ID: ${userId}</div>
+            </div>
+            <button class="btn btn-primary btn-small select-user" data-user-id="${userId}">Select</button>
+        `;
+        
+        searchResults.appendChild(userItem);
+    });
+    
+    // Add event listeners to select buttons
+    document.querySelectorAll('.select-user').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const searchInput = document.getElementById('contact-search');
+            
+            // Get user data and populate search field
+            database.ref('users/' + userId).once('value')
+                .then(snapshot => {
+                    const userData = snapshot.val();
+                    searchInput.value = userData.email; // Or userData.username or userId
+                    searchResults.classList.add('hidden');
+                });
+        });
+    });
+    
+    if (searchResults.innerHTML === '') {
+        searchResults.innerHTML = '<div class="no-results">No user found with that email or ID</div>';
+    }
 }
 
 // Setup real-time listeners
@@ -1128,76 +1242,99 @@ function createNewChat(userId, userData) {
 }
 
 // Handle contact request
+// Handle contact request - ENHANCED VERSION
 function handleSendContactRequest() {
-    const email = document.getElementById('contact-email').value;
+    const searchInput = document.getElementById('contact-search').value;
     const message = document.getElementById('contact-message').value;
     
-    if (!email) {
-        alert('Please enter an email address');
+    if (!searchInput) {
+        alert('Please enter an email address or User ID');
         return;
     }
     
-    // Find user by email
-    database.ref('users').orderByChild('email').equalTo(email).once('value')
-        .then(snapshot => {
-            const usersData = snapshot.val();
-            if (!usersData) {
-                alert('No user found with that email address');
-                return;
-            }
-            
-            const userId = Object.keys(usersData)[0];
-            const userData = usersData[userId];
-            
-            if (userId === currentUser.uid) {
-                alert('You cannot send a contact request to yourself');
-                return;
-            }
-            
-            // Check if contact already exists
-            database.ref('userContacts/' + currentUser.uid + '/' + userId).once('value')
-                .then(contactSnapshot => {
-                    if (contactSnapshot.exists()) {
-                        alert('This user is already in your contacts');
-                        return;
-                    }
-                    
-                    // Check if request already exists
-                    database.ref('contactRequests/' + userId + '/' + currentUser.uid).once('value')
-                        .then(requestSnapshot => {
-                            if (requestSnapshot.exists()) {
-                                alert('You have already sent a request to this user');
+    // Find user by email or ID
+    let searchPromise;
+    
+    if (searchInput.includes('@')) {
+        // Search by email
+        searchPromise = database.ref('users').orderByChild('email').equalTo(searchInput).once('value');
+    } else {
+        // Search by user ID
+        searchPromise = database.ref('users/' + searchInput).once('value')
+            .then(snapshot => {
+                const result = {};
+                if (snapshot.exists()) {
+                    result[searchInput] = snapshot.val();
+                }
+                return { val: () => result };
+            });
+    }
+    
+    searchPromise.then(snapshot => {
+        const usersData = snapshot.val();
+        if (!usersData || Object.keys(usersData).length === 0) {
+            alert('No user found with that email address or User ID');
+            return;
+        }
+        
+        const userId = Object.keys(usersData)[0];
+        const userData = usersData[userId];
+        
+        if (userId === currentUser.uid) {
+            alert('You cannot send a contact request to yourself');
+            return;
+        }
+        
+        // Check if contact already exists
+        database.ref('userContacts/' + currentUser.uid + '/' + userId).once('value')
+            .then(contactSnapshot => {
+                if (contactSnapshot.exists()) {
+                    alert('This user is already in your contacts');
+                    return;
+                }
+                
+                // Check if request already exists
+                database.ref('contactRequests/' + userId + '/' + currentUser.uid).once('value')
+                    .then(requestSnapshot => {
+                        if (requestSnapshot.exists()) {
+                            const requestData = requestSnapshot.val();
+                            if (requestData.status === 'pending') {
+                                alert('You have already sent a pending request to this user');
                                 return;
                             }
-                            
-                            // Create contact request
-                            const requestData = {
-                                from: currentUser.uid,
-                                to: userId,
-                                message: message,
-                                status: 'pending',
-                                timestamp: Date.now()
-                            };
-                            
-                            database.ref('contactRequests/' + userId + '/' + currentUser.uid).set(requestData)
-                                .then(() => {
-                                    alert('Contact request sent successfully');
-                                    hideModal('add-contact-modal');
-                                    document.getElementById('contact-email').value = '';
-                                    document.getElementById('contact-message').value = '';
-                                })
-                                .catch(error => {
-                                    console.error('Error sending contact request:', error);
-                                    alert('Failed to send contact request');
-                                });
-                        });
-                });
-        })
-        .catch(error => {
-            console.error('Error finding user:', error);
-            alert('Error finding user');
-        });
+                        }
+                        
+                        // Create contact request
+                        const requestData = {
+                            from: currentUser.uid,
+                            fromName: currentUser.displayName || 'Unknown User',
+                            to: userId,
+                            message: message,
+                            status: 'pending',
+                            timestamp: Date.now()
+                        };
+                        
+                        database.ref('contactRequests/' + userId + '/' + currentUser.uid).set(requestData)
+                            .then(() => {
+                                alert('Contact request sent successfully');
+                                hideModal('add-contact-modal');
+                                document.getElementById('contact-search').value = '';
+                                document.getElementById('contact-message').value = '';
+                                document.getElementById('search-results').classList.add('hidden');
+                            })
+                            .catch(error => {
+                                console.error('Error sending contact request:', error);
+                                alert('Failed to send contact request');
+                            });
+                    });
+            });
+    })
+    .catch(error => {
+        console.error('Error finding user:', error);
+        alert('Error finding user');
+    });
 }
+
 
 // Handle contact request response
 function handleContactRequest(requestId, response) {
