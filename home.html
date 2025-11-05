@@ -1,1 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zynapse - Chat App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="screen">
+        <div class="splash-content">
+            <div class="logo-container">
+                <img src="zynapse.png" alt="Zynapse Logo" class="logo">
+                <h1 class="app-title">Zynapse</h1>
+            </div>
+            <p class="tagline">Connect instantly, communicate freely</p>
+            <div class="splash-buttons">
+                <button id="login-btn" class="btn btn-primary">Login</button>
+                <button id="register-btn" class="btn btn-secondary">Register</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen hidden">
+        <div class="auth-container">
+            <div class="auth-header">
+                <img src="zynapse.png" alt="Zynapse Logo" class="logo-small">
+                <h2>Login to Zynapse</h2>
+            </div>
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Login</button>
+            </form>
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="#" id="go-to-register">Register</a></p>
+                <button class="btn btn-text" id="back-to-splash">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Screen -->
+    <div id="register-screen" class="screen hidden">
+        <div class="auth-container">
+            <div class="auth-header">
+                <img src="zynapse.png" alt="Zynapse Logo" class="logo-small">
+                <h2>Create Account</h2>
+            </div>
+            <form id="register-form" class="auth-form">
+                <div class="form-group">
+                    <label for="register-name">Full Name</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-phone">Phone Number</label>
+                    <input type="tel" id="register-phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+            </form>
+            <div class="auth-footer">
+                <p>Already have an account? <a href="#" id="go-to-login">Login</a></p>
+                <button class="btn btn-text" id="back-to-splash-2">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="hidden">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-info">
+                    <img src="zynapse.png" alt="Zynapse Logo" class="logo-small">
+                    <div class="user-details">
+                        <span id="current-user-name">User</span>
+                        <span id="current-user-status" class="status online">Online</span>
+                    </div>
+                </div>
+                <div class="sidebar-actions">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="settings-btn" class="icon-btn" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="user-search" placeholder="Search users by ID...">
+                </div>
+            </div>
+
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" data-tab="chats">Chats</button>
+                <button class="tab-btn" data-tab="contacts">Contacts</button>
+                <button class="tab-btn" data-tab="requests">Requests</button>
+            </div>
+
+            <div class="sidebar-content">
+                <!-- Chats Tab -->
+                <div id="chats-tab" class="tab-content active">
+                    <div class="chat-list" id="chat-list">
+                        <!-- Chat items will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Contacts Tab -->
+                <div id="contacts-tab" class="tab-content">
+                    <div class="contact-list" id="contact-list">
+                        <!-- Contact items will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Requests Tab -->
+                <div id="requests-tab" class="tab-content">
+                    <div class="request-list" id="request-list">
+                        <!-- Request items will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="logout-btn" class="btn btn-secondary btn-full">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <!-- Empty State -->
+            <div id="empty-chat" class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3>No chat selected</h3>
+                <p>Select a conversation from the sidebar or start a new chat</p>
+            </div>
+
+            <!-- Active Chat -->
+            <div id="active-chat" class="hidden">
+                <div class="chat-header">
+                    <div class="chat-info">
+                        <div class="chat-avatar">
+                            <div class="avatar-placeholder"></div>
+                            <span class="presence-indicator online"></span>
+                        </div>
+                        <div class="chat-details">
+                            <h3 id="chat-with-name">User Name</h3>
+                            <span id="chat-status" class="status">Online</span>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <button id="search-chat-btn" class="icon-btn" title="Search in chat">
+                            <i class="fas fa-search"></i>
+                        </button>
+                        <button id="chat-info-btn" class="icon-btn" title="Chat info">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="messages-container">
+                    <div class="messages" id="messages">
+                        <!-- Messages will be populated here -->
+                    </div>
+                    <div id="typing-indicator" class="typing-indicator hidden">
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <span id="typing-user">User is typing...</span>
+                    </div>
+                </div>
+
+                <div class="message-input-container">
+                    <div class="input-actions">
+                        <button id="emoji-btn" class="icon-btn" title="Emoji">
+                            <i class="far fa-smile"></i>
+                        </button>
+                    </div>
+                    <div class="message-input-wrapper">
+                        <input type="text" id="message-input" placeholder="Type a message...">
+                    </div>
+                    <button id="send-btn" class="send-btn" title="Send message">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Settings</h3>
+                    <button id="close-settings" class="icon-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-section">
+                        <h4>Appearance</h4>
+                        <div class="setting-item">
+                            <label for="theme-select">Theme</label>
+                            <select id="theme-select">
+                                <option value="dark">Dark</option>
+                                <option value="light">Light</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h4>Notifications</h4>
+                        <div class="setting-item">
+                            <label for="message-sounds">Message Sounds</label>
+                            <input type="checkbox" id="message-sounds" checked>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h4>Profile</h4>
+                        <div class="setting-item">
+                            <label for="user-status">Status</label>
+                            <select id="user-status">
+                                <option value="online">Online</option>
+                                <option value="away">Away</option>
+                                <option value="busy">Busy</option>
+                                <option value="offline">Offline</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="save-settings" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Message Notification -->
+        <div id="message-notification" class="notification hidden">
+            <div class="notification-content">
+                <div class="notification-avatar">
+                    <div class="avatar-placeholder small"></div>
+                </div>
+                <div class="notification-text">
+                    <strong id="notif-sender">User</strong>
+                    <span id="notif-message">New message</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
