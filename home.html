@@ -67,6 +67,25 @@
                             </div>
                             <i class="fas fa-chevron-down dropdown-arrow"></i>
                         </button>
+                        <div id="user-menu-dropdown" class="dropdown hidden">
+                            <div class="dropdown-item" data-action="profile">
+                                <i class="fas fa-user"></i>
+                                <span>My Profile</span>
+                            </div>
+                            <div class="dropdown-item" data-action="status">
+                                <i class="fas fa-circle"></i>
+                                <span>Set Status</span>
+                            </div>
+                            <div class="dropdown-item" data-action="settings">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-item" data-action="logout">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -247,18 +266,9 @@
                         <button id="emoji-btn" class="input-action-btn" title="Emoji">
                             <i class="far fa-smile"></i>
                         </button>
-                        <button id="attach-btn" class="input-action-btn" title="Attach file">
-                            <i class="fas fa-paperclip"></i>
-                        </button>
-                        <button id="gif-btn" class="input-action-btn" title="GIF">
-                            <i class="fas fa-film"></i>
-                        </button>
                     </div>
                     <div class="message-input-wrapper">
                         <textarea id="message-input" placeholder="Type a message..." rows="1"></textarea>
-                        <button id="voice-message-btn" class="input-action-btn voice-btn" title="Voice message">
-                            <i class="fas fa-microphone"></i>
-                        </button>
                     </div>
                     <button id="send-btn" class="send-btn" title="Send message" disabled>
                         <i class="fas fa-paper-plane"></i>
@@ -286,18 +296,18 @@
                         <div class="search-container">
                             <div class="search-box">
                                 <i class="fas fa-search"></i>
-                                <input type="text" id="new-chat-search" placeholder="Search users by name, email, or username...">
+                                <input type="text" id="new-chat-search" placeholder="Search users by UID...">
                                 <button class="search-clear hidden">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="modal-section">
-                            <h4>Suggested Contacts</h4>
-                            <div class="user-list-modal" id="user-list-modal">
-                                <!-- Users will be populated here -->
-                            </div>
+                        <div class="search-results" id="new-chat-results">
+                            <!-- Search results will appear here -->
                         </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="cancel-new-chat" class="btn btn-secondary">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -319,11 +329,11 @@
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
-                            <label for="contact-search">
+                            <label for="contact-uid">
                                 <i class="fas fa-search"></i>
-                                Find User
+                                Find User by UID
                             </label>
-                            <input type="text" id="contact-search" placeholder="Enter user's email, username, or User ID">
+                            <input type="text" id="contact-uid" placeholder="Enter user's UID">
                             <div class="input-focus-line"></div>
                             <p class="input-hint">
                                 <i class="fas fa-info-circle"></i>
@@ -344,7 +354,7 @@
                     </div>
                     <div class="modal-footer">
                         <button id="cancel-add-contact" class="btn btn-secondary">Cancel</button>
-                        <button id="send-contact-request" class="btn btn-primary">
+                        <button id="send-contact-request" class="btn btn-primary" disabled>
                             <span class="btn-text">Send Contact Request</span>
                             <div class="btn-loading">
                                 <i class="fas fa-spinner fa-spin"></i>
@@ -373,8 +383,6 @@
                         <div class="settings-tabs">
                             <button class="settings-tab active" data-tab="profile">Profile</button>
                             <button class="settings-tab" data-tab="preferences">Preferences</button>
-                            <button class="settings-tab" data-tab="privacy">Privacy</button>
-                            <button class="settings-tab" data-tab="security">Security</button>
                         </div>
                         
                         <div class="settings-content">
@@ -385,14 +393,9 @@
                                     <div class="profile-preview">
                                         <div class="profile-avatar-section">
                                             <div class="avatar-large" id="settings-avatar">U</div>
-                                            <button class="btn btn-secondary btn-small change-avatar">
-                                                <i class="fas fa-camera"></i>
-                                                Change
-                                            </button>
                                         </div>
                                         <div class="profile-info">
                                             <h5 id="settings-name">User Name</h5>
-                                            <p id="settings-username">@username</p>
                                             <div class="profile-details">
                                                 <div class="detail-item">
                                                     <i class="fas fa-phone"></i>
@@ -414,36 +417,6 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <button id="edit-profile-btn" class="btn btn-primary">
-                                            <i class="fas fa-edit"></i>
-                                            Edit Profile
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div class="settings-section">
-                                    <h4>Account Status</h4>
-                                    <div class="status-options">
-                                        <button class="status-option active" data-status="online">
-                                            <span class="status-dot online"></span>
-                                            <span class="status-label">Online</span>
-                                            <span class="status-description">Available to chat</span>
-                                        </button>
-                                        <button class="status-option" data-status="away">
-                                            <span class="status-dot away"></span>
-                                            <span class="status-label">Away</span>
-                                            <span class="status-description">Away from keyboard</span>
-                                        </button>
-                                        <button class="status-option" data-status="busy">
-                                            <span class="status-dot busy"></span>
-                                            <span class="status-label">Busy</span>
-                                            <span class="status-description">Do not disturb</span>
-                                        </button>
-                                        <button class="status-option" data-status="offline">
-                                            <span class="status-dot offline"></span>
-                                            <span class="status-label">Offline</span>
-                                            <span class="status-description">Appear offline</span>
-                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -462,119 +435,6 @@
                                             <span class="slider"></span>
                                         </label>
                                     </div>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Compact Mode</span>
-                                            <span class="setting-description">Use compact chat layout</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="compact-mode-toggle">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div class="settings-section">
-                                    <h4>Notifications & Sounds</h4>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Message Sounds</span>
-                                            <span class="setting-description">Play sounds for new messages</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="message-sounds" checked>
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Desktop Notifications</span>
-                                            <span class="setting-description">Show desktop notifications</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="desktop-notifications" checked>
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div class="settings-section">
-                                    <h4>Chat Preferences</h4>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Read Receipts</span>
-                                            <span class="setting-description">Let others see when you've read their messages</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="read-receipts" checked>
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Typing Indicators</span>
-                                            <span class="setting-description">Show when others are typing</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="typing-indicators" checked>
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Privacy Tab -->
-                            <div id="privacy-tab" class="settings-tab-content">
-                                <div class="settings-section">
-                                    <h4>Privacy Settings</h4>
-                                    <div class="privacy-options">
-                                        <div class="privacy-option">
-                                            <div class="privacy-details">
-                                                <span class="privacy-title">Who can add you as a contact</span>
-                                                <span class="privacy-description">Control who can send you contact requests</span>
-                                            </div>
-                                            <select class="privacy-select">
-                                                <option value="everyone">Everyone</option>
-                                                <option value="contacts">Contacts of Contacts</option>
-                                                <option value="nobody">Nobody</option>
-                                            </select>
-                                        </div>
-                                        <div class="privacy-option">
-                                            <div class="privacy-details">
-                                                <span class="privacy-title">Profile Visibility</span>
-                                                <span class="privacy-description">Control who can see your profile information</span>
-                                            </div>
-                                            <select class="privacy-select">
-                                                <option value="public">Public</option>
-                                                <option value="contacts">Contacts Only</option>
-                                                <option value="private">Private</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Security Tab -->
-                            <div id="security-tab" class="settings-tab-content">
-                                <div class="settings-section">
-                                    <h4>Security Settings</h4>
-                                    <div class="security-options">
-                                        <button class="security-option">
-                                            <i class="fas fa-lock"></i>
-                                            <span>Change Password</span>
-                                            <i class="fas fa-chevron-right"></i>
-                                        </button>
-                                        <button class="security-option">
-                                            <i class="fas fa-shield-alt"></i>
-                                            <span>Two-Factor Authentication</span>
-                                            <i class="fas fa-chevron-right"></i>
-                                        </button>
-                                        <button class="security-option">
-                                            <i class="fas fa-desktop"></i>
-                                            <span>Active Sessions</span>
-                                            <i class="fas fa-chevron-right"></i>
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -590,43 +450,11 @@
             </div>
         </div>
 
-        <!-- User Menu Dropdown -->
-        <div id="user-menu-dropdown" class="dropdown hidden">
-            <div class="dropdown-item" data-action="profile">
-                <i class="fas fa-user"></i>
-                <span>My Profile</span>
-            </div>
-            <div class="dropdown-item" data-action="status">
-                <i class="fas fa-circle"></i>
-                <span>Set Status</span>
-            </div>
-            <div class="dropdown-item" data-action="settings">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </div>
-            <div class="dropdown-divider"></div>
-            <div class="dropdown-item" data-action="logout">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </div>
-        </div>
-
         <!-- Emoji Picker -->
         <div id="emoji-picker" class="emoji-picker hidden"></div>
 
         <!-- Notification Container -->
         <div id="notification-container" class="notification-container"></div>
-
-        <!-- Online Users Indicator -->
-        <div id="online-users" class="online-users hidden">
-            <div class="online-users-header">
-                <span>Online Now</span>
-                <span class="online-count" id="online-count">0</span>
-            </div>
-            <div class="online-users-list" id="online-users-list">
-                <!-- Online users will be populated here -->
-            </div>
-        </div>
     </div>
 
     <!-- Firebase SDK -->
