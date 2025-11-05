@@ -1,11 +1,13 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "your-api-key",
-    authDomain: "your-auth-domain",
-    projectId: "your-project-id",
-    storageBucket: "your-storage-bucket",
-    messagingSenderId: "your-sender-id",
-    appId: "your-app-id"
+  apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
+  authDomain: "zynapse-68181.firebaseapp.com",
+  databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
+  projectId: "zynapse-68181",
+  storageBucket: "zynapse-68181.firebasestorage.app",
+  messagingSenderId: "841353050519",
+  appId: "1:841353050519:web:271e2709246067bc506cd2",
+  measurementId: "G-J38CL5MRPF"
 };
 
 // Initialize Firebase
@@ -996,7 +998,7 @@ function loadMessages(chatId) {
     });
     
     // Listen for typing indicators
-    database.ref('chats/' + chatId + '/typing').on('value', snapshot => {
+    database.ref('chats/' + currentChat + '/typing').on('value', snapshot => {
         const typingData = snapshot.val();
         const typingIndicator = document.getElementById('typing-indicator');
         
