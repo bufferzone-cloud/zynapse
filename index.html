@@ -6,13 +6,14 @@
     <title>Zynapse - Connect Instantly</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="zynapse.png">
 </head>
 <body class="dark-theme">
     <!-- Splash Screen -->
     <div id="splash-screen" class="screen">
         <div class="splash-content">
             <div class="logo-container">
-                <div class="logo">Z</div>
+                <img src="zynapse.png" alt="Zynapse Logo" class="logo-image">
                 <h1 class="app-title">Zynapse</h1>
             </div>
             <p class="tagline">Connect instantly, communicate freely</p>
@@ -27,7 +28,7 @@
     <div id="login-screen" class="screen hidden">
         <div class="auth-container">
             <div class="auth-header">
-                <div class="logo-small">Z</div>
+                <img src="zynapse.png" alt="Zynapse Logo" class="logo-image-small">
                 <h2>Login to Zynapse</h2>
             </div>
             <form id="login-form" class="auth-form">
@@ -37,7 +38,12 @@
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password</label>
-                    <input type="password" id="login-password" required>
+                    <div class="password-container">
+                        <input type="password" id="login-password" required>
+                        <button type="button" class="password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-options">
                     <label class="checkbox-container">
@@ -60,7 +66,7 @@
     <div id="register-screen" class="screen hidden">
         <div class="auth-container">
             <div class="auth-header">
-                <div class="logo-small">Z</div>
+                <img src="zynapse.png" alt="Zynapse Logo" class="logo-image-small">
                 <h2>Create Account</h2>
             </div>
             <form id="register-form" class="auth-form">
@@ -84,7 +90,7 @@
                     <label for="register-password">Password</label>
                     <div class="password-container">
                         <input type="password" id="register-password" required>
-                        <button type="button" class="password-toggle" id="register-password-toggle">
+                        <button type="button" class="password-toggle">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
@@ -99,7 +105,7 @@
                     <label for="register-confirm-password">Confirm Password</label>
                     <div class="password-container">
                         <input type="password" id="register-confirm-password" required>
-                        <button type="button" class="password-toggle" id="register-confirm-password-toggle">
+                        <button type="button" class="password-toggle">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
@@ -147,7 +153,7 @@
     <!-- Loading Screen -->
     <div id="loading-screen" class="screen hidden">
         <div class="loading-content">
-            <div class="logo">Z</div>
+            <img src="zynapse.png" alt="Zynapse Logo" class="logo-image">
             <div class="loading-spinner"></div>
             <p>Loading Zynapse...</p>
         </div>
