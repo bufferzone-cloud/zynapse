@@ -156,7 +156,7 @@ body {
 
 .logo-glow {
     display: inline-block;
-    padding: 0.5rem;
+    padding: 0.6rem;
     border-radius: 50%;
     background: var(--gradient-glow);
     box-shadow: 0 0 20px var(--glow-blue);
@@ -192,27 +192,28 @@ body {
 
 .splash-buttons {
     display: flex;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.75rem;
     justify-content: center;
-    flex-wrap: wrap;
     margin-bottom: 2rem;
     padding: 0 0.5rem;
 }
 
 .splash-features {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     gap: 1rem;
-    flex-wrap: wrap;
     padding: 0 0.5rem;
 }
 
 .feature-item {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.5rem;
     color: var(--text-secondary);
     font-size: 0.8rem;
+    justify-content: center;
 }
 
 .feature-item i {
@@ -243,7 +244,7 @@ body {
 .auth-container {
     background: var(--gradient-card);
     border-radius: var(--radius-xl);
-    padding: 1.25rem;
+    padding: 1.5rem;
     width: 100%;
     max-width: 400px;
     max-height: 95vh;
@@ -273,10 +274,10 @@ body {
 
 .logo-small-glow {
     display: inline-block;
-    padding: 0.3rem;
+    padding: 0.4rem;
     border-radius: 10px;
     background: var(--gradient-glow);
-    box-shadow: 0 0 10px var(--glow-blue);
+    box-shadow: 0 0 12px var(--glow-blue);
     margin-bottom: 0.75rem;
 }
 
@@ -306,19 +307,19 @@ body {
 .auth-form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
 }
 
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 1rem;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.5rem;
     position: relative;
 }
 
@@ -328,32 +329,32 @@ body {
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.5rem;
 }
 
 .form-group label i {
     color: var(--primary-blue);
-    width: 12px;
-    font-size: 0.7rem;
+    width: 14px;
+    font-size: 0.75rem;
 }
 
 .form-group input, .form-group textarea {
-    padding: 0.75rem;
+    padding: 0.875rem 1rem;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
     background-color: rgba(255, 255, 255, 0.05);
     color: var(--text-primary);
-    font-size: 0.85rem;
+    font-size: 16px; /* Prevent zoom on iOS */
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
     width: 100%;
-    min-height: 44px;
+    min-height: 44px; /* Touch-friendly height */
 }
 
 .form-group input:focus, .form-group textarea:focus {
     outline: none;
     border-color: var(--primary-blue);
-    box-shadow: 0 0 0 2px var(--glow-blue);
+    box-shadow: 0 0 0 3px var(--glow-blue);
     background-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -387,18 +388,18 @@ body {
 
 .password-toggle {
     position: absolute;
-    right: 0.5rem;
+    right: 0.75rem;
     background: none;
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    padding: 0.3rem;
+    padding: 0.4rem;
     border-radius: var(--radius-sm);
     transition: all 0.2s ease;
     z-index: 2;
-    font-size: 0.8rem;
-    min-height: 44px;
+    font-size: 0.9rem;
     min-width: 44px;
+    min-height: 44px;
 }
 
 .password-toggle:hover {
@@ -414,17 +415,17 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
     font-size: 0.7rem;
     color: var(--text-secondary);
 }
 
 .strength-bar {
-    height: 3px;
+    height: 4px;
     background-color: var(--border-color);
     border-radius: 2px;
     overflow: hidden;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
 }
 
 .strength-fill {
@@ -438,7 +439,7 @@ body {
 .strength-requirements {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0.2rem;
+    gap: 0.25rem;
     font-size: 0.65rem;
 }
 
@@ -452,7 +453,7 @@ body {
 }
 
 .validation-message-container {
-    min-height: 1rem;
+    min-height: 1.25rem;
     display: flex;
     align-items: center;
 }
@@ -474,7 +475,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 0.5rem 0;
+    margin: 0.75rem 0;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
@@ -485,7 +486,7 @@ body {
     cursor: pointer;
     font-size: 0.75rem;
     color: var(--text-secondary);
-    gap: 0.4rem;
+    gap: 0.5rem;
     transition: color 0.2s ease;
     flex: 1;
     min-width: fit-content;
@@ -539,7 +540,7 @@ body {
 }
 
 .terms-group {
-    margin: 0.5rem 0;
+    margin: 0.75rem 0;
 }
 
 .terms-link {
@@ -557,7 +558,7 @@ body {
 .auth-divider {
     display: flex;
     align-items: center;
-    margin: 1rem 0;
+    margin: 1.25rem 0;
     color: var(--text-secondary);
     font-size: 0.8rem;
 }
@@ -571,14 +572,14 @@ body {
 }
 
 .auth-divider span {
-    padding: 0 0.5rem;
+    padding: 0 0.75rem;
 }
 
 .social-auth {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
 }
 
 .auth-footer {
@@ -586,7 +587,7 @@ body {
     text-align: center;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
 }
 
 .auth-footer p {
@@ -610,21 +611,21 @@ body {
 
 /* Enhanced Buttons */
 .btn {
-    padding: 0.75rem 1rem;
+    padding: 0.875rem 1.25rem;
     border: none;
     border-radius: var(--radius-md);
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
+    gap: 0.5rem;
     text-decoration: none;
     position: relative;
     overflow: hidden;
-    min-height: 44px;
+    min-height: 44px; /* Touch-friendly height */
     width: 100%;
 }
 
@@ -672,7 +673,7 @@ body {
 .btn-text {
     background: transparent;
     color: var(--text-secondary);
-    padding: 0.6rem 0.8rem;
+    padding: 0.75rem 1rem;
     width: auto;
 }
 
@@ -710,9 +711,9 @@ body {
 }
 
 .btn-small {
-    padding: 0.5rem 0.8rem;
-    font-size: 0.75rem;
-    min-height: 36px;
+    padding: 0.625rem 1rem;
+    font-size: 0.8rem;
+    min-height: 40px;
     width: auto;
 }
 
@@ -770,8 +771,8 @@ body {
 
 .particle {
     position: absolute;
-    width: 2px;
-    height: 2px;
+    width: 3px;
+    height: 3px;
     background: var(--primary-blue);
     border-radius: 50%;
     animation: particle-float 3s ease-in-out infinite;
@@ -809,15 +810,15 @@ body {
 
 @keyframes particle-float {
     0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
-    50% { transform: translateY(-15px) scale(1.2); opacity: 1; }
+    50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
 }
 
 .loading-content {
     text-align: center;
-    padding: 1rem;
+    padding: 1.5rem;
     z-index: 2;
     width: 100%;
-    max-width: 280px;
+    max-width: 300px;
 }
 
 .loading-logo {
@@ -830,8 +831,8 @@ body {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     background: var(--gradient-primary);
     border-radius: 50%;
     transform: translate(-50%, -50%);
@@ -845,17 +846,17 @@ body {
 }
 
 .loading-spinner {
-    width: 35px;
-    height: 35px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-top: 2px solid var(--primary-blue);
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid var(--primary-blue);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 1rem auto;
 }
 
 .loading-content h3 {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     margin-bottom: 0.5rem;
     background: var(--gradient-primary);
     -webkit-background-clip: text;
@@ -866,20 +867,20 @@ body {
 .loading-content p {
     color: var(--text-secondary);
     margin-bottom: 1.5rem;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
 }
 
 .loading-progress {
-    max-width: 200px;
+    max-width: 250px;
     margin: 0 auto;
 }
 
 .progress-bar {
-    height: 3px;
+    height: 4px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
     overflow: hidden;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
 }
 
 .progress-fill {
@@ -897,7 +898,7 @@ body {
 }
 
 .progress-text {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
 }
 
@@ -920,7 +921,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 0.75rem;
-    background: rgba(21, 21, 21, 0.95);
+    background: rgba(21, 21, 21, 0.9);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     height: 56px;
     min-height: 56px;
@@ -941,14 +942,14 @@ body {
 .app-logo {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.5rem;
     min-width: 0;
 }
 
 .logo-glow-small {
     display: flex;
-    padding: 0.25rem;
-    border-radius: 6px;
+    padding: 0.3rem;
+    border-radius: 8px;
     background: var(--gradient-glow);
     box-shadow: 0 0 8px var(--glow-blue);
     flex-shrink: 0;
@@ -980,14 +981,7 @@ body {
 }
 
 .status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.3rem 0.6rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: var(--radius-md);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    flex-shrink: 0;
+    display: none; /* Hidden on mobile */
 }
 
 .status-dot-indicator {
@@ -996,25 +990,25 @@ body {
 }
 
 .status-dot {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    margin-right: 0.3rem;
+    margin-right: 0.4rem;
 }
 
 .status-dot.online {
     background: var(--online);
-    box-shadow: 0 0 4px var(--online);
+    box-shadow: 0 0 6px var(--online);
 }
 
 .status-dot.away {
     background: var(--away);
-    box-shadow: 0 0 4px var(--away);
+    box-shadow: 0 0 6px var(--away);
 }
 
 .status-dot.busy {
     background: var(--busy);
-    box-shadow: 0 0 4px var(--busy);
+    box-shadow: 0 0 6px var(--busy);
 }
 
 .status-dot.offline {
@@ -1022,7 +1016,7 @@ body {
 }
 
 .nav-center {
-    display: none;
+    display: none; /* Hidden on mobile */
 }
 
 .nav-right {
@@ -1034,7 +1028,7 @@ body {
 .nav-actions {
     display: flex;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.25rem;
 }
 
 .nav-action-btn {
@@ -1051,6 +1045,8 @@ body {
     transition: all 0.3s ease;
     position: relative;
     flex-shrink: 0;
+    min-width: 36px;
+    min-height: 36px;
 }
 
 .nav-action-btn:hover {
@@ -1066,9 +1062,9 @@ body {
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.8);
     color: white;
-    padding: 0.3rem 0.5rem;
+    padding: 0.4rem 0.6rem;
     border-radius: var(--radius-sm);
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     white-space: nowrap;
     opacity: 0;
     visibility: hidden;
@@ -1084,13 +1080,13 @@ body {
 
 .user-menu {
     position: relative;
-    margin-left: 0.2rem;
+    margin-left: 0.25rem;
 }
 
 .user-avatar-btn {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.5rem;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
@@ -1276,7 +1272,7 @@ body {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
-    padding: 0.4rem 0.6rem;
+    padding: 0.5rem 0.75rem;
     transition: all 0.3s ease;
     width: 100%;
     min-height: 36px;
@@ -1290,8 +1286,8 @@ body {
 
 .search-box i {
     color: var(--text-secondary);
-    margin-right: 0.4rem;
-    font-size: 0.7rem;
+    margin-right: 0.5rem;
+    font-size: 0.75rem;
     flex-shrink: 0;
 }
 
@@ -1320,9 +1316,9 @@ body {
     border-radius: var(--radius-sm);
     transition: all 0.2s ease;
     flex-shrink: 0;
-    font-size: 0.7rem;
-    min-height: 24px;
+    font-size: 0.75rem;
     min-width: 24px;
+    min-height: 24px;
 }
 
 .search-clear:hover {
@@ -1332,7 +1328,7 @@ body {
 
 .header-buttons {
     display: flex;
-    gap: 0.3rem;
+    gap: 0.4rem;
     flex-shrink: 0;
 }
 
@@ -1348,7 +1344,7 @@ body {
 .chat-list, .contact-list, .request-list {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.5rem;
     min-height: 0;
 }
 
@@ -1359,7 +1355,7 @@ body {
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.75rem;
     position: relative;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid transparent;
@@ -1420,7 +1416,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.3rem;
     min-width: 0;
 }
 
@@ -1447,7 +1443,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 0.2rem;
+    gap: 0.3rem;
     flex-shrink: 0;
     text-align: right;
     min-width: 0;
@@ -1478,13 +1474,13 @@ body {
 
 .request-actions {
     display: flex;
-    gap: 0.4rem;
-    margin-top: 0.4rem;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
     width: 100%;
 }
 
 .request-btn {
-    padding: 0.3rem 0.6rem;
+    padding: 0.4rem 0.75rem;
     border: none;
     border-radius: var(--radius-md);
     font-size: 0.7rem;
@@ -1493,19 +1489,19 @@ body {
     transition: all 0.3s ease;
     flex: 1;
     text-transform: uppercase;
-    letter-spacing: 0.2px;
-    min-height: 28px;
+    letter-spacing: 0.3px;
+    min-height: 30px;
 }
 
 .request-btn.accept {
     background: var(--gradient-primary);
     color: var(--text-primary);
-    box-shadow: 0 1px 4px rgba(26, 115, 232, 0.3);
+    box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
 }
 
 .request-btn.accept:hover {
     transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(26, 115, 232, 0.4);
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
 }
 
 .request-btn.decline {
@@ -1519,12 +1515,12 @@ body {
     transform: translateY(-1px);
 }
 
-/* Enhanced Active Chat */
+/* Enhanced Active Chat - MOBILE OPTIMIZED */
 .chat-header {
-    padding: 0.875rem;
+    padding: 0.75rem;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     background: rgba(21, 21, 21, 0.5);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
@@ -1545,6 +1541,8 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     flex-shrink: 0;
+    min-width: 36px;
+    min-height: 36px;
 }
 
 .back-btn:hover {
@@ -1556,7 +1554,7 @@ body {
 .chat-user-info {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     flex: 1;
     min-width: 0;
 }
@@ -1628,8 +1626,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
@@ -1637,6 +1635,8 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     flex-shrink: 0;
+    min-width: 32px;
+    min-height: 32px;
 }
 
 .chat-action-btn:hover {
@@ -1651,6 +1651,7 @@ body {
     padding: 0.5rem;
     background: transparent;
     min-height: 0;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
 .messages-scroll-area {
@@ -1665,7 +1666,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.5rem;
     padding-bottom: 0.5rem;
     min-height: 0;
 }
@@ -1673,8 +1674,8 @@ body {
 .message-group {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
-    max-width: 90%;
+    gap: 0.25rem;
+    max-width: 92%; /* More space for messages on mobile */
 }
 
 .message-group.own {
@@ -1706,6 +1707,7 @@ body {
     font-size: 0.8rem;
     backdrop-filter: blur(10px);
     min-width: 0;
+    word-break: break-word;
 }
 
 .message.received {
@@ -1719,13 +1721,13 @@ body {
     background: var(--gradient-primary);
     border-bottom-right-radius: 4px;
     align-self: flex-end;
-    box-shadow: 0 1px 6px rgba(26, 115, 232, 0.3);
+    box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
 }
 
 @keyframes messageAppear {
     from {
         opacity: 0;
-        transform: translateY(6px) scale(0.95);
+        transform: translateY(8px) scale(0.95);
     }
     to {
         opacity: 1;
@@ -1736,7 +1738,7 @@ body {
 .message-time {
     font-size: 0.6rem;
     color: rgba(255, 255, 255, 0.6);
-    margin-top: 0.1rem;
+    margin-top: 0.15rem;
     text-align: right;
 }
 
@@ -1764,7 +1766,7 @@ body {
     z-index: 2;
     color: var(--text-secondary);
     font-size: 0.65rem;
-    border-radius: 14px;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
 }
@@ -1832,7 +1834,7 @@ body {
     }
 }
 
-/* Enhanced Message Input Container - Optimized for Mobile */
+/* Enhanced Message Input - MOBILE OPTIMIZED */
 .message-input-container {
     display: flex;
     align-items: flex-end;
@@ -1864,6 +1866,8 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     flex-shrink: 0;
+    min-width: 36px;
+    min-height: 36px;
 }
 
 .input-action-btn:hover {
@@ -1882,12 +1886,12 @@ body {
     display: flex;
     align-items: center;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 18px;
+    border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 0.3rem;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
-    min-height: 40px;
+    min-height: 44px;
     max-height: 100px;
 }
 
@@ -1899,22 +1903,23 @@ body {
 
 .message-input-wrapper textarea {
     flex: 1;
-    padding: 0.5rem 0.6rem;
+    padding: 0.5rem 0.7rem;
     border: none;
     background: transparent;
     color: var(--text-primary);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     outline: none;
     resize: none;
     max-height: 80px;
     font-family: inherit;
     line-height: 1.3;
-    min-height: 18px;
+    min-height: 20px;
+    width: 100%;
 }
 
 .message-input-wrapper textarea::placeholder {
     color: var(--text-muted);
-    font-size: 0.75rem;
+    font-size: 0.8rem;
 }
 
 .send-btn {
@@ -1922,21 +1927,22 @@ body {
     color: var(--text-primary);
     border: none;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
     flex-shrink: 0;
-    box-shadow: 0 1px 6px rgba(26, 115, 232, 0.3);
-    min-width: 36px;
+    box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+    min-width: 40px;
+    min-height: 40px;
 }
 
 .send-btn:hover:not(:disabled) {
     transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 3px 10px rgba(26, 115, 232, 0.4);
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
 }
 
 .send-btn:disabled {
@@ -1968,7 +1974,7 @@ body {
 
 .empty-state h4 {
     font-size: 1.1rem;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.5rem;
     color: var(--text-primary);
     font-weight: 600;
     line-height: 1.3;
@@ -2028,7 +2034,7 @@ body {
 @keyframes modalSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-15px) scale(0.95);
+        transform: translateY(-20px) scale(0.95);
     }
     to {
         opacity: 1;
@@ -2040,7 +2046,7 @@ body {
     background: var(--gradient-card);
     border-radius: var(--radius-lg);
     box-shadow: 
-        0 8px 25px rgba(0, 0, 0, 0.5),
+        0 10px 30px rgba(0, 0, 0, 0.5),
         0 0 0 1px rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
@@ -2064,7 +2070,7 @@ body {
     padding: 1rem 0.875rem;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.02);
     flex-shrink: 0;
@@ -2095,8 +2101,8 @@ body {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-secondary);
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2105,6 +2111,8 @@ body {
     transition: all 0.2s ease;
     flex-shrink: 0;
     font-size: 0.8rem;
+    min-width: 32px;
+    min-height: 32px;
 }
 
 .modal-close:hover {
@@ -2117,6 +2125,7 @@ body {
     overflow-y: auto;
     flex: 1;
     min-height: 0;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-description {
@@ -2133,7 +2142,7 @@ body {
 .modal-section h4 {
     font-size: 0.95rem;
     font-weight: 600;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.75rem;
     color: var(--text-primary);
     line-height: 1.3;
 }
@@ -2143,7 +2152,7 @@ body {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: flex-end;
-    gap: 0.6rem;
+    gap: 0.5rem;
     background: rgba(255, 255, 255, 0.02);
     flex-shrink: 0;
     flex-wrap: wrap;
@@ -2162,7 +2171,7 @@ body {
 
 .settings-tab {
     flex: 1;
-    padding: 0.5rem 0.6rem;
+    padding: 0.6rem 0.5rem;
     background: transparent;
     border: none;
     color: var(--text-secondary);
@@ -2204,7 +2213,7 @@ body {
     font-weight: 600;
     margin-bottom: 0.75rem;
     color: var(--text-primary);
-    padding-bottom: 0.4rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     line-height: 1.3;
 }
@@ -2224,7 +2233,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     flex-shrink: 0;
     width: 100%;
 }
@@ -2245,7 +2254,7 @@ body {
 
 .profile-info p {
     color: var(--text-secondary);
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.5rem;
     font-size: 0.8rem;
     line-height: 1.3;
 }
@@ -2320,8 +2329,8 @@ body {
     transition: all 0.2s ease;
     flex-shrink: 0;
     font-size: 0.65rem;
-    min-height: 24px;
     min-width: 24px;
+    min-height: 24px;
 }
 
 .copy-id-btn:hover {
@@ -2332,7 +2341,7 @@ body {
 .status-options {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0.6rem;
+    gap: 0.5rem;
 }
 
 .status-option {
@@ -2357,7 +2366,7 @@ body {
 .status-option.active {
     background: rgba(26, 115, 232, 0.1);
     border-color: var(--glow-blue);
-    box-shadow: 0 1px 6px rgba(26, 115, 232, 0.2);
+    box-shadow: 0 2px 6px rgba(26, 115, 232, 0.2);
 }
 
 .status-label {
@@ -2382,7 +2391,7 @@ body {
     padding: 0.75rem 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     flex-wrap: wrap;
-    gap: 0.6rem;
+    gap: 0.5rem;
 }
 
 .setting-item:last-child {
@@ -2398,7 +2407,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
+    gap: 0.2rem;
     min-width: 0;
 }
 
@@ -2464,7 +2473,7 @@ input:checked + .slider:before {
 .privacy-options {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.5rem;
 }
 
 .privacy-option {
@@ -2476,14 +2485,14 @@ input:checked + .slider:before {
     border-radius: var(--radius-md);
     border: 1px solid rgba(255, 255, 255, 0.1);
     flex-wrap: wrap;
-    gap: 0.6rem;
+    gap: 0.5rem;
 }
 
 .privacy-details {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
+    gap: 0.2rem;
     min-width: 0;
 }
 
@@ -2520,7 +2529,7 @@ input:checked + .slider:before {
 .security-option {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     padding: 0.75rem 0.875rem;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -2565,7 +2574,7 @@ input:checked + .slider:before {
     background: var(--gradient-card);
     border-radius: var(--radius-lg);
     box-shadow: 
-        0 6px 20px rgba(0, 0, 0, 0.3),
+        0 8px 25px rgba(0, 0, 0, 0.3),
         0 0 0 1px rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 1000;
@@ -2579,7 +2588,7 @@ input:checked + .slider:before {
 @keyframes dropdownSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-6px);
+        transform: translateY(-8px);
     }
     to {
         opacity: 1;
@@ -2614,25 +2623,25 @@ input:checked + .slider:before {
 .dropdown-divider {
     height: 1px;
     background: rgba(255, 255, 255, 0.1);
-    margin: 0.1rem 0;
+    margin: 0.2rem 0;
 }
 
 /* Enhanced Emoji Picker */
 .emoji-picker {
     position: absolute;
-    bottom: 60px;
-    right: 5px;
+    bottom: 70px;
+    right: 10px;
     z-index: 100;
     background: var(--gradient-card);
     border-radius: var(--radius-lg);
     box-shadow: 
-        0 6px 20px rgba(0, 0, 0, 0.3),
+        0 8px 25px rgba(0, 0, 0, 0.3),
         0 0 0 1px rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
     max-width: 250px;
-    max-height: 150px;
+    max-height: 180px;
     overflow: auto;
-    padding: 0.6rem;
+    padding: 0.5rem;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 0.3rem;
@@ -2640,7 +2649,7 @@ input:checked + .slider:before {
 }
 
 .emoji-picker span {
-    font-size: 1rem;
+    font-size: 1.1rem;
     cursor: pointer;
     padding: 0.25rem;
     border-radius: var(--radius-sm);
@@ -2649,7 +2658,7 @@ input:checked + .slider:before {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 26px;
+    min-height: 28px;
 }
 
 .emoji-picker span:hover {
@@ -2675,7 +2684,7 @@ input:checked + .slider:before {
     background: var(--gradient-card);
     border-radius: var(--radius-lg);
     box-shadow: 
-        0 6px 20px rgba(0, 0, 0, 0.3),
+        0 8px 25px rgba(0, 0, 0, 0.3),
         0 0 0 1px rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 0.875rem;
@@ -2694,15 +2703,15 @@ input:checked + .slider:before {
     position: absolute;
     top: 0;
     left: 0;
-    width: 3px;
+    width: 4px;
     height: 100%;
     background: var(--gradient-primary);
 }
 
 .notification:hover {
-    transform: translateX(-2px);
+    transform: translateX(-3px);
     box-shadow: 
-        0 8px 25px rgba(0, 0, 0, 0.4),
+        0 12px 35px rgba(0, 0, 0, 0.4),
         0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 
@@ -2735,7 +2744,7 @@ input:checked + .slider:before {
 .notification-content {
     display: flex;
     align-items: flex-start;
-    gap: 0.6rem;
+    gap: 0.5rem;
 }
 
 .notification-avatar {
@@ -2754,7 +2763,7 @@ input:checked + .slider:before {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.6rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
 }
 
@@ -2806,7 +2815,7 @@ input:checked + .slider:before {
     cursor: pointer;
     transition: all 0.2s ease;
     text-transform: uppercase;
-    letter-spacing: 0.1px;
+    letter-spacing: 0.2px;
     flex: 1;
     min-width: 70px;
     text-align: center;
@@ -2836,13 +2845,13 @@ input:checked + .slider:before {
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    padding: 0.15rem;
+    padding: 0.2rem;
     border-radius: var(--radius-sm);
     transition: all 0.2s ease;
     font-size: 0.65rem;
     flex-shrink: 0;
-    min-height: 20px;
     min-width: 20px;
+    min-height: 20px;
 }
 
 .notification-close:hover {
@@ -2859,14 +2868,14 @@ input:checked + .slider:before {
     background: var(--gradient-card);
     border-radius: var(--radius-lg);
     box-shadow: 
-        0 6px 20px rgba(0, 0, 0, 0.3),
+        0 8px 25px rgba(0, 0, 0, 0.3),
         0 0 0 1px rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
     max-width: 100%;
     z-index: 100;
     animation: slideInLeft 0.3s ease;
     backdrop-filter: blur(20px);
-    max-height: 150px;
+    max-height: 180px;
 }
 
 .online-users-header {
@@ -2893,7 +2902,7 @@ input:checked + .slider:before {
 
 .online-users-list {
     padding: 0.5rem;
-    max-height: 100px;
+    max-height: 130px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -2916,7 +2925,7 @@ input:checked + .slider:before {
 .online-user:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.1);
-    transform: translateX(2px);
+    transform: translateX(3px);
 }
 
 .online-user-avatar {
@@ -2963,7 +2972,7 @@ input:checked + .slider:before {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-lg);
-    margin-top: 0.6rem;
+    margin-top: 0.5rem;
     max-height: 120px;
     overflow-y: auto;
 }
@@ -2971,13 +2980,12 @@ input:checked + .slider:before {
 .search-result-item {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
     padding: 0.75rem 0.875rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     transition: all 0.2s ease;
     cursor: pointer;
     flex-shrink: 0;
-    min-height: 50px;
 }
 
 .search-result-item:last-child {
@@ -2996,7 +3004,7 @@ input:checked + .slider:before {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
+    gap: 0.2rem;
     min-width: 0;
 }
 
@@ -3026,7 +3034,7 @@ input:checked + .slider:before {
     background: rgba(255, 255, 255, 0.05);
     padding: 0.1rem 0.25rem;
     border-radius: var(--radius-sm);
-    margin-top: 0.1rem;
+    margin-top: 0.15rem;
     word-break: break-all;
     line-height: 1.2;
 }
@@ -3040,8 +3048,8 @@ input:checked + .slider:before {
 }
 
 .no-results i, .error-text i {
-    font-size: 1.25rem;
-    margin-bottom: 0.6rem;
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
     opacity: 0.5;
     display: block;
 }
@@ -3139,15 +3147,15 @@ input:checked + .slider:before {
 }
 
 .gap-1 {
-    gap: 0.4rem;
+    gap: 0.5rem;
 }
 
 .gap-2 {
-    gap: 0.75rem;
+    gap: 1rem;
 }
 
 .gap-3 {
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 /* Animation Keyframes */
@@ -3179,8 +3187,8 @@ input:checked + .slider:before {
     }
     
     .auth-container {
-        padding: 1rem;
-        max-height: 98vh;
+        padding: 1.25rem;
+        max-height: 95vh;
     }
     
     .splash-content {
@@ -3201,13 +3209,11 @@ input:checked + .slider:before {
     }
     
     .splash-buttons {
-        flex-direction: column;
-        gap: 0.4rem;
+        gap: 0.5rem;
     }
     
     .splash-features {
-        flex-direction: column;
-        gap: 0.6rem;
+        gap: 0.75rem;
     }
     
     .feature-item {
@@ -3220,30 +3226,33 @@ input:checked + .slider:before {
         min-height: 52px;
     }
     
-    .status-indicator {
-        display: none;
+    .app-name {
+        font-size: 0.9rem;
     }
     
     .nav-action-btn {
         width: 32px;
         height: 32px;
+        min-width: 32px;
+        min-height: 32px;
     }
     
     .user-avatar-btn {
         padding: 0.25rem 0.4rem;
+        min-height: 32px;
     }
     
     .avatar-small {
-        width: 26px;
-        height: 26px;
-        font-size: 0.65rem;
+        width: 24px;
+        height: 24px;
+        font-size: 0.6rem;
     }
     
     .panel-header {
         padding: 0.75rem 0.5rem;
         min-height: 56px;
         flex-direction: column;
-        gap: 0.6rem;
+        gap: 0.5rem;
         align-items: stretch;
     }
     
@@ -3260,6 +3269,7 @@ input:checked + .slider:before {
     
     .search-box {
         min-width: 0;
+        padding: 0.4rem 0.6rem;
     }
     
     .panel-content {
@@ -3273,19 +3283,23 @@ input:checked + .slider:before {
     }
     
     .chat-header {
-        padding: 0.75rem;
+        padding: 0.75rem 0.5rem;
         min-height: 56px;
-        gap: 0.5rem;
+        gap: 0.4rem;
     }
     
     .back-btn {
         width: 32px;
         height: 32px;
+        min-width: 32px;
+        min-height: 32px;
     }
     
     .chat-action-btn {
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        min-height: 30px;
     }
     
     .messages-container {
@@ -3304,24 +3318,27 @@ input:checked + .slider:before {
     
     .message-input-container {
         padding: 0.6rem;
-        gap: 0.5rem;
+        gap: 0.4rem;
         min-height: 65px;
     }
     
     .input-action-btn {
         width: 32px;
         height: 32px;
+        min-width: 32px;
+        min-height: 32px;
     }
     
     .send-btn {
-        width: 34px;
-        height: 34px;
-        min-width: 34px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
     }
     
     .modal-container {
         max-width: 98%;
-        max-height: 98%;
+        max-height: 95%;
     }
     
     .modal-header {
@@ -3343,7 +3360,7 @@ input:checked + .slider:before {
     
     .settings-tabs {
         flex-direction: column;
-        gap: 0.1rem;
+        gap: 0.2rem;
     }
     
     .settings-tab {
@@ -3371,24 +3388,22 @@ input:checked + .slider:before {
     }
     
     .online-users {
-        left: 0.15rem;
-        right: 0.15rem;
+        left: 0.2rem;
+        right: 0.2rem;
         bottom: 0.4rem;
     }
     
     .notification-container {
         top: 0.4rem;
-        right: 0.15rem;
-        left: 0.15rem;
+        right: 0.2rem;
+        left: 0.2rem;
     }
     
     .emoji-picker {
-        right: 3px;
-        bottom: 55px;
-        max-width: calc(100vw - 10px);
+        right: 5px;
+        bottom: 60px;
+        max-width: calc(100vw - 15px);
         grid-template-columns: repeat(4, 1fr);
-        padding: 0.5rem;
-        max-height: 120px;
     }
 }
 
@@ -3403,7 +3418,7 @@ input:checked + .slider:before {
     }
     
     .auth-container {
-        padding: 1.5rem;
+        padding: 1.75rem;
     }
     
     .splash-content {
@@ -3419,7 +3434,7 @@ input:checked + .slider:before {
     }
     
     .online-users {
-        max-width: 200px;
+        max-width: 220px;
     }
     
     .notification-container {
@@ -3444,7 +3459,7 @@ input:checked + .slider:before {
     }
 }
 
-/* Ensure touch-friendly sizes */
+/* Ensure touch-friendly sizes for mobile */
 @media (hover: none) and (pointer: coarse) {
     .btn, .nav-action-btn, .chat-action-btn, .input-action-btn, .back-btn {
         min-height: 44px;
@@ -3458,8 +3473,17 @@ input:checked + .slider:before {
         font-size: 16px; /* Prevents zoom on iOS */
     }
     
-    .message-input-wrapper textarea {
-        font-size: 16px; /* Prevents zoom on iOS */
+    /* Increase tap targets for mobile */
+    .chat-item, .contact-item, .request-item {
+        min-height: 60px;
+    }
+    
+    .message {
+        min-height: 44px;
+    }
+    
+    .dropdown-item {
+        min-height: 44px;
     }
 }
 
@@ -3477,25 +3501,5 @@ input:checked + .slider:before {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
-    }
-}
-
-/* Safe area insets for notched phones */
-@supports(padding: max(0px)) {
-    .screen {
-        padding-left: max(0.5rem, env(safe-area-inset-left));
-        padding-right: max(0.5rem, env(safe-area-inset-right));
-        padding-top: max(0.5rem, env(safe-area-inset-top));
-        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-    }
-    
-    .top-nav {
-        padding-left: max(0.5rem, env(safe-area-inset-left));
-        padding-right: max(0.5rem, env(safe-area-inset-right));
-        padding-top: max(0.25rem, env(safe-area-inset-top));
-    }
-    
-    .message-input-container {
-        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
     }
 }
