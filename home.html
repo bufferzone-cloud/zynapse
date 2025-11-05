@@ -6,6 +6,7 @@
     <title>Zynapse - Chat</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="zynapse.png">
 </head>
 <body class="dark-theme">
     <div id="app">
@@ -13,7 +14,7 @@
         <div class="top-nav">
             <div class="nav-left">
                 <div class="app-logo">
-                    <div class="logo-tiny">Z</div>
+                    <img src="zynapse.png" alt="Zynapse Logo" class="logo-tiny">
                     <span class="app-name">Zynapse</span>
                 </div>
             </div>
@@ -166,12 +167,12 @@
                         </button>
                     </div>
                     <div class="message-input-wrapper">
-                        <input type="text" id="message-input" placeholder="Type a message...">
+                        <textarea id="message-input" placeholder="Type a message..." rows="1"></textarea>
                         <button id="voice-message-btn" class="icon-btn" title="Voice message">
                             <i class="fas fa-microphone"></i>
                         </button>
                     </div>
-                    <button id="send-btn" class="send-btn" title="Send message">
+                    <button id="send-btn" class="send-btn" title="Send message" disabled>
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
@@ -213,8 +214,9 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="contact-email">Email Address</label>
-                        <input type="email" id="contact-email" placeholder="Enter user's email">
+                        <label for="contact-email">Email Address or User ID</label>
+                        <input type="text" id="contact-email" placeholder="Enter user's email or User ID">
+                        <p class="input-hint">You can find User ID in the user's profile</p>
                     </div>
                     <div class="form-group">
                         <label for="contact-message">Message (Optional)</label>
@@ -248,6 +250,7 @@
                                 <h5 id="settings-name">User Name</h5>
                                 <p id="settings-username">@username</p>
                                 <p id="settings-email">user@example.com</p>
+                                <p class="user-id">ID: <span id="settings-user-id">loading...</span></p>
                             </div>
                             <button id="edit-profile-btn" class="btn btn-secondary">Edit</button>
                         </div>
