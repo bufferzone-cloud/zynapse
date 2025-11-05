@@ -6,14 +6,13 @@
     <title>Zynapse - Connect Instantly</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/emoji-picker/1.1.5/emoji-picker.min.css">
 </head>
 <body class="dark-theme">
     <!-- Splash Screen -->
     <div id="splash-screen" class="screen">
         <div class="splash-content">
             <div class="logo-container">
-                <img src="zynapse.png" alt="Zynapse" class="logo">
+                <div class="logo">Z</div>
                 <h1 class="app-title">Zynapse</h1>
             </div>
             <p class="tagline">Connect instantly, communicate freely</p>
@@ -28,7 +27,7 @@
     <div id="login-screen" class="screen hidden">
         <div class="auth-container">
             <div class="auth-header">
-                <img src="zynapse.png" alt="Zynapse" class="logo-small">
+                <div class="logo-small">Z</div>
                 <h2>Login to Zynapse</h2>
             </div>
             <form id="login-form" class="auth-form">
@@ -61,7 +60,7 @@
     <div id="register-screen" class="screen hidden">
         <div class="auth-container">
             <div class="auth-header">
-                <img src="zynapse.png" alt="Zynapse" class="logo-small">
+                <div class="logo-small">Z</div>
                 <h2>Create Account</h2>
             </div>
             <form id="register-form" class="auth-form">
@@ -145,6 +144,18 @@
         </div>
     </div>
 
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen hidden">
+        <div class="loading-content">
+            <div class="logo">Z</div>
+            <div class="loading-spinner"></div>
+            <p>Loading Zynapse...</p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
