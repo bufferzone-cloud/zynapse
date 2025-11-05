@@ -10,36 +10,80 @@
 </head>
 <body class="dark-theme">
     <!-- Splash Screen -->
-    <div id="splash-screen" class="screen">
+    <div id="splash-screen" class="screen active">
+        <div class="splash-background">
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+                <div class="shape shape-4"></div>
+            </div>
+        </div>
         <div class="splash-content">
             <div class="logo-container">
-                <img src="zynapse.png" alt="Zynapse Logo" class="logo-image">
+                <div class="logo-glow">
+                    <img src="zynapse.png" alt="Zynapse Logo" class="logo-image">
+                </div>
                 <h1 class="app-title">Zynapse</h1>
             </div>
             <p class="tagline">Connect instantly, communicate freely</p>
             <div class="splash-buttons">
-                <button id="go-to-login-btn" class="btn btn-primary">Login</button>
-                <button id="go-to-register-btn" class="btn btn-secondary">Register</button>
+                <button id="go-to-login-btn" class="btn btn-primary btn-glow">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </button>
+                <button id="go-to-register-btn" class="btn btn-secondary btn-glow">
+                    <i class="fas fa-user-plus"></i>
+                    Register
+                </button>
+            </div>
+            <div class="splash-features">
+                <div class="feature-item">
+                    <i class="fas fa-bolt"></i>
+                    <span>Lightning Fast</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Secure</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-users"></i>
+                    <span>Social</span>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Login Screen -->
-    <div id="login-screen" class="screen hidden">
+    <div id="login-screen" class="screen">
+        <div class="auth-background">
+            <div class="auth-pattern"></div>
+        </div>
         <div class="auth-container">
             <div class="auth-header">
-                <img src="zynapse.png" alt="Zynapse Logo" class="logo-image-small">
-                <h2>Login to Zynapse</h2>
+                <div class="logo-small-glow">
+                    <img src="zynapse.png" alt="Zynapse Logo" class="logo-image-small">
+                </div>
+                <h2>Welcome Back</h2>
+                <p class="auth-subtitle">Login to continue your conversations</p>
             </div>
             <form id="login-form" class="auth-form">
                 <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input type="email" id="login-email" required>
+                    <label for="login-email">
+                        <i class="fas fa-envelope"></i>
+                        Email Address
+                    </label>
+                    <input type="email" id="login-email" required placeholder="Enter your email">
+                    <div class="input-focus-line"></div>
                 </div>
                 <div class="form-group">
-                    <label for="login-password">Password</label>
+                    <label for="login-password">
+                        <i class="fas fa-lock"></i>
+                        Password
+                    </label>
                     <div class="password-container">
-                        <input type="password" id="login-password" required>
+                        <input type="password" id="login-password" required placeholder="Enter your password">
+                        <div class="input-focus-line"></div>
                         <button type="button" class="password-toggle">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -49,115 +93,224 @@
                     <label class="checkbox-container">
                         <input type="checkbox" id="remember-me">
                         <span class="checkmark"></span>
-                        Remember me
+                        Remember me for 30 days
                     </label>
-                    <a href="#" id="forgot-password">Forgot password?</a>
+                    <a href="#" id="forgot-password" class="forgot-link">
+                        Forgot password?
+                    </a>
                 </div>
-                <button type="submit" class="btn btn-primary btn-full">Login</button>
+                <button type="submit" class="btn btn-primary btn-full btn-glow">
+                    <span class="btn-text">Login to Zynapse</span>
+                    <div class="btn-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </button>
             </form>
+            <div class="auth-divider">
+                <span>or continue with</span>
+            </div>
+            <div class="social-auth">
+                <button class="btn btn-social btn-google">
+                    <i class="fab fa-google"></i>
+                    Google
+                </button>
+                <button class="btn btn-social btn-facebook">
+                    <i class="fab fa-facebook-f"></i>
+                    Facebook
+                </button>
+            </div>
             <div class="auth-footer">
-                <p>Don't have an account? <a href="#" id="go-to-register">Register</a></p>
-                <button class="btn btn-text" id="back-to-splash">Back</button>
+                <p>Don't have an account? <a href="#" id="go-to-register" class="auth-link">Create one here</a></p>
+                <button class="btn btn-text" id="back-to-splash">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Home
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Register Screen -->
-    <div id="register-screen" class="screen hidden">
+    <div id="register-screen" class="screen">
+        <div class="auth-background">
+            <div class="auth-pattern"></div>
+        </div>
         <div class="auth-container">
             <div class="auth-header">
-                <img src="zynapse.png" alt="Zynapse Logo" class="logo-image-small">
-                <h2>Create Account</h2>
+                <div class="logo-small-glow">
+                    <img src="zynapse.png" alt="Zynapse Logo" class="logo-image-small">
+                </div>
+                <h2>Join Zynapse</h2>
+                <p class="auth-subtitle">Create your account to get started</p>
             </div>
             <form id="register-form" class="auth-form">
-                <div class="form-group">
-                    <label for="register-name">Full Name</label>
-                    <input type="text" id="register-name" required>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="register-name">
+                            <i class="fas fa-user"></i>
+                            Full Name
+                        </label>
+                        <input type="text" id="register-name" required placeholder="Enter your full name">
+                        <div class="input-focus-line"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-username">
+                            <i class="fas fa-at"></i>
+                            Username
+                        </label>
+                        <input type="text" id="register-username" required placeholder="Choose username">
+                        <div class="input-focus-line"></div>
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label for="register-username">Username</label>
-                    <input type="text" id="register-username" required>
+                    <label for="register-phone">
+                        <i class="fas fa-phone"></i>
+                        Phone Number
+                    </label>
+                    <input type="tel" id="register-phone" required placeholder="+1 (555) 123-4567">
+                    <div class="input-focus-line"></div>
                 </div>
                 <div class="form-group">
-                    <label for="register-phone">Phone Number</label>
-                    <input type="tel" id="register-phone" required>
+                    <label for="register-email">
+                        <i class="fas fa-envelope"></i>
+                        Email Address
+                        </label>
+                    <input type="email" id="register-email" required placeholder="your@email.com">
+                    <div class="input-focus-line"></div>
                 </div>
                 <div class="form-group">
-                    <label for="register-email">Email</label>
-                    <input type="email" id="register-email" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-password">Password</label>
+                    <label for="register-password">
+                        <i class="fas fa-lock"></i>
+                        Password
+                    </label>
                     <div class="password-container">
-                        <input type="password" id="register-password" required>
+                        <input type="password" id="register-password" required placeholder="Create strong password">
+                        <div class="input-focus-line"></div>
                         <button type="button" class="password-toggle">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
                     <div class="password-strength">
+                        <div class="strength-labels">
+                            <span>Password Strength</span>
+                            <span id="password-strength-text">Weak</span>
+                        </div>
                         <div class="strength-bar">
                             <div class="strength-fill" id="password-strength-fill"></div>
                         </div>
-                        <span id="password-strength-text">Weak</span>
+                        <div class="strength-requirements">
+                            <span class="requirement" data-requirement="length">• 8+ characters</span>
+                            <span class="requirement" data-requirement="uppercase">• Uppercase letter</span>
+                            <span class="requirement" data-requirement="lowercase">• Lowercase letter</span>
+                            <span class="requirement" data-requirement="number">• Number</span>
+                            <span class="requirement" data-requirement="special">• Special character</span>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="register-confirm-password">Confirm Password</label>
+                    <label for="register-confirm-password">
+                        <i class="fas fa-lock"></i>
+                        Confirm Password
+                    </label>
                     <div class="password-container">
-                        <input type="password" id="register-confirm-password" required>
+                        <input type="password" id="register-confirm-password" required placeholder="Confirm your password">
+                        <div class="input-focus-line"></div>
                         <button type="button" class="password-toggle">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
-                    <span id="password-match-message" class="validation-message"></span>
+                    <div class="validation-message-container">
+                        <span id="password-match-message" class="validation-message"></span>
+                    </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group terms-group">
                     <label class="checkbox-container">
                         <input type="checkbox" id="accept-terms" required>
                         <span class="checkmark"></span>
-                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                        I agree to the <a href="#" class="terms-link">Terms of Service</a> and <a href="#" class="terms-link">Privacy Policy</a>
                     </label>
                 </div>
-                <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                <button type="submit" class="btn btn-primary btn-full btn-glow">
+                    <span class="btn-text">Create Zynapse Account</span>
+                    <div class="btn-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                </button>
             </form>
             <div class="auth-footer">
-                <p>Already have an account? <a href="#" id="go-to-login">Login</a></p>
-                <button class="btn btn-text" id="back-to-splash-2">Back</button>
+                <p>Already have an account? <a href="#" id="go-to-login" class="auth-link">Login here</a></p>
+                <button class="btn btn-text" id="back-to-splash-2">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Home
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Forgot Password Modal -->
-    <div id="forgot-password-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Reset Password</h3>
-                <button id="close-forgot-password" class="icon-btn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Enter your email address and we'll send you a link to reset your password.</p>
-                <div class="form-group">
-                    <label for="reset-email">Email</label>
-                    <input type="email" id="reset-email" required>
+    <div id="forgot-password-modal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <h3>Reset Your Password</h3>
+                    <button id="close-forgot-password" class="icon-btn modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button id="cancel-reset" class="btn btn-secondary">Cancel</button>
-                <button id="send-reset-link" class="btn btn-primary">Send Reset Link</button>
+                <div class="modal-body">
+                    <p class="modal-description">Enter your email address and we'll send you a secure link to reset your password.</p>
+                    <div class="form-group">
+                        <label for="reset-email">Email Address</label>
+                        <input type="email" id="reset-email" required placeholder="your@email.com">
+                        <div class="input-focus-line"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-reset" class="btn btn-secondary">Cancel</button>
+                    <button id="send-reset-link" class="btn btn-primary">
+                        <span class="btn-text">Send Reset Link</span>
+                        <div class="btn-loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Loading Screen -->
-    <div id="loading-screen" class="screen hidden">
+    <div id="loading-screen" class="screen">
+        <div class="loading-background">
+            <div class="loading-particles">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
+        </div>
         <div class="loading-content">
-            <img src="zynapse.png" alt="Zynapse Logo" class="logo-image">
+            <div class="loading-logo">
+                <img src="zynapse.png" alt="Zynapse Logo" class="logo-image">
+                <div class="loading-orb"></div>
+            </div>
             <div class="loading-spinner"></div>
-            <p>Loading Zynapse...</p>
+            <h3>Welcome to Zynapse</h3>
+            <p>Preparing your experience...</p>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <span class="progress-text">Loading</span>
+            </div>
         </div>
     </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
