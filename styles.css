@@ -1212,6 +1212,18 @@ body {
     display: flex;
 }
 
+.chat-container {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    background: transparent;
+    min-height: 0;
+}
+
+.chat-container.active {
+    display: flex;
+}
+
 .panel-header {
     padding: 1rem 1rem;
     background: rgba(21, 21, 21, 0.5);
@@ -1501,18 +1513,6 @@ body {
 }
 
 /* Enhanced Active Chat */
-#active-chat {
-    flex: 1;
-    display: none;
-    flex-direction: column;
-    background: transparent;
-    min-height: 0;
-}
-
-#active-chat.active {
-    display: flex;
-}
-
 .chat-header {
     padding: 1rem;
     display: flex;
