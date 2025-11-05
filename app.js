@@ -1,11 +1,11 @@
-// Firebase configuration
+// Firebase Configuration
 const firebaseConfig = {
     apiKey: "your-api-key",
     authDomain: "your-project.firebaseapp.com",
     databaseURL: "https://your-project-default-rtdb.firebaseio.com",
     projectId: "your-project-id",
     storageBucket: "your-project.appspot.com",
-    messagingSenderId: "your-sender-id",
+    messagingSenderId: "123456789",
     appId: "your-app-id"
 };
 
@@ -14,13 +14,14 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const database = firebase.database();
 
-// Global variables
+// Global Variables
 let currentUser = null;
 let currentChat = null;
 let contacts = [];
-let chats = [];
+let chatRooms = [];
 let pendingRequests = [];
-let userStatus = 'online';
+let typingTimeout = null;
+let onlineUsers = {};
 
 // DOM Elements
 const screens = {
@@ -30,800 +31,183 @@ const screens = {
     loading: document.getElementById('loading-screen')
 };
 
-const authForms = {
-    login: document.getElementById('login-form'),
-    register: document.getElementById('register-form')
-};
-
-const modals = {
-    newChat: document.getElementById('new-chat-modal'),
-    addContact: document.getElementById('add-contact-modal'),
-    settings: document.getElementById('settings-modal'),
-    forgotPassword: document.getElementById('forgot-password-modal')
-};
-
-// Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    initializeAuth();
-    initializeEventListeners();
-    checkAuthState();
+// Authentication State Observer
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUser = user;
+        loadUserData();
+        showScreen('home');
+        initializeRealtimeListeners();
+    } else {
+        currentUser = null;
+        showScreen('splash');
+    }
 });
 
-// Authentication Functions
-function initializeAuth() {
-    // Navigation between screens
-    document.getElementById('go-to-login-btn').addEventListener('click', () => showScreen('login'));
-    document.getElementById('go-to-register-btn').addEventListener('click', () => showScreen('register'));
-    document.getElementById('go-to-login').addEventListener('click', () => showScreen('login'));
-    document.getElementById('go-to-register').addEventListener('click', () => showScreen('register'));
-    document.getElementById('back-to-splash').addEventListener('click', () => showScreen('splash'));
-    document.getElementById('back-to-splash-2').addEventListener('click', () => showScreen('splash'));
-
-    // Form submissions
-    authForms.login.addEventListener('submit', handleLogin);
-    authForms.register.addEventListener('submit', handleRegister);
-
-    // Password toggle
-    document.querySelectorAll('.password-toggle').forEach(toggle => {
-        toggle.addEventListener('click', function() {
-            const passwordInput = this.parentElement.querySelector('input');
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-        });
-    });
-
-    // Forgot password
-    document.getElementById('forgot-password').addEventListener('click', (e) => {
-        e.preventDefault();
-        showModal('forgotPassword');
-    });
-
-    document.getElementById('send-reset-link').addEventListener('click', handlePasswordReset);
-    document.getElementById('cancel-reset').addEventListener('click', () => hideModal('forgotPassword'));
-    document.getElementById('close-forgot-password').addEventListener('click', () => hideModal('forgotPassword'));
-
-    // Password strength checker
-    const passwordInput = document.getElementById('register-password');
-    const confirmPasswordInput = document.getElementById('register-confirm-password');
-    
-    if (passwordInput) {
-        passwordInput.addEventListener('input', checkPasswordStrength);
-    }
-    if (confirmPasswordInput) {
-        confirmPasswordInput.addEventListener('input', checkPasswordMatch);
-    }
-}
-
-function initializeEventListeners() {
-    // Navigation tabs
-    document.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            const tabName = this.getAttribute('data-tab');
-            switchTab(tabName);
-        });
-    });
-
-    // Modal controls
-    document.getElementById('new-chat-btn').addEventListener('click', () => showModal('newChat'));
-    document.getElementById('close-new-chat').addEventListener('click', () => hideModal('newChat'));
-    document.getElementById('cancel-new-chat').addEventListener('click', () => hideModal('newChat'));
-
-    document.getElementById('add-contact-btn').addEventListener('click', () => showModal('addContact'));
-    document.getElementById('add-first-contact').addEventListener('click', () => showModal('addContact'));
-    document.getElementById('close-add-contact').addEventListener('click', () => hideModal('addContact'));
-    document.getElementById('cancel-add-contact').addEventListener('click', () => hideModal('addContact'));
-
-    document.getElementById('settings-btn').addEventListener('click', () => showModal('settings'));
-    document.getElementById('close-settings').addEventListener('click', () => hideModal('settings'));
-
-    // User menu
-    document.getElementById('user-menu-btn').addEventListener('click', toggleUserMenu);
-    document.querySelectorAll('.dropdown-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const action = this.getAttribute('data-action');
-            handleUserMenuAction(action);
-        });
-    });
-
-    // Chat functionality
-    document.getElementById('back-to-chats').addEventListener('click', showChatsPanel);
-    document.getElementById('send-btn').addEventListener('click', sendMessage);
-    document.getElementById('message-input').addEventListener('input', handleTyping);
-    document.getElementById('message-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
-    // Contact search
-    document.getElementById('contact-uid').addEventListener('input', debounce(searchUserByUID, 500));
-    document.getElementById('send-contact-request').addEventListener('click', sendContactRequest);
-
-    // New chat search
-    document.getElementById('new-chat-search').addEventListener('input', debounce(searchUserForChat, 500));
-
-    // Start first chat
-    document.getElementById('start-first-chat').addEventListener('click', () => showModal('newChat'));
-
-    // Logout
-    document.getElementById('logout-btn').addEventListener('click', handleLogout);
-
-    // Copy user ID
-    document.querySelector('.copy-id-btn').addEventListener('click', copyUserId);
-
-    // Close modals when clicking backdrop
-    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
-        backdrop.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            if (modal) {
-                modal.classList.remove('active');
-            }
-        });
-    });
-
-    // Theme toggle
-    document.getElementById('dark-mode-toggle').addEventListener('change', toggleTheme);
-}
-
-// Utility Functions
+// Screen Management
 function showScreen(screenName) {
-    Object.values(screens).forEach(screen => screen.classList.remove('active'));
-    screens[screenName].classList.add('active');
-}
-
-function showModal(modalName) {
-    modals[modalName].classList.add('active');
-}
-
-function hideModal(modalName) {
-    modals[modalName].classList.remove('active');
-}
-
-function switchTab(tabName) {
-    // Update active tab
-    document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-
-    // Show corresponding panel
-    document.querySelectorAll('.content-panel').forEach(panel => panel.classList.remove('active'));
-    document.getElementById(`${tabName}-panel`).classList.add('active');
-}
-
-function toggleUserMenu() {
-    const dropdown = document.getElementById('user-menu-dropdown');
-    dropdown.classList.toggle('hidden');
-}
-
-function handleUserMenuAction(action) {
-    switch(action) {
-        case 'profile':
-            showModal('settings');
-            break;
-        case 'settings':
-            showModal('settings');
-            break;
-        case 'logout':
-            handleLogout();
-            break;
-    }
-    toggleUserMenu();
-}
-
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Authentication Handlers
-async function handleLogin(e) {
-    e.preventDefault();
+    // Hide all screens
+    Object.values(screens).forEach(screen => {
+        screen.classList.remove('active');
+    });
     
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const button = e.target.querySelector('.btn-text');
-    const loading = e.target.querySelector('.btn-loading');
-
-    try {
-        button.textContent = 'Logging in...';
-        loading.style.display = 'block';
-        
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        currentUser = userCredential.user;
-        
-        showScreen('loading');
-        await initializeUserData();
-        
-    } catch (error) {
-        showNotification('Login Error', error.message, 'error');
-    } finally {
-        button.textContent = 'Login to Zynapse';
-        loading.style.display = 'none';
+    // Show the requested screen
+    if (screens[screenName]) {
+        screens[screenName].classList.add('active');
+    } else if (screenName === 'home') {
+        document.getElementById('app').style.display = 'flex';
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.remove('active');
+        });
     }
 }
 
-async function handleRegister(e) {
+// User Registration
+document.getElementById('register-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const name = document.getElementById('register-name').value;
+    const username = document.getElementById('register-username').value;
     const phone = document.getElementById('register-phone').value;
     const email = document.getElementById('register-email').value;
     const password = document.getElementById('register-password').value;
-    const button = e.target.querySelector('.btn-text');
-    const loading = e.target.querySelector('.btn-loading');
-
+    
+    const submitBtn = document.querySelector('#register-form .btn');
+    submitBtn.classList.add('loading');
+    
     try {
-        button.textContent = 'Creating Account...';
-        loading.style.display = 'block';
-
-        // Create user in Firebase Auth
+        // Create user with Firebase Auth
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
-
+        
         // Save user data to Firebase Database
         await database.ref('users/' + user.uid).set({
             name: name,
+            username: username,
             phone: phone,
             email: email,
             createdAt: firebase.database.ServerValue.TIMESTAMP,
             status: 'online',
             lastSeen: firebase.database.ServerValue.TIMESTAMP
         });
-
-        currentUser = user;
+        
+        showNotification('Account created successfully!', 'success');
         showScreen('loading');
-        await initializeUserData();
-
+        
+        // Automatically log in the user
+        setTimeout(() => {
+            showScreen('home');
+        }, 2000);
+        
     } catch (error) {
-        showNotification('Registration Error', error.message, 'error');
+        console.error('Registration error:', error);
+        showNotification(error.message, 'error');
     } finally {
-        button.textContent = 'Create Zynapse Account';
-        loading.style.display = 'none';
+        submitBtn.classList.remove('loading');
     }
-}
+});
 
-async function handlePasswordReset() {
-    const email = document.getElementById('reset-email').value;
-    const button = document.getElementById('send-reset-link');
-    const loading = button.querySelector('.btn-loading');
-
+// User Login
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    
+    const submitBtn = document.querySelector('#login-form .btn');
+    submitBtn.classList.add('loading');
+    
     try {
-        button.querySelector('.btn-text').textContent = 'Sending...';
-        loading.style.display = 'block';
-
-        await auth.sendPasswordResetEmail(email);
-        showNotification('Success', 'Password reset email sent!', 'success');
-        hideModal('forgotPassword');
-
+        await auth.signInWithEmailAndPassword(email, password);
+        showScreen('loading');
+        
+        setTimeout(() => {
+            showScreen('home');
+        }, 2000);
+        
     } catch (error) {
-        showNotification('Error', error.message, 'error');
+        console.error('Login error:', error);
+        showNotification(error.message, 'error');
     } finally {
-        button.querySelector('.btn-text').textContent = 'Send Reset Link';
-        loading.style.display = 'none';
+        submitBtn.classList.remove('loading');
     }
-}
+});
 
-function handleLogout() {
-    if (currentUser) {
-        // Update user status to offline
-        database.ref('users/' + currentUser.uid).update({
-            status: 'offline',
-            lastSeen: firebase.database.ServerValue.TIMESTAMP
-        });
-    }
-    
-    auth.signOut();
-    currentUser = null;
-    showScreen('splash');
-    hideModal('settings');
-}
-
-// Password Validation
-function checkPasswordStrength() {
-    const password = document.getElementById('register-password').value;
-    const strengthText = document.getElementById('password-strength-text');
-    const strengthFill = document.getElementById('password-strength-fill');
-    const requirements = document.querySelectorAll('.requirement');
-
-    let strength = 0;
-    const checks = {
-        length: password.length >= 8,
-        uppercase: /[A-Z]/.test(password),
-        lowercase: /[a-z]/.test(password),
-        number: /[0-9]/.test(password),
-        special: /[^A-Za-z0-9]/.test(password)
-    };
-
-    requirements.forEach(req => {
-        const type = req.getAttribute('data-requirement');
-        if (checks[type]) {
-            req.classList.add('met');
-            strength++;
-        } else {
-            req.classList.remove('met');
-        }
-    });
-
-    const percentage = (strength / 5) * 100;
-    strengthFill.style.width = percentage + '%';
-
-    if (password.length === 0) {
-        strengthText.textContent = 'Weak';
-        strengthFill.style.background = 'var(--danger)';
-    } else if (strength < 3) {
-        strengthText.textContent = 'Weak';
-        strengthFill.style.background = 'var(--danger)';
-    } else if (strength < 5) {
-        strengthText.textContent = 'Good';
-        strengthFill.style.background = 'var(--warning)';
-    } else {
-        strengthText.textContent = 'Strong';
-        strengthFill.style.background = 'var(--success)';
-    }
-}
-
-function checkPasswordMatch() {
-    const password = document.getElementById('register-password').value;
-    const confirmPassword = document.getElementById('register-confirm-password').value;
-    const message = document.getElementById('password-match-message');
-
-    if (confirmPassword.length === 0) {
-        message.textContent = '';
-        message.className = 'validation-message';
-    } else if (password === confirmPassword) {
-        message.textContent = 'Passwords match';
-        message.className = 'validation-message success';
-    } else {
-        message.textContent = 'Passwords do not match';
-        message.className = 'validation-message error';
-    }
-}
-
-// User Search and Contact Management
-async function searchUserByUID() {
-    const uid = document.getElementById('contact-uid').value.trim();
-    const resultsContainer = document.getElementById('search-results');
-    const sendButton = document.getElementById('send-contact-request');
-
-    if (uid.length === 0) {
-        resultsContainer.classList.add('hidden');
-        sendButton.disabled = true;
-        return;
-    }
-
-    if (uid === currentUser.uid) {
-        showResults('You cannot add yourself as a contact.', 'error');
-        sendButton.disabled = true;
-        return;
-    }
-
-    try {
-        showResults('Searching...', 'loading');
-        
-        const userSnapshot = await database.ref('users/' + uid).once('value');
-        
-        if (!userSnapshot.exists()) {
-            showResults('No user found with this UID.', 'error');
-            sendButton.disabled = true;
-            return;
-        }
-
-        const userData = userSnapshot.val();
-        showUserResult(userData, uid);
-        sendButton.disabled = false;
-
-    } catch (error) {
-        showResults('Error searching for user.', 'error');
-        sendButton.disabled = true;
-    }
-}
-
-async function searchUserForChat() {
-    const uid = document.getElementById('new-chat-search').value.trim();
-    const resultsContainer = document.getElementById('new-chat-results');
-
-    if (uid.length === 0) {
-        showChatResults('Enter a UID to search for users.', 'info');
-        return;
-    }
-
-    if (uid === currentUser.uid) {
-        showChatResults('You cannot chat with yourself.', 'error');
-        return;
-    }
-
-    try {
-        showChatResults('Searching...', 'loading');
-        
-        const userSnapshot = await database.ref('users/' + uid).once('value');
-        
-        if (!userSnapshot.exists()) {
-            showChatResults('No user found with this UID.', 'error');
-            return;
-        }
-
-        const userData = userSnapshot.val();
-        showChatUserResult(userData, uid);
-
-    } catch (error) {
-        showChatResults('Error searching for user.', 'error');
-    }
-}
-
-function showResults(message, type) {
-    const resultsContainer = document.getElementById('search-results');
-    resultsContainer.innerHTML = `
-        <div class="${type === 'error' ? 'error-text' : type === 'loading' ? 'loading-text' : 'no-results'}">
-            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'loading' ? 'spinner fa-spin' : 'info-circle'}"></i>
-            ${message}
-        </div>
-    `;
-    resultsContainer.classList.remove('hidden');
-}
-
-function showChatResults(message, type) {
-    const resultsContainer = document.getElementById('new-chat-results');
-    resultsContainer.innerHTML = `
-        <div class="${type === 'error' ? 'error-text' : type === 'loading' ? 'loading-text' : 'no-results'}">
-            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'loading' ? 'spinner fa-spin' : 'info-circle'}"></i>
-            ${message}
-        </div>
-    `;
-}
-
-function showUserResult(userData, uid) {
-    const resultsContainer = document.getElementById('search-results');
-    resultsContainer.innerHTML = `
-        <div class="search-result-item" data-uid="${uid}">
-            <div class="search-result-avatar">
-                <div class="avatar-medium">${userData.name.charAt(0).toUpperCase()}</div>
-            </div>
-            <div class="search-result-details">
-                <div class="search-result-name">${userData.name}</div>
-                <div class="search-result-info">
-                    <span><i class="fas fa-phone"></i> ${userData.phone}</span>
-                    <span><i class="fas fa-envelope"></i> ${userData.email}</span>
-                </div>
-                <div class="search-result-id">UID: ${uid}</div>
-            </div>
-        </div>
-    `;
-    resultsContainer.classList.remove('hidden');
-}
-
-function showChatUserResult(userData, uid) {
-    const resultsContainer = document.getElementById('new-chat-results');
-    resultsContainer.innerHTML = `
-        <div class="search-result-item" data-uid="${uid}">
-            <div class="search-result-avatar">
-                <div class="avatar-medium">${userData.name.charAt(0).toUpperCase()}</div>
-            </div>
-            <div class="search-result-details">
-                <div class="search-result-name">${userData.name}</div>
-                <div class="search-result-info">
-                    <span><i class="fas fa-phone"></i> ${userData.phone}</span>
-                    <span><i class="fas fa-envelope"></i> ${userData.email}</span>
-                </div>
-                <div class="search-result-id">UID: ${uid}</div>
-            </div>
-            <button class="btn btn-primary btn-small start-chat-btn" data-uid="${uid}">
-                <i class="fas fa-comment"></i> Chat
-            </button>
-        </div>
-    `;
-
-    // Add event listener to start chat button
-    resultsContainer.querySelector('.start-chat-btn').addEventListener('click', function() {
-        const targetUid = this.getAttribute('data-uid');
-        startChat(targetUid, userData.name);
-    });
-}
-
-async function sendContactRequest() {
-    const uid = document.getElementById('contact-uid').value.trim();
-    const message = document.getElementById('contact-message').value;
-    const sendButton = document.getElementById('send-contact-request');
-    const loading = sendButton.querySelector('.btn-loading');
-
-    if (!uid) {
-        showNotification('Error', 'Please search for a user first.', 'error');
-        return;
-    }
-
-    try {
-        sendButton.querySelector('.btn-text').textContent = 'Sending...';
-        loading.style.display = 'block';
-        sendButton.disabled = true;
-
-        // Check if contact already exists
-        const contactSnapshot = await database.ref('contacts/' + currentUser.uid + '/' + uid).once('value');
-        if (contactSnapshot.exists()) {
-            showNotification('Error', 'This user is already in your contacts.', 'error');
-            return;
-        }
-
-        // Check if request already sent
-        const requestSnapshot = await database.ref('contact_requests/' + uid + '/' + currentUser.uid).once('value');
-        if (requestSnapshot.exists()) {
-            showNotification('Error', 'Contact request already sent.', 'error');
-            return;
-        }
-
-        // Send contact request
-        await database.ref('contact_requests/' + uid + '/' + currentUser.uid).set({
-            from: currentUser.uid,
-            fromName: currentUser.displayName || 'User',
-            message: message,
-            timestamp: firebase.database.ServerValue.TIMESTAMP,
-            status: 'pending'
-        });
-
-        showNotification('Success', 'Contact request sent!', 'success');
-        hideModal('addContact');
-        document.getElementById('contact-uid').value = '';
-        document.getElementById('contact-message').value = '';
-
-    } catch (error) {
-        showNotification('Error', error.message, 'error');
-    } finally {
-        sendButton.querySelector('.btn-text').textContent = 'Send Contact Request';
-        loading.style.display = 'none';
-        sendButton.disabled = false;
-    }
-}
-
-// Chat Functions
-function startChat(targetUid, targetName) {
-    currentChat = {
-        uid: targetUid,
-        name: targetName
-    };
-
-    // Show active chat area
-    document.getElementById('active-chat').classList.remove('hidden');
-    document.getElementById('chats-panel').classList.remove('active');
-    
-    // Update chat header
-    document.getElementById('active-chat-name').textContent = targetName;
-    document.getElementById('active-chat-avatar').textContent = targetName.charAt(0).toUpperCase();
-    
-    // Clear messages
-    document.getElementById('messages').innerHTML = '';
-    
-    // Load chat history
-    loadChatHistory(targetUid);
-    
-    // Set up real-time listener for new messages
-    setupChatListener(targetUid);
-    
-    hideModal('newChat');
-}
-
-function showChatsPanel() {
-    document.getElementById('active-chat').classList.add('hidden');
-    document.getElementById('chats-panel').classList.add('active');
-    currentChat = null;
-}
-
-async function loadChatHistory(targetUid) {
-    const chatId = getChatId(currentUser.uid, targetUid);
-    const messagesRef = database.ref('chats/' + chatId + '/messages');
-    
-    try {
-        const snapshot = await messagesRef.orderByChild('timestamp').once('value');
-        const messages = [];
-        
-        snapshot.forEach(childSnapshot => {
-            messages.push({
-                id: childSnapshot.key,
-                ...childSnapshot.val()
-            });
-        });
-        
-        displayMessages(messages);
-        
-    } catch (error) {
-        console.error('Error loading chat history:', error);
-    }
-}
-
-function setupChatListener(targetUid) {
-    const chatId = getChatId(currentUser.uid, targetUid);
-    const messagesRef = database.ref('chats/' + chatId + '/messages');
-    
-    messagesRef.orderByChild('timestamp').on('child_added', (snapshot) => {
-        const message = {
-            id: snapshot.key,
-            ...snapshot.val()
-        };
-        
-        // Only add if not already displayed
-        if (!document.querySelector(`[data-message-id="${message.id}"]`)) {
-            displayMessage(message);
-        }
-    });
-}
-
-function displayMessages(messages) {
-    const messagesContainer = document.getElementById('messages');
-    messagesContainer.innerHTML = '';
-    
-    messages.forEach(message => {
-        displayMessage(message);
-    });
-    
-    // Scroll to bottom
-    scrollToBottom();
-}
-
-function displayMessage(message) {
-    const messagesContainer = document.getElementById('messages');
-    const messageElement = createMessageElement(message);
-    messagesContainer.appendChild(messageElement);
-    scrollToBottom();
-}
-
-function createMessageElement(message) {
-    const isOwnMessage = message.senderId === currentUser.uid;
-    const messageTime = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message-group ${isOwnMessage ? 'own' : 'other'}`;
-    messageDiv.setAttribute('data-message-id', message.id);
-    
-    if (!isOwnMessage) {
-        messageDiv.innerHTML = `
-            <div class="message-sender">${message.senderName}</div>
-        `;
-    }
-    
-    const messageContent = document.createElement('div');
-    messageContent.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
-    messageContent.textContent = message.text;
-    
-    const timeSpan = document.createElement('div');
-    timeSpan.className = 'message-time';
-    timeSpan.textContent = messageTime;
-    
-    messageContent.appendChild(timeSpan);
-    messageDiv.appendChild(messageContent);
-    
-    return messageDiv;
-}
-
-async function sendMessage() {
-    const messageInput = document.getElementById('message-input');
-    const text = messageInput.value.trim();
-    
-    if (!text || !currentChat) return;
-    
-    const chatId = getChatId(currentUser.uid, currentChat.uid);
-    const messageData = {
-        text: text,
-        senderId: currentUser.uid,
-        senderName: currentUser.displayName || 'User',
-        timestamp: firebase.database.ServerValue.TIMESTAMP,
-        type: 'text'
-    };
-    
-    try {
-        // Add message to database
-        await database.ref('chats/' + chatId + '/messages').push(messageData);
-        
-        // Update last message in chats list
-        await database.ref('user_chats/' + currentUser.uid + '/' + currentChat.uid).update({
-            lastMessage: text,
-            lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
-            unreadCount: 0
-        });
-        
-        await database.ref('user_chats/' + currentChat.uid + '/' + currentUser.uid).update({
-            lastMessage: text,
-            lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
-            unreadCount: firebase.database.ServerValue.increment(1)
-        });
-        
-        // Clear input
-        messageInput.value = '';
-        updateSendButton();
-        
-    } catch (error) {
-        showNotification('Error', 'Failed to send message.', 'error');
-    }
-}
-
-function handleTyping() {
-    updateSendButton();
-    
-    if (!currentChat) return;
-    
-    // Implement typing indicators if needed
-    // This is a basic implementation
-}
-
-function updateSendButton() {
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-btn');
-    sendButton.disabled = messageInput.value.trim().length === 0;
-}
-
-function scrollToBottom() {
-    const messagesContainer = document.getElementById('messages');
-    if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-}
-
-function getChatId(uid1, uid2) {
-    return [uid1, uid2].sort().join('_');
-}
-
-// User Data Management
-async function initializeUserData() {
+// Load User Data
+async function loadUserData() {
     if (!currentUser) return;
     
     try {
         // Load user profile
-        await loadUserProfile();
+        const userSnapshot = await database.ref('users/' + currentUser.uid).once('value');
+        const userData = userSnapshot.val();
+        
+        if (userData) {
+            updateUserProfile(userData);
+        }
         
         // Load contacts
         await loadContacts();
         
-        // Load chats
-        await loadChats();
+        // Load chat rooms
+        await loadChatRooms();
         
         // Load pending requests
         await loadPendingRequests();
         
-        // Set up real-time listeners
-        setupRealtimeListeners();
-        
-        // Update user status
-        await updateUserStatus('online');
-        
-        // Show home screen
-        setTimeout(() => {
-            window.location.href = 'home.html';
-        }, 1000);
-        
     } catch (error) {
-        console.error('Error initializing user data:', error);
-        showNotification('Error', 'Failed to load user data.', 'error');
+        console.error('Error loading user data:', error);
     }
 }
 
-async function loadUserProfile() {
-    const userSnapshot = await database.ref('users/' + currentUser.uid).once('value');
-    const userData = userSnapshot.val();
-    
-    if (userData) {
-        // Update UI with user data
-        document.getElementById('user-avatar').textContent = userData.name.charAt(0).toUpperCase();
-        document.getElementById('settings-name').textContent = userData.name;
-        document.getElementById('settings-phone').textContent = userData.phone;
-        document.getElementById('settings-email').textContent = userData.email;
-        document.getElementById('settings-user-id').textContent = currentUser.uid;
-        document.getElementById('settings-avatar').textContent = userData.name.charAt(0).toUpperCase();
-    }
+// Update User Profile in UI
+function updateUserProfile(userData) {
+    document.getElementById('user-avatar').textContent = userData.name.charAt(0).toUpperCase();
+    document.getElementById('settings-avatar').textContent = userData.name.charAt(0).toUpperCase();
+    document.getElementById('settings-name').textContent = userData.name;
+    document.getElementById('settings-username').textContent = `@${userData.username}`;
+    document.getElementById('settings-phone').textContent = userData.phone;
+    document.getElementById('settings-email').textContent = userData.email;
+    document.getElementById('settings-user-id').textContent = currentUser.uid;
 }
 
+// Load Contacts
 async function loadContacts() {
-    const contactsSnapshot = await database.ref('contacts/' + currentUser.uid).once('value');
-    const contactsList = document.getElementById('contact-list');
+    try {
+        const contactsSnapshot = await database.ref('userContacts/' + currentUser.uid).once('value');
+        contacts = [];
+        
+        if (contactsSnapshot.exists()) {
+            const contactsData = contactsSnapshot.val();
+            
+            for (const contactId in contactsData) {
+                const userSnapshot = await database.ref('users/' + contactId).once('value');
+                const userData = userSnapshot.val();
+                
+                if (userData) {
+                    contacts.push({
+                        id: contactId,
+                        ...userData
+                    });
+                }
+            }
+            
+            renderContacts();
+        }
+    } catch (error) {
+        console.error('Error loading contacts:', error);
+    }
+}
+
+// Render Contacts
+function renderContacts() {
+    const contactList = document.getElementById('contact-list');
+    const contactsCount = document.getElementById('contacts-count');
     
-    contacts = [];
-    contactsList.innerHTML = '';
+    contactsCount.textContent = `${contacts.length} contacts`;
     
-    if (!contactsSnapshot.exists()) {
-        contactsList.innerHTML = `
+    if (contacts.length === 0) {
+        contactList.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">
                     <i class="fas fa-user-friends"></i>
@@ -836,261 +220,597 @@ async function loadContacts() {
                 </button>
             </div>
         `;
-        document.getElementById('add-first-contact').addEventListener('click', () => showModal('addContact'));
         return;
     }
     
-    contactsSnapshot.forEach(contactSnapshot => {
-        const contactData = contactSnapshot.val();
-        contacts.push({
-            uid: contactSnapshot.key,
-            ...contactData
+    contactList.innerHTML = contacts.map(contact => `
+        <div class="contact-item" data-user-id="${contact.id}">
+            <div class="contact-avatar">
+                <div class="avatar-wrapper">
+                    <div class="avatar-small">${contact.name.charAt(0).toUpperCase()}</div>
+                    <span class="presence-indicator ${contact.status || 'offline'}"></span>
+                </div>
+            </div>
+            <div class="contact-details">
+                <div class="contact-name">${contact.name}</div>
+                <div class="contact-status">${contact.status || 'Offline'}</div>
+            </div>
+            <div class="contact-actions">
+                <button class="icon-btn start-chat-btn" title="Start Chat">
+                    <i class="fas fa-comment"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners for starting chats
+    document.querySelectorAll('.start-chat-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const contactItem = btn.closest('.contact-item');
+            const userId = contactItem.dataset.userId;
+            startChatWithUser(userId);
         });
-        
-        const contactElement = createContactElement(contactData, contactSnapshot.key);
-        contactsList.appendChild(contactElement);
     });
     
-    document.getElementById('contacts-count').textContent = `${contacts.length} contacts`;
-}
-
-function createContactElement(contactData, uid) {
-    const contactDiv = document.createElement('div');
-    contactDiv.className = 'contact-item';
-    contactDiv.setAttribute('data-uid', uid);
-    
-    contactDiv.innerHTML = `
-        <div class="contact-avatar">
-            <div class="avatar-wrapper">
-                <div class="avatar-medium">${contactData.name.charAt(0).toUpperCase()}</div>
-                <span class="presence-indicator online"></span>
-            </div>
-        </div>
-        <div class="contact-details">
-            <div class="contact-name">${contactData.name}</div>
-            <div class="contact-status">${contactData.phone}</div>
-        </div>
-        <div class="contact-actions">
-            <button class="btn btn-primary btn-small start-chat-from-contact" data-uid="${uid}">
-                <i class="fas fa-comment"></i> Chat
-            </button>
-        </div>
-    `;
-    
-    // Add event listener to chat button
-    contactDiv.querySelector('.start-chat-from-contact').addEventListener('click', function() {
-        startChat(uid, contactData.name);
-    });
-    
-    return contactDiv;
-}
-
-async function loadChats() {
-    const chatsSnapshot = await database.ref('user_chats/' + currentUser.uid).once('value');
-    const chatList = document.getElementById('chat-list');
-    
-    chats = [];
-    chatList.innerHTML = '';
-    
-    if (!chatsSnapshot.exists()) {
-        return; // Empty state is already shown in HTML
-    }
-    
-    chatsSnapshot.forEach(chatSnapshot => {
-        const chatData = chatSnapshot.val();
-        chats.push({
-            uid: chatSnapshot.key,
-            ...chatData
+    // Add event listeners for contact items
+    document.querySelectorAll('.contact-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const userId = item.dataset.userId;
+            startChatWithUser(userId);
         });
-        
-        // We'll need to get the other user's data to display the chat properly
-        // This is a simplified version
-        const chatElement = createChatElement(chatData, chatSnapshot.key);
-        chatList.appendChild(chatElement);
     });
-    
-    document.getElementById('chats-count').textContent = `${chats.length} chats`;
 }
 
-function createChatElement(chatData, uid) {
-    const chatDiv = document.createElement('div');
-    chatDiv.className = 'chat-item';
-    chatDiv.setAttribute('data-uid', uid);
-    
-    // This is a simplified version - you'd need to fetch the other user's data
-    chatDiv.innerHTML = `
-        <div class="chat-avatar">
-            <div class="avatar-wrapper">
-                <div class="avatar-medium">U</div>
-                <span class="presence-indicator online"></span>
-            </div>
-        </div>
-        <div class="chat-details">
-            <div class="chat-name">User</div>
-            <div class="chat-preview">${chatData.lastMessage || 'No messages yet'}</div>
-        </div>
-        <div class="chat-meta">
-            <div class="chat-time">${formatTime(chatData.lastMessageTime)}</div>
-            ${chatData.unreadCount > 0 ? `<div class="unread-badge">${chatData.unreadCount}</div>` : ''}
-        </div>
-    `;
-    
-    chatDiv.addEventListener('click', () => {
-        // This would need to be implemented to start chat with this user
-    });
-    
-    return chatDiv;
-}
-
-async function loadPendingRequests() {
-    const requestsSnapshot = await database.ref('contact_requests/' + currentUser.uid).once('value');
-    const requestList = document.getElementById('request-list');
-    
-    pendingRequests = [];
-    requestList.innerHTML = '';
-    
-    if (!requestsSnapshot.exists()) {
-        return; // Empty state is already shown in HTML
-    }
-    
-    requestsSnapshot.forEach(requestSnapshot => {
-        const requestData = requestSnapshot.val();
-        if (requestData.status === 'pending') {
-            pendingRequests.push({
-                from: requestSnapshot.key,
-                ...requestData
-            });
-            
-            const requestElement = createRequestElement(requestData, requestSnapshot.key);
-            requestList.appendChild(requestElement);
-        }
-    });
-    
-    document.getElementById('requests-count').textContent = `${pendingRequests.length} pending`;
-    document.getElementById('requests-badge').textContent = pendingRequests.length;
-}
-
-function createRequestElement(requestData, fromUid) {
-    const requestDiv = document.createElement('div');
-    requestDiv.className = 'request-item';
-    requestDiv.setAttribute('data-from', fromUid);
-    
-    requestDiv.innerHTML = `
-        <div class="request-avatar">
-            <div class="avatar-medium">${requestData.fromName.charAt(0).toUpperCase()}</div>
-        </div>
-        <div class="request-details">
-            <div class="request-name">${requestData.fromName}</div>
-            <div class="request-info">${requestData.message || 'Wants to connect with you'}</div>
-            <div class="request-actions">
-                <button class="request-btn accept" data-from="${fromUid}">Accept</button>
-                <button class="request-btn decline" data-from="${fromUid}">Decline</button>
-            </div>
-        </div>
-    `;
-    
-    // Add event listeners to action buttons
-    requestDiv.querySelector('.request-btn.accept').addEventListener('click', function() {
-        handleContactRequest(fromUid, 'accepted');
-    });
-    
-    requestDiv.querySelector('.request-btn.decline').addEventListener('click', function() {
-        handleContactRequest(fromUid, 'declined');
-    });
-    
-    return requestDiv;
-}
-
-async function handleContactRequest(fromUid, action) {
+// Load Chat Rooms
+async function loadChatRooms() {
     try {
-        if (action === 'accepted') {
+        const chatRoomsSnapshot = await database.ref('userChats/' + currentUser.uid).once('value');
+        chatRooms = [];
+        
+        if (chatRoomsSnapshot.exists()) {
+            const chatRoomsData = chatRoomsSnapshot.val();
+            
+            for (const chatId in chatRoomsData) {
+                const chatSnapshot = await database.ref('chats/' + chatId).once('value');
+                const chatData = chatSnapshot.val();
+                
+                if (chatData) {
+                    // Get the other user's ID
+                    const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
+                    const userSnapshot = await database.ref('users/' + otherUserId).once('value');
+                    const userData = userSnapshot.val();
+                    
+                    if (userData) {
+                        // Get last message
+                        const messagesSnapshot = await database.ref('messages/' + chatId)
+                            .orderByChild('timestamp')
+                            .limitToLast(1)
+                            .once('value');
+                        
+                        let lastMessage = 'No messages yet';
+                        let lastMessageTime = chatData.createdAt;
+                        
+                        if (messagesSnapshot.exists()) {
+                            const messages = messagesSnapshot.val();
+                            const lastMessageKey = Object.keys(messages)[0];
+                            lastMessage = messages[lastMessageKey].text;
+                            lastMessageTime = messages[lastMessageKey].timestamp;
+                        }
+                        
+                        chatRooms.push({
+                            id: chatId,
+                            otherUser: {
+                                id: otherUserId,
+                                ...userData
+                            },
+                            lastMessage: lastMessage,
+                            lastMessageTime: lastMessageTime,
+                            unreadCount: 0 // You can implement unread count logic
+                        });
+                    }
+                }
+            }
+            
+            // Sort by last message time
+            chatRooms.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+            renderChatRooms();
+        }
+    } catch (error) {
+        console.error('Error loading chat rooms:', error);
+    }
+}
+
+// Render Chat Rooms
+function renderChatRooms() {
+    const chatList = document.getElementById('chat-list');
+    const chatsCount = document.getElementById('chats-count');
+    
+    chatsCount.textContent = `${chatRooms.length} chats`;
+    
+    if (chatRooms.length === 0) {
+        chatList.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h4>No conversations yet</h4>
+                <p>Start a new chat to connect with friends and colleagues</p>
+                <button class="btn btn-primary btn-glow" id="start-first-chat">
+                    <i class="fas fa-plus"></i>
+                    Start Your First Chat
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    chatList.innerHTML = chatRooms.map(chat => `
+        <div class="chat-item" data-chat-id="${chat.id}" data-user-id="${chat.otherUser.id}">
+            <div class="chat-avatar">
+                <div class="avatar-wrapper">
+                    <div class="avatar-small">${chat.otherUser.name.charAt(0).toUpperCase()}</div>
+                    <span class="presence-indicator ${chat.otherUser.status || 'offline'}"></span>
+                </div>
+            </div>
+            <div class="chat-details">
+                <div class="chat-name">${chat.otherUser.name}</div>
+                <div class="chat-preview">${chat.lastMessage}</div>
+            </div>
+            <div class="chat-meta">
+                <div class="chat-time">${formatTime(chat.lastMessageTime)}</div>
+                ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners for chat items
+    document.querySelectorAll('.chat-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const chatId = item.dataset.chatId;
+            const userId = item.dataset.userId;
+            openChat(chatId, userId);
+        });
+    });
+}
+
+// Load Pending Requests
+async function loadPendingRequests() {
+    try {
+        const requestsSnapshot = await database.ref('contactRequests/' + currentUser.uid).once('value');
+        pendingRequests = [];
+        
+        if (requestsSnapshot.exists()) {
+            const requestsData = requestsSnapshot.val();
+            
+            for (const requestId in requestsData) {
+                const request = requestsData[requestId];
+                if (request.status === 'pending') {
+                    const userSnapshot = await database.ref('users/' + request.senderId).once('value');
+                    const userData = userSnapshot.val();
+                    
+                    if (userData) {
+                        pendingRequests.push({
+                            id: requestId,
+                            senderId: request.senderId,
+                            senderName: userData.name,
+                            senderEmail: userData.email,
+                            message: request.message,
+                            timestamp: request.timestamp
+                        });
+                    }
+                }
+            }
+            
+            renderPendingRequests();
+        }
+    } catch (error) {
+        console.error('Error loading pending requests:', error);
+    }
+}
+
+// Render Pending Requests
+function renderPendingRequests() {
+    const requestList = document.getElementById('request-list');
+    const requestsCount = document.getElementById('requests-count');
+    const requestsBadge = document.getElementById('requests-badge');
+    
+    requestsCount.textContent = `${pendingRequests.length} pending`;
+    requestsBadge.textContent = pendingRequests.length;
+    
+    if (pendingRequests.length === 0) {
+        requestList.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h4>No pending requests</h4>
+                <p>When someone sends you a contact request, it will appear here</p>
+            </div>
+        `;
+        return;
+    }
+    
+    requestList.innerHTML = pendingRequests.map(request => `
+        <div class="request-item" data-request-id="${request.id}" data-sender-id="${request.senderId}">
+            <div class="request-avatar">
+                <div class="avatar-small">${request.senderName.charAt(0).toUpperCase()}</div>
+            </div>
+            <div class="request-details">
+                <div class="request-name">${request.senderName}</div>
+                <div class="request-info">${request.senderEmail}</div>
+                ${request.message ? `<div class="request-message">"${request.message}"</div>` : ''}
+            </div>
+            <div class="request-actions">
+                <button class="request-btn accept" data-action="accept">Accept</button>
+                <button class="request-btn decline" data-action="decline">Decline</button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners for request actions
+    document.querySelectorAll('.request-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const requestItem = btn.closest('.request-item');
+            const requestId = requestItem.dataset.requestId;
+            const senderId = requestItem.dataset.senderId;
+            const action = btn.dataset.action;
+            
+            handleContactRequest(requestId, senderId, action);
+        });
+    });
+}
+
+// Handle Contact Request
+async function handleContactRequest(requestId, senderId, action) {
+    try {
+        if (action === 'accept') {
             // Add to contacts for both users
-            const fromUserSnapshot = await database.ref('users/' + fromUid).once('value');
-            const fromUserData = fromUserSnapshot.val();
+            await database.ref('userContacts/' + currentUser.uid + '/' + senderId).set(true);
+            await database.ref('userContacts/' + senderId + '/' + currentUser.uid).set(true);
             
-            await database.ref('contacts/' + currentUser.uid + '/' + fromUid).set({
-                name: fromUserData.name,
-                phone: fromUserData.phone,
-                email: fromUserData.email,
-                addedAt: firebase.database.ServerValue.TIMESTAMP
+            // Update request status
+            await database.ref('contactRequests/' + currentUser.uid + '/' + requestId).update({
+                status: 'accepted',
+                respondedAt: firebase.database.ServerValue.TIMESTAMP
             });
             
-            const currentUserSnapshot = await database.ref('users/' + currentUser.uid).once('value');
-            const currentUserData = currentUserSnapshot.val();
+            showNotification('Contact request accepted', 'success');
             
-            await database.ref('contacts/' + fromUid + '/' + currentUser.uid).set({
-                name: currentUserData.name,
-                phone: currentUserData.phone,
-                email: currentUserData.email,
-                addedAt: firebase.database.ServerValue.TIMESTAMP
+            // Create a chat room
+            await createChatRoom(senderId);
+            
+        } else if (action === 'decline') {
+            // Update request status
+            await database.ref('contactRequests/' + currentUser.uid + '/' + requestId).update({
+                status: 'declined',
+                respondedAt: firebase.database.ServerValue.TIMESTAMP
             });
             
-            showNotification('Success', 'Contact added successfully!', 'success');
+            showNotification('Contact request declined', 'info');
         }
         
-        // Update request status
-        await database.ref('contact_requests/' + currentUser.uid + '/' + fromUid).update({
-            status: action,
-            processedAt: firebase.database.ServerValue.TIMESTAMP
-        });
-        
-        // Reload requests and contacts
+        // Reload requests
         await loadPendingRequests();
-        await loadContacts();
         
     } catch (error) {
-        showNotification('Error', 'Failed to process contact request.', 'error');
+        console.error('Error handling contact request:', error);
+        showNotification('Error processing request', 'error');
     }
 }
 
-// Real-time Listeners
-function setupRealtimeListeners() {
-    if (!currentUser) return;
-    
-    // Listen for new contact requests
-    database.ref('contact_requests/' + currentUser.uid).on('child_added', (snapshot) => {
-        const requestData = snapshot.val();
-        if (requestData.status === 'pending') {
-            loadPendingRequests(); // Reload requests
+// Search User by UID
+async function searchUserByUID(uid) {
+    try {
+        const userSnapshot = await database.ref('users/' + uid).once('value');
+        
+        if (userSnapshot.exists()) {
+            const userData = userSnapshot.val();
+            return {
+                id: uid,
+                ...userData
+            };
+        } else {
+            return null;
         }
-    });
-    
-    // Listen for contact updates
-    database.ref('contacts/' + currentUser.uid).on('child_added', (snapshot) => {
-        loadContacts(); // Reload contacts
-    });
-    
-    // Listen for user status changes
-    database.ref('users/' + currentUser.uid).on('value', (snapshot) => {
-        const userData = snapshot.val();
-        if (userData) {
-            updateUIWithUserData(userData);
-        }
-    });
+    } catch (error) {
+        console.error('Error searching user:', error);
+        return null;
+    }
 }
 
-async function updateUserStatus(status) {
+// Send Contact Request
+async function sendContactRequest(receiverId, message = '') {
+    try {
+        const requestId = database.ref('contactRequests/' + receiverId).push().key;
+        
+        await database.ref('contactRequests/' + receiverId + '/' + requestId).set({
+            senderId: currentUser.uid,
+            message: message,
+            status: 'pending',
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        });
+        
+        showNotification('Contact request sent successfully', 'success');
+        return true;
+        
+    } catch (error) {
+        console.error('Error sending contact request:', error);
+        showNotification('Error sending contact request', 'error');
+        return false;
+    }
+}
+
+// Create Chat Room
+async function createChatRoom(otherUserId) {
+    try {
+        const chatId = database.ref('chats').push().key;
+        
+        await database.ref('chats/' + chatId).set({
+            participants: [currentUser.uid, otherUserId],
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            lastMessage: '',
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+        
+        // Add chat to both users' chat lists
+        await database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
+        await database.ref('userChats/' + otherUserId + '/' + chatId).set(true);
+        
+        return chatId;
+        
+    } catch (error) {
+        console.error('Error creating chat room:', error);
+        return null;
+    }
+}
+
+// Start Chat with User
+async function startChatWithUser(userId) {
+    try {
+        // Check if chat already exists
+        let chatId = null;
+        
+        for (const chat of chatRooms) {
+            if (chat.otherUser.id === userId) {
+                chatId = chat.id;
+                break;
+            }
+        }
+        
+        // If no existing chat, create one
+        if (!chatId) {
+            chatId = await createChatRoom(userId);
+        }
+        
+        if (chatId) {
+            openChat(chatId, userId);
+        }
+        
+    } catch (error) {
+        console.error('Error starting chat:', error);
+        showNotification('Error starting chat', 'error');
+    }
+}
+
+// Open Chat
+async function openChat(chatId, userId) {
+    try {
+        currentChat = {
+            id: chatId,
+            userId: userId
+        };
+        
+        // Load user data for chat header
+        const userSnapshot = await database.ref('users/' + userId).once('value');
+        const userData = userSnapshot.val();
+        
+        if (userData) {
+            document.getElementById('active-chat-name').textContent = userData.name;
+            document.getElementById('active-chat-avatar').textContent = userData.name.charAt(0).toUpperCase();
+            document.getElementById('active-chat-status-text').textContent = userData.status || 'Offline';
+            document.getElementById('active-chat-status').className = `presence-indicator ${userData.status || 'offline'}`;
+            
+            // Format last seen
+            if (userData.lastSeen) {
+                const lastSeen = new Date(userData.lastSeen);
+                document.getElementById('active-chat-last-seen').textContent = `Last seen ${formatTime(lastSeen)}`;
+            }
+        }
+        
+        // Show active chat and hide panels
+        document.getElementById('active-chat').classList.remove('hidden');
+        document.querySelectorAll('.content-panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        
+        // Load messages
+        await loadMessages(chatId);
+        
+        // Set up real-time message listener
+        setupMessageListener(chatId);
+        
+    } catch (error) {
+        console.error('Error opening chat:', error);
+    }
+}
+
+// Load Messages
+async function loadMessages(chatId) {
+    try {
+        const messagesSnapshot = await database.ref('messages/' + chatId)
+            .orderByChild('timestamp')
+            .limitToLast(50)
+            .once('value');
+        
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.innerHTML = '';
+        
+        if (messagesSnapshot.exists()) {
+            const messages = messagesSnapshot.val();
+            const messageArray = Object.keys(messages).map(key => ({
+                id: key,
+                ...messages[key]
+            }));
+            
+            // Sort by timestamp
+            messageArray.sort((a, b) => a.timestamp - b.timestamp);
+            
+            // Render messages
+            messageArray.forEach(message => {
+                renderMessage(message);
+            });
+            
+            // Scroll to bottom
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Error loading messages:', error);
+    }
+}
+
+// Render Message
+function renderMessage(message) {
+    const messagesContainer = document.getElementById('messages');
+    const isOwnMessage = message.senderId === currentUser.uid;
+    
+    const messageElement = document.createElement('div');
+    messageElement.className = `message-group ${isOwnMessage ? 'own' : 'other'}`;
+    
+    if (!isOwnMessage) {
+        messageElement.innerHTML = `
+            <div class="message-sender">${message.senderName}</div>
+        `;
+    }
+    
+    messageElement.innerHTML += `
+        <div class="message ${isOwnMessage ? 'sent' : 'received'}">
+            ${message.text}
+            <div class="message-time">${formatTime(message.timestamp)}</div>
+        </div>
+    `;
+    
+    messagesContainer.appendChild(messageElement);
+}
+
+// Setup Real-time Message Listener
+function setupMessageListener(chatId) {
+    database.ref('messages/' + chatId)
+        .orderByChild('timestamp')
+        .limitToLast(1)
+        .on('child_added', (snapshot) => {
+            const message = snapshot.val();
+            
+            // Only render if not our own message (we already rendered it when sending)
+            if (message.senderId !== currentUser.uid) {
+                renderMessage({
+                    id: snapshot.key,
+                    ...message
+                });
+                
+                // Scroll to bottom
+                const messagesContainer = document.getElementById('messages');
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                // Play notification sound
+                playNotificationSound();
+            }
+        });
+}
+
+// Send Message
+async function sendMessage() {
+    const messageInput = document.getElementById('message-input');
+    const text = messageInput.value.trim();
+    
+    if (!text || !currentChat) return;
+    
+    try {
+        const messageId = database.ref('messages/' + currentChat.id).push().key;
+        const timestamp = firebase.database.ServerValue.TIMESTAMP;
+        
+        await database.ref('messages/' + currentChat.id + '/' + messageId).set({
+            text: text,
+            senderId: currentUser.uid,
+            senderName: currentUser.displayName || 'User',
+            timestamp: timestamp,
+            type: 'text'
+        });
+        
+        // Update chat last message
+        await database.ref('chats/' + currentChat.id).update({
+            lastMessage: text,
+            lastMessageTime: timestamp
+        });
+        
+        // Clear input
+        messageInput.value = '';
+        updateSendButtonState();
+        
+        // Render message immediately
+        renderMessage({
+            id: messageId,
+            text: text,
+            senderId: currentUser.uid,
+            senderName: currentUser.displayName || 'User',
+            timestamp: Date.now(),
+            type: 'text'
+        });
+        
+        // Scroll to bottom
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+    } catch (error) {
+        console.error('Error sending message:', error);
+        showNotification('Error sending message', 'error');
+    }
+}
+
+// Initialize Realtime Listeners
+function initializeRealtimeListeners() {
     if (!currentUser) return;
     
-    userStatus = status;
-    await database.ref('users/' + currentUser.uid).update({
-        status: status,
+    // Listen for online status changes
+    database.ref('users/' + currentUser.uid).update({
+        status: 'online',
         lastSeen: firebase.database.ServerValue.TIMESTAMP
     });
-}
-
-function updateUIWithUserData(userData) {
-    document.getElementById('global-status').textContent = userData.status;
-    document.getElementById('global-status').className = `status ${userData.status}`;
     
-    const statusDot = document.querySelector('.status-dot');
-    statusDot.className = `status-dot ${userData.status}`;
+    // Set up presence system
+    const userStatusRef = database.ref('users/' + currentUser.uid);
+    const userStatusDatabaseRef = database.ref('.info/connected');
+    
+    userStatusDatabaseRef.on('value', (snapshot) => {
+        if (snapshot.val() === false) return;
+        
+        userStatusRef.onDisconnect().update({
+            status: 'offline',
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+        });
+    });
+    
+    // Listen for contact requests
+    database.ref('contactRequests/' + currentUser.uid).on('value', (snapshot) => {
+        loadPendingRequests();
+    });
+    
+    // Listen for new contacts
+    database.ref('userContacts/' + currentUser.uid).on('value', (snapshot) => {
+        loadContacts();
+    });
+    
+    // Listen for new chats
+    database.ref('userChats/' + currentUser.uid).on('value', (snapshot) => {
+        loadChatRooms();
+    });
 }
 
-// Utility Functions
+// Format Time
 function formatTime(timestamp) {
-    if (!timestamp) return '';
-    
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
@@ -1098,17 +818,38 @@ function formatTime(timestamp) {
     if (diff < 60000) { // Less than 1 minute
         return 'Just now';
     } else if (diff < 3600000) { // Less than 1 hour
-        return Math.floor(diff / 60000) + 'm ago';
+        const minutes = Math.floor(diff / 60000);
+        return `${minutes}m ago`;
     } else if (diff < 86400000) { // Less than 1 day
-        return Math.floor(diff / 3600000) + 'h ago';
+        const hours = Math.floor(diff / 3600000);
+        return `${hours}h ago`;
+    } else if (diff < 604800000) { // Less than 1 week
+        const days = Math.floor(diff / 86400000);
+        return `${days}d ago`;
     } else {
         return date.toLocaleDateString();
     }
 }
 
-function showNotification(title, message, type = 'info') {
-    const container = document.getElementById('notification-container');
+// Update Send Button State
+function updateSendButtonState() {
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    
+    if (messageInput.value.trim()) {
+        sendBtn.disabled = false;
+    } else {
+        sendBtn.disabled = true;
+    }
+}
+
+// Show Notification
+function showNotification(message, type = 'info') {
+    const notificationContainer = document.getElementById('notification-container');
+    const notificationId = 'notification-' + Date.now();
+    
     const notification = document.createElement('div');
+    notification.id = notificationId;
     notification.className = `notification ${type}`;
     
     notification.innerHTML = `
@@ -1116,8 +857,8 @@ function showNotification(title, message, type = 'info') {
             <div class="notification-details">
                 <div class="notification-header">
                     <div class="notification-title">
-                        <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
-                        ${title}
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                        ${type.charAt(0).toUpperCase() + type.slice(1)}
                     </div>
                     <button class="notification-close">
                         <i class="fas fa-times"></i>
@@ -1128,19 +869,22 @@ function showNotification(title, message, type = 'info') {
         </div>
     `;
     
-    container.appendChild(notification);
+    notificationContainer.appendChild(notification);
     
     // Auto remove after 5 seconds
     setTimeout(() => {
-        notification.classList.add('fade-out');
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
+        const notif = document.getElementById(notificationId);
+        if (notif) {
+            notif.classList.add('fade-out');
+            setTimeout(() => {
+                if (notif.parentNode) {
+                    notif.parentNode.removeChild(notif);
+                }
+            }, 300);
+        }
     }, 5000);
     
-    // Close button
+    // Close button event
     notification.querySelector('.notification-close').addEventListener('click', () => {
         notification.classList.add('fade-out');
         setTimeout(() => {
@@ -1151,62 +895,350 @@ function showNotification(title, message, type = 'info') {
     });
 }
 
-function toggleTheme() {
-    const body = document.body;
-    const isDark = body.classList.contains('dark-theme');
-    
-    if (isDark) {
-        body.classList.remove('dark-theme');
-        body.classList.add('light-theme');
-    } else {
-        body.classList.remove('light-theme');
-        body.classList.add('dark-theme');
-    }
+// Play Notification Sound
+function playNotificationSound() {
+    // You can implement notification sounds here
+    // For now, we'll just log to console
+    console.log('Notification sound would play here');
 }
 
-function copyUserId() {
-    const userId = document.getElementById('settings-user-id').textContent;
-    navigator.clipboard.writeText(userId).then(() => {
-        showNotification('Success', 'User ID copied to clipboard!', 'success');
-    }).catch(() => {
-        showNotification('Error', 'Failed to copy User ID.', 'error');
+// Event Listeners Setup
+function setupEventListeners() {
+    // Screen navigation
+    document.getElementById('go-to-login-btn').addEventListener('click', () => showScreen('login'));
+    document.getElementById('go-to-register-btn').addEventListener('click', () => showScreen('register'));
+    document.getElementById('go-to-login').addEventListener('click', () => showScreen('login'));
+    document.getElementById('go-to-register').addEventListener('click', () => showScreen('register'));
+    document.getElementById('back-to-splash').addEventListener('click', () => showScreen('splash'));
+    document.getElementById('back-to-splash-2').addEventListener('click', () => showScreen('splash'));
+    
+    // Password toggle
+    document.querySelectorAll('.password-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const passwordInput = this.parentElement.querySelector('input');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        });
+    });
+    
+    // Password strength checker
+    const passwordInput = document.getElementById('register-password');
+    const confirmPasswordInput = document.getElementById('register-confirm-password');
+    
+    if (passwordInput) {
+        passwordInput.addEventListener('input', checkPasswordStrength);
+    }
+    
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+    }
+    
+    // Navigation tabs
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+            
+            // Update active tab
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show corresponding panel
+            document.querySelectorAll('.content-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`${tabName}-panel`).classList.add('active');
+        });
+    });
+    
+    // New chat button
+    document.getElementById('new-chat-btn').addEventListener('click', () => {
+        document.getElementById('new-chat-modal').classList.add('active');
+    });
+    
+    // Add contact button
+    document.getElementById('add-contact-btn').addEventListener('click', () => {
+        document.getElementById('add-contact-modal').classList.add('active');
+    });
+    
+    // Settings button
+    document.getElementById('settings-btn').addEventListener('click', () => {
+        document.getElementById('settings-modal').classList.add('active');
+    });
+    
+    // Back to chats
+    document.getElementById('back-to-chats').addEventListener('click', () => {
+        document.getElementById('active-chat').classList.add('hidden');
+        document.getElementById('chats-panel').classList.add('active');
+        currentChat = null;
+    });
+    
+    // Send message
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    
+    // Message input events
+    const messageInput = document.getElementById('message-input');
+    messageInput.addEventListener('input', updateSendButtonState);
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+    
+    // User menu
+    document.getElementById('user-menu-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dropdown = document.getElementById('user-menu-dropdown');
+        dropdown.classList.toggle('hidden');
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            dropdown.classList.add('hidden');
+        });
+    });
+    
+    // Modal close buttons
+    document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.modal').classList.remove('active');
+        });
+    });
+    
+    // Modal backdrops
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+        backdrop.addEventListener('click', function() {
+            this.closest('.modal').classList.remove('active');
+        });
+    });
+    
+    // Contact search
+    document.getElementById('contact-search').addEventListener('input', async function() {
+        const uid = this.value.trim();
+        
+        if (uid.length < 5) {
+            document.getElementById('search-results').classList.add('hidden');
+            return;
+        }
+        
+        const user = await searchUserByUID(uid);
+        const resultsContainer = document.getElementById('search-results');
+        
+        if (user) {
+            resultsContainer.innerHTML = `
+                <div class="search-result-item">
+                    <div class="search-result-avatar">
+                        <div class="avatar-small">${user.name.charAt(0).toUpperCase()}</div>
+                    </div>
+                    <div class="search-result-details">
+                        <div class="search-result-name">${user.name}</div>
+                        <div class="search-result-info">
+                            <span>${user.email}</span>
+                            <span>•</span>
+                            <span>${user.phone}</span>
+                        </div>
+                        <div class="search-result-id">UID: ${user.id}</div>
+                    </div>
+                </div>
+            `;
+            resultsContainer.classList.remove('hidden');
+        } else {
+            resultsContainer.innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <p>No user found with this UID</p>
+                </div>
+            `;
+            resultsContainer.classList.remove('hidden');
+        }
+    });
+    
+    // Send contact request
+    document.getElementById('send-contact-request').addEventListener('click', async function() {
+        const uid = document.getElementById('contact-search').value.trim();
+        const message = document.getElementById('contact-message').value.trim();
+        
+        if (!uid) {
+            showNotification('Please enter a user UID', 'error');
+            return;
+        }
+        
+        const user = await searchUserByUID(uid);
+        
+        if (!user) {
+            showNotification('User not found', 'error');
+            return;
+        }
+        
+        if (user.id === currentUser.uid) {
+            showNotification('You cannot send a request to yourself', 'error');
+            return;
+        }
+        
+        // Check if already contacts
+        const isContact = contacts.some(contact => contact.id === user.id);
+        if (isContact) {
+            showNotification('This user is already in your contacts', 'info');
+            return;
+        }
+        
+        // Check if request already sent
+        const existingRequest = pendingRequests.find(req => req.senderId === user.id);
+        if (existingRequest) {
+            showNotification('Contact request already sent to this user', 'info');
+            return;
+        }
+        
+        this.classList.add('loading');
+        
+        const success = await sendContactRequest(user.id, message);
+        
+        if (success) {
+            document.getElementById('add-contact-modal').classList.remove('active');
+            document.getElementById('contact-search').value = '';
+            document.getElementById('contact-message').value = '';
+            document.getElementById('search-results').classList.add('hidden');
+        }
+        
+        this.classList.remove('loading');
+    });
+    
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+        try {
+            // Update status to offline
+            if (currentUser) {
+                await database.ref('users/' + currentUser.uid).update({
+                    status: 'offline',
+                    lastSeen: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+            
+            await auth.signOut();
+            showScreen('splash');
+        } catch (error) {
+            console.error('Error signing out:', error);
+        }
     });
 }
 
-// Auth State Listener
-function checkAuthState() {
+// Password Strength Checker
+function checkPasswordStrength() {
+    const password = this.value;
+    const strengthText = document.getElementById('password-strength-text');
+    const strengthFill = document.getElementById('password-strength-fill');
+    const requirements = document.querySelectorAll('.requirement');
+    
+    let strength = 0;
+    let fillWidth = 0;
+    
+    // Reset requirements
+    requirements.forEach(req => {
+        req.classList.remove('met');
+    });
+    
+    // Check length
+    if (password.length >= 8) {
+        strength += 20;
+        fillWidth += 20;
+        document.querySelector('[data-requirement="length"]').classList.add('met');
+    }
+    
+    // Check uppercase
+    if (/[A-Z]/.test(password)) {
+        strength += 20;
+        fillWidth += 20;
+        document.querySelector('[data-requirement="uppercase"]').classList.add('met');
+    }
+    
+    // Check lowercase
+    if (/[a-z]/.test(password)) {
+        strength += 20;
+        fillWidth += 20;
+        document.querySelector('[data-requirement="lowercase"]').classList.add('met');
+    }
+    
+    // Check numbers
+    if (/[0-9]/.test(password)) {
+        strength += 20;
+        fillWidth += 20;
+        document.querySelector('[data-requirement="number"]').classList.add('met');
+    }
+    
+    // Check special characters
+    if (/[^A-Za-z0-9]/.test(password)) {
+        strength += 20;
+        fillWidth += 20;
+        document.querySelector('[data-requirement="special"]').classList.add('met');
+    }
+    
+    // Update UI
+    strengthFill.style.width = `${fillWidth}%`;
+    
+    if (strength < 40) {
+        strengthText.textContent = 'Weak';
+        strengthText.style.color = 'var(--danger)';
+        strengthFill.style.background = 'var(--danger)';
+    } else if (strength < 80) {
+        strengthText.textContent = 'Medium';
+        strengthText.style.color = 'var(--warning)';
+        strengthFill.style.background = 'var(--warning)';
+    } else {
+        strengthText.textContent = 'Strong';
+        strengthText.style.color = 'var(--success)';
+        strengthFill.style.background = 'var(--success)';
+    }
+}
+
+// Password Match Checker
+function checkPasswordMatch() {
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = this.value;
+    const messageElement = document.getElementById('password-match-message');
+    
+    if (!confirmPassword) {
+        messageElement.textContent = '';
+        messageElement.className = 'validation-message';
+        return;
+    }
+    
+    if (password === confirmPassword) {
+        messageElement.textContent = 'Passwords match';
+        messageElement.className = 'validation-message success';
+    } else {
+        messageElement.textContent = 'Passwords do not match';
+        messageElement.className = 'validation-message error';
+    }
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    setupEventListeners();
+    
+    // Check if user is already logged in
     auth.onAuthStateChanged((user) => {
         if (user) {
             currentUser = user;
-            // User is signed in
-            if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
-                showScreen('loading');
-                initializeUserData();
-            }
+            loadUserData();
+            showScreen('home');
+            initializeRealtimeListeners();
         } else {
-            // User is signed out
-            currentUser = null;
-            if (window.location.pathname.endsWith('home.html')) {
-                window.location.href = 'index.html';
-            }
+            showScreen('splash');
         }
     });
-}
-
-// Handle page visibility changes
-document.addEventListener('visibilitychange', function() {
-    if (currentUser) {
-        if (document.hidden) {
-            updateUserStatus('away');
-        } else {
-            updateUserStatus('online');
-        }
-    }
 });
 
-// Handle beforeunload
-window.addEventListener('beforeunload', function() {
-    if (currentUser) {
-        updateUserStatus('offline');
-    }
-});
+// Export functions for global access (if needed)
+window.Zynapse = {
+    showScreen,
+    showNotification,
+    searchUserByUID,
+    sendContactRequest,
+    startChatWithUser
+};
