@@ -25,6 +25,9 @@ let requests = {};
 let onlineUsers = {};
 let userStatus = 'online';
 let notificationCount = 0;
+let userTypingTimeout = null;
+let messageListeners = {};
+let chatListeners = {};
 
 // DOM Elements
 document.addEventListener('DOMContentLoaded', function() {
@@ -209,6 +212,9 @@ function handleLogin(e) {
             currentUser = userCredential.user;
             showScreen('loading');
             
+            // Update user status to online
+            updateUserStatus('online');
+            
             // Show success notification
             showNotification('success', 'Login Successful', 'Welcome back to Zynapse!', 3000);
         })
@@ -243,6 +249,12 @@ function handleRegister(e) {
         return;
     }
     
+    // Validate username format
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        showNotification('error', 'Invalid Username', 'Username can only contain letters, numbers, and underscores', 4000);
+        return;
+    }
+    
     // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const btnText = submitBtn.querySelector('.btn-text');
@@ -252,10 +264,22 @@ function handleRegister(e) {
     if (btnLoading) btnLoading.style.display = 'block';
     submitBtn.disabled = true;
     
-    auth.createUserWithEmailAndPassword(email, password)
+    // First check if username is available
+    database.ref('usernames/' + username).once('value')
+        .then(usernameSnapshot => {
+            if (usernameSnapshot.exists()) {
+                throw new Error('Username already taken');
+            }
+            
+            // Create user with email and password
+            return auth.createUserWithEmailAndPassword(email, password);
+        })
         .then((userCredential) => {
             // User created successfully
             currentUser = userCredential.user;
+            
+            // Save username to prevent duplicates
+            database.ref('usernames/' + username).set(currentUser.uid);
             
             // Save user data to database
             return database.ref('users/' + currentUser.uid).set({
@@ -266,7 +290,8 @@ function handleRegister(e) {
                 status: 'online',
                 lastSeen: Date.now(),
                 createdAt: Date.now(),
-                profileComplete: true
+                profileComplete: true,
+                uid: currentUser.uid
             });
         })
         .then(() => {
@@ -281,7 +306,16 @@ function handleRegister(e) {
             console.error('Registration error:', error);
             
             // Show error notification
-            showNotification('error', 'Registration Failed', error.message, 5000);
+            let errorMessage = error.message;
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage = 'This email is already registered';
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage = 'Password is too weak';
+            } else if (error.message === 'Username already taken') {
+                errorMessage = 'Username is already taken';
+            }
+            
+            showNotification('error', 'Registration Failed', errorMessage, 5000);
             
             // Reset button
             if (btnText) btnText.style.opacity = '1';
@@ -302,6 +336,18 @@ function loadApp() {
     
     // Show welcome notification
     showNotification('success', 'Welcome Back!', 'You are now connected to Zynapse', 3000);
+    
+    // Load users for new chat modal
+    loadUsersForNewChat();
+    
+    // Setup enhanced new chat modal
+    setupNewChatModal();
+    
+    // Setup chat request listeners
+    setupChatRequestListeners();
+    
+    // Enhance requests panel
+    enhanceRequestsPanel();
 }
 
 // Setup app event listeners
@@ -396,6 +442,16 @@ function setupAppEventListeners() {
             // Handle typing indicator
             if (currentChat && messageInput.value.trim()) {
                 updateTypingStatus(true);
+                
+                // Clear previous timeout
+                if (userTypingTimeout) {
+                    clearTimeout(userTypingTimeout);
+                }
+                
+                // Set timeout to stop typing indicator
+                userTypingTimeout = setTimeout(() => {
+                    updateTypingStatus(false);
+                }, 2000);
             } else {
                 updateTypingStatus(false);
             }
@@ -405,6 +461,17 @@ function setupAppEventListeners() {
             
             // Auto-resize textarea
             autoResizeTextarea(messageInput);
+        });
+        
+        // Handle focus and blur for typing indicator
+        messageInput.addEventListener('focus', () => {
+            if (currentChat && messageInput.value.trim()) {
+                updateTypingStatus(true);
+            }
+        });
+        
+        messageInput.addEventListener('blur', () => {
+            updateTypingStatus(false);
         });
     }
     
@@ -434,6 +501,20 @@ function setupAppEventListeners() {
             if (globalStatus) {
                 globalStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
                 globalStatus.className = `status ${status}`;
+            }
+            
+            // Update user status in chat if active
+            if (currentChat) {
+                const activeChatStatus = document.getElementById('active-chat-status');
+                const activeChatStatusText = document.getElementById('active-chat-status-text');
+                
+                if (activeChatStatus) {
+                    activeChatStatus.className = `presence-indicator ${status}`;
+                }
+                if (activeChatStatusText) {
+                    activeChatStatusText.textContent = status;
+                    activeChatStatusText.className = `status ${status}`;
+                }
             }
             
             // Show notification
@@ -498,6 +579,42 @@ function setupAppEventListeners() {
     if (newChatSearch) {
         newChatSearch.addEventListener('input', () => filterUsers(newChatSearch.value));
     }
+    
+    // User menu dropdown items
+    const dropdownItems = document.querySelectorAll('.dropdown-item');
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+            handleUserMenuAction(action);
+        });
+    });
+}
+
+// Handle user menu actions
+function handleUserMenuAction(action) {
+    switch(action) {
+        case 'profile':
+            showModal('settings-modal');
+            break;
+        case 'status':
+            // Focus on status options in settings
+            showModal('settings-modal');
+            setTimeout(() => {
+                const profileTab = document.querySelector('.settings-tab[data-tab="profile"]');
+                if (profileTab) profileTab.click();
+            }, 100);
+            break;
+        case 'settings':
+            showModal('settings-modal');
+            break;
+        case 'logout':
+            handleLogout();
+            break;
+    }
+    
+    // Hide dropdown
+    const dropdown = document.getElementById('user-menu-dropdown');
+    if (dropdown) dropdown.classList.add('hidden');
 }
 
 // Switch between panels
@@ -526,10 +643,18 @@ function toggleUserMenu() {
     const dropdown = document.getElementById('user-menu-dropdown');
     if (dropdown) {
         dropdown.classList.toggle('hidden');
+        
+        // Position dropdown below user avatar
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        if (userMenuBtn) {
+            const rect = userMenuBtn.getBoundingClientRect();
+            dropdown.style.top = `${rect.bottom + 5}px`;
+            dropdown.style.right = `${window.innerWidth - rect.right}px`;
+        }
     }
 }
 
-// Load current user data - ENHANCED VERSION
+// Load current user data
 function loadUserData() {
     if (!currentUser) return;
     
@@ -992,7 +1117,8 @@ function setupRealtimeListeners() {
     database.ref('userChats/' + currentUser.uid).on('child_added', snapshot => {
         const chatId = snapshot.key;
         
-        database.ref('chats/' + chatId + '/messages').limitToLast(1).on('child_added', messageSnapshot => {
+        // Set up listener for new messages in this chat
+        messageListeners[chatId] = database.ref('chats/' + chatId + '/messages').limitToLast(1).on('child_added', messageSnapshot => {
             const message = messageSnapshot.val();
             
             // Don't show notification for own messages or if chat is active
@@ -1000,6 +1126,15 @@ function setupRealtimeListeners() {
                 showMessageNotification(chatId, message);
             }
         });
+    });
+    
+    // Remove listeners for chats that are removed
+    database.ref('userChats/' + currentUser.uid).on('child_removed', snapshot => {
+        const chatId = snapshot.key;
+        if (messageListeners[chatId]) {
+            database.ref('chats/' + chatId + '/messages').off('child_added', messageListeners[chatId]);
+            delete messageListeners[chatId];
+        }
     });
 }
 
@@ -1246,6 +1381,9 @@ function openChat(chatId, userData) {
     
     // Mark messages as read
     markMessagesAsRead(chatId);
+    
+    // Update last seen
+    updateLastSeen(userData.uid);
 }
 
 // Show chat list
@@ -1263,7 +1401,13 @@ function loadMessages(chatId) {
     
     messagesContainer.innerHTML = '';
     
-    database.ref('chats/' + chatId + '/messages').on('value', snapshot => {
+    // Remove any existing listener for this chat
+    if (chatListeners[chatId]) {
+        database.ref('chats/' + chatId + '/messages').off('value', chatListeners[chatId]);
+    }
+    
+    // Set up new listener
+    chatListeners[chatId] = database.ref('chats/' + chatId + '/messages').on('value', snapshot => {
         const messagesData = snapshot.val();
         
         if (!messagesData) {
@@ -1283,7 +1427,7 @@ function loadMessages(chatId) {
         const messages = Object.values(messagesData).sort((a, b) => a.timestamp - b.timestamp);
         
         // Clear messages (except empty state)
-        const existingMessages = messagesContainer.querySelectorAll('.message-group');
+        const existingMessages = messagesContainer.querySelectorAll('.message-group, .date-divider');
         existingMessages.forEach(msg => msg.remove());
         
         // Hide empty state if it exists
@@ -1334,6 +1478,9 @@ function loadMessages(chatId) {
                 messageContent = `<div class="message-image">📷 Image</div>`;
             } else if (message.type === 'file') {
                 messageContent = `<div class="message-file">📎 File</div>`;
+            } else if (message.type === 'system') {
+                messageElement.className = 'message system';
+                messageContent = `<div class="system-message">${message.content}</div>`;
             }
             
             messageElement.innerHTML = `
@@ -1345,7 +1492,9 @@ function loadMessages(chatId) {
         });
         
         // Scroll to bottom
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        setTimeout(() => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 100);
     });
     
     // Listen for typing indicators
@@ -1407,6 +1556,9 @@ function sendMessage() {
             messageInput.value = '';
             if (sendBtn) sendBtn.disabled = true;
             
+            // Reset textarea height
+            messageInput.style.height = 'auto';
+            
             // Update last message in chat
             database.ref('chats/' + currentChat).update({
                 lastMessage: messageContent,
@@ -1434,8 +1586,9 @@ function startChatWithUser(userId, userData) {
             let existingChatId = null;
             
             if (userChats) {
-                Object.keys(userChats).forEach(chatId => {
-                    database.ref('chats/' + chatId + '/participants').once('value')
+                // Check each chat to see if it includes the target user
+                const chatPromises = Object.keys(userChats).map(chatId => {
+                    return database.ref('chats/' + chatId + '/participants').once('value')
                         .then(participantsSnapshot => {
                             const participants = participantsSnapshot.val();
                             if (participants && participants[userId]) {
@@ -1443,8 +1596,12 @@ function startChatWithUser(userId, userData) {
                             }
                         });
                 });
+                
+                return Promise.all(chatPromises).then(() => existingChatId);
             }
-            
+            return null;
+        })
+        .then(existingChatId => {
             if (existingChatId) {
                 // Open existing chat
                 openChat(existingChatId, userData);
@@ -1623,7 +1780,17 @@ function handleContactRequest(requestId, response) {
 function updateTypingStatus(isTyping) {
     if (!currentChat) return;
     
-    database.ref('chats/' + currentChat + '/typing/' + currentUser.uid).set(isTyping ? true : null);
+    if (isTyping) {
+        database.ref('chats/' + currentChat + '/typing/' + currentUser.uid).set(true);
+    } else {
+        database.ref('chats/' + currentChat + '/typing/' + currentUser.uid).remove();
+        
+        // Clear timeout if it exists
+        if (userTypingTimeout) {
+            clearTimeout(userTypingTimeout);
+            userTypingTimeout = null;
+        }
+    }
 }
 
 // Mark messages as read
@@ -1664,6 +1831,15 @@ function updateUserStatus(status) {
     });
 }
 
+// Update last seen
+function updateLastSeen(userId) {
+    if (!userId) return;
+    
+    database.ref('users/' + userId).update({
+        lastSeen: Date.now()
+    });
+}
+
 // Initialize emoji picker
 function initializeEmojiPicker() {
     const emojiPicker = document.getElementById('emoji-picker');
@@ -1689,6 +1865,14 @@ function toggleEmojiPicker() {
     const emojiPicker = document.getElementById('emoji-picker');
     if (emojiPicker) {
         emojiPicker.classList.toggle('hidden');
+        
+        // Position emoji picker above the input
+        const emojiBtn = document.getElementById('emoji-btn');
+        if (emojiBtn) {
+            const rect = emojiBtn.getBoundingClientRect();
+            emojiPicker.style.bottom = `${window.innerHeight - rect.top + 10}px`;
+            emojiPicker.style.left = `${rect.left}px`;
+        }
     }
 }
 
@@ -1704,6 +1888,12 @@ function insertEmoji(emoji) {
     messageInput.value = textBefore + emoji + textAfter;
     messageInput.focus();
     messageInput.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+    
+    // Update send button state
+    const sendBtn = document.getElementById('send-btn');
+    if (sendBtn) {
+        sendBtn.disabled = !messageInput.value.trim();
+    }
     
     // Close emoji picker
     const emojiPicker = document.getElementById('emoji-picker');
@@ -1795,7 +1985,8 @@ function showMessageNotification(chatId, message) {
             
             let messageText = '';
             if (message.type === 'text') {
-                messageText = message.content;
+                messageText = message.content.length > 50 ? 
+                    message.content.substring(0, 50) + '...' : message.content;
             } else if (message.type === 'image') {
                 messageText = 'Sent an image';
             } else if (message.type === 'file') {
@@ -1826,6 +2017,15 @@ function handleLogout() {
         const originalHTML = logoutBtn.innerHTML;
         logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
         logoutBtn.disabled = true;
+        
+        // Remove all real-time listeners
+        Object.keys(messageListeners).forEach(chatId => {
+            database.ref('chats/' + chatId + '/messages').off('value', messageListeners[chatId]);
+        });
+        
+        Object.keys(chatListeners).forEach(chatId => {
+            database.ref('chats/' + chatId + '/messages').off('value', chatListeners[chatId]);
+        });
         
         // Sign out
         auth.signOut()
@@ -2082,11 +2282,6 @@ window.addEventListener('DOMContentLoaded', function() {
             darkModeToggle.checked = false;
         }
     }
-});
-
-// Initialize any animations or interactive elements
-window.addEventListener('load', function() {
-    // Add any initialization code for animations or other features
 });
 
 // NEW FUNCTIONALITY: Enhanced Chat Request System
@@ -2490,14 +2685,6 @@ function createChatFromRequest(chatRequest) {
                 'Failed to create chat room. Please try again.', 4000);
         });
 }
-
-// Enhanced loadApp function to include new functionality
-const originalLoadApp = loadApp;
-loadApp = function() {
-    originalLoadApp();
-    setupNewChatModal();
-    setupChatRequestListeners();
-};
 
 // Enhanced requests panel to show both contact and chat requests
 function enhanceRequestsPanel() {
