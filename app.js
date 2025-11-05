@@ -2088,3 +2088,538 @@ window.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('load', function() {
     // Add any initialization code for animations or other features
 });
+
+// NEW FUNCTIONALITY: Enhanced Chat Request System
+
+// Enhanced New Chat Modal with User Search Form
+function setupNewChatModal() {
+    const newChatModal = document.getElementById('new-chat-modal');
+    if (!newChatModal) return;
+    
+    // Clear existing content and add search form
+    const modalBody = newChatModal.querySelector('.modal-body');
+    if (modalBody) {
+        modalBody.innerHTML = `
+            <div class="search-container">
+                <div class="form-group">
+                    <label for="user-search-input">
+                        <i class="fas fa-search"></i>
+                        Find User by Email or UID
+                    </label>
+                    <input type="text" id="user-search-input" placeholder="Enter user's email address or User ID">
+                    <div class="input-focus-line"></div>
+                    <p class="input-hint">
+                        <i class="fas fa-info-circle"></i>
+                        Enter the exact email address or User ID of the person you want to chat with
+                    </p>
+                </div>
+                <div id="user-search-results" class="search-results hidden">
+                    <!-- Search results will appear here -->
+                </div>
+            </div>
+            <div class="modal-section">
+                <h4>Suggested Contacts</h4>
+                <div class="user-list-modal" id="user-list-modal">
+                    <!-- Existing contacts will be populated here -->
+                </div>
+            </div>
+        `;
+        
+        // Add event listener for user search
+        const userSearchInput = document.getElementById('user-search-input');
+        if (userSearchInput) {
+            let searchTimeout;
+            userSearchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchUsersForChat(this.value);
+                }, 500);
+            });
+        }
+    }
+}
+
+// Search users for chat initiation
+function searchUsersForChat(searchTerm) {
+    if (!searchTerm.trim()) {
+        const searchResults = document.getElementById('user-search-results');
+        if (searchResults) searchResults.classList.add('hidden');
+        return;
+    }
+
+    const searchResults = document.getElementById('user-search-results');
+    if (!searchResults) return;
+    
+    searchResults.innerHTML = '<div class="loading-text"><i class="fas fa-spinner fa-spin"></i> Searching users...</div>';
+    searchResults.classList.remove('hidden');
+
+    // Search by email
+    database.ref('users').orderByChild('email').equalTo(searchTerm).once('value')
+        .then(snapshot => {
+            const usersData = snapshot.val();
+            
+            if (usersData) {
+                displayUserSearchResults(usersData);
+                return;
+            }
+            
+            // If not found by email, search by user ID
+            database.ref('users/' + searchTerm).once('value')
+                .then(userSnapshot => {
+                    if (userSnapshot.exists()) {
+                        const userData = {};
+                        userData[searchTerm] = userSnapshot.val();
+                        displayUserSearchResults(userData);
+                    } else {
+                        searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No user found with that email or User ID</p></div>';
+                    }
+                });
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+            searchResults.innerHTML = '<div class="error-text"><i class="fas fa-exclamation-triangle"></i><p>Search failed. Please try again.</p></div>';
+        });
+}
+
+// Display user search results for chat
+function displayUserSearchResults(usersData) {
+    const searchResults = document.getElementById('user-search-results');
+    if (!searchResults) return;
+    
+    searchResults.innerHTML = '';
+    
+    Object.keys(usersData).forEach(userId => {
+        const userData = usersData[userId];
+        
+        // Don't show current user in search results
+        if (userId === currentUser.uid) return;
+        
+        const userItem = document.createElement('div');
+        userItem.className = 'search-result-item';
+        userItem.innerHTML = `
+            <div class="search-result-avatar">
+                <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
+            </div>
+            <div class="search-result-details">
+                <div class="search-result-name">${userData.name || 'Unknown User'}</div>
+                <div class="search-result-info">
+                    <span class="search-result-username">@${userData.username || 'user'}</span>
+                    <span class="search-result-email">${userData.email || 'No email'}</span>
+                </div>
+                <div class="search-result-phone">
+                    <i class="fas fa-phone"></i>
+                    ${userData.phone || 'No phone'}
+                </div>
+            </div>
+            <button class="btn btn-primary btn-small send-chat-request" data-user-id="${userId}">
+                <i class="fas fa-comment"></i>
+                Start Chat
+            </button>
+        `;
+        
+        searchResults.appendChild(userItem);
+    });
+    
+    // Add event listeners to start chat buttons
+    document.querySelectorAll('.send-chat-request').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            sendChatRequest(userId);
+        });
+    });
+    
+    if (searchResults.innerHTML === '') {
+        searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No user found with that information</p></div>';
+    }
+}
+
+// Send chat request to user
+function sendChatRequest(targetUserId) {
+    if (!currentUser || !targetUserId) return;
+    
+    // Check if user exists
+    database.ref('users/' + targetUserId).once('value')
+        .then(snapshot => {
+            if (!snapshot.exists()) {
+                showNotification('error', 'User Not Found', 'The specified user does not exist', 4000);
+                return;
+            }
+            
+            const targetUserData = snapshot.val();
+            
+            // Check if chat already exists
+            database.ref('userChats/' + currentUser.uid).once('value')
+                .then(userChatsSnapshot => {
+                    const userChats = userChatsSnapshot.val();
+                    let existingChatId = null;
+                    
+                    if (userChats) {
+                        Object.keys(userChats).forEach(chatId => {
+                            database.ref('chats/' + chatId + '/participants').once('value')
+                                .then(participantsSnapshot => {
+                                    const participants = participantsSnapshot.val();
+                                    if (participants && participants[targetUserId]) {
+                                        existingChatId = chatId;
+                                    }
+                                });
+                        });
+                    }
+                    
+                    if (existingChatId) {
+                        // Open existing chat
+                        hideModal('new-chat-modal');
+                        openChat(existingChatId, targetUserData);
+                        showNotification('info', 'Chat Exists', 'Opening existing chat', 2000);
+                    } else {
+                        // Create chat request
+                        createChatRequest(targetUserId, targetUserData);
+                    }
+                });
+        })
+        .catch(error => {
+            console.error('Error finding user:', error);
+            showNotification('error', 'Error', 'Failed to find user', 4000);
+        });
+}
+
+// Create chat request
+function createChatRequest(targetUserId, targetUserData) {
+    const requestId = database.ref('chatRequests').push().key;
+    
+    // Get current user data
+    database.ref('users/' + currentUser.uid).once('value')
+        .then(currentUserSnapshot => {
+            const currentUserData = currentUserSnapshot.val();
+            
+            // Create chat request object
+            const chatRequest = {
+                id: requestId,
+                fromUserId: currentUser.uid,
+                fromUserName: currentUserData.name || 'Unknown User',
+                fromUserEmail: currentUserData.email || 'No email',
+                fromUserPhone: currentUserData.phone || 'No phone',
+                toUserId: targetUserId,
+                toUserName: targetUserData.name || 'Unknown User',
+                status: 'pending',
+                timestamp: Date.now(),
+                message: 'Wants to start a chat with you'
+            };
+            
+            // Save chat request to database
+            database.ref('chatRequests/' + targetUserId + '/' + requestId).set(chatRequest)
+                .then(() => {
+                    showNotification('success', 'Chat Request Sent', 
+                        `Chat request sent to ${targetUserData.name || 'User'}. They will be notified.`, 4000);
+                    hideModal('new-chat-modal');
+                    
+                    // Clear search input
+                    const userSearchInput = document.getElementById('user-search-input');
+                    if (userSearchInput) userSearchInput.value = '';
+                    
+                    const searchResults = document.getElementById('user-search-results');
+                    if (searchResults) searchResults.classList.add('hidden');
+                })
+                .catch(error => {
+                    console.error('Error sending chat request:', error);
+                    showNotification('error', 'Request Failed', 'Failed to send chat request', 4000);
+                });
+        });
+}
+
+// Enhanced setup to include chat request listeners
+function setupChatRequestListeners() {
+    if (!currentUser) return;
+    
+    // Listen for incoming chat requests
+    database.ref('chatRequests/' + currentUser.uid).on('value', snapshot => {
+        const chatRequests = snapshot.val();
+        const requestsBadge = document.getElementById('requests-badge');
+        const requestsCount = document.getElementById('requests-count');
+        
+        let pendingChatRequests = 0;
+        
+        if (chatRequests) {
+            Object.keys(chatRequests).forEach(requestId => {
+                const request = chatRequests[requestId];
+                if (request.status === 'pending') {
+                    pendingChatRequests++;
+                    
+                    // Show notification for new chat requests
+                    showChatRequestNotification(request);
+                }
+            });
+        }
+        
+        // Update badge with total requests (contact + chat)
+        const totalPending = pendingChatRequests + (Object.keys(requests || {}).filter(id => requests[id].status === 'pending').length);
+        if (requestsBadge) {
+            if (totalPending > 0) {
+                requestsBadge.textContent = totalPending;
+                requestsBadge.classList.remove('hidden');
+            } else {
+                requestsBadge.classList.add('hidden');
+            }
+        }
+        if (requestsCount) {
+            requestsCount.textContent = `${totalPending} pending`;
+        }
+    });
+}
+
+// Show chat request notification
+function showChatRequestNotification(chatRequest) {
+    const notificationId = showNotification('info', 
+        'New Chat Request', 
+        `${chatRequest.fromUserName} wants to chat with you`, 
+        7000);
+    
+    // Add action buttons to notification
+    const notification = document.getElementById(notificationId);
+    if (notification) {
+        const notificationDetails = notification.querySelector('.notification-details');
+        if (notificationDetails) {
+            const requestInfo = document.createElement('div');
+            requestInfo.className = 'request-info';
+            requestInfo.innerHTML = `
+                <div class="request-details-small">
+                    <div><i class="fas fa-envelope"></i> ${chatRequest.fromUserEmail}</div>
+                    <div><i class="fas fa-phone"></i> ${chatRequest.fromUserPhone}</div>
+                </div>
+                <div class="notification-actions">
+                    <button class="notification-action accept-chat" data-request-id="${chatRequest.id}">
+                        <i class="fas fa-check"></i> Accept
+                    </button>
+                    <button class="notification-action decline-chat" data-request-id="${chatRequest.id}">
+                        <i class="fas fa-times"></i> Decline
+                    </button>
+                </div>
+            `;
+            notificationDetails.appendChild(requestInfo);
+            
+            // Add event listeners
+            const acceptBtn = notification.querySelector('.accept-chat');
+            const declineBtn = notification.querySelector('.decline-chat');
+            
+            if (acceptBtn) {
+                acceptBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleChatRequestResponse(chatRequest.id, 'accepted', chatRequest);
+                    removeNotification(notificationId);
+                });
+            }
+            
+            if (declineBtn) {
+                declineBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleChatRequestResponse(chatRequest.id, 'declined', chatRequest);
+                    removeNotification(notificationId);
+                });
+            }
+        }
+    }
+}
+
+// Handle chat request response
+function handleChatRequestResponse(requestId, response, chatRequest) {
+    if (!currentUser) return;
+    
+    // Update request status
+    database.ref('chatRequests/' + currentUser.uid + '/' + requestId).update({
+        status: response
+    });
+    
+    if (response === 'accepted') {
+        // Create chat room
+        createChatFromRequest(chatRequest);
+        
+        // Add to contacts automatically
+        database.ref('userContacts/' + currentUser.uid + '/' + chatRequest.fromUserId).set(true);
+        database.ref('userContacts/' + chatRequest.fromUserId + '/' + currentUser.uid).set(true);
+        
+        showNotification('success', 'Chat Request Accepted', 
+            `You are now connected with ${chatRequest.fromUserName}`, 3000);
+    } else {
+        showNotification('info', 'Chat Request Declined', 
+            `You declined chat request from ${chatRequest.fromUserName}`, 3000);
+    }
+}
+
+// Create chat room from accepted request
+function createChatFromRequest(chatRequest) {
+    const chatId = database.ref('chats').push().key;
+    
+    // Create chat object
+    const chatData = {
+        id: chatId,
+        participants: {
+            [currentUser.uid]: true,
+            [chatRequest.fromUserId]: true
+        },
+        createdAt: Date.now(),
+        lastMessage: 'Chat started',
+        lastMessageTime: Date.now(),
+        createdFromRequest: true,
+        requestId: chatRequest.id
+    };
+    
+    // Save chat to database
+    database.ref('chats/' + chatId).set(chatData)
+        .then(() => {
+            // Add chat to both users' chat lists
+            database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
+            database.ref('userChats/' + chatRequest.fromUserId + '/' + chatId).set(true);
+            
+            // Add welcome message
+            const welcomeMessage = {
+                senderId: 'system',
+                content: `Chat started between ${chatRequest.fromUserName} and ${chatRequest.toUserName}`,
+                type: 'system',
+                timestamp: Date.now(),
+                status: 'sent'
+            };
+            
+            database.ref('chats/' + chatId + '/messages').push().set(welcomeMessage);
+            
+            // Show success notification
+            showNotification('success', 'Chat Started', 
+                `You can now chat with ${chatRequest.fromUserName}`, 3000);
+        })
+        .catch(error => {
+            console.error('Error creating chat:', error);
+            showNotification('error', 'Chat Creation Failed', 
+                'Failed to create chat room. Please try again.', 4000);
+        });
+}
+
+// Enhanced loadApp function to include new functionality
+const originalLoadApp = loadApp;
+loadApp = function() {
+    originalLoadApp();
+    setupNewChatModal();
+    setupChatRequestListeners();
+};
+
+// Enhanced requests panel to show both contact and chat requests
+function enhanceRequestsPanel() {
+    const requestsPanel = document.getElementById('requests-panel');
+    if (!requestsPanel) return;
+    
+    const panelContent = requestsPanel.querySelector('.panel-content');
+    if (panelContent) {
+        const requestList = panelContent.querySelector('#request-list');
+        if (requestList) {
+            // Listen for both contact and chat requests
+            database.ref('contactRequests/' + currentUser.uid).on('value', contactSnapshot => {
+                database.ref('chatRequests/' + currentUser.uid).on('value', chatSnapshot => {
+                    updateCombinedRequestsList(contactSnapshot.val(), chatSnapshot.val());
+                });
+            });
+        }
+    }
+}
+
+// Update combined requests list
+function updateCombinedRequestsList(contactRequests, chatRequests) {
+    const requestList = document.getElementById('request-list');
+    if (!requestList) return;
+    
+    requestList.innerHTML = '';
+    
+    let hasRequests = false;
+    
+    // Add chat requests
+    if (chatRequests) {
+        Object.keys(chatRequests).forEach(requestId => {
+            const request = chatRequests[requestId];
+            if (request.status === 'pending') {
+                hasRequests = true;
+                addChatRequestToList(request);
+            }
+        });
+    }
+    
+    // Add contact requests
+    if (contactRequests) {
+        Object.keys(contactRequests).forEach(userId => {
+            const request = contactRequests[userId];
+            if (request.status === 'pending') {
+                hasRequests = true;
+                // This will be handled by the existing contact request system
+            }
+        });
+    }
+    
+    if (!hasRequests) {
+        requestList.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h4>No pending requests</h4>
+                <p>When someone sends you a chat or contact request, it will appear here</p>
+            </div>
+        `;
+    }
+}
+
+// Add chat request to requests list
+function addChatRequestToList(chatRequest) {
+    const requestList = document.getElementById('request-list');
+    if (!requestList) return;
+    
+    const requestItem = document.createElement('div');
+    requestItem.className = 'request-item chat-request-item';
+    requestItem.setAttribute('data-request-id', chatRequest.id);
+    
+    requestItem.innerHTML = `
+        <div class="chat-avatar">
+            <div class="avatar-small">${chatRequest.fromUserName ? chatRequest.fromUserName.charAt(0).toUpperCase() : 'U'}</div>
+        </div>
+        <div class="request-details">
+            <div class="request-name">${chatRequest.fromUserName || 'Unknown User'}</div>
+            <div class="request-type">Chat Request</div>
+            <div class="request-info">
+                <div class="request-contact-info">
+                    <span><i class="fas fa-envelope"></i> ${chatRequest.fromUserEmail}</span>
+                    <span><i class="fas fa-phone"></i> ${chatRequest.fromUserPhone}</span>
+                </div>
+            </div>
+            <div class="request-actions">
+                <button class="request-btn accept-chat-request" data-request-id="${chatRequest.id}">
+                    <i class="fas fa-check"></i> Accept
+                </button>
+                <button class="request-btn decline-chat-request" data-request-id="${chatRequest.id}">
+                    <i class="fas fa-times"></i> Decline
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Add event listeners
+    const acceptBtn = requestItem.querySelector('.accept-chat-request');
+    const declineBtn = requestItem.querySelector('.decline-chat-request');
+    
+    if (acceptBtn) {
+        acceptBtn.addEventListener('click', () => {
+            handleChatRequestResponse(chatRequest.id, 'accepted', chatRequest);
+        });
+    }
+    
+    if (declineBtn) {
+        declineBtn.addEventListener('click', () => {
+            handleChatRequestResponse(chatRequest.id, 'declined', chatRequest);
+        });
+    }
+    
+    requestList.appendChild(requestItem);
+}
+
+// Initialize enhanced functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Override the original initializeApp to include our enhancements
+    const originalInitializeApp = initializeApp;
+    initializeApp = function() {
+        originalInitializeApp();
+        enhanceRequestsPanel();
+    };
+});
