@@ -24,6 +24,7 @@ let contacts = {};
 let requests = {};
 let onlineUsers = {};
 let userStatus = 'online';
+let notificationCount = 0;
 
 // DOM Elements
 document.addEventListener('DOMContentLoaded', function() {
@@ -137,16 +138,16 @@ function setupAuthScreens() {
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', (e) => {
             e.preventDefault();
-            forgotPasswordModal.classList.remove('hidden');
+            showModal('forgot-password-modal');
         });
     }
     
     if (closeForgotPassword) {
-        closeForgotPassword.addEventListener('click', () => forgotPasswordModal.classList.add('hidden'));
+        closeForgotPassword.addEventListener('click', () => hideModal('forgot-password-modal'));
     }
     
     if (cancelReset) {
-        cancelReset.addEventListener('click', () => forgotPasswordModal.classList.add('hidden'));
+        cancelReset.addEventListener('click', () => hideModal('forgot-password-modal'));
     }
     
     if (sendResetLink) {
@@ -160,11 +161,21 @@ function setupAuthScreens() {
 function showScreen(screenName) {
     // Hide all screens
     document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.add('hidden');
+        screen.classList.remove('active');
     });
     
     // Show the requested screen
-    document.getElementById(`${screenName}-screen`).classList.remove('hidden');
+    document.getElementById(`${screenName}-screen`).classList.add('active');
+}
+
+// Show modal
+function showModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+}
+
+// Hide modal
+function hideModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
 }
 
 // Handle user login
@@ -176,24 +187,26 @@ function handleLogin(e) {
     
     // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
     
     auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
             // Login successful
             currentUser = userCredential.user;
             showScreen('loading');
+            
+            // Show success notification
+            showNotification('success', 'Login Successful', 'Welcome back to Zynapse!', 3000);
         })
         .catch((error) => {
             // Handle errors
             console.error('Login error:', error);
-            alert(`Login failed: ${error.message}`);
+            
+            // Show error notification
+            showNotification('error', 'Login Failed', error.message, 5000);
             
             // Reset button
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
         });
 }
 
@@ -210,15 +223,13 @@ function handleRegister(e) {
     // Validate passwords match
     const confirmPassword = document.getElementById('register-confirm-password').value;
     if (password !== confirmPassword) {
-        alert('Passwords do not match');
+        showNotification('error', 'Registration Failed', 'Passwords do not match', 4000);
         return;
     }
     
     // Show loading state
     const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
-    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
     
     auth.createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
@@ -233,21 +244,26 @@ function handleRegister(e) {
                 email: email,
                 status: 'online',
                 lastSeen: Date.now(),
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                profileComplete: true
             });
         })
         .then(() => {
             // Registration complete
             showScreen('loading');
+            
+            // Show success notification
+            showNotification('success', 'Welcome to Zynapse!', 'Your account has been created successfully', 4000);
         })
         .catch((error) => {
             // Handle errors
             console.error('Registration error:', error);
-            alert(`Registration failed: ${error.message}`);
+            
+            // Show error notification
+            showNotification('error', 'Registration Failed', error.message, 5000);
             
             // Reset button
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
         });
 }
 
@@ -260,6 +276,9 @@ function loadApp() {
     
     // Update user status to online
     updateUserStatus('online');
+    
+    // Show welcome notification
+    showNotification('success', 'Welcome Back!', 'You are now connected to Zynapse', 3000);
 }
 
 // Setup app event listeners
@@ -283,7 +302,6 @@ function setupAppEventListeners() {
     const addContactBtn = document.getElementById('add-contact-btn');
     const addFirstContact = document.getElementById('add-first-contact');
     const startFirstChat = document.getElementById('start-first-chat');
-    const startChatEmpty = document.getElementById('start-chat-empty');
     
     // Chat buttons
     const backToChats = document.getElementById('back-to-chats');
@@ -295,18 +313,25 @@ function setupAppEventListeners() {
     const logoutBtn = document.getElementById('logout-btn');
     const editProfileBtn = document.getElementById('edit-profile-btn');
     const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const copyIdBtn = document.querySelector('.copy-id-btn');
 
-  // Add contact search functionality
-const contactSearch = document.getElementById('contact-search');
-if (contactSearch) {
-    let searchTimeout;
-    contactSearch.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            searchUsers(this.value);
-        }, 500);
-    });
-}
+    // Copy User ID functionality
+    if (copyIdBtn) {
+        copyIdBtn.addEventListener('click', copyUserIdToClipboard);
+    }
+
+    // Add contact search functionality
+    const contactSearch = document.getElementById('contact-search');
+    if (contactSearch) {
+        let searchTimeout;
+        contactSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchUsers(this.value);
+            }, 500);
+        });
+    }
+    
     // Navigation
     if (chatsBtn) chatsBtn.addEventListener('click', () => switchPanel('chats'));
     if (contactsBtn) contactsBtn.addEventListener('click', () => switchPanel('contacts'));
@@ -332,7 +357,6 @@ if (contactSearch) {
     
     // Chat management
     if (startFirstChat) startFirstChat.addEventListener('click', () => showModal('new-chat-modal'));
-    if (startChatEmpty) startChatEmpty.addEventListener('click', () => showModal('new-chat-modal'));
     if (backToChats) backToChats.addEventListener('click', showChatList);
     
     // Message sending
@@ -355,6 +379,9 @@ if (contactSearch) {
             
             // Toggle send button state
             sendBtn.disabled = !messageInput.value.trim();
+            
+            // Auto-resize textarea
+            autoResizeTextarea(messageInput);
         });
     }
     
@@ -382,6 +409,27 @@ if (contactSearch) {
             // Update global status
             document.getElementById('global-status').textContent = status.charAt(0).toUpperCase() + status.slice(1);
             document.getElementById('global-status').className = `status ${status}`;
+            
+            // Show notification
+            showNotification('info', 'Status Updated', `Your status is now set to ${status}`, 2000);
+        });
+    });
+    
+    // Settings tabs
+    const settingsTabs = document.querySelectorAll('.settings-tab');
+    settingsTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+            
+            // Update active tab
+            settingsTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Show corresponding content
+            document.querySelectorAll('.settings-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
         });
     });
     
@@ -397,6 +445,11 @@ if (contactSearch) {
         const emojiPicker = document.getElementById('emoji-picker');
         if (emojiPicker && !emojiPicker.contains(e.target) && !e.target.closest('#emoji-btn')) {
             emojiPicker.classList.add('hidden');
+        }
+        
+        // Modals
+        if (e.target.classList.contains('modal-backdrop')) {
+            hideAllModals();
         }
     });
     
@@ -421,7 +474,7 @@ if (contactSearch) {
 // Switch between panels
 function switchPanel(panelName) {
     // Update nav buttons
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+    document.querySelectorAll('.nav-tab').forEach(btn => {
         btn.classList.remove('active');
     });
     document.getElementById(`${panelName}-btn`).classList.add('active');
@@ -433,22 +486,7 @@ function switchPanel(panelName) {
     document.getElementById(`${panelName}-panel`).classList.add('active');
     
     // Hide active chat
-    document.getElementById('active-chat').classList.add('hidden');
-}
-
-// Show modal
-function showModal(modalId) {
-    document.getElementById(modalId).classList.remove('hidden');
-    
-    // Load data for specific modals
-    if (modalId === 'new-chat-modal') {
-        loadUsersForNewChat();
-    }
-}
-
-// Hide modal
-function hideModal(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
+    document.getElementById('active-chat').classList.remove('active');
 }
 
 // Toggle user menu
@@ -457,7 +495,6 @@ function toggleUserMenu() {
     dropdown.classList.toggle('hidden');
 }
 
-// Load current user data
 // Load current user data - ENHANCED VERSION
 function loadUserData() {
     if (!currentUser) return;
@@ -490,10 +527,23 @@ function loadUserData() {
         })
         .catch(error => {
             console.error('Error loading user data:', error);
+            showNotification('error', 'Profile Error', 'Failed to load user data', 4000);
         });
 }
 
-// Search for users by email or ID
+// Copy User ID to clipboard
+function copyUserIdToClipboard() {
+    const userId = document.getElementById('settings-user-id').textContent;
+    
+    navigator.clipboard.writeText(userId).then(() => {
+        showNotification('success', 'Copied!', 'User ID copied to clipboard', 2000);
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        showNotification('error', 'Copy Failed', 'Failed to copy User ID', 3000);
+    });
+}
+
+// Search for users by email, username, or ID
 function searchUsers(searchTerm) {
     if (!searchTerm.trim()) {
         document.getElementById('search-results').classList.add('hidden');
@@ -501,7 +551,7 @@ function searchUsers(searchTerm) {
     }
 
     const searchResults = document.getElementById('search-results');
-    searchResults.innerHTML = '<div class="loading-text">Searching...</div>';
+    searchResults.innerHTML = '<div class="loading-text"><i class="fas fa-spinner fa-spin"></i> Searching users...</div>';
     searchResults.classList.remove('hidden');
 
     // Search by email
@@ -514,30 +564,40 @@ function searchUsers(searchTerm) {
                 return;
             }
             
-            // If not found by email, search by user ID
-            database.ref('users/' + searchTerm).once('value')
-                .then(userSnapshot => {
-                    if (userSnapshot.exists()) {
-                        const userData = {};
-                        userData[searchTerm] = userSnapshot.val();
-                        displaySearchResults(userData);
-                    } else {
-                        // If still not found, search by username
-                        database.ref('users').orderByChild('username').equalTo(searchTerm.replace('@', '')).once('value')
-                            .then(usernameSnapshot => {
-                                const usernameUsers = usernameSnapshot.val();
-                                if (usernameUsers) {
-                                    displaySearchResults(usernameUsers);
-                                } else {
-                                    searchResults.innerHTML = '<div class="no-results">No user found with that email or ID</div>';
-                                }
-                            });
+            // If not found by email, search by username
+            database.ref('users').orderByChild('username').equalTo(searchTerm.replace('@', '')).once('value')
+                .then(usernameSnapshot => {
+                    const usernameUsers = usernameSnapshot.val();
+                    if (usernameUsers) {
+                        displaySearchResults(usernameUsers);
+                        return;
                     }
+                    
+                    // If still not found, search by user ID
+                    database.ref('users/' + searchTerm).once('value')
+                        .then(userSnapshot => {
+                            if (userSnapshot.exists()) {
+                                const userData = {};
+                                userData[searchTerm] = userSnapshot.val();
+                                displaySearchResults(userData);
+                            } else {
+                                // If still not found, search by name (partial match)
+                                database.ref('users').orderByChild('name').startAt(searchTerm).endAt(searchTerm + '\uf8ff').once('value')
+                                    .then(nameSnapshot => {
+                                        const nameUsers = nameSnapshot.val();
+                                        if (nameUsers) {
+                                            displaySearchResults(nameUsers);
+                                        } else {
+                                            searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No user found with that information</p></div>';
+                                        }
+                                    });
+                            }
+                        });
                 });
         })
         .catch(error => {
             console.error('Search error:', error);
-            searchResults.innerHTML = '<div class="error-text">Search failed. Please try again.</div>';
+            searchResults.innerHTML = '<div class="error-text"><i class="fas fa-exclamation-triangle"></i><p>Search failed. Please try again.</p></div>';
         });
 }
 
@@ -582,14 +642,17 @@ function displaySearchResults(usersData) {
             database.ref('users/' + userId).once('value')
                 .then(snapshot => {
                     const userData = snapshot.val();
-                    searchInput.value = userData.email; // Or userData.username or userId
+                    searchInput.value = userData.email;
                     searchResults.classList.add('hidden');
+                    
+                    // Show confirmation
+                    showNotification('success', 'User Selected', `${userData.name} has been selected`, 2000);
                 });
         });
     });
     
     if (searchResults.innerHTML === '') {
-        searchResults.innerHTML = '<div class="no-results">No user found with that email or ID</div>';
+        searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No user found with that information</p></div>';
     }
 }
 
@@ -601,6 +664,7 @@ function setupRealtimeListeners() {
     database.ref('userChats/' + currentUser.uid).on('value', snapshot => {
         const userChats = snapshot.val();
         const chatList = document.getElementById('chat-list');
+        const chatsCount = document.getElementById('chats-count');
         
         // Clear existing chats (except empty state)
         const existingChats = chatList.querySelectorAll('.chat-item:not(.empty-state)');
@@ -611,13 +675,20 @@ function setupRealtimeListeners() {
             if (!chatList.querySelector('.empty-state')) {
                 chatList.innerHTML = `
                     <div class="empty-state">
-                        <i class="fas fa-comments"></i>
-                        <p>No chats yet</p>
-                        <button class="btn btn-primary" id="start-first-chat">Start a chat</button>
+                        <div class="empty-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h4>No conversations yet</h4>
+                        <p>Start a new chat to connect with friends and colleagues</p>
+                        <button class="btn btn-primary btn-glow" id="start-first-chat">
+                            <i class="fas fa-plus"></i>
+                            Start Your First Chat
+                        </button>
                     </div>
                 `;
                 document.getElementById('start-first-chat').addEventListener('click', () => showModal('new-chat-modal'));
             }
+            chatsCount.textContent = '0 chats';
             return;
         }
         
@@ -625,8 +696,11 @@ function setupRealtimeListeners() {
         const emptyState = chatList.querySelector('.empty-state');
         if (emptyState) emptyState.remove();
         
+        const chatIds = Object.keys(userChats);
+        chatsCount.textContent = `${chatIds.length} ${chatIds.length === 1 ? 'chat' : 'chats'}`;
+        
         // Add chats to the list
-        Object.keys(userChats).forEach(chatId => {
+        chatIds.forEach(chatId => {
             database.ref('chats/' + chatId).once('value')
                 .then(chatSnapshot => {
                     const chatData = chatSnapshot.val();
@@ -641,6 +715,7 @@ function setupRealtimeListeners() {
     database.ref('userContacts/' + currentUser.uid).on('value', snapshot => {
         const userContacts = snapshot.val();
         const contactList = document.getElementById('contact-list');
+        const contactsCount = document.getElementById('contacts-count');
         
         // Clear existing contacts (except empty state)
         const existingContacts = contactList.querySelectorAll('.contact-item:not(.empty-state)');
@@ -651,13 +726,20 @@ function setupRealtimeListeners() {
             if (!contactList.querySelector('.empty-state')) {
                 contactList.innerHTML = `
                     <div class="empty-state">
-                        <i class="fas fa-user-friends"></i>
-                        <p>No contacts yet</p>
-                        <button class="btn btn-primary" id="add-first-contact">Add a contact</button>
+                        <div class="empty-icon">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                        <h4>No contacts yet</h4>
+                        <p>Add contacts to start chatting and sharing</p>
+                        <button class="btn btn-primary btn-glow" id="add-first-contact">
+                            <i class="fas fa-user-plus"></i>
+                            Add Your First Contact
+                        </button>
                     </div>
                 `;
                 document.getElementById('add-first-contact').addEventListener('click', () => showModal('add-contact-modal'));
             }
+            contactsCount.textContent = '0 contacts';
             return;
         }
         
@@ -665,8 +747,11 @@ function setupRealtimeListeners() {
         const emptyState = contactList.querySelector('.empty-state');
         if (emptyState) emptyState.remove();
         
+        const contactIds = Object.keys(userContacts);
+        contactsCount.textContent = `${contactIds.length} ${contactIds.length === 1 ? 'contact' : 'contacts'}`;
+        
         // Add contacts to the list
-        Object.keys(userContacts).forEach(contactId => {
+        contactIds.forEach(contactId => {
             database.ref('users/' + contactId).once('value')
                 .then(userSnapshot => {
                     const userData = userSnapshot.val();
@@ -682,6 +767,7 @@ function setupRealtimeListeners() {
         const userRequests = snapshot.val();
         const requestList = document.getElementById('request-list');
         const requestsBadge = document.getElementById('requests-badge');
+        const requestsCount = document.getElementById('requests-count');
         
         // Clear existing requests (except empty state)
         const existingRequests = requestList.querySelectorAll('.request-item:not(.empty-state)');
@@ -694,13 +780,17 @@ function setupRealtimeListeners() {
             if (!requestList.querySelector('.empty-state')) {
                 requestList.innerHTML = `
                     <div class="empty-state">
-                        <i class="fas fa-user-plus"></i>
-                        <p>No pending requests</p>
+                        <div class="empty-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h4>No pending requests</h4>
+                        <p>When someone sends you a contact request, it will appear here</p>
                     </div>
                 `;
             }
-            // Update badge
+            // Update badge and count
             requestsBadge.classList.add('hidden');
+            requestsCount.textContent = '0 pending';
             return;
         }
         
@@ -716,19 +806,28 @@ function setupRealtimeListeners() {
                     .then(userSnapshot => {
                         const userData = userSnapshot.val();
                         if (userData) {
-                            addRequestToList(requestId, userData);
+                            addRequestToList(requestId, userData, userRequests[requestId]);
                         }
                     });
             }
         });
         
-        // Update badge
+        // Update badge and count
         if (pendingCount > 0) {
             requestsBadge.textContent = pendingCount;
             requestsBadge.classList.remove('hidden');
+            requestsCount.textContent = `${pendingCount} pending`;
+            
+            // Show notification for new requests
+            if (pendingCount > Object.keys(requests).length) {
+                showNotification('info', 'New Contact Request', `You have ${pendingCount} pending contact requests`, 4000);
+            }
         } else {
             requestsBadge.classList.add('hidden');
+            requestsCount.textContent = '0 pending';
         }
+        
+        requests = userRequests;
     });
     
     // Listen for online users
@@ -867,7 +966,7 @@ function addContactToList(contactId, userData) {
 }
 
 // Add a request to the request list
-function addRequestToList(requestId, userData) {
+function addRequestToList(requestId, userData, requestData) {
     const requestList = document.getElementById('request-list');
     
     const requestItem = document.createElement('div');
@@ -880,7 +979,7 @@ function addRequestToList(requestId, userData) {
         </div>
         <div class="request-details">
             <div class="request-name">${userData.name}</div>
-            <div class="request-info">Wants to connect with you</div>
+            <div class="request-info">${requestData.message || 'Wants to connect with you'}</div>
             <div class="request-actions">
                 <button class="request-btn accept">Accept</button>
                 <button class="request-btn decline">Decline</button>
@@ -1000,7 +1099,7 @@ function openChat(chatId, userData) {
     document.querySelectorAll('.content-panel').forEach(panel => {
         panel.classList.remove('active');
     });
-    document.getElementById('active-chat').classList.remove('hidden');
+    document.getElementById('active-chat').classList.add('active');
     
     // Update chat header
     document.getElementById('active-chat-name').textContent = userData.name;
@@ -1018,7 +1117,7 @@ function openChat(chatId, userData) {
 
 // Show chat list
 function showChatList() {
-    document.getElementById('active-chat').classList.add('hidden');
+    document.getElementById('active-chat').classList.remove('active');
     switchPanel('chats');
     currentChat = null;
 }
@@ -1034,8 +1133,10 @@ function loadMessages(chatId) {
         if (!messagesData) {
             messagesContainer.innerHTML = `
                 <div class="empty-state">
-                    <i class="fas fa-comment-slash"></i>
-                    <p>No messages yet</p>
+                    <div class="empty-icon">
+                        <i class="fas fa-comment-slash"></i>
+                    </div>
+                    <h4>No messages yet</h4>
                     <p>Start the conversation!</p>
                 </div>
             `;
@@ -1175,7 +1276,7 @@ function sendMessage() {
         })
         .catch(error => {
             console.error('Error sending message:', error);
-            alert('Failed to send message. Please try again.');
+            showNotification('error', 'Message Failed', 'Failed to send message. Please try again.', 4000);
         });
 }
 
@@ -1234,21 +1335,23 @@ function createNewChat(userId, userData) {
             
             // Open the new chat
             openChat(chatId, userData);
+            
+            // Show success notification
+            showNotification('success', 'Chat Started', `You started a chat with ${userData.name}`, 3000);
         })
         .catch(error => {
             console.error('Error creating chat:', error);
-            alert('Failed to create chat. Please try again.');
+            showNotification('error', 'Chat Failed', 'Failed to create chat. Please try again.', 4000);
         });
 }
 
 // Handle contact request
-// Handle contact request - ENHANCED VERSION
 function handleSendContactRequest() {
     const searchInput = document.getElementById('contact-search').value;
     const message = document.getElementById('contact-message').value;
     
     if (!searchInput) {
-        alert('Please enter an email address or User ID');
+        showNotification('error', 'Missing Information', 'Please enter an email address or User ID', 4000);
         return;
     }
     
@@ -1273,7 +1376,7 @@ function handleSendContactRequest() {
     searchPromise.then(snapshot => {
         const usersData = snapshot.val();
         if (!usersData || Object.keys(usersData).length === 0) {
-            alert('No user found with that email address or User ID');
+            showNotification('error', 'User Not Found', 'No user found with that email address or User ID', 4000);
             return;
         }
         
@@ -1281,7 +1384,7 @@ function handleSendContactRequest() {
         const userData = usersData[userId];
         
         if (userId === currentUser.uid) {
-            alert('You cannot send a contact request to yourself');
+            showNotification('error', 'Invalid Request', 'You cannot send a contact request to yourself', 4000);
             return;
         }
         
@@ -1289,7 +1392,7 @@ function handleSendContactRequest() {
         database.ref('userContacts/' + currentUser.uid + '/' + userId).once('value')
             .then(contactSnapshot => {
                 if (contactSnapshot.exists()) {
-                    alert('This user is already in your contacts');
+                    showNotification('info', 'Already Connected', 'This user is already in your contacts', 4000);
                     return;
                 }
                 
@@ -1299,7 +1402,7 @@ function handleSendContactRequest() {
                         if (requestSnapshot.exists()) {
                             const requestData = requestSnapshot.val();
                             if (requestData.status === 'pending') {
-                                alert('You have already sent a pending request to this user');
+                                showNotification('info', 'Request Pending', 'You have already sent a pending request to this user', 4000);
                                 return;
                             }
                         }
@@ -1316,7 +1419,7 @@ function handleSendContactRequest() {
                         
                         database.ref('contactRequests/' + userId + '/' + currentUser.uid).set(requestData)
                             .then(() => {
-                                alert('Contact request sent successfully');
+                                showNotification('success', 'Request Sent', `Contact request sent to ${userData.name}`, 3000);
                                 hideModal('add-contact-modal');
                                 document.getElementById('contact-search').value = '';
                                 document.getElementById('contact-message').value = '';
@@ -1324,17 +1427,16 @@ function handleSendContactRequest() {
                             })
                             .catch(error => {
                                 console.error('Error sending contact request:', error);
-                                alert('Failed to send contact request');
+                                showNotification('error', 'Request Failed', 'Failed to send contact request', 4000);
                             });
                     });
             });
     })
     .catch(error => {
         console.error('Error finding user:', error);
-        alert('Error finding user');
+        showNotification('error', 'Search Error', 'Error finding user', 4000);
     });
 }
-
 
 // Handle contact request response
 function handleContactRequest(requestId, response) {
@@ -1355,10 +1457,19 @@ function handleContactRequest(requestId, response) {
         if (requestItem) requestItem.remove();
         
         // Show success message
-        alert('Contact added successfully');
+        showNotification('success', 'Contact Added', 'Contact added successfully', 3000);
+        
+        // Get user data for notification
+        database.ref('users/' + requestId).once('value')
+            .then(snapshot => {
+                const userData = snapshot.val();
+                if (userData) {
+                    showNotification('success', 'Contact Added', `${userData.name} has been added to your contacts`, 3000);
+                }
+            });
     } else {
         // Show declined message
-        alert('Contact request declined');
+        showNotification('info', 'Request Declined', 'Contact request declined', 3000);
     }
 }
 
@@ -1448,6 +1559,77 @@ function insertEmoji(emoji) {
     document.getElementById('emoji-picker').classList.add('hidden');
 }
 
+// Enhanced Notification System
+function showNotification(type, title, message, duration = 5000) {
+    const notificationContainer = document.getElementById('notification-container');
+    const notificationId = 'notification-' + Date.now();
+    
+    const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        warning: 'fas fa-exclamation-triangle',
+        info: 'fas fa-info-circle'
+    };
+    
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.id = notificationId;
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-details">
+                <div class="notification-header">
+                    <div class="notification-title">
+                        <i class="${icons[type]}"></i>
+                        ${title}
+                    </div>
+                    <div class="notification-time">${formatTime(new Date())}</div>
+                </div>
+                <div class="notification-message">${message}</div>
+            </div>
+            <button class="notification-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    notificationContainer.appendChild(notification);
+    
+    // Add close event
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.addEventListener('click', () => {
+        removeNotification(notificationId);
+    });
+    
+    // Auto remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            removeNotification(notificationId);
+        }, duration);
+    }
+    
+    // Add click to dismiss
+    notification.addEventListener('click', (e) => {
+        if (!e.target.closest('.notification-close')) {
+            removeNotification(notificationId);
+        }
+    });
+    
+    return notificationId;
+}
+
+function removeNotification(notificationId) {
+    const notification = document.getElementById(notificationId);
+    if (notification) {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }
+}
+
 // Show message notification
 function showMessageNotification(chatId, message) {
     // Get sender info
@@ -1455,9 +1637,6 @@ function showMessageNotification(chatId, message) {
         .then(snapshot => {
             const userData = snapshot.val();
             if (!userData) return;
-            
-            const notification = document.getElementById('message-notification');
-            document.getElementById('notif-sender').textContent = userData.name;
             
             let messageText = '';
             if (message.type === 'text') {
@@ -1468,26 +1647,16 @@ function showMessageNotification(chatId, message) {
                 messageText = 'Sent a file';
             }
             
-            document.getElementById('notif-message').textContent = messageText;
-            notification.classList.remove('hidden');
-            
-            // Auto hide after 5 seconds
-            setTimeout(() => {
-                notification.classList.add('hidden');
-            }, 5000);
+            const notificationId = showNotification('info', userData.name, messageText, 5000);
             
             // Add click event to open the chat
-            notification.addEventListener('click', () => {
-                openChat(chatId, userData);
-                notification.classList.add('hidden');
-            });
-            
-            // Add close button event
-            const closeBtn = notification.querySelector('.notification-close');
-            closeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                notification.classList.add('hidden');
-            });
+            const notification = document.getElementById(notificationId);
+            if (notification) {
+                notification.addEventListener('click', () => {
+                    openChat(chatId, userData);
+                    removeNotification(notificationId);
+                });
+            }
         });
 }
 
@@ -1496,27 +1665,44 @@ function handleLogout() {
     // Update status to offline
     updateUserStatus('offline');
     
+    // Show loading state
+    const logoutBtn = document.getElementById('logout-btn');
+    const originalText = logoutBtn.innerHTML;
+    logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
+    logoutBtn.disabled = true;
+    
     // Sign out
     auth.signOut()
         .then(() => {
             currentUser = null;
-            window.location.href = 'index.html';
+            showNotification('success', 'Logged Out', 'You have been successfully logged out', 2000);
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
         })
         .catch(error => {
             console.error('Logout error:', error);
+            showNotification('error', 'Logout Failed', 'Failed to logout. Please try again.', 4000);
+            
+            // Reset button
+            logoutBtn.innerHTML = originalText;
+            logoutBtn.disabled = false;
         });
 }
 
 // Handle edit profile
 function handleEditProfile() {
-    alert('Edit profile feature coming soon!');
+    showNotification('info', 'Coming Soon', 'Edit profile feature will be available in the next update', 4000);
 }
 
 // Toggle dark mode
 function toggleDarkMode() {
     document.body.classList.toggle('dark-theme');
-    // In a real app, you would save this preference to localStorage
-    localStorage.setItem('darkMode', document.body.classList.contains('dark-theme'));
+    const isDarkMode = document.body.classList.contains('dark-theme');
+    localStorage.setItem('darkMode', isDarkMode);
+    
+    showNotification('success', 'Theme Updated', 
+        isDarkMode ? 'Dark mode activated' : 'Light mode activated', 2000);
 }
 
 // Handle password reset
@@ -1524,18 +1710,26 @@ function handlePasswordReset() {
     const email = document.getElementById('reset-email').value;
     
     if (!email) {
-        alert('Please enter your email address');
+        showNotification('error', 'Missing Email', 'Please enter your email address', 4000);
         return;
     }
     
+    // Show loading state
+    const sendBtn = document.getElementById('send-reset-link');
+    sendBtn.classList.add('loading');
+    
     auth.sendPasswordResetEmail(email)
         .then(() => {
-            alert('Password reset email sent! Check your inbox.');
-            document.getElementById('forgot-password-modal').classList.add('hidden');
+            showNotification('success', 'Reset Email Sent', 'Password reset email sent! Check your inbox.', 5000);
+            hideModal('forgot-password-modal');
+            document.getElementById('reset-email').value = '';
         })
         .catch(error => {
             console.error('Password reset error:', error);
-            alert(`Failed to send reset email: ${error.message}`);
+            showNotification('error', 'Reset Failed', `Failed to send reset email: ${error.message}`, 5000);
+        })
+        .finally(() => {
+            sendBtn.classList.remove('loading');
         });
 }
 
@@ -1544,29 +1738,67 @@ function checkPasswordStrength() {
     const password = document.getElementById('register-password').value;
     const strengthFill = document.getElementById('password-strength-fill');
     const strengthText = document.getElementById('password-strength-text');
+    const requirements = document.querySelectorAll('.requirement');
     
-    // Simple password strength calculation
-    let strength = 0;
+    // Reset requirements
+    requirements.forEach(req => req.classList.remove('met'));
     
-    if (password.length >= 8) strength += 1;
-    if (/[a-z]/.test(password)) strength += 1;
-    if (/[A-Z]/.test(password)) strength += 1;
-    if (/[0-9]/.test(password)) strength += 1;
-    if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
-    
-    // Update UI
-    strengthFill.className = 'strength-fill';
-    
-    if (strength <= 2) {
-        strengthFill.classList.add('weak');
+    if (!password) {
+        strengthFill.style.width = '0%';
         strengthText.textContent = 'Weak';
         strengthText.style.color = 'var(--primary-red)';
-    } else if (strength <= 4) {
-        strengthFill.classList.add('medium');
+        return;
+    }
+    
+    // Check requirements
+    let strength = 0;
+    const requirementsMet = {};
+    
+    // Length requirement
+    if (password.length >= 8) {
+        strength += 20;
+        requirementsMet.length = true;
+        document.querySelector('.requirement[data-requirement="length"]').classList.add('met');
+    }
+    
+    // Uppercase requirement
+    if (/[A-Z]/.test(password)) {
+        strength += 20;
+        requirementsMet.uppercase = true;
+        document.querySelector('.requirement[data-requirement="uppercase"]').classList.add('met');
+    }
+    
+    // Lowercase requirement
+    if (/[a-z]/.test(password)) {
+        strength += 20;
+        requirementsMet.lowercase = true;
+        document.querySelector('.requirement[data-requirement="lowercase"]').classList.add('met');
+    }
+    
+    // Number requirement
+    if (/[0-9]/.test(password)) {
+        strength += 20;
+        requirementsMet.number = true;
+        document.querySelector('.requirement[data-requirement="number"]').classList.add('met');
+    }
+    
+    // Special character requirement
+    if (/[^a-zA-Z0-9]/.test(password)) {
+        strength += 20;
+        requirementsMet.special = true;
+        document.querySelector('.requirement[data-requirement="special"]').classList.add('met');
+    }
+    
+    // Update UI
+    strengthFill.style.width = strength + '%';
+    
+    if (strength <= 40) {
+        strengthText.textContent = 'Weak';
+        strengthText.style.color = 'var(--primary-red)';
+    } else if (strength <= 80) {
         strengthText.textContent = 'Medium';
         strengthText.style.color = 'var(--warning)';
     } else {
-        strengthFill.classList.add('strong');
         strengthText.textContent = 'Strong';
         strengthText.style.color = 'var(--success)';
     }
@@ -1585,12 +1817,25 @@ function checkPasswordMatch() {
     }
     
     if (password === confirmPassword) {
-        messageElement.textContent = 'Passwords match';
+        messageElement.textContent = '✓ Passwords match';
         messageElement.className = 'validation-message success';
     } else {
-        messageElement.textContent = 'Passwords do not match';
+        messageElement.textContent = '✗ Passwords do not match';
         messageElement.className = 'validation-message error';
     }
+}
+
+// Auto-resize textarea
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+}
+
+// Hide all modals
+function hideAllModals() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.remove('active');
+    });
 }
 
 // Utility functions
@@ -1635,6 +1880,7 @@ document.addEventListener('visibilitychange', function() {
 window.addEventListener('beforeunload', function() {
     if (currentUser) {
         // Use sendBeacon or similar for reliable status update
+        navigator.sendBeacon = navigator.sendBeacon || function() { return true; };
         updateUserStatus('offline');
     }
 });
@@ -1644,6 +1890,13 @@ window.addEventListener('DOMContentLoaded', function() {
     const darkMode = localStorage.getItem('darkMode');
     if (darkMode === 'false') {
         document.body.classList.remove('dark-theme');
-        document.getElementById('dark-mode-toggle').checked = false;
+        if (document.getElementById('dark-mode-toggle')) {
+            document.getElementById('dark-mode-toggle').checked = false;
+        }
     }
+});
+
+// Initialize any animations or interactive elements
+window.addEventListener('load', function() {
+    // Add any initialization code for animations or other features
 });
