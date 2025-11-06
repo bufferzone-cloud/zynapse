@@ -30,6 +30,7 @@ let userTypingTimeout = null;
 let messageListeners = {};
 let chatListeners = {};
 let typingListeners = {};
+let shouldAutoScroll = true;
 
 // DOM Elements
 document.addEventListener('DOMContentLoaded', function() {
@@ -590,6 +591,37 @@ function setupAppEventListeners() {
             handleUserMenuAction(action);
         });
     });
+
+    // Auto-scroll functionality for messages
+    const messagesScrollArea = document.getElementById('messages-scroll-area');
+    if (messagesScrollArea) {
+        messagesScrollArea.addEventListener('scroll', handleMessagesScroll);
+    }
+}
+
+// Handle messages scroll to detect when user scrolls up
+function handleMessagesScroll() {
+    const messagesScrollArea = document.getElementById('messages-scroll-area');
+    if (!messagesScrollArea) return;
+    
+    const scrollTop = messagesScrollArea.scrollTop;
+    const scrollHeight = messagesScrollArea.scrollHeight;
+    const clientHeight = messagesScrollArea.clientHeight;
+    
+    // If user scrolls up more than 100px from bottom, disable auto-scroll
+    shouldAutoScroll = (scrollHeight - scrollTop - clientHeight) < 100;
+}
+
+// Auto-scroll to bottom of messages
+function scrollToBottom() {
+    if (!shouldAutoScroll) return;
+    
+    const messagesScrollArea = document.getElementById('messages-scroll-area');
+    if (messagesScrollArea) {
+        setTimeout(() => {
+            messagesScrollArea.scrollTop = messagesScrollArea.scrollHeight;
+        }, 100);
+    }
 }
 
 // Handle user menu actions
@@ -1258,47 +1290,84 @@ function addRequestToList(requestId, userData, requestData) {
     requestList.appendChild(requestItem);
 }
 
-// Load users for new chat modal
+// Load users for new chat modal - ONLY SHOW CONTACTS
 function loadUsersForNewChat() {
     if (!currentUser) return;
     
-    database.ref('users').once('value')
-        .then(snapshot => {
-            const usersData = snapshot.val();
+    // Only load users who are contacts (users we have chat history with)
+    database.ref('userContacts/' + currentUser.uid).once('value')
+        .then(contactsSnapshot => {
+            const contacts = contactsSnapshot.val();
             const userListModal = document.getElementById('user-list-modal');
             if (!userListModal) return;
             
             userListModal.innerHTML = '';
             
-            if (!usersData) {
-                userListModal.innerHTML = '<div class="empty-state"><p>No users found</p></div>';
+            if (!contacts) {
+                userListModal.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4>No contacts yet</h4>
+                        <p>Add contacts to start chatting</p>
+                    </div>
+                `;
                 return;
             }
             
-            Object.keys(usersData).forEach(userId => {
-                if (userId !== currentUser.uid) {
-                    const userData = usersData[userId];
-                    const userItem = document.createElement('div');
-                    userItem.className = 'contact-item';
-                    userItem.innerHTML = `
-                        <div class="chat-avatar">
-                            <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
-                            <span class="presence-indicator ${userData.status || 'offline'}"></span>
-                        </div>
-                        <div class="contact-details">
-                            <div class="contact-name">${userData.name || 'Unknown User'}</div>
-                            <div class="contact-status">${userData.status || 'offline'}</div>
-                        </div>
-                    `;
-                    
-                    userItem.addEventListener('click', () => {
-                        startChatWithUser(userId, userData);
-                        hideModal('new-chat-modal');
+            const contactIds = Object.keys(contacts);
+            let loadedContacts = 0;
+            
+            contactIds.forEach(contactId => {
+                database.ref('users/' + contactId).once('value')
+                    .then(userSnapshot => {
+                        const userData = userSnapshot.val();
+                        if (userData) {
+                            const userItem = document.createElement('div');
+                            userItem.className = 'contact-item';
+                            userItem.innerHTML = `
+                                <div class="chat-avatar">
+                                    <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
+                                    <span class="presence-indicator ${userData.status || 'offline'}"></span>
+                                </div>
+                                <div class="contact-details">
+                                    <div class="contact-name">${userData.name || 'Unknown User'}</div>
+                                    <div class="contact-status">${userData.status || 'offline'}</div>
+                                </div>
+                            `;
+                            
+                            userItem.addEventListener('click', () => {
+                                startChatWithUser(contactId, userData);
+                                hideModal('new-chat-modal');
+                            });
+                            
+                            userListModal.appendChild(userItem);
+                        }
+                        
+                        loadedContacts++;
+                        
+                        // If all contacts are loaded and none were found, show empty state
+                        if (loadedContacts === contactIds.length && userListModal.innerHTML === '') {
+                            userListModal.innerHTML = `
+                                <div class="empty-state">
+                                    <div class="empty-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <h4>No contacts available</h4>
+                                    <p>Add contacts to start chatting</p>
+                                </div>
+                            `;
+                        }
                     });
-                    
-                    userListModal.appendChild(userItem);
-                }
             });
+        })
+        .catch(error => {
+            console.error('Error loading contacts:', error);
+            const userListModal = document.getElementById('user-list-modal');
+            if (userListModal) {
+                userListModal.innerHTML = '<div class="empty-state"><p>Error loading contacts</p></div>';
+            }
         });
 }
 
@@ -1358,6 +1427,9 @@ function openChat(chatId, userData) {
     currentChat = chatId;
     currentChatUser = userData;
     
+    // Enable auto-scroll when opening a chat
+    shouldAutoScroll = true;
+    
     // Update UI
     document.querySelectorAll('.content-panel').forEach(panel => {
         panel.classList.remove('active');
@@ -1391,13 +1463,23 @@ function openChat(chatId, userData) {
     // Update last seen
     updateLastSeen(userData.uid);
     
-    // Focus on message input
+    // Focus on message input and ensure it's visible
     const messageInput = document.getElementById('message-input');
     if (messageInput) {
         setTimeout(() => {
             messageInput.focus();
+            // Ensure message input container is visible
+            const messageInputContainer = document.querySelector('.message-input-container');
+            if (messageInputContainer) {
+                messageInputContainer.style.display = 'flex';
+            }
         }, 300);
     }
+    
+    // Scroll to bottom immediately
+    setTimeout(() => {
+        scrollToBottom();
+    }, 100);
 }
 
 // Show chat list
@@ -1447,6 +1529,8 @@ function loadMessages(chatId) {
                     <p>Start the conversation!</p>
                 </div>
             `;
+            // Ensure message input is visible even when no messages
+            ensureMessageInputVisible();
             return;
         }
         
@@ -1518,13 +1602,11 @@ function loadMessages(chatId) {
             if (messageGroup) messageGroup.appendChild(messageElement);
         });
         
-        // Scroll to bottom
-        setTimeout(() => {
-            const messagesScrollArea = document.getElementById('messages-scroll-area');
-            if (messagesScrollArea) {
-                messagesScrollArea.scrollTop = messagesScrollArea.scrollHeight;
-            }
-        }, 100);
+        // Ensure message input is visible
+        ensureMessageInputVisible();
+        
+        // Auto-scroll to bottom
+        scrollToBottom();
     });
     
     // Listen for typing indicators
@@ -1553,6 +1635,9 @@ function loadMessages(chatId) {
                             `${names.join(', ')} ${names.length > 1 ? 'are' : 'is'} typing...`;
                     }
                     typingIndicator.classList.remove('hidden');
+                    
+                    // Auto-scroll when someone is typing
+                    scrollToBottom();
                 });
             } else {
                 typingIndicator.classList.add('hidden');
@@ -1561,6 +1646,16 @@ function loadMessages(chatId) {
             typingIndicator.classList.add('hidden');
         }
     });
+}
+
+// Ensure message input is always visible
+function ensureMessageInputVisible() {
+    const messageInputContainer = document.querySelector('.message-input-container');
+    if (messageInputContainer) {
+        messageInputContainer.style.display = 'flex';
+        messageInputContainer.style.visibility = 'visible';
+        messageInputContainer.style.opacity = '1';
+    }
 }
 
 // Send a message
@@ -1606,13 +1701,9 @@ function sendMessage() {
             // Stop typing indicator
             updateTypingStatus(false);
             
-            // Scroll to bottom
-            setTimeout(() => {
-                const messagesScrollArea = document.getElementById('messages-scroll-area');
-                if (messagesScrollArea) {
-                    messagesScrollArea.scrollTop = messagesScrollArea.scrollHeight;
-                }
-            }, 100);
+            // Force auto-scroll after sending message
+            shouldAutoScroll = true;
+            scrollToBottom();
         })
         .catch(error => {
             console.error('Error sending message:', error);
@@ -1620,38 +1711,51 @@ function sendMessage() {
         });
 }
 
-// Start a new chat with a user
+// Start a new chat with a user - ONLY ALLOWED WITH CONTACTS
 function startChatWithUser(userId, userData) {
-    // Check if chat already exists
-    database.ref('userChats/' + currentUser.uid).once('value')
-        .then(snapshot => {
-            const userChats = snapshot.val();
-            let existingChatId = null;
+    // Check if user is in contacts
+    database.ref('userContacts/' + currentUser.uid + '/' + userId).once('value')
+        .then(contactSnapshot => {
+            if (!contactSnapshot.exists()) {
+                showNotification('error', 'Cannot Start Chat', 'You can only chat with users in your contacts list. Send a contact request first.', 5000);
+                return;
+            }
             
-            if (userChats) {
-                // Check each chat to see if it includes the target user
-                const chatPromises = Object.keys(userChats).map(chatId => {
-                    return database.ref('chats/' + chatId + '/participants').once('value')
-                        .then(participantsSnapshot => {
-                            const participants = participantsSnapshot.val();
-                            if (participants && participants[userId]) {
-                                existingChatId = chatId;
-                            }
+            // Check if chat already exists
+            database.ref('userChats/' + currentUser.uid).once('value')
+                .then(snapshot => {
+                    const userChats = snapshot.val();
+                    let existingChatId = null;
+                    
+                    if (userChats) {
+                        // Check each chat to see if it includes the target user
+                        const chatPromises = Object.keys(userChats).map(chatId => {
+                            return database.ref('chats/' + chatId + '/participants').once('value')
+                                .then(participantsSnapshot => {
+                                    const participants = participantsSnapshot.val();
+                                    if (participants && participants[userId]) {
+                                        existingChatId = chatId;
+                                    }
+                                });
                         });
+                        
+                        return Promise.all(chatPromises).then(() => existingChatId);
+                    }
+                    return null;
+                })
+                .then(existingChatId => {
+                    if (existingChatId) {
+                        // Open existing chat
+                        openChat(existingChatId, userData);
+                    } else {
+                        // Create new chat
+                        createNewChat(userId, userData);
+                    }
                 });
-                
-                return Promise.all(chatPromises).then(() => existingChatId);
-            }
-            return null;
         })
-        .then(existingChatId => {
-            if (existingChatId) {
-                // Open existing chat
-                openChat(existingChatId, userData);
-            } else {
-                // Create new chat
-                createNewChat(userId, userData);
-            }
+        .catch(error => {
+            console.error('Error checking contact:', error);
+            showNotification('error', 'Error', 'Failed to verify contact status', 4000);
         });
 }
 
@@ -1678,6 +1782,10 @@ function createNewChat(userId, userData) {
             // Add chat to user's chat list
             database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
             database.ref('userChats/' + userId + '/' + chatId).set(true);
+            
+            // Add users to each other's contacts if not already
+            database.ref('userContacts/' + currentUser.uid + '/' + userId).set(true);
+            database.ref('userContacts/' + userId + '/' + currentUser.uid).set(true);
             
             // Open the new chat
             openChat(chatId, userData);
@@ -2334,7 +2442,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 // NEW FUNCTIONALITY: Enhanced Chat Request System
 
-// Enhanced New Chat Modal with User Search Form
+// Enhanced New Chat Modal with User Search Form - ONLY SHOW CONTACTS
 function setupNewChatModal() {
     const newChatModal = document.getElementById('new-chat-modal');
     if (!newChatModal) return;
@@ -2347,13 +2455,13 @@ function setupNewChatModal() {
                 <div class="form-group">
                     <label for="user-search-input">
                         <i class="fas fa-search"></i>
-                        Find User by Email or UID
+                        Find Contact by Email or UID
                     </label>
-                    <input type="text" id="user-search-input" placeholder="Enter user's email address or User ID">
+                    <input type="text" id="user-search-input" placeholder="Enter contact's email address or User ID">
                     <div class="input-focus-line"></div>
                     <p class="input-hint">
                         <i class="fas fa-info-circle"></i>
-                        Enter the exact email address or User ID of the person you want to chat with
+                        You can only chat with users in your contacts list
                     </p>
                 </div>
                 <div id="user-search-results" class="search-results hidden">
@@ -2361,29 +2469,29 @@ function setupNewChatModal() {
                 </div>
             </div>
             <div class="modal-section">
-                <h4>Suggested Contacts</h4>
+                <h4>Your Contacts</h4>
                 <div class="user-list-modal" id="user-list-modal">
                     <!-- Existing contacts will be populated here -->
                 </div>
             </div>
         `;
         
-        // Add event listener for user search
+        // Add event listener for user search - ONLY SEARCH CONTACTS
         const userSearchInput = document.getElementById('user-search-input');
         if (userSearchInput) {
             let searchTimeout;
             userSearchInput.addEventListener('input', function() {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
-                    searchUsersForChat(this.value);
+                    searchContactsForChat(this.value);
                 }, 500);
             });
         }
     }
 }
 
-// Search users for chat initiation
-function searchUsersForChat(searchTerm) {
+// Search contacts for chat initiation
+function searchContactsForChat(searchTerm) {
     if (!searchTerm.trim()) {
         const searchResults = document.getElementById('user-search-results');
         if (searchResults) searchResults.classList.add('hidden');
@@ -2393,30 +2501,51 @@ function searchUsersForChat(searchTerm) {
     const searchResults = document.getElementById('user-search-results');
     if (!searchResults) return;
     
-    searchResults.innerHTML = '<div class="loading-text"><i class="fas fa-spinner fa-spin"></i> Searching users...</div>';
+    searchResults.innerHTML = '<div class="loading-text"><i class="fas fa-spinner fa-spin"></i> Searching contacts...</div>';
     searchResults.classList.remove('hidden');
 
-    // Search by email
-    database.ref('users').orderByChild('email').equalTo(searchTerm).once('value')
-        .then(snapshot => {
-            const usersData = snapshot.val();
-            
-            if (usersData) {
-                displayUserSearchResults(usersData);
+    // First get user contacts
+    database.ref('userContacts/' + currentUser.uid).once('value')
+        .then(contactsSnapshot => {
+            const contacts = contactsSnapshot.val();
+            if (!contacts) {
+                searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No contacts found</p></div>';
                 return;
             }
             
-            // If not found by email, search by user ID
-            database.ref('users/' + searchTerm).once('value')
-                .then(userSnapshot => {
-                    if (userSnapshot.exists()) {
-                        const userData = {};
-                        userData[searchTerm] = userSnapshot.val();
-                        displayUserSearchResults(userData);
-                    } else {
-                        searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No user found with that email or User ID</p></div>';
-                    }
-                });
+            const contactIds = Object.keys(contacts);
+            let foundContacts = [];
+            
+            // Search through each contact
+            const searchPromises = contactIds.map(contactId => {
+                return database.ref('users/' + contactId).once('value')
+                    .then(userSnapshot => {
+                        const userData = userSnapshot.val();
+                        if (userData) {
+                            // Check if user matches search term
+                            const emailMatch = userData.email && userData.email.toLowerCase().includes(searchTerm.toLowerCase());
+                            const usernameMatch = userData.username && userData.username.toLowerCase().includes(searchTerm.toLowerCase());
+                            const nameMatch = userData.name && userData.name.toLowerCase().includes(searchTerm.toLowerCase());
+                            const idMatch = contactId.toLowerCase().includes(searchTerm.toLowerCase());
+                            
+                            if (emailMatch || usernameMatch || nameMatch || idMatch) {
+                                foundContacts.push({ id: contactId, data: userData });
+                            }
+                        }
+                    });
+            });
+            
+            Promise.all(searchPromises).then(() => {
+                if (foundContacts.length > 0) {
+                    const usersData = {};
+                    foundContacts.forEach(contact => {
+                        usersData[contact.id] = contact.data;
+                    });
+                    displayUserSearchResults(usersData);
+                } else {
+                    searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No contacts found with that information</p></div>';
+                }
+            });
         })
         .catch(error => {
             console.error('Search error:', error);
@@ -2433,9 +2562,6 @@ function displayUserSearchResults(usersData) {
     
     Object.keys(usersData).forEach(userId => {
         const userData = usersData[userId];
-        
-        // Don't show current user in search results
-        if (userId === currentUser.uid) return;
         
         const userItem = document.createElement('div');
         userItem.className = 'search-result-item';
@@ -2467,106 +2593,15 @@ function displayUserSearchResults(usersData) {
     document.querySelectorAll('.send-chat-request').forEach(button => {
         button.addEventListener('click', function() {
             const userId = this.getAttribute('data-user-id');
-            sendChatRequest(userId);
+            const userData = usersData[userId];
+            startChatWithUser(userId, userData);
+            hideModal('new-chat-modal');
         });
     });
     
     if (searchResults.innerHTML === '') {
-        searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No user found with that information</p></div>';
+        searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No contacts found with that information</p></div>';
     }
-}
-
-// Send chat request to user
-function sendChatRequest(targetUserId) {
-    if (!currentUser || !targetUserId) return;
-    
-    // Check if user exists
-    database.ref('users/' + targetUserId).once('value')
-        .then(snapshot => {
-            if (!snapshot.exists()) {
-                showNotification('error', 'User Not Found', 'The specified user does not exist', 4000);
-                return;
-            }
-            
-            const targetUserData = snapshot.val();
-            
-            // Check if chat already exists
-            database.ref('userChats/' + currentUser.uid).once('value')
-                .then(userChatsSnapshot => {
-                    const userChats = userChatsSnapshot.val();
-                    let existingChatId = null;
-                    
-                    if (userChats) {
-                        Object.keys(userChats).forEach(chatId => {
-                            database.ref('chats/' + chatId + '/participants').once('value')
-                                .then(participantsSnapshot => {
-                                    const participants = participantsSnapshot.val();
-                                    if (participants && participants[targetUserId]) {
-                                        existingChatId = chatId;
-                                    }
-                                });
-                        });
-                    }
-                    
-                    if (existingChatId) {
-                        // Open existing chat
-                        hideModal('new-chat-modal');
-                        openChat(existingChatId, targetUserData);
-                        showNotification('info', 'Chat Exists', 'Opening existing chat', 2000);
-                    } else {
-                        // Create chat request
-                        createChatRequest(targetUserId, targetUserData);
-                    }
-                });
-        })
-        .catch(error => {
-            console.error('Error finding user:', error);
-            showNotification('error', 'Error', 'Failed to find user', 4000);
-        });
-}
-
-// Create chat request
-function createChatRequest(targetUserId, targetUserData) {
-    const requestId = database.ref('chatRequests').push().key;
-    
-    // Get current user data
-    database.ref('users/' + currentUser.uid).once('value')
-        .then(currentUserSnapshot => {
-            const currentUserData = currentUserSnapshot.val();
-            
-            // Create chat request object
-            const chatRequest = {
-                id: requestId,
-                fromUserId: currentUser.uid,
-                fromUserName: currentUserData.name || 'Unknown User',
-                fromUserEmail: currentUserData.email || 'No email',
-                fromUserPhone: currentUserData.phone || 'No phone',
-                toUserId: targetUserId,
-                toUserName: targetUserData.name || 'Unknown User',
-                status: 'pending',
-                timestamp: Date.now(),
-                message: 'Wants to start a chat with you'
-            };
-            
-            // Save chat request to database
-            database.ref('chatRequests/' + targetUserId + '/' + requestId).set(chatRequest)
-                .then(() => {
-                    showNotification('success', 'Chat Request Sent', 
-                        `Chat request sent to ${targetUserData.name || 'User'}. They will be notified.`, 4000);
-                    hideModal('new-chat-modal');
-                    
-                    // Clear search input
-                    const userSearchInput = document.getElementById('user-search-input');
-                    if (userSearchInput) userSearchInput.value = '';
-                    
-                    const searchResults = document.getElementById('user-search-results');
-                    if (searchResults) searchResults.classList.add('hidden');
-                })
-                .catch(error => {
-                    console.error('Error sending chat request:', error);
-                    showNotification('error', 'Request Failed', 'Failed to send chat request', 4000);
-                });
-        });
 }
 
 // Enhanced setup to include chat request listeners
