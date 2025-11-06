@@ -31,6 +31,7 @@ let messageListeners = {};
 let chatListeners = {};
 let typingListeners = {};
 let shouldAutoScroll = true;
+let notificationSound = null;
 
 // DOM Elements
 document.addEventListener('DOMContentLoaded', function() {
@@ -39,6 +40,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize the application
 function initializeApp() {
+    // Create night sky background
+    createNightSky();
+    
+    // Initialize notification sound
+    notificationSound = new Audio('notification.mp3');
+    
     // Check if user is logged in
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -58,6 +65,39 @@ function initializeApp() {
             }
         }
     });
+}
+
+// Create night sky with stars
+function createNightSky() {
+    const body = document.querySelector('body');
+    const nightSky = document.createElement('div');
+    nightSky.className = 'night-sky';
+    
+    const stars = document.createElement('div');
+    stars.className = 'stars';
+    
+    // Create stars
+    for (let i = 0; i < 150; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        
+        // Random size
+        const sizes = ['small', 'medium', 'large'];
+        const size = sizes[Math.floor(Math.random() * sizes.length)];
+        star.classList.add(size);
+        
+        // Random position
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        
+        // Random animation delay
+        star.style.animationDelay = `${Math.random() * 5}s`;
+        
+        stars.appendChild(star);
+    }
+    
+    nightSky.appendChild(stars);
+    body.appendChild(nightSky);
 }
 
 // Setup authentication screens
@@ -464,6 +504,9 @@ function setupAppEventListeners() {
             
             // Auto-resize textarea
             autoResizeTextarea(messageInput);
+            
+            // Format message for 9 words per line
+            formatMessageForDisplay(messageInput);
         });
         
         // Handle focus and blur for typing indicator
@@ -596,6 +639,31 @@ function setupAppEventListeners() {
     const messagesScrollArea = document.getElementById('messages-scroll-area');
     if (messagesScrollArea) {
         messagesScrollArea.addEventListener('scroll', handleMessagesScroll);
+    }
+}
+
+// Format message for display (9 words per line)
+function formatMessageForDisplay(textarea) {
+    const message = textarea.value;
+    const words = message.split(' ');
+    let formattedMessage = '';
+    let lineWordCount = 0;
+    
+    for (let i = 0; i < words.length; i++) {
+        formattedMessage += words[i] + ' ';
+        lineWordCount++;
+        
+        if (lineWordCount >= 9 && i < words.length - 1) {
+            formattedMessage += '\n';
+            lineWordCount = 0;
+        }
+    }
+    
+    // Only update if there's a change to prevent cursor jumping
+    if (formattedMessage.trim() !== message.trim()) {
+        const cursorPosition = textarea.selectionStart;
+        textarea.value = formattedMessage.trim();
+        textarea.setSelectionRange(cursorPosition, cursorPosition);
     }
 }
 
@@ -1584,7 +1652,8 @@ function loadMessages(chatId) {
             
             let messageContent = '';
             if (message.type === 'text') {
-                messageContent = message.content;
+                // Format message with 9 words per line
+                messageContent = formatMessageContent(message.content);
             } else if (message.type === 'image') {
                 messageContent = `<div class="message-image">📷 Image</div>`;
             } else if (message.type === 'file') {
@@ -1646,6 +1715,25 @@ function loadMessages(chatId) {
             typingIndicator.classList.add('hidden');
         }
     });
+}
+
+// Format message content with 9 words per line
+function formatMessageContent(content) {
+    const words = content.split(' ');
+    let formattedContent = '';
+    let lineWordCount = 0;
+    
+    for (let i = 0; i < words.length; i++) {
+        formattedContent += words[i] + ' ';
+        lineWordCount++;
+        
+        if (lineWordCount >= 9 && i < words.length - 1) {
+            formattedContent += '<br>';
+            lineWordCount = 0;
+        }
+    }
+    
+    return formattedContent.trim();
 }
 
 // Ensure message input is always visible
@@ -2052,7 +2140,7 @@ function insertEmoji(emoji) {
     if (emojiPicker) emojiPicker.classList.add('hidden');
 }
 
-// Enhanced Notification System
+// Enhanced Notification System with Sound
 function showNotification(type, title, message, duration = 5000) {
     const notificationContainer = document.getElementById('notification-container');
     if (!notificationContainer) return null;
@@ -2089,6 +2177,16 @@ function showNotification(type, title, message, duration = 5000) {
     `;
     
     notificationContainer.appendChild(notification);
+    
+    // Play notification sound for new messages
+    if (type === 'info' && notificationSound) {
+        try {
+            notificationSound.currentTime = 0;
+            notificationSound.play().catch(e => console.log('Audio play failed:', e));
+        } catch (error) {
+            console.log('Notification sound error:', error);
+        }
+    }
     
     // Add close event
     const closeBtn = notification.querySelector('.notification-close');
