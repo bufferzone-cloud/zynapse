@@ -33,6 +33,7 @@ let typingListeners = {};
 let shouldAutoScroll = true;
 let notificationSound = null;
 let ringtoneSound = null;
+let userCache = {}; // Added user cache to prevent duplicate user objects
 
 // DOM Elements
 document.addEventListener('DOMContentLoaded', function() {
@@ -680,15 +681,24 @@ function handleMessagesScroll() {
     shouldAutoScroll = (scrollHeight - scrollTop - clientHeight) < 100;
 }
 
-// Auto-scroll to bottom of messages
+// Auto-scroll to bottom of messages - FIXED VERSION
 function scrollToBottom() {
     if (!shouldAutoScroll) return;
     
     const messagesScrollArea = document.getElementById('messages-scroll-area');
     if (messagesScrollArea) {
-        setTimeout(() => {
+        // Use multiple attempts to ensure scrolling works
+        const scrollToBottom = () => {
             messagesScrollArea.scrollTop = messagesScrollArea.scrollHeight;
-        }, 100);
+        };
+        
+        // Immediate scroll
+        scrollToBottom();
+        
+        // Additional scroll after a short delay to handle dynamic content
+        setTimeout(scrollToBottom, 50);
+        setTimeout(scrollToBottom, 100);
+        setTimeout(scrollToBottom, 200);
     }
 }
 
@@ -1092,13 +1102,20 @@ function setupRealtimeListeners() {
         
         // Add contacts to the list
         contactIds.forEach(contactId => {
-            database.ref('users/' + contactId).once('value')
-                .then(userSnapshot => {
-                    const userData = userSnapshot.val();
-                    if (userData) {
-                        addContactToList(contactId, userData);
-                    }
-                });
+            // Use cached user data if available to prevent duplicate fetches
+            if (userCache[contactId]) {
+                addContactToList(contactId, userCache[contactId]);
+            } else {
+                database.ref('users/' + contactId).once('value')
+                    .then(userSnapshot => {
+                        const userData = userSnapshot.val();
+                        if (userData) {
+                            // Cache the user data
+                            userCache[contactId] = userData;
+                            addContactToList(contactId, userData);
+                        }
+                    });
+            }
         });
     });
     
@@ -1146,13 +1163,20 @@ function setupRealtimeListeners() {
         Object.keys(userRequests).forEach(requestId => {
             if (userRequests[requestId].status === 'pending') {
                 pendingCount++;
-                database.ref('users/' + requestId).once('value')
-                    .then(userSnapshot => {
-                        const userData = userSnapshot.val();
-                        if (userData) {
-                            addRequestToList(requestId, userData, userRequests[requestId]);
-                        }
-                    });
+                // Use cached user data if available
+                if (userCache[requestId]) {
+                    addRequestToList(requestId, userCache[requestId], userRequests[requestId]);
+                } else {
+                    database.ref('users/' + requestId).once('value')
+                        .then(userSnapshot => {
+                            const userData = userSnapshot.val();
+                            if (userData) {
+                                // Cache the user data
+                                userCache[requestId] = userData;
+                                addRequestToList(requestId, userData, userRequests[requestId]);
+                            }
+                        });
+                }
             }
         });
         
@@ -1191,6 +1215,9 @@ function setupRealtimeListeners() {
                 if (userId !== currentUser.uid) {
                     count++;
                     const userData = onlineUsersData[userId];
+                    // Cache the user data
+                    userCache[userId] = userData;
+                    
                     const onlineUser = document.createElement('div');
                     onlineUser.className = 'online-user';
                     onlineUser.innerHTML = `
@@ -1240,10 +1267,16 @@ function setupRealtimeListeners() {
     });
 }
 
-// Add a chat to the chat list
+// Add a chat to the chat list - FIXED to prevent duplicate users
 function addChatToList(chatId, chatData) {
     const chatList = document.getElementById('chat-list');
     if (!chatList) return;
+    
+    // Check if chat already exists in the list to prevent duplicates
+    const existingChat = chatList.querySelector(`[data-chat-id="${chatId}"]`);
+    if (existingChat) {
+        existingChat.remove();
+    }
     
     // Determine the other user in the chat
     const participants = Object.keys(chatData.participants || {});
@@ -1251,58 +1284,82 @@ function addChatToList(chatId, chatData) {
     
     if (!otherUserId) return;
     
-    // Get user data
-    database.ref('users/' + otherUserId).once('value')
-        .then(userSnapshot => {
-            const userData = userSnapshot.val();
-            if (!userData) return;
-            
-            // Get last message
-            const messages = chatData.messages ? Object.values(chatData.messages) : [];
-            const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
-            
-            // Create chat item
-            const chatItem = document.createElement('div');
-            chatItem.className = 'chat-item';
-            chatItem.setAttribute('data-chat-id', chatId);
-            chatItem.setAttribute('data-user-id', otherUserId);
-            
-            const lastMessageTime = lastMessage ? formatTime(lastMessage.timestamp) : '';
-            const lastMessageText = lastMessage ? 
-                (lastMessage.type === 'text' ? lastMessage.content : 
-                 lastMessage.type === 'image' ? '📷 Image' : 
-                 lastMessage.type === 'file' ? '📎 File' : 'Message') : 
-                'No messages yet';
-            
-            const unreadCount = chatData.unreadCount && chatData.unreadCount[currentUser.uid] ? 
-                chatData.unreadCount[currentUser.uid] : 0;
-            
-            chatItem.innerHTML = `
-                <div class="chat-avatar">
-                    <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
-                    <span class="presence-indicator ${userData.status || 'offline'}"></span>
-                </div>
-                <div class="chat-details">
-                    <div class="chat-name">${userData.name || 'Unknown User'}</div>
-                    <div class="chat-preview">${lastMessageText}</div>
-                </div>
-                <div class="chat-meta">
-                    <div class="chat-time">${lastMessageTime}</div>
-                    ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ''}
-                </div>
-            `;
-            
-            // Add click event to open chat
-            chatItem.addEventListener('click', () => openChat(chatId, userData));
-            
-            chatList.appendChild(chatItem);
-        });
+    // Use cached user data if available
+    if (userCache[otherUserId]) {
+        createChatListItem(chatId, userCache[otherUserId], chatData);
+    } else {
+        // Get user data
+        database.ref('users/' + otherUserId).once('value')
+            .then(userSnapshot => {
+                const userData = userSnapshot.val();
+                if (!userData) return;
+                
+                // Cache the user data
+                userCache[otherUserId] = userData;
+                createChatListItem(chatId, userData, chatData);
+            })
+            .catch(error => {
+                console.error('Error fetching user data for chat:', error);
+            });
+    }
 }
 
-// Add a contact to the contact list
+// Create chat list item (separated for better organization)
+function createChatListItem(chatId, userData, chatData) {
+    const chatList = document.getElementById('chat-list');
+    if (!chatList) return;
+    
+    // Get last message
+    const messages = chatData.messages ? Object.values(chatData.messages) : [];
+    const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+    
+    // Create chat item
+    const chatItem = document.createElement('div');
+    chatItem.className = 'chat-item';
+    chatItem.setAttribute('data-chat-id', chatId);
+    chatItem.setAttribute('data-user-id', userData.uid);
+    
+    const lastMessageTime = lastMessage ? formatTime(lastMessage.timestamp) : '';
+    const lastMessageText = lastMessage ? 
+        (lastMessage.type === 'text' ? lastMessage.content : 
+         lastMessage.type === 'image' ? '📷 Image' : 
+         lastMessage.type === 'file' ? '📎 File' : 'Message') : 
+        'No messages yet';
+    
+    const unreadCount = chatData.unreadCount && chatData.unreadCount[currentUser.uid] ? 
+        chatData.unreadCount[currentUser.uid] : 0;
+    
+    chatItem.innerHTML = `
+        <div class="chat-avatar">
+            <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
+            <span class="presence-indicator ${userData.status || 'offline'}"></span>
+        </div>
+        <div class="chat-details">
+            <div class="chat-name">${userData.name || 'Unknown User'}</div>
+            <div class="chat-preview">${lastMessageText}</div>
+        </div>
+        <div class="chat-meta">
+            <div class="chat-time">${lastMessageTime}</div>
+            ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ''}
+        </div>
+    `;
+    
+    // Add click event to open chat
+    chatItem.addEventListener('click', () => openChat(chatId, userData));
+    
+    chatList.appendChild(chatItem);
+}
+
+// Add a contact to the contact list - FIXED to prevent duplicates
 function addContactToList(contactId, userData) {
     const contactList = document.getElementById('contact-list');
     if (!contactList) return;
+    
+    // Check if contact already exists to prevent duplicates
+    const existingContact = contactList.querySelector(`[data-user-id="${contactId}"]`);
+    if (existingContact) {
+        existingContact.remove();
+    }
     
     const contactItem = document.createElement('div');
     contactItem.className = 'contact-item';
@@ -1409,10 +1466,17 @@ function filterUsers(searchTerm) {
     });
 }
 
-// Open a chat
+// Open a chat - FIXED with better user data handling
 function openChat(chatId, userData) {
     currentChat = chatId;
-    currentChatUser = userData;
+    
+    // Ensure we have the correct user data (use cached version if available)
+    if (userCache[userData.uid]) {
+        currentChatUser = userCache[userData.uid];
+    } else {
+        currentChatUser = userData;
+        userCache[userData.uid] = userData;
+    }
     
     // Enable auto-scroll when opening a chat
     shouldAutoScroll = true;
@@ -1433,13 +1497,13 @@ function openChat(chatId, userData) {
     const activeChatStatus = document.getElementById('active-chat-status');
     const activeChatAvatar = document.getElementById('active-chat-avatar');
     
-    if (activeChatName) activeChatName.textContent = userData.name || 'Unknown User';
+    if (activeChatName) activeChatName.textContent = currentChatUser.name || 'Unknown User';
     if (activeChatStatusText) {
-        activeChatStatusText.textContent = userData.status || 'offline';
-        activeChatStatusText.className = `status ${userData.status || 'offline'}`;
+        activeChatStatusText.textContent = currentChatUser.status || 'offline';
+        activeChatStatusText.className = `status ${currentChatUser.status || 'offline'}`;
     }
-    if (activeChatStatus) activeChatStatus.className = `presence-indicator ${userData.status || 'offline'}`;
-    if (activeChatAvatar) activeChatAvatar.textContent = userData.name ? userData.name.charAt(0).toUpperCase() : 'U';
+    if (activeChatStatus) activeChatStatus.className = `presence-indicator ${currentChatUser.status || 'offline'}`;
+    if (activeChatAvatar) activeChatAvatar.textContent = currentChatUser.name ? currentChatUser.name.charAt(0).toUpperCase() : 'U';
     
     // Load messages
     loadMessages(chatId);
@@ -1448,7 +1512,7 @@ function openChat(chatId, userData) {
     markMessagesAsRead(chatId);
     
     // Update last seen
-    updateLastSeen(userData.uid);
+    updateLastSeen(currentChatUser.uid);
     
     // Focus on message input and ensure it's visible
     const messageInput = document.getElementById('message-input');
@@ -1463,10 +1527,15 @@ function openChat(chatId, userData) {
         }, 300);
     }
     
-    // Scroll to bottom immediately
+    // Scroll to bottom immediately with multiple attempts
     setTimeout(() => {
         scrollToBottom();
     }, 100);
+    
+    // Additional scroll after messages are loaded
+    setTimeout(() => {
+        scrollToBottom();
+    }, 500);
 }
 
 // Show chat list
@@ -1490,7 +1559,7 @@ function showChatList() {
     }
 }
 
-// Load messages for a chat - FIXED VERSION
+// Load messages for a chat - FIXED VERSION with better auto-scroll
 function loadMessages(chatId) {
     const messagesContainer = document.getElementById('messages');
     if (!messagesContainer) return;
@@ -1593,8 +1662,16 @@ function loadMessages(chatId) {
         // Ensure message input is visible
         ensureMessageInputVisible();
         
-        // Auto-scroll to bottom
-        scrollToBottom();
+        // Auto-scroll to bottom with multiple attempts
+        setTimeout(() => {
+            scrollToBottom();
+        }, 50);
+        setTimeout(() => {
+            scrollToBottom();
+        }, 150);
+        setTimeout(() => {
+            scrollToBottom();
+        }, 300);
     });
     
     // Listen for typing indicators
@@ -1665,7 +1742,7 @@ function ensureMessageInputVisible() {
     }
 }
 
-// Send a message
+// Send a message - FIXED with better auto-scroll
 function sendMessage() {
     const messageInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
@@ -1708,9 +1785,14 @@ function sendMessage() {
             // Stop typing indicator
             updateTypingStatus(false);
             
-            // Force auto-scroll after sending message
+            // Force auto-scroll after sending message with multiple attempts
             shouldAutoScroll = true;
-            scrollToBottom();
+            setTimeout(() => {
+                scrollToBottom();
+            }, 50);
+            setTimeout(() => {
+                scrollToBottom();
+            }, 150);
         })
         .catch(error => {
             console.error('Error sending message:', error);
@@ -1737,7 +1819,7 @@ function startChatWithUser(userId, userData) {
         });
 }
 
-// Check if chat exists and open it, otherwise create new chat
+// Check if chat exists and open it, otherwise create new chat - FIXED to prevent duplicate chats
 function checkAndOpenChat(userId, userData) {
     database.ref('userChats/' + currentUser.uid).once('value')
         .then(snapshot => {
@@ -1762,12 +1844,17 @@ function checkAndOpenChat(userId, userData) {
         })
         .then(existingChatId => {
             if (existingChatId) {
-                // Open existing chat
-                openChat(existingChatId, userData);
+                // Open existing chat - use cached user data if available
+                const chatUserData = userCache[userId] || userData;
+                openChat(existingChatId, chatUserData);
             } else {
                 // Create new chat
                 createNewChat(userId, userData);
             }
+        })
+        .catch(error => {
+            console.error('Error checking for existing chat:', error);
+            showNotification('error', 'Chat Error', 'Failed to check for existing chat', 4000);
         });
 }
 
@@ -1850,7 +1937,7 @@ function addToContacts(userId) {
     database.ref('userContacts/' + userId + '/' + currentUser.uid).set(true);
 }
 
-// Create a new chat
+// Create a new chat - FIXED to ensure proper user identification
 function createNewChat(userId, userData) {
     const chatId = database.ref('chats').push().key;
     
@@ -1873,6 +1960,9 @@ function createNewChat(userId, userData) {
             // Add chat to user's chat list
             database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
             database.ref('userChats/' + userId + '/' + chatId).set(true);
+            
+            // Cache the user data
+            userCache[userId] = userData;
             
             // Open the new chat
             openChat(chatId, userData);
@@ -1993,6 +2083,15 @@ function handleContactRequest(requestId, response) {
     if (response === 'accepted') {
         database.ref('userContacts/' + currentUser.uid + '/' + requestId).set(true);
         database.ref('userContacts/' + requestId + '/' + currentUser.uid).set(true);
+        
+        // Cache the user data
+        database.ref('users/' + requestId).once('value')
+            .then(snapshot => {
+                const userData = snapshot.val();
+                if (userData) {
+                    userCache[requestId] = userData;
+                }
+            });
         
         // Remove from requests list
         const requestItem = document.querySelector(`.request-item[data-user-id="${requestId}"]`);
@@ -2280,6 +2379,9 @@ function handleLogout() {
             database.ref('chats/' + chatId + '/typing').off('value', typingListeners[chatId]);
         });
         
+        // Clear user cache
+        userCache = {};
+        
         // Sign out
         auth.signOut()
             .then(() => {
@@ -2500,6 +2602,11 @@ function formatDate(timestamp) {
 }
 
 function getSenderName(senderId) {
+    // Use cached user data if available
+    if (userCache[senderId]) {
+        return userCache[senderId].name || 'User';
+    }
+    
     // This would typically fetch from a users cache
     // For now, return a placeholder
     return 'User';
