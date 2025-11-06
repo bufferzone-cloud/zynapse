@@ -1503,7 +1503,7 @@ function showChatList() {
     }
 }
 
-// Load messages for a chat
+// Load messages for a chat - FIXED VERSION
 function loadMessages(chatId) {
     const messagesContainer = document.getElementById('messages');
     if (!messagesContainer) return;
