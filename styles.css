@@ -1675,8 +1675,11 @@ body {
     font-weight: 500;
 }
 
+/* ENHANCED MESSAGE STYLING - 80% WIDTH */
 .message {
-    max-width: 100%;
+    max-width: 80% !important; /* Force 80% width */
+    min-width: auto !important;
+    width: fit-content !important;
     padding: 0.6rem 0.8rem;
     border-radius: 16px;
     position: relative;
@@ -1685,7 +1688,6 @@ body {
     line-height: 1.3;
     font-size: 0.85rem;
     backdrop-filter: blur(10px);
-    min-width: 0;
     word-break: break-word;
     overflow-wrap: break-word;
 }
@@ -1702,6 +1704,14 @@ body {
     border-bottom-right-radius: 4px;
     align-self: flex-end;
     box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+}
+
+/* Ensure message content takes full available width */
+.message-content {
+    width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 @keyframes messageAppear {
@@ -3278,7 +3288,7 @@ input:checked + .slider:before {
     .message {
         padding: 0.5rem 0.7rem;
         font-size: 0.8rem;
-        max-width: 95%;
+        max-width: 80% !important; /* Maintain 80% width on mobile */
     }
     
     .message-group {
