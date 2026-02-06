@@ -1,120 +1,49 @@
-class ImageKitService {
-  constructor() {
-    this.publicKey = "public_lP5Vb+5SXLUjuoliJDp19GPOU6s=";
-    this.urlEndpoint = "https://ik.imagekit.io/48l5ydkzy";
-    this.authenticationEndpoint = "https://imagekit-auth-server-uafl.onrender.com/auth";
-    this.imagekit = null;
-    this.initialize();
-  }
+// ImageKit SDK initialization
+const imagekit = new ImageKit({
+    publicKey: "public_lP5Vb+5SXLUjuoliJDp19GPOU6s=",
+    urlEndpoint: "https://ik.imagekit.io/48l5ydkzy",
+    authenticationEndpoint: "https://imagekit-auth.onrender.com/auth"
+});
 
-  async initialize() {
-    if (typeof ImageKit !== 'undefined') {
-      this.imagekit = new ImageKit({
-        publicKey: this.publicKey,
-        urlEndpoint: this.urlEndpoint,
-        authenticationEndpoint: this.authenticationEndpoint
-      });
-    } else {
-      // Load ImageKit SDK dynamically
-      await this.loadSDK();
-      this.imagekit = new ImageKit({
-        publicKey: this.publicKey,
-        urlEndpoint: this.urlEndpoint,
-        authenticationEndpoint: this.authenticationEndpoint
-      });
-    }
-  }
-
-  loadSDK() {
+// Function to upload media to ImageKit
+async function uploadMedia(file, fileName, tags = []) {
     return new Promise((resolve, reject) => {
-      if (document.querySelector('script[src*="imagekit.io"]')) {
-        resolve();
-        return;
-      }
-      
-      const script = document.createElement('script');
-      script.src = 'https://unpkg.com/imagekit-javascript/dist/imagekit.min.js';
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
-
-  async upload(file, fileName, tags = []) {
-    try {
-      if (!this.imagekit) {
-        await this.initialize();
-      }
-
-      return new Promise((resolve, reject) => {
-        this.imagekit.upload({
-          file: file,
-          fileName: fileName,
-          tags: tags,
-          useUniqueFileName: true
-        }, (err, result) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({
-              url: result.url,
-              fileId: result.fileId,
-              name: result.name
-            });
-          }
+        imagekit.upload({
+            file: file,
+            fileName: fileName || `zynapse_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            folder: "/zynapse",
+            tags: tags,
+            useUniqueFileName: true
+        }, function(err, result) {
+            if (err) {
+                console.error("ImageKit Upload Error:", err);
+                reject(err);
+            } else {
+                console.log("ImageKit Upload Success:", result);
+                resolve(result);
+            }
         });
-      });
-    } catch (error) {
-      console.error("ImageKit upload error:", error);
-      throw error;
-    }
-  }
-
-  getUrl(url, transformations = []) {
-    if (!this.imagekit) {
-      this.initialize();
-    }
-    return this.imagekit.url({
-      src: url,
-      transformation: transformations
     });
-  }
-
-  async uploadProfilePicture(file, userId) {
-    const fileName = `profile_${userId}_${Date.now()}.${file.name.split('.').pop()}`;
-    const result = await this.upload(file, fileName, ['profile', 'user']);
-    return result.url;
-  }
-
-  async uploadChatMedia(file, chatId) {
-    const fileName = `chat_${chatId}_${Date.now()}.${file.name.split('.').pop()}`;
-    const result = await this.upload(file, fileName, ['chat', 'media']);
-    return {
-      url: result.url,
-      type: file.type.startsWith('image/') ? 'image' : 'video'
-    };
-  }
-
-  async uploadZyneMedia(file, userId) {
-    const fileName = `zyne_${userId}_${Date.now()}.${file.name.split('.').pop()}`;
-    const result = await this.upload(file, fileName, ['zyne', 'status']);
-    return {
-      url: result.url,
-      type: file.type.startsWith('image/') ? 'image' : 'video'
-    };
-  }
-
-  async uploadGroupMedia(file, groupId) {
-    const fileName = `group_${groupId}_${Date.now()}.${file.name.split('.').pop()}`;
-    const result = await this.upload(file, fileName, ['group', 'media']);
-    return {
-      url: result.url,
-      type: file.type.startsWith('image/') ? 'image' : 'video'
-    };
-  }
 }
 
-// Create global instance
-const imageKitService = new ImageKitService();
+// Function to get optimized URL
+function getOptimizedImageUrl(url, options = {}) {
+    const { width, height, quality = 80 } = options;
+    const transformations = [];
+    
+    if (width || height) {
+        transformations.push({
+            width: width || undefined,
+            height: height || undefined,
+            quality: quality
+        });
+    }
+    
+    return imagekit.url({
+        src: url,
+        transformation: transformations
+    });
+}
 
-export default imageKitService;
+// Export functions
+export { imagekit, uploadMedia, getOptimizedImageUrl };
