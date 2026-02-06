@@ -5,182 +5,286 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynapse</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="zynaps.png">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
-<body class="app-page">
-    <!-- Navigation Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <img src="zynaps.png" alt="Zynapse" class="sidebar-logo">
-            <h2>Zynapse</h2>
-        </div>
-        
-        <nav class="nav-menu">
-            <a href="#home" class="nav-item active" data-view="home">
-                <i class="fas fa-home"></i>
-                <span>Home</span>
-            </a>
-            <a href="#zynes" class="nav-item" data-view="zynes">
-                <i class="fas fa-circle"></i>
-                <span>Zynes</span>
-            </a>
-            <a href="#groups" class="nav-item" data-view="groups">
-                <i class="fas fa-users"></i>
-                <span>Groups</span>
-            </a>
-            <a href="#requests" class="nav-item" data-view="requests">
-                <i class="fas fa-user-plus"></i>
-                <span>Chat Requests</span>
-                <span class="badge" id="requestBadge">0</span>
-            </a>
-            <a href="#contacts" class="nav-item" data-view="contacts">
-                <i class="fas fa-address-book"></i>
-                <span>Contacts</span>
-            </a>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
+                <div class="user-info">
+                    <span class="user-name" id="userName">Loading...</span>
+                    <div class="user-id">
+                        <span id="userId">ZYN-0000</span>
+                        <button class="copy-btn" onclick="copyUserId()">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon" onclick="showSearch()">
+                    <img src="icons/search.svg" alt="Search" class="nav-icon">
+                </button>
+                <button class="btn-icon" onclick="showMenu()">
+                    <img src="icons/menu.svg" alt="Menu" class="nav-icon">
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-content" id="mainContent">
+            <!-- Home Screen -->
+            <div id="homeScreen" class="screen">
+                <div class="empty-state">
+                    <img src="zynaps.png" alt="Zynapse" class="empty-state-icon">
+                    <h2 class="empty-state-title">Welcome to Zynapse</h2>
+                    <p class="empty-state-subtitle">
+                        Tap the chat button below to start a new conversation or connect with friends.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Contacts Screen -->
+            <div id="contactsScreen" class="screen hidden">
+                <div class="contacts-list" id="contactsList">
+                    <!-- Contacts will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Chat Requests Screen -->
+            <div id="requestsScreen" class="screen hidden">
+                <div id="chatRequestsList">
+                    <!-- Chat requests will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Groups Screen -->
+            <div id="groupsScreen" class="screen hidden">
+                <button class="btn btn-primary mb-4" onclick="showCreateGroupPopup()" style="width: 100%;">
+                    Create New Group
+                </button>
+                <div id="groupsList">
+                    <!-- Groups will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Zynes Screen -->
+            <div id="zynesScreen" class="screen hidden">
+                <div class="zynes-container">
+                    <button class="btn btn-primary mb-4" onclick="showCreateZynePopup()" style="width: 100%;">
+                        Create New Zyne
+                    </button>
+                    <div class="zynes-list" id="zynesList">
+                        <!-- Zynes will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Navigation -->
+        <nav class="app-navigation">
+            <div class="nav-items">
+                <button class="nav-item active" onclick="switchScreen('home')">
+                    <img src="icons/home.svg" alt="Home" class="nav-icon">
+                    <span class="nav-label">HOME</span>
+                </button>
+                <button class="nav-item" onclick="switchScreen('zynes')">
+                    <img src="icons/status.svg" alt="Zynes" class="nav-icon">
+                    <span class="nav-label">ZYNES</span>
+                </button>
+                <button class="nav-item" onclick="switchScreen('groups')">
+                    <img src="icons/groups.svg" alt="Groups" class="nav-icon">
+                    <span class="nav-label">GROUPS</span>
+                </button>
+                <button class="nav-item" onclick="switchScreen('requests')">
+                    <img src="icons/requests.svg" alt="Requests" class="nav-icon">
+                    <span class="nav-label">REQUESTS</span>
+                </button>
+                <button class="nav-item" onclick="switchScreen('contacts')">
+                    <img src="icons/contacts.svg" alt="Contacts" class="nav-icon">
+                    <span class="nav-label">CONTACTS</span>
+                </button>
+            </div>
         </nav>
 
-        <div class="user-profile">
-            <img id="userProfilePic" src="" alt="Profile">
-            <div class="user-info">
-                <h4 id="userName">Loading...</h4>
-                <div class="user-id">
-                    <code id="userIdDisplay">ZYN-0000</code>
-                    <button class="copy-btn" onclick="copyUserId()">
-                        <i class="far fa-copy"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
+        <!-- Floating Chat Button -->
+        <button class="floating-chat-btn" onclick="showStartChatPopup()">
+            <img src="icons/send.svg" alt="Start Chat" style="width: 24px; height: 24px; filter: brightness(0) invert(1);">
+        </button>
     </div>
 
-    <!-- Main Content Area -->
-    <div class="main-content">
-        <!-- Home View -->
-        <div id="homeView" class="view active">
-            <div class="top-bar">
-                <div class="top-bar-left">
-                    <img src="zynapse.png" alt="Zynapse" class="top-bar-logo">
-                    <div>
-                        <h3 id="mainUserName">User Name</h3>
-                        <div class="user-id-main">
-                            <code id="mainUserId">ZYN-0000</code>
-                            <button class="copy-btn small" onclick="copyUserId()">
-                                <i class="far fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="top-bar-right">
-                    <div class="dropdown">
-                        <button class="icon-btn" id="settingsBtn">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
-                        <div class="dropdown-menu">
-                            <a href="#"><i class="fas fa-cog"></i> Settings</a>
-                            <a href="#"><i class="fas fa-user"></i> Profile</a>
-                            <a href="#"><i class="fas fa-bell"></i> Notifications</a>
-                            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="content-area">
-                <div class="floating-chat-btn" id="floatingChatBtn">
-                    <i class="fas fa-comment-alt"></i>
-                    <span>Start Chat</span>
-                </div>
-
-                <div class="chat-requests-container" id="pendingRequests">
-                    <h3>Pending Chat Requests</h3>
-                    <div class="requests-list" id="requestsList">
-                        <!-- Requests will be loaded here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Zynes View -->
-        <div id="zynesView" class="view">
-            <div class="view-header">
-                <h2><i class="fas fa-circle"></i> Zynes</h2>
-                <button class="btn-primary" id="createZyneBtn">
-                    <i class="fas fa-plus"></i> Create Zyne
-                </button>
-            </div>
-            <div class="zynes-container" id="zynesContainer">
-                <!-- Zynes will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Groups View -->
-        <div id="groupsView" class="view">
-            <div class="view-header">
-                <h2><i class="fas fa-users"></i> Groups</h2>
-                <button class="btn-primary" id="createGroupBtn">
-                    <i class="fas fa-plus"></i> Create Group
-                </button>
-            </div>
-            <div class="groups-container" id="groupsContainer">
-                <!-- Groups will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Chat Requests View -->
-        <div id="requestsView" class="view">
-            <div class="view-header">
-                <h2><i class="fas fa-user-plus"></i> Chat Requests</h2>
-            </div>
-            <div class="requests-container" id="allRequestsContainer">
-                <!-- All requests will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Contacts View -->
-        <div id="contactsView" class="view">
-            <div class="view-header">
-                <h2><i class="fas fa-address-book"></i> Contacts</h2>
-                <button class="btn-primary" id="addContactBtn">
-                    <i class="fas fa-plus"></i> Add Contact
-                </button>
-            </div>
-            <div class="contacts-container" id="contactsContainer">
-                <!-- Contacts will be loaded here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Modals -->
-    <div class="modal" id="startChatModal">
-        <div class="modal-content">
-            <div class="modal-header">
+    <!-- Popup Modals -->
+    <div id="startChatPopup" class="popup-overlay hidden">
+        <div class="popup-content">
+            <div class="popup-header">
                 <h3>Start New Chat</h3>
-                <button class="close-btn">&times;</button>
             </div>
-            <div class="modal-body">
-                <input type="text" id="searchUserId" placeholder="Enter User ID (ZYN-XXXX)">
-                <div id="userSearchResult" class="search-result"></div>
+            <div class="popup-body">
+                <div class="form-group">
+                    <label class="form-label">Enter User ID</label>
+                    <input type="text" id="recipientId" class="form-input" placeholder="ZYN-XXXX" maxlength="8">
+                </div>
+                <div id="recipientInfo" class="hidden">
+                    <div class="request-card" style="border: none; padding: 0;">
+                        <img id="recipientAvatar" src="" alt="" class="request-avatar">
+                        <div class="request-info">
+                            <div class="request-name" id="recipientName"></div>
+                            <div class="request-id" id="recipientUserId"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancelSearch">Cancel</button>
-                <button class="btn-primary" id="sendRequestBtn">Send Request</button>
+            <div class="popup-footer">
+                <button class="btn btn-secondary" onclick="closePopup('startChatPopup')">Cancel</button>
+                <button class="btn btn-primary" id="sendRequestBtn" onclick="sendChatRequest()" disabled>Send Request</button>
             </div>
         </div>
     </div>
 
-    <div class="modal" id="profileModal">
-        <div class="modal-content">
-            <!-- Profile modal content -->
+    <!-- Create Group Popup -->
+    <div id="createGroupPopup" class="popup-overlay hidden">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3>Create New Group</h3>
+            </div>
+            <div class="popup-body">
+                <div class="form-group">
+                    <label class="form-label">Group Name</label>
+                    <input type="text" id="groupName" class="form-input" placeholder="Enter group name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Add Members (User IDs)</label>
+                    <input type="text" id="groupMembers" class="form-input" placeholder="ZYN-XXXX, ZYN-YYYY">
+                    <p class="text-muted mt-1" style="font-size: 13px;">Separate multiple User IDs with commas</p>
+                </div>
+            </div>
+            <div class="popup-footer">
+                <button class="btn btn-secondary" onclick="closePopup('createGroupPopup')">Cancel</button>
+                <button class="btn btn-primary" onclick="createGroup()">Create Group</button>
+            </div>
         </div>
     </div>
 
-    <audio id="notificationSound" preload="auto">
-        <source src="notification.mp3" type="audio/mpeg">
-    </audio>
+    <!-- Menu Dropdown -->
+    <div id="menuDropdown" class="dropdown-menu hidden">
+        <button class="dropdown-item" onclick="showProfile()">
+            <img src="icons/user.svg" alt="Profile" style="width: 20px; height: 20px;">
+            My Profile
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" onclick="logout()">
+            <img src="icons/logout.svg" alt="Logout" style="width: 20px; height: 20px;">
+            Logout
+        </button>
+    </div>
 
     <script src="firebase-config.js"></script>
-    <script src="imagekit-config.js"></script>
     <script src="app.js"></script>
+    <script>
+        // Current user data
+        let currentUser = null;
+        let currentUserId = null;
+
+        // Initialize app
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            currentUser = user;
+            
+            // Get user data from database
+            const usersRef = database.ref('users');
+            const snapshot = await usersRef.orderByChild('email').equalTo(user.email).once('value');
+            
+            if (snapshot.exists()) {
+                const userData = Object.values(snapshot.val())[0];
+                currentUserId = userData.userId;
+                
+                // Update UI
+                document.getElementById('userName').textContent = userData.name;
+                document.getElementById('userId').textContent = userData.userId;
+                
+                // Load initial data
+                loadContacts();
+                loadChatRequests();
+                loadGroups();
+                loadZynes();
+                
+                // Set user online
+                await database.ref('users/' + currentUserId + '/status').set('online');
+                
+                // Update last seen on disconnect
+                database.ref('.info/connected').on('value', (snap) => {
+                    if (snap.val() === true) {
+                        database.ref('users/' + currentUserId + '/status').onDisconnect().set('offline');
+                    }
+                });
+            }
+        });
+
+        function switchScreen(screen) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
+            // Show selected screen
+            document.getElementById(screen + 'Screen').classList.remove('hidden');
+            
+            // Add active class to clicked nav item
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        function showStartChatPopup() {
+            document.getElementById('recipientId').value = '';
+            document.getElementById('recipientInfo').classList.add('hidden');
+            document.getElementById('sendRequestBtn').disabled = true;
+            document.getElementById('startChatPopup').classList.remove('hidden');
+        }
+
+        function closePopup(popupId) {
+            document.getElementById(popupId).classList.add('hidden');
+        }
+
+        function copyUserId() {
+            const userId = document.getElementById('userId').textContent;
+            navigator.clipboard.writeText(userId).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+
+        function showMenu() {
+            const menu = document.getElementById('menuDropdown');
+            menu.classList.toggle('hidden');
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', function closeMenu(e) {
+                if (!menu.contains(e.target) && !e.target.closest('.btn-icon')) {
+                    menu.classList.add('hidden');
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }
+
+        function logout() {
+            if (currentUserId) {
+                database.ref('users/' + currentUserId + '/status').set('offline');
+            }
+            auth.signOut();
+        }
+
+        // Load data functions will be implemented in app.js
+    </script>
 </body>
 </html>
