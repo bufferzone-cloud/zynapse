@@ -2,7 +2,7 @@ class ImageKitService {
   constructor() {
     this.publicKey = "public_lP5Vb+5SXLUjuoliJDp19GPOU6s=";
     this.urlEndpoint = "https://ik.imagekit.io/48l5ydkzy";
-    this.authenticationEndpoint = "https://imagekit-auth.onrender.com/auth";
+    this.authenticationEndpoint = "https://imagekit-auth-server-uafl.onrender.com/auth";
     this.imagekit = null;
     this.initialize();
   }
