@@ -4,45 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynapse - Home</title>
-    <meta name="description" content="Zynapse - Secure messaging platform">
-    <meta name="theme-color" content="#4A6FFF">
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Favicon -->
     <link rel="icon" href="zynaps.png" type="image/png">
-    
-    <!-- PWA Support -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- iOS Support -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="zynaps.png">
 </head>
 <body class="app-home">
     <!-- Loading Screen -->
-    <div id="loadingScreen" class="loading-screen">
+    <div class="loading-screen" id="loadingScreen">
         <div class="loading-content">
             <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
             <div class="spinner-large"></div>
-            <p>Loading...</p>
+            <p>Loading Zynapse...</p>
         </div>
     </div>
 
-    <!-- Header -->
+    <!-- App Header -->
     <header class="app-header">
         <div class="header-left">
             <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
             <div class="user-info">
                 <h2 id="userName">Loading...</h2>
                 <div class="user-id-container">
-                    <span id="userID" class="user-id">ZYN-0000</span>
-                    <button id="copyUserIdBtn" class="copy-btn" title="Copy ID">
+                    <span class="user-id" id="userID">ZYN-0000</span>
+                    <button class="copy-btn" id="copyIDBtn">
                         <i class="far fa-copy"></i>
                     </button>
                 </div>
@@ -50,32 +34,29 @@
         </div>
         
         <div class="header-right">
-            <!-- Status Indicator -->
-            <div class="status-indicator online" id="statusIndicator" title="Online">
+            <div class="status-indicator online" id="statusIndicator">
                 <div class="status-dot"></div>
             </div>
             
-            <!-- Profile Dropdown -->
-            <div class="dropdown profile-dropdown">
-                <button class="profile-btn" id="profileMenuBtn">
-                    <img id="headerProfilePic" src="zynaps.png" alt="Profile" class="profile-pic-small">
+            <div class="dropdown">
+                <button class="profile-btn" id="profileDropdownBtn">
+                    <img src="" alt="Profile" class="profile-pic-small" id="userProfilePic">
                     <i class="fas fa-chevron-down"></i>
                 </button>
-                <div class="dropdown-content">
+                <div class="dropdown-content" id="profileDropdown">
                     <div class="dropdown-profile">
-                        <img id="dropdownProfilePic" src="zynaps.png" alt="Profile" class="dropdown-profile-pic">
+                        <img src="" alt="Profile" class="dropdown-profile-pic" id="dropdownProfilePic">
                         <div class="dropdown-profile-info">
-                            <strong id="dropdownUserName">User Name</strong>
-                            <span id="dropdownUserZynapseId">ZYN-0000</span>
+                            <strong id="dropdownUserName"></strong>
+                            <span id="dropdownUserID"></span>
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
-                    <a href="#" id="myProfileBtn"><i class="fas fa-user"></i> My Profile</a>
-                    <a href="#" id="profileSettingsBtn"><i class="fas fa-user-cog"></i> Profile Settings</a>
-                    <a href="#" id="appSettingsBtn"><i class="fas fa-cog"></i> App Settings</a>
-                    <a href="#" id="helpSupportBtn"><i class="fas fa-question-circle"></i> Help & Support</a>
+                    <a href="#"><i class="fas fa-user"></i> My Profile</a>
+                    <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                    <a href="#"><i class="fas fa-moon"></i> Appearance</a>
                     <div class="dropdown-divider"></div>
-                    <a href="#" id="logoutBtn" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                 </div>
             </div>
         </div>
@@ -83,75 +64,74 @@
 
     <!-- Navigation -->
     <nav class="app-nav">
-        <a href="#home" class="nav-item active" data-page="home">
+        <a href="#" class="nav-item active" data-page="home">
             <i class="fas fa-home"></i>
             <span>HOME</span>
         </a>
-        <a href="#zynes" class="nav-item" data-page="zynes">
-            <i class="fas fa-fire"></i>
+        <a href="#" class="nav-item" data-page="zynes">
+            <i class="fas fa-circle"></i>
             <span>ZYNES</span>
+            <span class="badge" id="zynesBadge" style="display: none;">0</span>
         </a>
-        <a href="#groups" class="nav-item" data-page="groups">
+        <a href="#" class="nav-item" data-page="groups">
             <i class="fas fa-users"></i>
             <span>GROUPS</span>
+            <span class="badge" id="groupsBadge" style="display: none;">0</span>
         </a>
-        <a href="#requests" class="nav-item" data-page="requests">
-            <i class="fas fa-user-clock"></i>
+        <a href="#" class="nav-item" data-page="requests">
+            <i class="fas fa-user-plus"></i>
             <span>REQUESTS</span>
-            <span class="badge" id="requestsBadge">0</span>
+            <span class="badge" id="requestsBadge" style="display: none;">0</span>
         </a>
-        <a href="#contacts" class="nav-item" data-page="contacts">
+        <a href="#" class="nav-item" data-page="contacts">
             <i class="fas fa-address-book"></i>
             <span>CONTACTS</span>
-            <span class="badge" id="contactsBadge">0</span>
-        </a>
-        <a href="#chats" class="nav-item" data-page="chats">
-            <i class="fas fa-comments"></i>
-            <span>CHATS</span>
-            <span class="badge" id="chatsBadge">0</span>
         </a>
     </nav>
 
     <!-- Main Content -->
     <main class="app-main">
         <!-- Home Page -->
-        <div id="homePage" class="page active">
+        <div class="page active" id="homePage">
             <div class="home-content">
                 <div class="welcome-message">
                     <h1>Welcome to Zynapse</h1>
-                    <p>Start connecting with others using their Zynapse ID</p>
+                    <p>Secure messaging for Zambia</p>
                 </div>
                 
-                <!-- Quick Actions -->
                 <div class="quick-actions">
-                    <div class="quick-action-card" id="quickStartChat">
-                        <i class="fas fa-comment-medical"></i>
+                    <div class="quick-action-card" id="startChatCard">
+                        <i class="fas fa-comment-alt"></i>
                         <h3>Start Chat</h3>
                         <p>Begin a new conversation</p>
                     </div>
-                    <div class="quick-action-card" id="quickAddZyne">
-                        <i class="fas fa-fire"></i>
-                        <h3>Add Zyne</h3>
-                        <p>Share your status</p>
-                    </div>
-                    <div class="quick-action-card" id="quickCreateGroup">
+                    <div class="quick-action-card" id="createGroupCard">
                         <i class="fas fa-users"></i>
                         <h3>Create Group</h3>
                         <p>Chat with multiple people</p>
                     </div>
+                    <div class="quick-action-card" id="addContactCard">
+                        <i class="fas fa-user-plus"></i>
+                        <h3>Add Contact</h3>
+                        <p>Connect with friends</p>
+                    </div>
+                    <div class="quick-action-card" id="postZyneCard">
+                        <i class="fas fa-circle"></i>
+                        <h3>Post Zyne</h3>
+                        <p>Share your status</p>
+                    </div>
                 </div>
                 
-                <!-- Recent Chats Preview -->
                 <div class="recent-chats-section">
                     <div class="section-header">
                         <h3>Recent Chats</h3>
-                        <a href="#chats" class="view-all">View All</a>
+                        <a href="#" class="view-all">View All</a>
                     </div>
-                    <div id="recentChatsList" class="recent-chats-list">
-                        <!-- Recent chats will be loaded here -->
+                    <div class="recent-chats-list" id="recentChats">
                         <div class="empty-state">
-                            <i class="fas fa-comment-slash"></i>
-                            <p>No recent chats</p>
+                            <i class="fas fa-comments"></i>
+                            <h3>No chats yet</h3>
+                            <p>Start a conversation by clicking the chat button</p>
                         </div>
                     </div>
                 </div>
@@ -159,33 +139,42 @@
         </div>
 
         <!-- Zynes Page -->
-        <div id="zynesPage" class="page">
+        <div class="page" id="zynesPage">
             <div class="page-header">
                 <h2>Zynes</h2>
-                <button class="btn-primary" id="addZyneBtn">
-                    <i class="fas fa-plus"></i> Add Zyne
-                </button>
+                <div class="header-actions">
+                    <button class="btn-primary" id="addZyneBtn">
+                        <i class="fas fa-plus"></i> Add Zyne
+                    </button>
+                </div>
             </div>
-            <div id="zynesList" class="zynes-container">
-                <!-- Zynes will be loaded here -->
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="myZynes">My Zynes</button>
+                <button class="tab-btn" data-tab="contactsZynes">Contacts</button>
+            </div>
+            
+            <div class="zynes-container" id="zynesContainer">
                 <div class="empty-state">
-                    <i class="fas fa-fire"></i>
+                    <i class="fas fa-circle"></i>
                     <h3>No Zynes yet</h3>
-                    <p>Share your status with friends</p>
+                    <p>Share what's on your mind with your contacts</p>
                 </div>
             </div>
         </div>
 
         <!-- Groups Page -->
-        <div id="groupsPage" class="page">
+        <div class="page" id="groupsPage">
             <div class="page-header">
                 <h2>Groups</h2>
-                <button class="btn-primary" id="createGroupBtn">
-                    <i class="fas fa-plus"></i> Create Group
-                </button>
+                <div class="header-actions">
+                    <button class="btn-primary" id="createGroupBtn">
+                        <i class="fas fa-plus"></i> New Group
+                    </button>
+                </div>
             </div>
-            <div id="groupsList" class="groups-container">
-                <!-- Groups will be loaded here -->
+            
+            <div class="groups-container" id="groupsContainer">
                 <div class="empty-state">
                     <i class="fas fa-users"></i>
                     <h3>No groups yet</h3>
@@ -195,149 +184,136 @@
         </div>
 
         <!-- Chat Requests Page -->
-        <div id="requestsPage" class="page">
+        <div class="page" id="requestsPage">
             <div class="page-header">
                 <h2>Chat Requests</h2>
                 <div class="header-actions">
-                    <div class="tabs">
-                        <button class="tab-btn active" data-tab="received">Received</button>
-                        <button class="tab-btn" data-tab="sent">Sent</button>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search requests..." id="searchRequests">
                     </div>
                 </div>
             </div>
-            <div id="requestsList" class="requests-container">
-                <!-- Requests will be loaded here -->
+            
+            <div class="requests-container" id="requestsContainer">
                 <div class="empty-state">
-                    <i class="fas fa-user-clock"></i>
+                    <i class="fas fa-user-plus"></i>
                     <h3>No pending requests</h3>
-                    <p>When someone sends you a request, it will appear here</p>
+                    <p>When someone sends you a chat request, it will appear here</p>
                 </div>
             </div>
         </div>
 
         <!-- Contacts Page -->
-        <div id="contactsPage" class="page">
+        <div class="page" id="contactsPage">
             <div class="page-header">
                 <h2>Contacts</h2>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="contactsSearch" placeholder="Search contacts...">
+                <div class="header-actions">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search contacts..." id="searchContacts">
+                    </div>
+                    <button class="btn-secondary" id="addContactBtn">
+                        <i class="fas fa-user-plus"></i> Add
+                    </button>
                 </div>
             </div>
-            <div id="contactsList" class="contacts-container">
-                <!-- Contacts will be loaded here -->
+            
+            <div class="contacts-container" id="contactsContainer">
                 <div class="empty-state">
                     <i class="fas fa-address-book"></i>
                     <h3>No contacts yet</h3>
-                    <p>Start chatting with others to build your network</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Chats Page -->
-        <div id="chatsPage" class="page">
-            <div class="page-header">
-                <h2>Chats</h2>
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="chatsSearch" placeholder="Search chats...">
-                </div>
-            </div>
-            <div id="chatsList" class="chats-container">
-                <!-- Chats will be loaded here -->
-                <div class="empty-state">
-                    <i class="fas fa-comment-slash"></i>
-                    <h3>No chats yet</h3>
-                    <p>Start a conversation with someone</p>
+                    <p>Add contacts to start chatting</p>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Floating Start Chat Button -->
-    <button id="startChatBtn" class="floating-btn" title="Start New Chat">
-        <i class="fas fa-comment-medical"></i>
+    <!-- Floating Chat Button -->
+    <button class="floating-btn" id="floatingChatBtn">
+        <i class="fas fa-comment"></i>
         <span>Start Chat</span>
     </button>
 
     <!-- Modals -->
-    
-    <!-- Start Chat Popup -->
-    <div id="startChatPopup" class="modal-overlay">
+    <div class="modal-overlay" id="startChatModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Start New Chat</h3>
-                <button class="close-modal">&times;</button>
+                <button class="close-modal" id="closeStartChatModal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="input-group">
-                    <i class="fas fa-id-card"></i>
-                    <input type="text" id="searchUserId" placeholder="Enter Zynapse ID (ZYN-XXXX)" maxlength="8">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchUserID" placeholder="Enter Zynapse ID (ZYN-XXXX)" maxlength="8">
                 </div>
-                <div id="userSearchResult" class="search-result">
+                
+                <div class="search-result" id="userSearchResult">
                     <div class="search-placeholder">
-                        <i class="fas fa-search"></i>
-                        <p>Enter a Zynapse ID to search for users</p>
+                        <i class="fas fa-user"></i>
+                        <p>Enter a Zynapse ID to search</p>
                     </div>
                 </div>
+                
                 <div class="modal-actions">
-                    <button id="sendRequestBtn" class="btn-primary" style="display: none;">
-                        <i class="fas fa-paper-plane"></i> Send Chat Request
-                    </button>
-                    <button id="startDirectChatBtn" class="btn-secondary" style="display: none;">
-                        <i class="fas fa-comment"></i> Start Chat
-                    </button>
+                    <div class="action-buttons" id="searchActions" style="display: none;">
+                        <button class="btn-secondary" id="cancelSearchBtn">Cancel</button>
+                        <button class="btn-primary" id="sendRequestBtn">Send Chat Request</button>
+                        <button class="btn-primary" id="startChatBtn" style="display: none;">Start Chat</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Add Zyne Modal -->
-    <div id="addZyneModal" class="modal-overlay">
+    <div class="modal-overlay" id="addZyneModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add New Zyne</h3>
-                <button class="close-modal">&times;</button>
+                <button class="close-modal" id="closeAddZyneModal">&times;</button>
             </div>
             <div class="modal-body">
-                <textarea id="zyneText" placeholder="What's on your mind?" rows="4" maxlength="500"></textarea>
-                <div class="character-counter">
-                    <span id="zyneCharCount">0</span>/500
-                </div>
-                <div class="media-preview" id="zyneMediaPreview">
-                    <div class="preview-placeholder">
-                        <i class="fas fa-image"></i>
-                        <p>No media selected</p>
+                <div class="input-group">
+                    <textarea id="zyneText" placeholder="What's on your mind? (Optional)" rows="3"></textarea>
+                    <div class="character-counter">
+                        <span id="zyneCharCount">0</span>/200
                     </div>
                 </div>
-                <div class="modal-actions">
+                
+                <div class="profile-upload-section">
+                    <label class="upload-label">Add Photo/Video (Optional)</label>
+                    <div class="media-preview" id="zyneMediaPreview">
+                        <div class="preview-placeholder">
+                            <i class="fas fa-image"></i>
+                            <p>No media selected</p>
+                        </div>
+                    </div>
                     <div class="media-buttons">
-                        <button class="btn-media" id="addPhotoBtn" title="Add Photo">
+                        <button type="button" class="btn-media" id="zynePhotoBtn">
                             <i class="fas fa-camera"></i>
                         </button>
-                        <button class="btn-media" id="addVideoBtn" title="Add Video">
+                        <button type="button" class="btn-media" id="zyneVideoBtn">
                             <i class="fas fa-video"></i>
                         </button>
-                        <button class="btn-media" id="removeMediaBtn" style="display: none;" title="Remove Media">
-                            <i class="fas fa-times"></i>
-                        </button>
                     </div>
-                    <div class="action-buttons">
-                        <button id="postZyneBtn" class="btn-primary">
-                            <i class="fas fa-share"></i> Post Zyne
-                        </button>
-                    </div>
+                    <input type="file" id="zyneMedia" accept="image/*,video/*" style="display: none;">
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="cancelZyneBtn">Cancel</button>
+                    <button class="btn-primary" id="postZyneBtn">Post Zyne</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Create Group Modal -->
-    <div id="createGroupModal" class="modal-overlay">
+    <div class="modal-overlay" id="createGroupModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Create New Group</h3>
-                <button class="close-modal">&times;</button>
+                <button class="close-modal" id="closeCreateGroupModal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="input-group">
@@ -345,121 +321,1214 @@
                     <input type="text" id="groupName" placeholder="Group Name" required>
                 </div>
                 
+                <div class="input-group">
+                    <i class="fas fa-pencil-alt"></i>
+                    <textarea id="groupDescription" placeholder="Group Description (Optional)" rows="2"></textarea>
+                </div>
+                
                 <div class="profile-upload-section">
                     <label class="upload-label">Group Photo (Optional)</label>
-                    <div class="profile-upload-container">
-                        <div class="upload-preview" id="groupImagePreview">
-                            <div class="preview-placeholder">
-                                <i class="fas fa-users"></i>
-                                <span>No image selected</span>
-                            </div>
-                        </div>
-                        <div class="upload-buttons">
-                            <button type="button" id="uploadGroupImageBtn" class="btn-upload">
-                                <i class="fas fa-cloud-upload-alt"></i> Choose Image
-                            </button>
-                            <input type="file" id="groupImageInput" accept="image/*" style="display: none;">
-                            <button type="button" id="removeGroupImageBtn" class="btn-remove" style="display: none;">
-                                <i class="fas fa-times"></i> Remove
-                            </button>
+                    <div class="upload-preview" id="groupPhotoPreview">
+                        <div class="preview-placeholder">
+                            <i class="fas fa-users"></i>
+                            <p>No photo selected</p>
                         </div>
                     </div>
-                    <p class="upload-hint">Max size: 5MB. Supported: JPG, PNG</p>
+                    <button type="button" class="btn-upload" id="uploadGroupPhotoBtn">
+                        <i class="fas fa-upload"></i> Choose Photo
+                    </button>
+                    <input type="file" id="groupPhoto" accept="image/*" style="display: none;">
                 </div>
                 
-                <div class="input-group">
-                    <i class="fas fa-id-card"></i>
-                    <input type="text" id="addMemberInput" placeholder="Add member by Zynapse ID">
-                    <button class="btn-secondary" id="addMemberBtn">Add</button>
-                </div>
-                
-                <div id="membersList" class="members-container">
+                <div class="members-container">
                     <div class="members-header">
-                        <h4>Group Members (1)</h4>
-                        <span class="members-count">You + <span id="addedMembersCount">0</span> others</span>
+                        <h4>Add Members</h4>
+                        <span class="members-count" id="memberCount">0 members</span>
                     </div>
-                    <div class="members-list">
-                        <!-- Added members will appear here -->
+                    <div class="input-group">
+                        <i class="fas fa-user-plus"></i>
+                        <input type="text" id="addMemberInput" placeholder="Enter Zynapse ID to add member">
+                    </div>
+                    <div class="members-list" id="groupMembersList">
                         <div class="empty-members">
                             <i class="fas fa-user-plus"></i>
-                            <p>Add members to your group</p>
+                            <p>No members added yet</p>
                         </div>
                     </div>
                 </div>
                 
                 <div class="modal-actions">
-                    <button id="createGroupSubmitBtn" class="btn-primary">
-                        <i class="fas fa-plus"></i> Create Group
-                    </button>
+                    <button class="btn-secondary" id="cancelGroupBtn">Cancel</button>
+                    <button class="btn-primary" id="createGroupSubmitBtn">Create Group</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal-overlay">
+    <!-- Add Contact Modal -->
+    <div class="modal-overlay" id="addContactModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Settings</h3>
-                <button class="close-modal">&times;</button>
+                <h3>Add Contact</h3>
+                <button class="close-modal" id="closeAddContactModal">&times;</button>
             </div>
             <div class="modal-body">
-                <!-- Settings content will be loaded here -->
+                <div class="input-group">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="contactSearchID" placeholder="Enter Zynapse ID (ZYN-XXXX)" maxlength="8">
+                </div>
+                
+                <div class="search-result" id="contactSearchResult">
+                    <div class="search-placeholder">
+                        <i class="fas fa-user"></i>
+                        <p>Enter a Zynapse ID to search</p>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <div class="action-buttons" id="contactActions" style="display: none;">
+                        <button class="btn-secondary" id="cancelContactBtn">Cancel</button>
+                        <button class="btn-primary" id="sendContactRequestBtn">Send Request</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Profile Settings Modal -->
-    <div id="profileSettingsModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Profile Settings</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <!-- Profile settings content will be loaded here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notifications Container -->
-    <div id="toastContainer" class="toast-container"></div>
-
-    <!-- Audio Elements -->
-    <audio id="notificationSound" preload="auto">
-        <source src="notification.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-    
-    <audio id="sentSound" preload="auto">
-        <source src="sent.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js"></script>
-    
-    <!-- ImageKit SDK -->
-    <script src="https://unpkg.com/imagekit-javascript/dist/imagekit.min.js"></script>
-    
-    <!-- App Scripts -->
-    <script src="firebase-config.js"></script>
-    <script src="imagekit-config.js"></script>
-    <script src="app.js"></script>
-
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(registration => {
-                    console.log('ServiceWorker registered:', registration.scope);
-                }).catch(error => {
-                    console.log('ServiceWorker registration failed:', error);
-                });
+    <script type="module" src="app.js"></script>
+    <script type="module">
+        import zynapseApp from './app.js';
+        import { onAuthStateChanged, signOut, ref, onValue, onChildAdded, onChildChanged, onChildRemoved, get } from './firebase-config.js';
+        
+        let currentUser = null;
+        let userData = null;
+        let contacts = [];
+        let pendingRequests = [];
+        let chats = [];
+        let groups = [];
+        let zynes = [];
+        let groupMembers = [];
+        let searchResult = null;
+        let contactSearchResult = null;
+        
+        // DOM Elements
+        const loadingScreen = document.getElementById('loadingScreen');
+        const userName = document.getElementById('userName');
+        const userID = document.getElementById('userID');
+        const copyIDBtn = document.getElementById('copyIDBtn');
+        const userProfilePic = document.getElementById('userProfilePic');
+        const dropdownProfilePic = document.getElementById('dropdownProfilePic');
+        const dropdownUserName = document.getElementById('dropdownUserName');
+        const dropdownUserID = document.getElementById('dropdownUserID');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const profileDropdownBtn = document.getElementById('profileDropdownBtn');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        const navItems = document.querySelectorAll('.nav-item');
+        const pages = document.querySelectorAll('.page');
+        
+        const floatingChatBtn = document.getElementById('floatingChatBtn');
+        const startChatModal = document.getElementById('startChatModal');
+        const closeStartChatModal = document.getElementById('closeStartChatModal');
+        const searchUserID = document.getElementById('searchUserID');
+        const userSearchResult = document.getElementById('userSearchResult');
+        const searchActions = document.getElementById('searchActions');
+        const cancelSearchBtn = document.getElementById('cancelSearchBtn');
+        const sendRequestBtn = document.getElementById('sendRequestBtn');
+        const startChatBtn = document.getElementById('startChatBtn');
+        
+        const addZyneBtn = document.getElementById('addZyneBtn');
+        const addZyneModal = document.getElementById('addZyneModal');
+        const closeAddZyneModal = document.getElementById('closeAddZyneModal');
+        const zyneText = document.getElementById('zyneText');
+        const zyneCharCount = document.getElementById('zyneCharCount');
+        const zyneMediaPreview = document.getElementById('zyneMediaPreview');
+        const zynePhotoBtn = document.getElementById('zynePhotoBtn');
+        const zyneVideoBtn = document.getElementById('zyneVideoBtn');
+        const zyneMedia = document.getElementById('zyneMedia');
+        const cancelZyneBtn = document.getElementById('cancelZyneBtn');
+        const postZyneBtn = document.getElementById('postZyneBtn');
+        
+        const createGroupBtn = document.getElementById('createGroupBtn');
+        const createGroupModal = document.getElementById('createGroupModal');
+        const closeCreateGroupModal = document.getElementById('closeCreateGroupModal');
+        const groupName = document.getElementById('groupName');
+        const groupDescription = document.getElementById('groupDescription');
+        const groupPhotoPreview = document.getElementById('groupPhotoPreview');
+        const uploadGroupPhotoBtn = document.getElementById('uploadGroupPhotoBtn');
+        const groupPhoto = document.getElementById('groupPhoto');
+        const addMemberInput = document.getElementById('addMemberInput');
+        const groupMembersList = document.getElementById('groupMembersList');
+        const memberCount = document.getElementById('memberCount');
+        const cancelGroupBtn = document.getElementById('cancelGroupBtn');
+        const createGroupSubmitBtn = document.getElementById('createGroupSubmitBtn');
+        
+        const addContactBtn = document.getElementById('addContactBtn');
+        const addContactModal = document.getElementById('addContactModal');
+        const closeAddContactModal = document.getElementById('closeAddContactModal');
+        const contactSearchID = document.getElementById('contactSearchID');
+        const contactSearchResult = document.getElementById('contactSearchResult');
+        const contactActions = document.getElementById('contactActions');
+        const cancelContactBtn = document.getElementById('cancelContactBtn');
+        const sendContactRequestBtn = document.getElementById('sendContactRequestBtn');
+        
+        const startChatCard = document.getElementById('startChatCard');
+        const createGroupCard = document.getElementById('createGroupCard');
+        const addContactCard = document.getElementById('addContactCard');
+        const postZyneCard = document.getElementById('postZyneCard');
+        
+        const recentChats = document.getElementById('recentChats');
+        const zynesContainer = document.getElementById('zynesContainer');
+        const groupsContainer = document.getElementById('groupsContainer');
+        const requestsContainer = document.getElementById('requestsContainer');
+        const contactsContainer = document.getElementById('contactsContainer');
+        
+        const searchRequests = document.getElementById('searchRequests');
+        const searchContacts = document.getElementById('searchContacts');
+        
+        const zynesBadge = document.getElementById('zynesBadge');
+        const groupsBadge = document.getElementById('groupsBadge');
+        const requestsBadge = document.getElementById('requestsBadge');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Hide loading screen
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 400);
+            }, 1000);
+            
+            // Check auth state
+            onAuthStateChanged(zynapseApp.auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    await loadUserData();
+                    setupRealtimeListeners();
+                } else {
+                    window.location.href = 'index.html';
+                }
+            });
+            
+            initEventListeners();
+        });
+        
+        async function loadUserData() {
+            userData = await zynapseApp.getUserData(currentUser.uid);
+            if (userData) {
+                updateUI();
+            }
+        }
+        
+        function updateUI() {
+            // Update user info
+            userName.textContent = userData.name;
+            userID.textContent = userData.userID;
+            dropdownUserName.textContent = userData.name;
+            dropdownUserID.textContent = userData.userID;
+            
+            // Update profile picture
+            const defaultProfile = './zynaps.png';
+            if (userData.profilePicture) {
+                userProfilePic.src = userData.profilePicture;
+                dropdownProfilePic.src = userData.profilePicture;
+            } else {
+                userProfilePic.src = defaultProfile;
+                dropdownProfilePic.src = defaultProfile;
+            }
+            
+            // Update status
+            updateStatusIndicator(userData.status);
+        }
+        
+        function updateStatusIndicator(status) {
+            statusIndicator.className = 'status-indicator';
+            statusIndicator.classList.add(status);
+        }
+        
+        function setupRealtimeListeners() {
+            // Listen for user data changes
+            const userRef = ref(zynapseApp.database, `users/${currentUser.uid}`);
+            onValue(userRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    userData = snapshot.val();
+                    updateUI();
+                }
+            });
+            
+            // Listen for incoming chat requests
+            const requestsRef = ref(zynapseApp.database, `users/${currentUser.uid}/incomingRequests`);
+            onChildAdded(requestsRef, async (snapshot) => {
+                if (snapshot.exists()) {
+                    const requestId = snapshot.key;
+                    await loadRequest(requestId);
+                    updateRequestsBadge();
+                }
+            });
+            
+            onChildRemoved(requestsRef, (snapshot) => {
+                const requestId = snapshot.key;
+                removeRequestFromUI(requestId);
+                updateRequestsBadge();
+            });
+            
+            // Listen for contacts
+            const contactsRef = ref(zynapseApp.database, `users/${currentUser.uid}/contacts`);
+            onChildAdded(contactsRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const contactUID = snapshot.key;
+                    loadContact(contactUID, snapshot.val());
+                }
+            });
+            
+            onChildChanged(contactsRef, (snapshot) => {
+                const contactUID = snapshot.key;
+                updateContact(contactUID, snapshot.val());
+            });
+            
+            onChildRemoved(contactsRef, (snapshot) => {
+                const contactUID = snapshot.key;
+                removeContactFromUI(contactUID);
+            });
+            
+            // Listen for chats
+            const chatsRef = ref(zynapseApp.database, `users/${currentUser.uid}/chats`);
+            onChildAdded(chatsRef, async (snapshot) => {
+                if (snapshot.exists()) {
+                    const chatId = snapshot.key;
+                    await loadChat(chatId, snapshot.val());
+                }
+            });
+            
+            onChildChanged(chatsRef, async (snapshot) => {
+                const chatId = snapshot.key;
+                updateChat(chatId, snapshot.val());
             });
         }
+        
+        async function loadRequest(requestId) {
+            try {
+                const requestRef = ref(zynapseApp.database, `chatRequests/${requestId}`);
+                const snapshot = await get(requestRef);
+                
+                if (snapshot.exists()) {
+                    const request = snapshot.val();
+                    const sender = await zynapseApp.getUserData(request.from);
+                    
+                    if (sender) {
+                        const requestData = {
+                            id: requestId,
+                            ...request,
+                            sender: sender
+                        };
+                        
+                        pendingRequests.push(requestData);
+                        displayRequest(requestData);
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading request:", error);
+            }
+        }
+        
+        function displayRequest(request) {
+            const requestElement = document.createElement('div');
+            requestElement.className = 'request-card';
+            requestElement.dataset.id = request.id;
+            
+            const profilePic = request.sender.profilePicture || './zynaps.png';
+            
+            requestElement.innerHTML = `
+                <img src="${profilePic}" alt="${request.sender.name}" class="profile-pic">
+                <div class="request-info">
+                    <h4>${request.sender.name}</h4>
+                    <p>${request.sender.userID}</p>
+                    <p class="time">${zynapseApp.formatTime(request.timestamp)}</p>
+                </div>
+                <div class="request-actions">
+                    <button class="action-btn accept-btn" data-action="accept">
+                        <i class="fas fa-check"></i> Accept
+                    </button>
+                    <button class="action-btn reject-btn" data-action="reject">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            `;
+            
+            // Check if already exists
+            const existing = requestsContainer.querySelector(`[data-id="${request.id}"]`);
+            if (existing) {
+                existing.replaceWith(requestElement);
+            } else {
+                // Remove empty state if present
+                const emptyState = requestsContainer.querySelector('.empty-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+                requestsContainer.appendChild(requestElement);
+            }
+            
+            // Add event listeners to buttons
+            const acceptBtn = requestElement.querySelector('[data-action="accept"]');
+            const rejectBtn = requestElement.querySelector('[data-action="reject"]');
+            
+            acceptBtn.addEventListener('click', async () => {
+                await acceptRequest(request.id);
+            });
+            
+            rejectBtn.addEventListener('click', async () => {
+                await rejectRequest(request.id);
+            });
+        }
+        
+        async function acceptRequest(requestId) {
+            const result = await zynapseApp.acceptChatRequest(requestId, currentUser.uid);
+            if (result) {
+                zynapseApp.showToast('Chat request accepted', 'success');
+                // Remove from UI
+                removeRequestFromUI(requestId);
+                updateRequestsBadge();
+            } else {
+                zynapseApp.showToast('Failed to accept request', 'error');
+            }
+        }
+        
+        async function rejectRequest(requestId) {
+            const result = await zynapseApp.rejectChatRequest(requestId, currentUser.uid);
+            if (result) {
+                zynapseApp.showToast('Chat request rejected', 'success');
+                // Remove from UI
+                removeRequestFromUI(requestId);
+                updateRequestsBadge();
+            } else {
+                zynapseApp.showToast('Failed to reject request', 'error');
+            }
+        }
+        
+        function removeRequestFromUI(requestId) {
+            const requestElement = requestsContainer.querySelector(`[data-id="${requestId}"]`);
+            if (requestElement) {
+                requestElement.remove();
+            }
+            
+            // Remove from array
+            pendingRequests = pendingRequests.filter(r => r.id !== requestId);
+            
+            // Show empty state if no requests
+            if (requestsContainer.children.length === 0) {
+                requestsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-user-plus"></i>
+                        <h3>No pending requests</h3>
+                        <p>When someone sends you a chat request, it will appear here</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadContact(contactUID, contactData) {
+            try {
+                const contactUser = await zynapseApp.getUserData(contactUID);
+                if (contactUser) {
+                    const contact = {
+                        uid: contactUID,
+                        ...contactData,
+                        ...contactUser
+                    };
+                    
+                    contacts.push(contact);
+                    displayContact(contact);
+                }
+            } catch (error) {
+                console.error("Error loading contact:", error);
+            }
+        }
+        
+        function displayContact(contact) {
+            const contactElement = document.createElement('div');
+            contactElement.className = 'contact-card';
+            contactElement.dataset.uid = contact.uid;
+            
+            const profilePic = contact.profilePicture || './zynaps.png';
+            const statusClass = contact.status || 'offline';
+            
+            contactElement.innerHTML = `
+                <img src="${profilePic}" alt="${contact.name}" class="profile-pic">
+                <div class="contact-info">
+                    <h4>${contact.name}</h4>
+                    <p>${contact.userID}</p>
+                    <p class="status ${statusClass}">${contact.status || 'offline'}</p>
+                </div>
+                <div class="contact-actions">
+                    <button class="action-btn chat-btn" data-action="chat">
+                        <i class="fas fa-comment"></i> Chat
+                    </button>
+                </div>
+            `;
+            
+            // Check if already exists
+            const existing = contactsContainer.querySelector(`[data-uid="${contact.uid}"]`);
+            if (existing) {
+                existing.replaceWith(contactElement);
+            } else {
+                // Remove empty state if present
+                const emptyState = contactsContainer.querySelector('.empty-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+                contactsContainer.appendChild(contactElement);
+            }
+            
+            // Add event listener to chat button
+            const chatBtn = contactElement.querySelector('[data-action="chat"]');
+            chatBtn.addEventListener('click', () => {
+                startChatWithContact(contact.userID);
+            });
+        }
+        
+        function updateContact(contactUID, contactData) {
+            const contactElement = contactsContainer.querySelector(`[data-uid="${contactUID}"]`);
+            if (contactElement) {
+                const statusElement = contactElement.querySelector('.status');
+                if (statusElement) {
+                    statusElement.textContent = contactData.status || 'offline';
+                    statusElement.className = `status ${contactData.status || 'offline'}`;
+                }
+            }
+        }
+        
+        function removeContactFromUI(contactUID) {
+            const contactElement = contactsContainer.querySelector(`[data-uid="${contactUID}"]`);
+            if (contactElement) {
+                contactElement.remove();
+            }
+            
+            // Remove from array
+            contacts = contacts.filter(c => c.uid !== contactUID);
+            
+            // Show empty state if no contacts
+            if (contactsContainer.children.length === 0) {
+                contactsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-address-book"></i>
+                        <h3>No contacts yet</h3>
+                        <p>Add contacts to start chatting</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadChat(chatId, chatData) {
+            try {
+                const otherUserUID = chatData.with;
+                const otherUser = await zynapseApp.getUserData(otherUserUID);
+                
+                if (otherUser) {
+                    const chat = {
+                        id: chatId,
+                        ...chatData,
+                        otherUser: otherUser
+                    };
+                    
+                    chats.push(chat);
+                    displayRecentChat(chat);
+                }
+            } catch (error) {
+                console.error("Error loading chat:", error);
+            }
+        }
+        
+        function displayRecentChat(chat) {
+            const chatElement = document.createElement('div');
+            chatElement.className = 'contact-card';
+            chatElement.dataset.chatId = chat.id;
+            
+            const profilePic = chat.otherUser.profilePicture || './zynaps.png';
+            
+            chatElement.innerHTML = `
+                <img src="${profilePic}" alt="${chat.otherUser.name}" class="profile-pic">
+                <div class="contact-info">
+                    <h4>${chat.otherUser.name}</h4>
+                    <p>${chat.otherUser.userID}</p>
+                    <p class="time">${zynapseApp.formatTime(chat.lastActive)}</p>
+                </div>
+                <div class="contact-actions">
+                    <button class="action-btn chat-btn" data-action="open-chat">
+                        <i class="fas fa-comment"></i> Open
+                    </button>
+                </div>
+            `;
+            
+            // Check if already exists
+            const existing = recentChats.querySelector(`[data-chat-id="${chat.id}"]`);
+            if (existing) {
+                existing.replaceWith(chatElement);
+            } else {
+                // Remove empty state if present
+                const emptyState = recentChats.querySelector('.empty-state');
+                if (emptyState) {
+                    emptyState.remove();
+                }
+                recentChats.appendChild(chatElement);
+            }
+            
+            // Add event listener to open chat button
+            const openBtn = chatElement.querySelector('[data-action="open-chat"]');
+            openBtn.addEventListener('click', () => {
+                openChat(chat.id, chat.otherUser);
+            });
+        }
+        
+        function updateChat(chatId, chatData) {
+            const chatElement = recentChats.querySelector(`[data-chat-id="${chatId}"]`);
+            if (chatElement) {
+                const timeElement = chatElement.querySelector('.time');
+                if (timeElement) {
+                    timeElement.textContent = zynapseApp.formatTime(chatData.lastActive);
+                }
+            }
+        }
+        
+        function openChat(chatId, otherUser) {
+            // Store chat data in session storage
+            sessionStorage.setItem('currentChat', JSON.stringify({
+                id: chatId,
+                otherUser: otherUser
+            }));
+            
+            // Open chat page
+            window.location.href = 'chat.html';
+        }
+        
+        function updateRequestsBadge() {
+            const count = pendingRequests.length;
+            if (count > 0) {
+                requestsBadge.textContent = count;
+                requestsBadge.style.display = 'flex';
+            } else {
+                requestsBadge.style.display = 'none';
+            }
+        }
+        
+        function initEventListeners() {
+            // Copy user ID
+            copyIDBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(userData.userID).then(() => {
+                    zynapseApp.showToast('User ID copied to clipboard', 'success');
+                });
+            });
+            
+            // Profile dropdown
+            profileDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('show');
+            });
+            
+            // Logout
+            logoutBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    await zynapseApp.logout();
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    zynapseApp.showToast('Error logging out', 'error');
+                }
+            });
+            
+            // Navigation
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = item.getAttribute('data-page');
+                    
+                    // Update active state
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    // Show corresponding page
+                    pages.forEach(p => p.classList.remove('active'));
+                    document.getElementById(`${page}Page`).classList.add('active');
+                });
+            });
+            
+            // Floating chat button
+            floatingChatBtn.addEventListener('click', openStartChatModal);
+            startChatCard.addEventListener('click', openStartChatModal);
+            
+            // Start chat modal
+            closeStartChatModal.addEventListener('click', () => {
+                startChatModal.classList.remove('active');
+            });
+            
+            searchUserID.addEventListener('input', async (e) => {
+                const id = e.target.value.toUpperCase().trim();
+                if (id.length === 8 && id.startsWith('ZYN-')) {
+                    await searchUser(id);
+                } else {
+                    resetSearchResult();
+                }
+            });
+            
+            cancelSearchBtn.addEventListener('click', () => {
+                resetSearchModal();
+            });
+            
+            sendRequestBtn.addEventListener('click', async () => {
+                if (searchResult) {
+                    await sendChatRequest(searchResult.user.userID);
+                }
+            });
+            
+            startChatBtn.addEventListener('click', async () => {
+                if (searchResult) {
+                    await startDirectChat(searchResult.user.userID);
+                }
+            });
+            
+            // Add Zyne
+            addZyneBtn.addEventListener('click', openAddZyneModal);
+            postZyneCard.addEventListener('click', openAddZyneModal);
+            closeAddZyneModal.addEventListener('click', () => {
+                addZyneModal.classList.remove('active');
+            });
+            
+            zyneText.addEventListener('input', (e) => {
+                const count = e.target.value.length;
+                zyneCharCount.textContent = count;
+                if (count > 200) {
+                    zyneCharCount.style.color = 'var(--red)';
+                } else {
+                    zyneCharCount.style.color = 'var(--gray-500)';
+                }
+            });
+            
+            zynePhotoBtn.addEventListener('click', () => {
+                zyneMedia.accept = 'image/*';
+                zyneMedia.click();
+            });
+            
+            zyneVideoBtn.addEventListener('click', () => {
+                zyneMedia.accept = 'video/*';
+                zyneMedia.click();
+            });
+            
+            zyneMedia.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.size > 10 * 1024 * 1024) {
+                        zynapseApp.showToast('File size must be less than 10MB', 'error');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (file.type.startsWith('image/')) {
+                            zyneMediaPreview.innerHTML = `
+                                <div class="preview-item">
+                                    <img src="${e.target.result}" alt="Preview">
+                                    <button class="remove-preview" id="removeZyneMedia">&times;</button>
+                                </div>
+                            `;
+                        } else if (file.type.startsWith('video/')) {
+                            zyneMediaPreview.innerHTML = `
+                                <div class="preview-item">
+                                    <video src="${e.target.result}" controls></video>
+                                    <button class="remove-preview" id="removeZyneMedia">&times;</button>
+                                </div>
+                            `;
+                        }
+                        
+                        document.getElementById('removeZyneMedia').addEventListener('click', () => {
+                            zyneMedia.value = '';
+                            zyneMediaPreview.innerHTML = `
+                                <div class="preview-placeholder">
+                                    <i class="fas fa-image"></i>
+                                    <p>No media selected</p>
+                                </div>
+                            `;
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            cancelZyneBtn.addEventListener('click', () => {
+                resetZyneModal();
+                addZyneModal.classList.remove('active');
+            });
+            
+            postZyneBtn.addEventListener('click', async () => {
+                await postZyne();
+            });
+            
+            // Create Group
+            createGroupBtn.addEventListener('click', openCreateGroupModal);
+            createGroupCard.addEventListener('click', openCreateGroupModal);
+            closeCreateGroupModal.addEventListener('click', () => {
+                createGroupModal.classList.remove('active');
+            });
+            
+            uploadGroupPhotoBtn.addEventListener('click', () => {
+                groupPhoto.click();
+            });
+            
+            groupPhoto.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                        zynapseApp.showToast('File size must be less than 5MB', 'error');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        groupPhotoPreview.innerHTML = `<img src="${e.target.result}" alt="Group Photo Preview">`;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            addMemberInput.addEventListener('keypress', async (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const id = addMemberInput.value.toUpperCase().trim();
+                    if (id.length === 8 && id.startsWith('ZYN-')) {
+                        await addGroupMember(id);
+                        addMemberInput.value = '';
+                    }
+                }
+            });
+            
+            cancelGroupBtn.addEventListener('click', () => {
+                resetGroupModal();
+                createGroupModal.classList.remove('active');
+            });
+            
+            createGroupSubmitBtn.addEventListener('click', async () => {
+                await createGroup();
+            });
+            
+            // Add Contact
+            addContactBtn.addEventListener('click', openAddContactModal);
+            addContactCard.addEventListener('click', openAddContactModal);
+            closeAddContactModal.addEventListener('click', () => {
+                addContactModal.classList.remove('active');
+            });
+            
+            contactSearchID.addEventListener('input', async (e) => {
+                const id = e.target.value.toUpperCase().trim();
+                if (id.length === 8 && id.startsWith('ZYN-')) {
+                    await searchContact(id);
+                } else {
+                    resetContactSearchResult();
+                }
+            });
+            
+            cancelContactBtn.addEventListener('click', () => {
+                resetContactModal();
+            });
+            
+            sendContactRequestBtn.addEventListener('click', async () => {
+                if (contactSearchResult) {
+                    await sendContactRequest(contactSearchResult.user.userID);
+                }
+            });
+            
+            // Search in pages
+            searchRequests.addEventListener('input', filterRequests);
+            searchContacts.addEventListener('input', filterContacts);
+        }
+        
+        // Modal functions
+        function openStartChatModal() {
+            resetSearchModal();
+            startChatModal.classList.add('active');
+            searchUserID.focus();
+        }
+        
+        function resetSearchModal() {
+            searchUserID.value = '';
+            resetSearchResult();
+            startChatModal.classList.remove('active');
+        }
+        
+        function resetSearchResult() {
+            searchResult = null;
+            userSearchResult.innerHTML = `
+                <div class="search-placeholder">
+                    <i class="fas fa-user"></i>
+                    <p>Enter a Zynapse ID to search</p>
+                </div>
+            `;
+            searchActions.style.display = 'none';
+        }
+        
+        async function searchUser(zynID) {
+            try {
+                userSearchResult.innerHTML = `
+                    <div class="search-placeholder">
+                        <div class="spinner-large"></div>
+                        <p>Searching...</p>
+                    </div>
+                `;
+                
+                const result = await zynapseApp.searchUser(zynID);
+                
+                if (result.success) {
+                    searchResult = result;
+                    
+                    const profilePic = result.user.profilePicture || './zynaps.png';
+                    
+                    userSearchResult.innerHTML = `
+                        <div class="user-found">
+                            <img src="${profilePic}" alt="${result.user.name}" class="profile-pic">
+                            <div class="user-info">
+                                <h4>${result.user.name}</h4>
+                                <p>${result.user.userID}</p>
+                                ${result.isContact ? '<p class="already-contact"><i class="fas fa-check-circle"></i> Already in contacts</p>' : ''}
+                            </div>
+                        </div>
+                    `;
+                    
+                    searchActions.style.display = 'flex';
+                    if (result.isContact) {
+                        sendRequestBtn.style.display = 'none';
+                        startChatBtn.style.display = 'flex';
+                    } else {
+                        sendRequestBtn.style.display = 'flex';
+                        startChatBtn.style.display = 'none';
+                    }
+                } else {
+                    userSearchResult.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>${result.message}</p>
+                        </div>
+                    `;
+                    searchActions.style.display = 'none';
+                }
+            } catch (error) {
+                zynapseApp.showToast('Search error', 'error');
+                resetSearchResult();
+            }
+        }
+        
+        async function sendChatRequest(zynID) {
+            const result = await zynapseApp.startChat(zynID);
+            if (result.success) {
+                if (result.requiresRequest) {
+                    zynapseApp.showToast('Chat request sent successfully', 'success');
+                }
+                resetSearchModal();
+            } else {
+                zynapseApp.showToast(result.message, 'error');
+            }
+        }
+        
+        async function startDirectChat(zynID) {
+            const result = await zynapseApp.startChat(zynID);
+            if (result.success && !result.requiresRequest) {
+                // Open chat immediately
+                sessionStorage.setItem('currentChat', JSON.stringify({
+                    id: result.chatId,
+                    otherUser: result.otherUser
+                }));
+                window.location.href = 'chat.html';
+            }
+        }
+        
+        function openAddZyneModal() {
+            resetZyneModal();
+            addZyneModal.classList.add('active');
+            zyneText.focus();
+        }
+        
+        function resetZyneModal() {
+            zyneText.value = '';
+            zyneCharCount.textContent = '0';
+            zyneMedia.value = '';
+            zyneMediaPreview.innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-image"></i>
+                    <p>No media selected</p>
+                </div>
+            `;
+        }
+        
+        async function postZyne() {
+            const text = zyneText.value.trim();
+            const mediaFile = zyneMedia.files[0];
+            
+            if (!text && !mediaFile) {
+                zynapseApp.showToast('Please add text or media', 'error');
+                return;
+            }
+            
+            if (text.length > 200) {
+                zynapseApp.showToast('Text must be less than 200 characters', 'error');
+                return;
+            }
+            
+            postZyneBtn.disabled = true;
+            postZyneBtn.innerHTML = '<div class="spinner"></div>';
+            
+            try {
+                const result = await zynapseApp.createZyne(text, mediaFile);
+                if (result.success) {
+                    zynapseApp.showToast('Zyne posted successfully', 'success');
+                    resetZyneModal();
+                    addZyneModal.classList.remove('active');
+                } else {
+                    zynapseApp.showToast(result.message, 'error');
+                }
+            } catch (error) {
+                zynapseApp.showToast('Error posting zyne', 'error');
+            } finally {
+                postZyneBtn.disabled = false;
+                postZyneBtn.textContent = 'Post Zyne';
+            }
+        }
+        
+        function openCreateGroupModal() {
+            resetGroupModal();
+            createGroupModal.classList.add('active');
+            groupName.focus();
+        }
+        
+        function resetGroupModal() {
+            groupName.value = '';
+            groupDescription.value = '';
+            groupPhoto.value = '';
+            groupPhotoPreview.innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-users"></i>
+                    <p>No photo selected</p>
+                </div>
+            `;
+            addMemberInput.value = '';
+            groupMembers = [];
+            updateGroupMembersList();
+        }
+        
+        async function addGroupMember(zynID) {
+            // Check if already added
+            if (groupMembers.some(m => m.userID === zynID)) {
+                zynapseApp.showToast('User already added', 'warning');
+                return;
+            }
+            
+            // Check if adding self
+            if (zynID === userData.userID) {
+                zynapseApp.showToast('Cannot add yourself', 'warning');
+                return;
+            }
+            
+            const result = await zynapseApp.searchUser(zynID);
+            if (result.success) {
+                groupMembers.push(result.user);
+                updateGroupMembersList();
+                zynapseApp.showToast('User added to group', 'success');
+            } else {
+                zynapseApp.showToast(result.message, 'error');
+            }
+        }
+        
+        function updateGroupMembersList() {
+            if (groupMembers.length === 0) {
+                groupMembersList.innerHTML = `
+                    <div class="empty-members">
+                        <i class="fas fa-user-plus"></i>
+                        <p>No members added yet</p>
+                    </div>
+                `;
+            } else {
+                groupMembersList.innerHTML = groupMembers.map(member => `
+                    <div class="member-tag">
+                        <span>${member.name} (${member.userID})</span>
+                        <button class="remove-member" data-id="${member.userID}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `).join('');
+                
+                // Add remove event listeners
+                groupMembersList.querySelectorAll('.remove-member').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = btn.getAttribute('data-id');
+                        groupMembers = groupMembers.filter(m => m.userID !== id);
+                        updateGroupMembersList();
+                    });
+                });
+            }
+            
+            memberCount.textContent = `${groupMembers.length} member${groupMembers.length !== 1 ? 's' : ''}`;
+        }
+        
+        async function createGroup() {
+            const name = groupName.value.trim();
+            const description = groupDescription.value.trim();
+            const photoFile = groupPhoto.files[0];
+            
+            if (!name) {
+                zynapseApp.showToast('Please enter group name', 'error');
+                return;
+            }
+            
+            if (groupMembers.length === 0) {
+                zynapseApp.showToast('Please add at least one member', 'error');
+                return;
+            }
+            
+            createGroupSubmitBtn.disabled = true;
+            createGroupSubmitBtn.innerHTML = '<div class="spinner"></div>';
+            
+            try {
+                const memberIDs = groupMembers.map(m => m.userID);
+                const result = await zynapseApp.createGroup(name, description, memberIDs, photoFile);
+                if (result.success) {
+                    zynapseApp.showToast('Group created successfully', 'success');
+                    resetGroupModal();
+                    createGroupModal.classList.remove('active');
+                } else {
+                    zynapseApp.showToast(result.message, 'error');
+                }
+            } catch (error) {
+                zynapseApp.showToast('Error creating group', 'error');
+            } finally {
+                createGroupSubmitBtn.disabled = false;
+                createGroupSubmitBtn.textContent = 'Create Group';
+            }
+        }
+        
+        function openAddContactModal() {
+            resetContactModal();
+            addContactModal.classList.add('active');
+            contactSearchID.focus();
+        }
+        
+        function resetContactModal() {
+            contactSearchID.value = '';
+            resetContactSearchResult();
+            addContactModal.classList.remove('active');
+        }
+        
+        function resetContactSearchResult() {
+            contactSearchResult = null;
+            contactSearchResult.innerHTML = `
+                <div class="search-placeholder">
+                    <i class="fas fa-user"></i>
+                    <p>Enter a Zynapse ID to search</p>
+                </div>
+            `;
+            contactActions.style.display = 'none';
+        }
+        
+        async function searchContact(zynID) {
+            try {
+                contactSearchResult.innerHTML = `
+                    <div class="search-placeholder">
+                        <div class="spinner-large"></div>
+                        <p>Searching...</p>
+                    </div>
+                `;
+                
+                const result = await zynapseApp.searchUser(zynID);
+                
+                if (result.success) {
+                    contactSearchResult = result;
+                    
+                    const profilePic = result.user.profilePicture || './zynaps.png';
+                    
+                    contactSearchResult.innerHTML = `
+                        <div class="user-found">
+                            <img src="${profilePic}" alt="${result.user.name}" class="profile-pic">
+                            <div class="user-info">
+                                <h4>${result.user.name}</h4>
+                                <p>${result.user.userID}</p>
+                                ${result.isContact ? '<p class="already-contact"><i class="fas fa-check-circle"></i> Already in contacts</p>' : ''}
+                            </div>
+                        </div>
+                    `;
+                    
+                    contactActions.style.display = 'flex';
+                    if (result.isContact) {
+                        sendContactRequestBtn.style.display = 'none';
+                    } else {
+                        sendContactRequestBtn.style.display = 'flex';
+                    }
+                } else {
+                    contactSearchResult.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>${result.message}</p>
+                        </div>
+                    `;
+                    contactActions.style.display = 'none';
+                }
+            } catch (error) {
+                zynapseApp.showToast('Search error', 'error');
+                resetContactSearchResult();
+            }
+        }
+        
+        async function sendContactRequest(zynID) {
+            const result = await zynapseApp.startChat(zynID);
+            if (result.success) {
+                zynapseApp.showToast('Contact request sent successfully', 'success');
+                resetContactModal();
+            } else {
+                zynapseApp.showToast(result.message, 'error');
+            }
+        }
+        
+        function filterRequests() {
+            const searchTerm = searchRequests.value.toLowerCase();
+            const requestCards = requestsContainer.querySelectorAll('.request-card');
+            
+            requestCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        function filterContacts() {
+            const searchTerm = searchContacts.value.toLowerCase();
+            const contactCards = contactsContainer.querySelectorAll('.contact-card');
+            
+            contactCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        function startChatWithContact(zynID) {
+            // This will trigger the start chat flow
+            openStartChatModal();
+            searchUserID.value = zynID;
+            searchUserID.dispatchEvent(new Event('input'));
+        }
+        
+        // Close modals when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('active');
+            }
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', () => {
+            profileDropdown.classList.remove('show');
+        });
     </script>
 </body>
 </html>
