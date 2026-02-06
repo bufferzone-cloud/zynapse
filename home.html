@@ -5,23 +5,1423 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynapse - Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        /* All the CSS from your provided code */
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        :root {
+            --white: #ffffff;
+            --black: #000000;
+            --gray-50: #f9f9f9;
+            --gray-100: #f2f2f2;
+            --gray-200: #e9e9e9;
+            --gray-300: #d9d9d9;
+            --gray-400: #b0b0b0;
+            --gray-500: #8e8e93;
+            --gray-600: #6d6d72;
+            --gray-700: #3a3a3c;
+            --blue: #007aff;
+            --blue-light: #5ac8fa;
+            --blue-dark: #0056cc;
+            --green: #34c759;
+            --green-light: #4cd964;
+            --red: #ff3b30;
+            --red-light: #ff5757;
+            --red-dark: #d70015;
+            --orange: #ff9500;
+            --purple: #af52de;
+            --yellow: #ffcc00;
+            --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-heavy: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --border-radius-small: 10px;
+            --border-radius-medium: 16px;
+            --border-radius-large: 20px;
+            --border-radius-circle: 50%;
+            --font-sf-pro: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.4s ease;
+        }
+
+        body {
+            font-family: var(--font-sf-pro);
+            background: var(--white);
+            color: var(--black);
+            line-height: 1.4;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity var(--transition-slow);
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-content {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 30px;
+            border-radius: var(--border-radius-large);
+            object-fit: cover;
+            animation: pulse 2s infinite;
+        }
+
+        .spinner-large {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(0, 122, 255, 0.1);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-content p {
+            color: var(--gray-600);
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* App Home Page */
+        .app-home {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--white);
+            position: relative;
+        }
+
+        .app-header {
+            background: var(--white);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-small);
+            object-fit: cover;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-info h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 2px;
+            line-height: 1.2;
+        }
+
+        .user-id-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-id {
+            font-size: 14px;
+            color: var(--gray-600);
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: var(--border-radius-small);
+            transition: all var(--transition-normal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+        }
+
+        .copy-btn:hover {
+            color: var(--blue);
+            background: var(--gray-100);
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            position: relative;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: var(--border-radius-circle);
+            background: var(--green);
+            border: 2px solid var(--white);
+            box-shadow: 0 0 0 2px var(--green);
+        }
+
+        .status-indicator.online .status-dot {
+            background: var(--green);
+            box-shadow: 0 0 0 2px var(--green);
+        }
+
+        .status-indicator.offline .status-dot {
+            background: var(--gray-400);
+            box-shadow: 0 0 0 2px var(--gray-400);
+        }
+
+        .status-indicator.away .status-dot {
+            background: var(--orange);
+            box-shadow: 0 0 0 2px var(--orange);
+        }
+
+        .profile-pic-small {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--border-radius-circle);
+            object-fit: cover;
+            border: 2px solid var(--gray-200);
+            transition: border-color var(--transition-normal);
+        }
+
+        .profile-pic-small:hover {
+            border-color: var(--blue);
+        }
+
+        .profile-btn {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: var(--border-radius-medium);
+            transition: background var(--transition-normal);
+        }
+
+        .profile-btn:hover {
+            background: var(--gray-100);
+        }
+
+        /* Navigation */
+        .app-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 20px;
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 64px;
+            z-index: 99;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: var(--gray-500);
+            padding: 8px 16px;
+            border-radius: var(--border-radius-medium);
+            transition: all var(--transition-normal);
+            position: relative;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        .nav-item span {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: color var(--transition-normal);
+        }
+
+        .nav-item.active {
+            color: var(--blue);
+        }
+
+        .nav-item.active span {
+            color: var(--blue);
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--blue);
+            border-radius: var(--border-radius-circle);
+        }
+
+        .nav-item:hover:not(.active) {
+            color: var(--gray-700);
+            background: var(--gray-100);
+        }
+
+        .badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: var(--red);
+            color: var(--white);
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: var(--border-radius-circle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            animation: badgePulse 2s infinite;
+        }
+
+        @keyframes badgePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Main Content */
+        .app-main {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--white);
+            padding: 20px;
+            position: relative;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .home-content {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .welcome-message h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 12px;
+        }
+
+        .welcome-message p {
+            font-size: 18px;
+            color: var(--gray-600);
+            margin-bottom: 40px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .quick-action-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius-medium);
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--blue);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .quick-action-card i {
+            font-size: 32px;
+            color: var(--blue);
+            margin-bottom: 12px;
+        }
+
+        .quick-action-card h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 4px;
+        }
+
+        .quick-action-card p {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        /* Recent Chats Section */
+        .recent-chats-section {
+            background: var(--white);
+            border-radius: var(--border-radius-medium);
+            padding: 20px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--black);
+        }
+
+        .view-all {
+            color: var(--blue);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: color var(--transition-normal);
+        }
+
+        .view-all:hover {
+            color: var(--blue-dark);
+            text-decoration: underline;
+        }
+
+        .recent-chats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Page Headers */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .page-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--black);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--gray-100);
+            border-radius: var(--border-radius-medium);
+            padding: 4px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius-small);
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .tab-btn.active {
+            background: var(--white);
+            color: var(--blue);
+            box-shadow: var(--shadow-light);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--gray-100);
+            border-radius: var(--border-radius-medium);
+            padding: 10px 16px;
+            width: 250px;
+        }
+
+        .search-box i {
+            color: var(--gray-500);
+            margin-right: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: var(--black);
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: var(--gray-400);
+        }
+
+        /* Floating Button */
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--blue);
+            color: var(--white);
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: var(--border-radius-circle);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            box-shadow: var(--shadow-heavy);
+            transition: all var(--transition-normal);
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-heavy), 0 0 30px rgba(0, 122, 255, 0.4);
+        }
+
+        .floating-btn:active {
+            transform: scale(0.95);
+        }
+
+        .floating-btn i {
+            font-size: 20px;
+        }
+
+        .floating-btn span {
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: var(--shadow-heavy); }
+            50% { box-shadow: var(--shadow-heavy), 0 0 20px rgba(0, 122, 255, 0.3); }
+            100% { box-shadow: var(--shadow-heavy); }
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--border-radius-large);
+            padding: 0;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: var(--shadow-heavy);
+            animation: modalSlideUp 0.4s ease;
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--white);
+            border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+            z-index: 1;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--black);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius-circle);
+            transition: all var(--transition-normal);
+        }
+
+        .close-modal:hover {
+            background: var(--gray-100);
+            color: var(--black);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .search-result {
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--gray-50);
+            border-radius: var(--border-radius-medium);
+            display: none;
+        }
+
+        .search-result.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .search-placeholder {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray-500);
+        }
+
+        .search-placeholder i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .search-placeholder p {
+            font-size: 15px;
+        }
+
+        .user-found {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--white);
+            border-radius: var(--border-radius-medium);
+            border: 1px solid var(--gray-200);
+            animation: slideUp 0.3s ease;
+        }
+
+        .user-found .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--border-radius-circle);
+            object-fit: cover;
+        }
+
+        .user-found h4 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 4px;
+        }
+
+        .user-found p {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .already-contact {
+            color: var(--green) !important;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .error {
+            color: var(--red) !important;
+            text-align: center;
+            padding: 10px;
+        }
+
+        /* Character Counter */
+        .character-counter {
+            text-align: right;
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-top: 8px;
+        }
+
+        /* Media Preview */
+        .media-preview {
+            margin: 16px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 100px;
+        }
+
+        .media-preview-content {
+            width: 100%;
+            text-align: center;
+        }
+
+        .preview-item {
+            width: 100px;
+            height: 100px;
+            border-radius: var(--border-radius-small);
+            overflow: hidden;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .preview-item img,
+        .preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .remove-preview {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--white);
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: var(--border-radius-circle);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-normal);
+        }
+
+        .remove-preview:hover {
+            background: var(--red);
+            transform: scale(1.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            justify-content: flex-end;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .media-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Members Container */
+        .members-container {
+            margin: 20px 0;
+            background: var(--gray-50);
+            border-radius: var(--border-radius-medium);
+            padding: 20px;
+        }
+
+        .members-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .members-header h4 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--black);
+        }
+
+        .members-count {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .members-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 60px;
+        }
+
+        .empty-members {
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+            color: var(--gray-500);
+        }
+
+        .empty-members i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .empty-members p {
+            font-size: 15px;
+        }
+
+        .member-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius-large);
+            padding: 8px 12px;
+            font-size: 14px;
+            color: var(--gray-700);
+            animation: slideUp 0.3s ease;
+        }
+
+        .remove-member {
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 2px;
+            border-radius: var(--border-radius-circle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            transition: all var(--transition-normal);
+        }
+
+        .remove-member:hover {
+            color: var(--red);
+            background: var(--gray-100);
+        }
+
+        /* Lists Containers */
+        .requests-container,
+        .contacts-container,
+        .groups-container,
+        .zynes-container,
+        .chats-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Request Card */
+        .request-card,
+        .contact-card,
+        .group-card {
+            background: var(--white);
+            border-radius: var(--border-radius-medium);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid var(--gray-200);
+            transition: all var(--transition-normal);
+            cursor: pointer;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .request-card:hover,
+        .contact-card:hover,
+        .group-card:hover {
+            border-color: var(--blue);
+            box-shadow: var(--shadow-light);
+            transform: translateY(-1px);
+        }
+
+        .request-card .profile-pic,
+        .contact-card .profile-pic,
+        .group-card .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--border-radius-circle);
+            object-fit: cover;
+        }
+
+        .request-info,
+        .contact-info,
+        .group-info {
+            flex: 1;
+        }
+
+        .request-info h4,
+        .contact-info h4,
+        .group-info h4 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 4px;
+        }
+
+        .request-info p,
+        .contact-info p,
+        .group-info p {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 2px;
+        }
+
+        .request-info .time,
+        .contact-info .time,
+        .group-info .time {
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        .contact-info .status {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .contact-info .status.online {
+            color: var(--green);
+        }
+
+        .contact-info .status.offline {
+            color: var(--gray-500);
+        }
+
+        .request-actions,
+        .contact-actions,
+        .group-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: var(--border-radius-medium);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .accept-btn {
+            background: var(--green);
+            color: var(--white);
+        }
+
+        .accept-btn:hover {
+            background: #2db34a;
+            transform: translateY(-1px);
+        }
+
+        .reject-btn {
+            background: var(--red);
+            color: var(--white);
+        }
+
+        .reject-btn:hover {
+            background: #e53935;
+            transform: translateY(-1px);
+        }
+
+        .chat-btn {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        .chat-btn:hover {
+            background: var(--blue-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Dropdowns */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: var(--white);
+            min-width: 220px;
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-heavy);
+            z-index: 1000;
+            border: 1px solid var(--gray-200);
+            animation: dropdownFade 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .dropdown-profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-circle);
+            object-fit: cover;
+        }
+
+        .dropdown-profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dropdown-profile-info strong {
+            font-size: 15px;
+            color: var(--black);
+            margin-bottom: 2px;
+        }
+
+        .dropdown-profile-info span {
+            font-size: 13px;
+            color: var(--gray-600);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--gray-200);
+            margin: 8px 0;
+        }
+
+        .dropdown-content a {
+            color: var(--black);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            transition: all var(--transition-normal);
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content a:hover {
+            background: var(--gray-100);
+            color: var(--blue);
+        }
+
+        .logout-link {
+            color: var(--red) !important;
+        }
+
+        .logout-link:hover {
+            color: var(--white) !important;
+            background: var(--red) !important;
+        }
+
+        /* Toast Notifications Container */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            background: var(--black);
+            color: var(--white);
+            padding: 16px 20px;
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-heavy);
+            animation: slideInRight 0.3s ease, fadeOut 0.3s ease 2.7s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            max-width: 100%;
+        }
+
+        .toast::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            animation: toastProgress 3s linear forwards;
+        }
+
+        .toast.success {
+            background: var(--green);
+        }
+
+        .toast.error {
+            background: var(--red);
+        }
+
+        .toast.warning {
+            background: var(--orange);
+        }
+
+        .toast.info {
+            background: var(--blue);
+        }
+
+        .toast i {
+            font-size: 20px;
+        }
+
+        .toast span {
+            flex: 1;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-500);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--gray-600);
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            max-width: 300px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes dropdownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes toastProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .app-nav span {
+                display: none;
+            }
+            
+            .app-nav {
+                justify-content: space-between;
+                padding: 12px 16px;
+            }
+            
+            .nav-item {
+                padding: 12px;
+            }
+            
+            .nav-item.active::after {
+                bottom: -8px;
+            }
+            
+            .floating-btn span {
+                display: none;
+            }
+            
+            .floating-btn {
+                width: 56px;
+                height: 56px;
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+            
+            .search-box {
+                width: 200px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-height: 85vh;
+            }
+            
+            .toast-container {
+                left: 20px;
+                right: 20px;
+                max-width: none;
+            }
+            
+            .toast {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            
+            .page-header h2 {
+                font-size: 24px;
+            }
+            
+            .header-actions {
+                width: 100%;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .modal-content {
+                width: 100%;
+                height: 100%;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .modal-header {
+                padding: 20px;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Touch Device Optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .nav-item:hover:not(.active) {
+                background: transparent;
+            }
+            
+            .copy-btn:hover,
+            .icon-btn:hover,
+            .profile-btn:hover {
+                background: transparent;
+            }
+            
+            .btn-primary:hover:not(:disabled),
+            .btn-secondary:hover:not(:disabled),
+            .btn-danger:hover:not(:disabled) {
+                transform: none;
+            }
+            
+            .floating-btn:hover {
+                transform: none;
+            }
+            
+            .request-card:hover,
+            .contact-card:hover,
+            .group-card:hover {
+                transform: none;
+            }
+            
+            .action-btn:hover {
+                transform: none;
+            }
+            
+            input,
+            textarea,
+            select,
+            button {
+                font-size: 16px !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-content">
-            <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
             <div class="spinner-large"></div>
             <p>Loading Zynapse...</p>
         </div>
     </div>
 
-    <!-- App Container -->
-    <div class="app-home" id="appContainer" style="display: none;">
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Main App Container -->
+    <div class="app-home" id="appHome" style="display: none;">
         <!-- Header -->
         <header class="app-header">
             <div class="header-left">
@@ -29,8 +1429,8 @@
                 <div class="user-info">
                     <h2 id="userName">Loading...</h2>
                     <div class="user-id-container">
-                        <span class="user-id" id="userId">ZYN-XXXX</span>
-                        <button class="copy-btn" id="copyUserId" title="Copy ID">
+                        <span class="user-id" id="userIdDisplay">ZYN-0000</span>
+                        <button class="copy-btn" onclick="copyUserId()" title="Copy ID">
                             <i class="far fa-copy"></i>
                         </button>
                     </div>
@@ -38,29 +1438,29 @@
             </div>
             
             <div class="header-right">
-                <div class="status-indicator online" id="statusIndicator">
+                <div class="status-indicator online" id="statusIndicator" onclick="toggleStatus()">
                     <div class="status-dot"></div>
                 </div>
+                
                 <div class="dropdown">
-                    <button class="profile-btn" id="profileDropdownBtn">
-                        <img src="" alt="Profile" class="profile-pic-small" id="userProfilePic">
+                    <button class="profile-btn" onclick="toggleProfileDropdown()">
+                        <img src="" alt="Profile" class="profile-pic-small" id="headerProfilePic">
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <div class="dropdown-content" id="profileDropdown">
                         <div class="dropdown-profile">
                             <img src="" alt="Profile" class="dropdown-profile-pic" id="dropdownProfilePic">
                             <div class="dropdown-profile-info">
-                                <strong id="dropdownUserName">Loading...</strong>
-                                <span id="dropdownUserId">ZYN-XXXX</span>
+                                <strong id="dropdownUserName">User Name</strong>
+                                <span id="dropdownUserId">ZYN-0000</span>
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
-                        <a href="#"><i class="fas fa-user"></i> My Profile</a>
-                        <a href="#"><i class="fas fa-moon"></i> Dark Mode</a>
-                        <a href="#"><i class="fas fa-cog"></i> Settings</a>
-                        <a href="#"><i class="fas fa-question-circle"></i> Help</a>
+                        <a href="#" onclick="showProfileModal()"><i class="fas fa-user"></i> My Profile</a>
+                        <a href="#" onclick="showSettingsModal()"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#" onclick="showNotificationsModal()"><i class="fas fa-bell"></i> Notifications</a>
                         <div class="dropdown-divider"></div>
-                        <a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+                        <a href="#" class="logout-link" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </div>
                 </div>
             </div>
@@ -68,26 +1468,26 @@
 
         <!-- Navigation -->
         <nav class="app-nav">
-            <a href="#" class="nav-item active" data-page="home">
+            <a href="#" class="nav-item active" onclick="showPage('home')" data-page="home">
                 <i class="fas fa-home"></i>
                 <span>HOME</span>
             </a>
-            <a href="#" class="nav-item" data-page="zynes">
-                <i class="fas fa-bolt"></i>
+            <a href="#" class="nav-item" onclick="showPage('zynes')" data-page="zynes">
+                <i class="fas fa-circle"></i>
                 <span>ZYNES</span>
-                <span class="badge" id="zynesBadge" style="display: none;">0</span>
+                <div class="badge" id="zynesBadge" style="display: none;">0</div>
             </a>
-            <a href="#" class="nav-item" data-page="groups">
+            <a href="#" class="nav-item" onclick="showPage('groups')" data-page="groups">
                 <i class="fas fa-users"></i>
                 <span>GROUPS</span>
-                <span class="badge" id="groupsBadge" style="display: none;">0</span>
+                <div class="badge" id="groupsBadge" style="display: none;">0</div>
             </a>
-            <a href="#" class="nav-item" data-page="requests">
+            <a href="#" class="nav-item" onclick="showPage('requests')" data-page="requests">
                 <i class="fas fa-user-plus"></i>
                 <span>REQUESTS</span>
-                <span class="badge" id="requestsBadge" style="display: none;">0</span>
+                <div class="badge" id="requestsBadge" style="display: none;">0</div>
             </a>
-            <a href="#" class="nav-item" data-page="contacts">
+            <a href="#" class="nav-item" onclick="showPage('contacts')" data-page="contacts">
                 <i class="fas fa-address-book"></i>
                 <span>CONTACTS</span>
             </a>
@@ -99,45 +1499,40 @@
             <div class="page active" id="homePage">
                 <div class="home-content">
                     <div class="welcome-message">
-                        <h1 id="welcomeTitle">Welcome to Zynapse</h1>
-                        <p id="welcomeSubtitle">Connect with friends and family securely</p>
+                        <h1>Welcome to Zynapse</h1>
+                        <p>Secure messaging for Zambia</p>
                     </div>
                     
                     <div class="quick-actions">
-                        <div class="quick-action-card" id="startChatBtn">
-                            <i class="fas fa-comment-medical"></i>
-                            <h3>New Chat</h3>
-                            <p>Start a conversation</p>
+                        <div class="quick-action-card" onclick="showStartChatModal()">
+                            <i class="fas fa-plus"></i>
+                            <h3>Start Chat</h3>
+                            <p>Begin a new conversation</p>
                         </div>
-                        <div class="quick-action-card" id="createGroupBtn">
+                        <div class="quick-action-card" onclick="showPage('contacts')">
+                            <i class="fas fa-user-friends"></i>
+                            <h3>Contacts</h3>
+                            <p>Manage your connections</p>
+                        </div>
+                        <div class="quick-action-card" onclick="showCreateGroupModal()">
                             <i class="fas fa-users"></i>
                             <h3>Create Group</h3>
-                            <p>Chat with multiple people</p>
+                            <p>Start a group chat</p>
                         </div>
-                        <div class="quick-action-card" id="addContactBtn">
-                            <i class="fas fa-user-plus"></i>
-                            <h3>Add Contact</h3>
-                            <p>Add new friends</p>
-                        </div>
-                        <div class="quick-action-card" id="shareIdBtn">
-                            <i class="fas fa-share-alt"></i>
-                            <h3>Share ID</h3>
-                            <p>Share your Zynapse ID</p>
+                        <div class="quick-action-card" onclick="showPostZyneModal()">
+                            <i class="fas fa-circle"></i>
+                            <h3>Post Zyne</h3>
+                            <p>Share your status</p>
                         </div>
                     </div>
                     
                     <div class="recent-chats-section">
                         <div class="section-header">
                             <h3>Recent Chats</h3>
-                            <a href="#" class="view-all" id="viewAllChats">View All</a>
+                            <a href="#" class="view-all" onclick="showPage('contacts')">View All</a>
                         </div>
-                        <div class="recent-chats-list" id="recentChats">
+                        <div class="recent-chats-list" id="recentChatsList">
                             <!-- Recent chats will be loaded here -->
-                            <div class="empty-state">
-                                <i class="fas fa-comments"></i>
-                                <h3>No Recent Chats</h3>
-                                <p>Start a conversation by clicking the floating button</p>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -148,17 +1543,14 @@
                 <div class="page-header">
                     <h2>Zynes</h2>
                     <div class="header-actions">
-                        <button class="btn-primary" id="createZyneBtn">
-                            <i class="fas fa-plus"></i> Create Zyne
+                        <button class="btn-primary" onclick="showPostZyneModal()">
+                            <i class="fas fa-plus"></i> New Zyne
                         </button>
                     </div>
                 </div>
+                
                 <div class="zynes-container" id="zynesContainer">
-                    <div class="empty-state">
-                        <i class="fas fa-bolt"></i>
-                        <h3>No Zynes Available</h3>
-                        <p>Create a Zyne or view your contacts' status updates</p>
-                    </div>
+                    <!-- Zynes will be loaded here -->
                 </div>
             </div>
 
@@ -167,37 +1559,25 @@
                 <div class="page-header">
                     <h2>Groups</h2>
                     <div class="header-actions">
-                        <button class="btn-primary" id="createGroupPageBtn">
+                        <button class="btn-primary" onclick="showCreateGroupModal()">
                             <i class="fas fa-plus"></i> New Group
                         </button>
                     </div>
                 </div>
+                
                 <div class="groups-container" id="groupsContainer">
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>No Groups</h3>
-                        <p>Create a group or wait to be added to one</p>
-                    </div>
+                    <!-- Groups will be loaded here -->
                 </div>
             </div>
 
-            <!-- Requests Page -->
+            <!-- Chat Requests Page -->
             <div class="page" id="requestsPage">
                 <div class="page-header">
                     <h2>Chat Requests</h2>
-                    <div class="header-actions">
-                        <div class="tabs">
-                            <button class="tab-btn active" data-tab="received">Received</button>
-                            <button class="tab-btn" data-tab="sent">Sent</button>
-                        </div>
-                    </div>
                 </div>
+                
                 <div class="requests-container" id="requestsContainer">
-                    <div class="empty-state">
-                        <i class="fas fa-user-plus"></i>
-                        <h3>No Requests</h3>
-                        <p>You don't have any pending chat requests</p>
-                    </div>
+                    <!-- Chat requests will be loaded here -->
                 </div>
             </div>
 
@@ -208,177 +1588,223 @@
                     <div class="header-actions">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" id="searchContacts" placeholder="Search contacts...">
+                            <input type="text" placeholder="Search contacts..." id="searchContacts" onkeyup="searchContacts()">
                         </div>
-                        <button class="btn-media" id="addContactPageBtn" title="Add Contact">
-                            <i class="fas fa-user-plus"></i>
+                        <button class="btn-primary" onclick="showStartChatModal()">
+                            <i class="fas fa-plus"></i> Add Contact
                         </button>
                     </div>
                 </div>
+                
                 <div class="contacts-container" id="contactsContainer">
-                    <div class="empty-state">
-                        <i class="fas fa-address-book"></i>
-                        <h3>No Contacts</h3>
-                        <p>Add contacts to start chatting</p>
-                    </div>
+                    <!-- Contacts will be loaded here -->
                 </div>
             </div>
         </main>
 
-        <!-- Floating Chat Button -->
-        <button class="floating-btn" id="floatingChatBtn">
-            <i class="fas fa-comment"></i>
-            <span>CHAT</span>
+        <!-- Floating Action Button -->
+        <button class="floating-btn" onclick="showStartChatModal()">
+            <i class="fas fa-plus"></i>
+            <span>Chat</span>
         </button>
+    </div>
 
-        <!-- Modals -->
-        <div class="modal-overlay" id="startChatModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Start New Chat</h3>
-                    <button class="close-modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="input-group">
-                        <i class="fas fa-id-card"></i>
-                        <input type="text" id="searchUserId" placeholder="Enter Zynapse ID (ZYN-XXXX)" maxlength="8">
-                    </div>
-                    <div class="search-result" id="searchResult">
-                        <div class="search-placeholder">
-                            <i class="fas fa-search"></i>
-                            <p>Enter a Zynapse ID to search for users</p>
-                        </div>
-                    </div>
-                </div>
+    <!-- Modals -->
+    <div class="modal-overlay" id="modalOverlay">
+        <!-- Start Chat Modal -->
+        <div class="modal-content" id="startChatModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Start New Chat</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
             </div>
-        </div>
-
-        <!-- Add Contact Modal -->
-        <div class="modal-overlay" id="addContactModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Add Contact</h3>
-                    <button class="close-modal">&times;</button>
+            <div class="modal-body">
+                <div class="input-group">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchUserId" placeholder="Enter User ID (ZYN-XXXX)" maxlength="8" oninput="searchUser()">
                 </div>
-                <div class="modal-body">
-                    <div class="input-group">
-                        <i class="fas fa-id-card"></i>
-                        <input type="text" id="contactUserId" placeholder="Enter Zynapse ID (ZYN-XXXX)" maxlength="8">
+                
+                <div class="search-result" id="searchResult">
+                    <div class="search-placeholder" id="searchPlaceholder">
+                        <i class="fas fa-user-search"></i>
+                        <p>Enter a User ID to search</p>
                     </div>
-                    <div class="search-result" id="contactSearchResult">
-                        <div class="search-placeholder">
-                            <i class="fas fa-search"></i>
-                            <p>Enter a Zynapse ID to add as contact</p>
+                    <div class="user-found" id="userFound" style="display: none;">
+                        <img src="" alt="Profile" class="profile-pic" id="foundUserPic">
+                        <div class="user-info">
+                            <h4 id="foundUserName">User Name</h4>
+                            <p id="foundUserId">ZYN-0000</p>
+                            <p id="foundUserStatus" class="already-contact">Status</p>
                         </div>
                     </div>
+                    <div class="error" id="searchError" style="display: none;"></div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn-primary" id="sendRequestBtn" onclick="sendChatRequest()" style="display: none;">
+                        Send Chat Request
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Create Group Modal -->
-        <div class="modal-overlay" id="createGroupModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Create New Group</h3>
-                    <button class="close-modal">&times;</button>
+        <div class="modal-content" id="createGroupModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Create New Group</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <i class="fas fa-users"></i>
+                    <input type="text" id="groupName" placeholder="Group Name" required>
                 </div>
-                <div class="modal-body">
-                    <div class="input-group">
-                        <i class="fas fa-users"></i>
-                        <input type="text" id="groupName" placeholder="Group Name">
-                    </div>
-                    
-                    <div class="profile-upload-section">
-                        <label class="upload-label">Group Photo</label>
-                        <div class="profile-upload-container">
-                            <div class="upload-preview" id="groupPhotoPreview">
-                                <div class="preview-placeholder">
-                                    <i class="fas fa-users"></i>
-                                    <span>No image selected</span>
-                                    <p>Click to upload</p>
-                                </div>
+                
+                <div class="profile-upload-section">
+                    <label class="upload-label">Group Photo (Optional)</label>
+                    <div class="profile-upload-container">
+                        <div class="upload-preview" id="groupPreview">
+                            <div class="preview-placeholder" id="groupPreviewPlaceholder">
+                                <i class="fas fa-users"></i>
+                                <span>No image selected</span>
                             </div>
-                            <div class="upload-buttons">
-                                <button class="btn-upload" id="uploadGroupPhotoBtn">
-                                    <i class="fas fa-upload"></i>
-                                    Choose Image
-                                </button>
-                            </div>
+                            <img id="groupPreviewImage" style="display: none;">
                         </div>
-                        <input type="file" id="groupPhoto" accept="image/*" style="display: none;">
-                    </div>
-                    
-                    <div class="members-container">
-                        <div class="members-header">
-                            <h4>Add Members</h4>
-                            <span class="members-count">0 members</span>
-                        </div>
-                        <div class="members-list" id="groupMembersList">
-                            <div class="empty-members">
-                                <i class="fas fa-user-plus"></i>
-                                <p>Add members using their Zynapse ID</p>
-                            </div>
-                        </div>
-                        <div class="input-group" style="margin-top: 15px;">
-                            <i class="fas fa-id-card"></i>
-                            <input type="text" id="addMemberId" placeholder="Enter Zynapse ID to add member">
-                            <button class="btn-media" id="addMemberBtn">
-                                <i class="fas fa-plus"></i>
+                        <div class="upload-buttons">
+                            <button type="button" class="btn-upload" onclick="document.getElementById('groupImage').click()">
+                                <i class="fas fa-upload"></i> Upload Photo
                             </button>
                         </div>
                     </div>
-                    
-                    <div class="modal-actions">
-                        <button class="btn-secondary" id="cancelGroup">Cancel</button>
-                        <button class="btn-primary" id="createGroup">Create Group</button>
+                    <input type="file" id="groupImage" accept="image/*" style="display: none;" onchange="previewGroupImage(event)">
+                </div>
+                
+                <div class="members-container">
+                    <div class="members-header">
+                        <h4>Add Members</h4>
+                        <span class="members-count" id="membersCount">0 members</span>
                     </div>
+                    <div class="members-list" id="membersList">
+                        <div class="empty-members">
+                            <i class="fas fa-user-plus"></i>
+                            <p>Search and add members by User ID</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="addMemberInput" placeholder="Search contacts or enter User ID" onkeyup="searchMember(event)">
+                </div>
+                
+                <div class="search-result" id="memberSearchResult" style="display: none;">
+                    <!-- Search results will appear here -->
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn-primary" id="createGroupBtn" onclick="createGroup()">
+                        Create Group
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Create Zyne Modal -->
-        <div class="modal-overlay" id="createZyneModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Create Zyne</h3>
-                    <button class="close-modal">&times;</button>
+        <!-- Post Zyne Modal -->
+        <div class="modal-content" id="postZyneModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Post New Zyne</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <textarea id="zyneText" placeholder="What's on your mind?" rows="4" maxlength="500"></textarea>
+                    <div class="character-counter">
+                        <span id="zyneCharCount">0</span>/500
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <div class="input-group">
-                        <textarea id="zyneText" placeholder="What's on your mind?" rows="3"></textarea>
-                        <div class="character-counter">
-                            <span id="zyneCharCount">0</span>/200
-                        </div>
-                    </div>
-                    
-                    <div class="media-preview" id="zyneMediaPreview"></div>
-                    
-                    <div class="modal-actions">
-                        <div class="action-buttons">
-                            <div class="media-buttons">
-                                <button class="btn-media" id="zyneAddPhoto">
-                                    <i class="fas fa-camera"></i>
-                                </button>
-                                <button class="btn-media" id="zyneAddVideo">
-                                    <i class="fas fa-video"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <button class="btn-primary" id="postZyne">Post Zyne</button>
-                    </div>
+                
+                <div class="media-preview" id="zyneMediaPreview">
+                    <!-- Media preview will appear here -->
+                </div>
+                
+                <div class="media-buttons">
+                    <button class="btn-media" onclick="attachZyneMedia('photo')" title="Add Photo">
+                        <i class="fas fa-image"></i>
+                    </button>
+                    <button class="btn-media" onclick="attachZyneMedia('video')" title="Add Video">
+                        <i class="fas fa-video"></i>
+                    </button>
+                    <button class="btn-media" onclick="clearZyneMedia()" title="Clear Media">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                
+                <input type="file" id="zyneMediaInput" accept="image/*,video/*" style="display: none;" onchange="handleZyneMedia(event)">
+                
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn-primary" onclick="postZyne()">
+                        Post Zyne
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Toast Container -->
-        <div class="toast-container"></div>
+        <!-- Profile Modal -->
+        <div class="modal-content" id="profileModal" style="display: none;">
+            <div class="modal-header">
+                <h3>My Profile</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-upload-section">
+                    <div class="profile-upload-container" style="justify-content: center;">
+                        <div class="upload-preview" style="width: 150px; height: 150px;">
+                            <img id="profileModalPic" style="width: 100%; height: 100%; display: block;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="profileName" placeholder="Full Name" readonly>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-id-card"></i>
+                    <input type="text" id="profileUserId" placeholder="User ID" readonly>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" id="profilePhone" placeholder="Phone Number" readonly>
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="profileEmail" placeholder="Email" readonly>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn-primary" onclick="closeModal()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Notification Sound -->
+    <!-- Audio for notifications -->
     <audio id="notificationSound" preload="auto">
         <source src="notification.mp3" type="audio/mpeg">
     </audio>
 
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
     <script>
         // Firebase Configuration
         const firebaseConfig = {
@@ -392,6 +1818,12 @@
             measurementId: "G-4764XLL6WS"
         };
 
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        const storage = firebase.storage();
+
         // Cloudinary Configuration
         const CLOUDINARY_CONFIG = {
             cloudName: 'dd3lcymrk',
@@ -403,1257 +1835,1017 @@
         // Global Variables
         let currentUser = null;
         let userData = null;
-        let contacts = {};
-        let chatRequests = {};
-        let groups = {};
-        let zynes = {};
+        let contacts = [];
+        let chatRequests = [];
+        let groups = [];
+        let zynes = [];
         let recentChats = [];
-        let onlineUsers = new Set();
-        let notifications = [];
-
-        // Firebase Initialization
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
+        let selectedMembers = [];
+        let zyneMediaFile = null;
+        let groupImageFile = null;
 
         // DOM Elements
         const loadingScreen = document.getElementById('loadingScreen');
-        const appContainer = document.getElementById('appContainer');
-        
-        // User Info Elements
-        const userName = document.getElementById('userName');
-        const userId = document.getElementById('userId');
-        const copyUserId = document.getElementById('copyUserId');
-        const userProfilePic = document.getElementById('userProfilePic');
-        const dropdownUserName = document.getElementById('dropdownUserName');
-        const dropdownUserId = document.getElementById('dropdownUserId');
-        const dropdownProfilePic = document.getElementById('dropdownProfilePic');
-        
-        // Navigation Elements
-        const navItems = document.querySelectorAll('.nav-item');
-        const zynesBadge = document.getElementById('zynesBadge');
-        const groupsBadge = document.getElementById('groupsBadge');
-        const requestsBadge = document.getElementById('requestsBadge');
-        
-        // Page Elements
-        const pages = document.querySelectorAll('.page');
-        const welcomeTitle = document.getElementById('welcomeTitle');
-        const welcomeSubtitle = document.getElementById('welcomeSubtitle');
-        
-        // Containers
-        const recentChatsContainer = document.getElementById('recentChats');
-        const zynesContainer = document.getElementById('zynesContainer');
-        const groupsContainer = document.getElementById('groupsContainer');
-        const requestsContainer = document.getElementById('requestsContainer');
-        const contactsContainer = document.getElementById('contactsContainer');
-        
-        // Quick Action Buttons
-        const startChatBtn = document.getElementById('startChatBtn');
-        const createGroupBtn = document.getElementById('createGroupBtn');
-        const addContactBtn = document.getElementById('addContactBtn');
-        const shareIdBtn = document.getElementById('shareIdBtn');
-        const viewAllChats = document.getElementById('viewAllChats');
-        
-        // Page Action Buttons
-        const createZyneBtn = document.getElementById('createZyneBtn');
-        const createGroupPageBtn = document.getElementById('createGroupPageBtn');
-        const addContactPageBtn = document.getElementById('addContactPageBtn');
-        const searchContacts = document.getElementById('searchContacts');
-        
-        // Floating Button
-        const floatingChatBtn = document.getElementById('floatingChatBtn');
-        
-        // Profile Dropdown
-        const profileDropdownBtn = document.getElementById('profileDropdownBtn');
-        const profileDropdown = document.getElementById('profileDropdown');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const statusIndicator = document.getElementById('statusIndicator');
-        
-        // Modals
-        const startChatModal = document.getElementById('startChatModal');
-        const addContactModal = document.getElementById('addContactModal');
-        const createGroupModal = document.getElementById('createGroupModal');
-        const createZyneModal = document.getElementById('createZyneModal');
-        
-        // Modal Elements
-        const searchUserId = document.getElementById('searchUserId');
-        const searchResult = document.getElementById('searchResult');
-        const contactUserId = document.getElementById('contactUserId');
-        const contactSearchResult = document.getElementById('contactSearchResult');
-        const groupName = document.getElementById('groupName');
-        const groupPhotoPreview = document.getElementById('groupPhotoPreview');
-        const uploadGroupPhotoBtn = document.getElementById('uploadGroupPhotoBtn');
-        const groupPhoto = document.getElementById('groupPhoto');
-        const groupMembersList = document.getElementById('groupMembersList');
-        const addMemberId = document.getElementById('addMemberId');
-        const addMemberBtn = document.getElementById('addMemberBtn');
-        const cancelGroup = document.getElementById('cancelGroup');
-        const createGroupButton = document.getElementById('createGroup');
-        const zyneText = document.getElementById('zyneText');
-        const zyneCharCount = document.getElementById('zyneCharCount');
-        const zyneMediaPreview = document.getElementById('zyneMediaPreview');
-        const zyneAddPhoto = document.getElementById('zyneAddPhoto');
-        const zyneAddVideo = document.getElementById('zyneAddVideo');
-        const postZyne = document.getElementById('postZyne');
-        
-        // Notification Sound
+        const appHome = document.getElementById('appHome');
+        const toastContainer = document.getElementById('toastContainer');
+        const modalOverlay = document.getElementById('modalOverlay');
         const notificationSound = document.getElementById('notificationSound');
-        
-        // Close Modal Buttons
-        const closeModalButtons = document.querySelectorAll('.close-modal');
-        
-        // Tab Buttons
-        const tabButtons = document.querySelectorAll('.tab-btn');
 
-        // Initialize Application
-        document.addEventListener('DOMContentLoaded', initializeApp);
-
-        async function initializeApp() {
-            // Check authentication
-            auth.onAuthStateChanged(async (user) => {
-                if (!user) {
-                    // Not logged in, redirect to index
-                    window.location.href = 'index.html';
-                    return;
-                }
-
-                // Load user data
-                await loadUserData(user.uid);
-                
-                // Setup real-time listeners
-                setupRealtimeListeners();
-                
-                // Setup event listeners
-                setupEventListeners();
-                
-                // Load initial data
-                await loadInitialData();
-                
-                // Show app
-                setTimeout(() => {
-                    loadingScreen.classList.add('hidden');
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                        appContainer.style.display = 'flex';
-                    }, 300);
-                }, 1000);
-            });
-        }
-
-        async function loadUserData(uid) {
-            try {
-                const snapshot = await database.ref(`users/${uid}`).once('value');
-                userData = snapshot.val();
-                currentUser = auth.currentUser;
-                
-                // Update UI with user data
-                updateUserUI();
-                
-                // Store in localStorage
-                localStorage.setItem('currentUser', JSON.stringify(userData));
-                
-            } catch (error) {
-                console.error('Error loading user data:', error);
-                showToast('Failed to load user data', 'error');
-            }
-        }
-
-        function updateUserUI() {
-            if (!userData) return;
-            
-            // Update header info
-            userName.textContent = userData.name;
-            userId.textContent = userData.userId;
-            dropdownUserName.textContent = userData.name;
-            dropdownUserId.textContent = userData.userId;
-            
-            // Update profile pictures
-            if (userData.profileUrl) {
-                userProfilePic.src = userData.profileUrl;
-                dropdownProfilePic.src = userData.profileUrl;
-            } else {
-                userProfilePic.src = 'zynaps.png';
-                dropdownProfilePic.src = 'zynaps.png';
-            }
-            
-            // Update welcome message
-            welcomeTitle.textContent = `Welcome, ${userData.name.split(' ')[0]}!`;
-            const hour = new Date().getHours();
-            if (hour < 12) {
-                welcomeSubtitle.textContent = 'Good morning! Ready to connect?';
-            } else if (hour < 18) {
-                welcomeSubtitle.textContent = 'Good afternoon! How is your day going?';
-            } else {
-                welcomeSubtitle.textContent = 'Good evening! Hope you had a great day!';
-            }
-        }
-
-        function setupRealtimeListeners() {
-            if (!userData) return;
-            
-            const userId = userData.uid;
-            
-            // Listen for chat requests
-            database.ref(`users/${userId}/chatRequests`).on('value', (snapshot) => {
-                chatRequests = snapshot.val() || {};
-                updateRequestsBadge();
-                if (document.getElementById('requestsPage').classList.contains('active')) {
-                    loadRequests();
-                }
-            });
-            
-            // Listen for contacts
-            database.ref(`users/${userId}/contacts`).on('value', (snapshot) => {
-                contacts = snapshot.val() || {};
-                if (document.getElementById('contactsPage').classList.contains('active')) {
-                    loadContacts();
-                }
-                updateOnlineStatus();
-            });
-            
-            // Listen for groups
-            database.ref(`users/${userId}/groups`).on('value', (snapshot) => {
-                groups = snapshot.val() || {};
-                updateGroupsBadge();
-                if (document.getElementById('groupsPage').classList.contains('active')) {
-                    loadGroups();
-                }
-            });
-            
-            // Listen for recent chats
-            database.ref(`users/${userId}/chats`).on('value', (snapshot) => {
-                const chats = snapshot.val() || {};
-                recentChats = Object.values(chats).sort((a, b) => b.lastMessageTime - a.lastMessageTime);
-                if (document.getElementById('homePage').classList.contains('active')) {
-                    loadRecentChats();
-                }
-            });
-            
-            // Update online status periodically
-            setInterval(() => {
-                if (userData) {
-                    database.ref(`users/${userId}`).update({
-                        lastActive: Date.now(),
-                        isOnline: true
-                    });
-                }
-            }, 30000);
-            
-            // Listen for notifications
-            database.ref(`notifications/${userId}`).on('child_added', (snapshot) => {
-                const notification = snapshot.val();
-                showNotification(notification);
-                database.ref(`notifications/${userId}/${snapshot.key}`).remove();
-            });
-        }
-
-        async function loadInitialData() {
-            await Promise.all([
-                loadContacts(),
-                loadRequests(),
-                loadGroups(),
-                loadRecentChats(),
-                loadZynes()
-            ]);
-        }
-
-        async function loadContacts() {
-            if (!userData || !contacts) return;
-            
-            const contactsContainer = document.getElementById('contactsContainer');
-            const contactIds = Object.keys(contacts);
-            
-            if (contactIds.length === 0) {
-                contactsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-address-book"></i>
-                        <h3>No Contacts</h3>
-                        <p>Add contacts to start chatting</p>
-                    </div>`;
-                return;
-            }
-            
-            try {
-                // Fetch contact details
-                const contactPromises = contactIds.map(async (contactId) => {
-                    const snapshot = await database.ref(`users/${contactId}`).once('value');
-                    return snapshot.val();
-                });
-                
-                const contactUsers = await Promise.all(contactPromises);
-                
-                // Filter out null values and sort by online status and name
-                const validContacts = contactUsers.filter(Boolean).sort((a, b) => {
-                    if (a.isOnline && !b.isOnline) return -1;
-                    if (!a.isOnline && b.isOnline) return 1;
-                    return a.name.localeCompare(b.name);
-                });
-                
-                // Render contacts
-                contactsContainer.innerHTML = '';
-                validContacts.forEach(contact => {
-                    const contactElement = createContactElement(contact);
-                    contactsContainer.appendChild(contactElement);
-                });
-                
-            } catch (error) {
-                console.error('Error loading contacts:', error);
-                showToast('Failed to load contacts', 'error');
-            }
-        }
-
-        function createContactElement(contact) {
-            const div = document.createElement('div');
-            div.className = 'contact-card';
-            div.dataset.userId = contact.uid;
-            
-            const lastActive = contact.lastActive ? formatTime(contact.lastActive) : 'Never';
-            const statusClass = contact.isOnline ? 'online' : 'offline';
-            const statusText = contact.isOnline ? 'Online' : `Last seen ${lastActive}`;
-            
-            div.innerHTML = `
-                <img src="${contact.profileUrl || 'zynaps.png'}" alt="${contact.name}" class="profile-pic">
-                <div class="contact-info">
-                    <h4>${contact.name}</h4>
-                    <p class="status ${statusClass}">${statusText}</p>
-                    <p class="user-id">${contact.userId}</p>
-                </div>
-                <div class="contact-actions">
-                    <button class="action-btn chat-btn start-chat-btn" title="Start Chat">
-                        <i class="fas fa-comment"></i>
-                    </button>
-                    <button class="action-btn reject-btn remove-contact-btn" title="Remove Contact">
-                        <i class="fas fa-user-times"></i>
-                    </button>
-                </div>
+        // Show Toast Notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                <span>${message}</span>
             `;
             
-            // Add event listeners
-            div.querySelector('.start-chat-btn').addEventListener('click', () => startChatWithUser(contact));
-            div.querySelector('.remove-contact-btn').addEventListener('click', () => removeContact(contact.uid));
+            toastContainer.appendChild(toast);
             
-            return div;
-        }
-
-        async function loadRequests() {
-            if (!userData || !chatRequests) return;
-            
-            const requestsContainer = document.getElementById('requestsContainer');
-            const requestIds = Object.keys(chatRequests);
-            
-            if (requestIds.length === 0) {
-                requestsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-user-plus"></i>
-                        <h3>No Requests</h3>
-                        <p>You don't have any pending chat requests</p>
-                    </div>`;
-                return;
+            // Play notification sound
+            if (type !== 'info' && notificationSound) {
+                notificationSound.currentTime = 0;
+                notificationSound.play().catch(e => console.log('Audio play failed:', e));
             }
             
-            try {
-                // Fetch request details
-                const requestPromises = requestIds.map(async (requestId) => {
-                    const snapshot = await database.ref(`users/${requestId}`).once('value');
-                    const user = snapshot.val();
-                    if (user) {
-                        return {
-                            ...user,
-                            requestId: requestId,
-                            timestamp: chatRequests[requestId]
-                        };
-                    }
-                    return null;
-                });
-                
-                const requests = (await Promise.all(requestPromises)).filter(Boolean);
-                
-                // Sort by timestamp
-                requests.sort((a, b) => b.timestamp - a.timestamp);
-                
-                // Render requests
-                requestsContainer.innerHTML = '';
-                requests.forEach(request => {
-                    const requestElement = createRequestElement(request);
-                    requestsContainer.appendChild(requestElement);
-                });
-                
-            } catch (error) {
-                console.error('Error loading requests:', error);
-                showToast('Failed to load requests', 'error');
-            }
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
         }
 
-        function createRequestElement(request) {
-            const div = document.createElement('div');
-            div.className = 'request-card';
-            
-            const time = formatTime(request.timestamp);
-            
-            div.innerHTML = `
-                <img src="${request.profileUrl || 'zynaps.png'}" alt="${request.name}" class="profile-pic">
-                <div class="request-info">
-                    <h4>${request.name}</h4>
-                    <p>${request.userId}</p>
-                    <p class="time">Requested ${time}</p>
-                </div>
-                <div class="request-actions">
-                    <button class="action-btn accept-btn accept-request-btn">
-                        <i class="fas fa-check"></i> Accept
-                    </button>
-                    <button class="action-btn reject-btn reject-request-btn">
-                        <i class="fas fa-times"></i> Reject
-                    </button>
-                </div>
-            `;
-            
-            // Add event listeners
-            div.querySelector('.accept-request-btn').addEventListener('click', () => acceptRequest(request.uid));
-            div.querySelector('.reject-request-btn').addEventListener('click', () => rejectRequest(request.uid));
-            
-            return div;
+        // Copy User ID
+        function copyUserId() {
+            const userId = document.getElementById('userIdDisplay').textContent;
+            navigator.clipboard.writeText(userId).then(() => {
+                showToast('User ID copied to clipboard', 'success');
+            });
         }
 
-        async function loadGroups() {
-            if (!userData || !groups) return;
+        // Toggle Status
+        function toggleStatus() {
+            if (!currentUser || !userData) return;
             
-            const groupsContainer = document.getElementById('groupsContainer');
-            const groupIds = Object.keys(groups);
+            const statusIndicator = document.getElementById('statusIndicator');
+            const currentStatus = userData.status;
+            let newStatus = 'online';
             
-            if (groupIds.length === 0) {
-                groupsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>No Groups</h3>
-                        <p>Create a group or wait to be added to one</p>
-                    </div>`;
-                return;
+            if (currentStatus === 'online') {
+                newStatus = 'away';
+            } else if (currentStatus === 'away') {
+                newStatus = 'offline';
             }
             
-            try {
-                // Fetch group details
-                const groupPromises = groupIds.map(async (groupId) => {
-                    const snapshot = await database.ref(`groups/${groupId}`).once('value');
-                    return snapshot.val();
+            database.ref('users/' + currentUser.uid).update({
+                status: newStatus,
+                lastSeen: Date.now()
+            });
+            
+            showToast(`Status changed to ${newStatus}`, 'info');
+        }
+
+        // Toggle Profile Dropdown
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close all dropdowns
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                    dropdown.classList.remove('show');
                 });
-                
-                const groupData = await Promise.all(groupPromises);
-                
-                // Filter and sort
-                const validGroups = groupData.filter(Boolean).sort((a, b) => b.lastActive - a.lastActive);
-                
-                // Render groups
-                groupsContainer.innerHTML = '';
-                validGroups.forEach(group => {
-                    const groupElement = createGroupElement(group);
-                    groupsContainer.appendChild(groupElement);
-                });
-                
-            } catch (error) {
-                console.error('Error loading groups:', error);
-                showToast('Failed to load groups', 'error');
             }
-        }
+        });
 
-        function createGroupElement(group) {
-            const div = document.createElement('div');
-            div.className = 'group-card';
-            div.dataset.groupId = group.id;
-            
-            const memberCount = Object.keys(group.members || {}).length;
-            const lastActive = group.lastMessageTime ? formatTime(group.lastMessageTime) : 'No messages yet';
-            
-            div.innerHTML = `
-                <img src="${group.photoUrl || 'zynaps.png'}" alt="${group.name}" class="profile-pic">
-                <div class="group-info">
-                    <h4>${group.name}</h4>
-                    <p>${memberCount} members</p>
-                    <p class="time">${lastActive}</p>
-                </div>
-                <div class="group-actions">
-                    <button class="action-btn chat-btn enter-group-btn" title="Enter Group">
-                        <i class="fas fa-comments"></i>
-                    </button>
-                </div>
-            `;
-            
-            // Add event listener
-            div.querySelector('.enter-group-btn').addEventListener('click', () => enterGroup(group.id));
-            
-            return div;
-        }
-
-        async function loadRecentChats() {
-            if (!recentChats || recentChats.length === 0) {
-                recentChatsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-comments"></i>
-                        <h3>No Recent Chats</h3>
-                        <p>Start a conversation by clicking the floating button</p>
-                    </div>`;
-                return;
-            }
-            
-            try {
-                // Fetch chat details
-                const chatPromises = recentChats.map(async (chat) => {
-                    if (chat.type === 'user') {
-                        const snapshot = await database.ref(`users/${chat.withUserId}`).once('value');
-                        const user = snapshot.val();
-                        if (user) {
-                            return {
-                                ...chat,
-                                name: user.name,
-                                profileUrl: user.profileUrl,
-                                userId: user.userId,
-                                isOnline: user.isOnline
-                            };
-                        }
-                    } else if (chat.type === 'group') {
-                        const snapshot = await database.ref(`groups/${chat.groupId}`).once('value');
-                        const group = snapshot.val();
-                        if (group) {
-                            return {
-                                ...chat,
-                                name: group.name,
-                                profileUrl: group.photoUrl,
-                                isGroup: true
-                            };
-                        }
-                    }
-                    return null;
-                });
-                
-                const chats = (await Promise.all(chatPromises)).filter(Boolean);
-                
-                // Render chats
-                recentChatsContainer.innerHTML = '';
-                chats.forEach(chat => {
-                    const chatElement = createRecentChatElement(chat);
-                    recentChatsContainer.appendChild(chatElement);
-                });
-                
-            } catch (error) {
-                console.error('Error loading recent chats:', error);
-                showToast('Failed to load recent chats', 'error');
-            }
-        }
-
-        function createRecentChatElement(chat) {
-            const div = document.createElement('div');
-            div.className = 'contact-card';
-            
-            const lastMessage = chat.lastMessage || 'No messages yet';
-            const time = chat.lastMessageTime ? formatTime(chat.lastMessageTime) : '';
-            const statusClass = chat.isOnline ? 'online' : 'offline';
-            
-            div.innerHTML = `
-                <img src="${chat.profileUrl || 'zynaps.png'}" alt="${chat.name}" class="profile-pic">
-                <div class="contact-info">
-                    <h4>${chat.name} ${chat.isGroup ? '<i class="fas fa-users"></i>' : ''}</h4>
-                    <p class="last-message">${lastMessage}</p>
-                    ${chat.userId ? `<p class="user-id">${chat.userId}</p>` : ''}
-                    <p class="time">${time}</p>
-                </div>
-                <div class="contact-actions">
-                    <button class="action-btn chat-btn enter-chat-btn" title="Open Chat">
-                        <i class="fas fa-comment"></i>
-                    </button>
-                </div>
-            `;
-            
-            // Add event listener
-            div.querySelector('.enter-chat-btn').addEventListener('click', () => {
-                if (chat.isGroup) {
-                    enterGroup(chat.groupId);
-                } else {
-                    startChatWithUser({ uid: chat.withUserId });
-                }
-            });
-            
-            return div;
-        }
-
-        async function loadZynes() {
-            // This would load status updates from contacts
-            // For now, showing empty state
-            zynesContainer.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-bolt"></i>
-                    <h3>No Zynes Available</h3>
-                    <p>Create a Zyne or view your contacts' status updates</p>
-                </div>`;
-        }
-
-        function setupEventListeners() {
-            // Navigation
-            navItems.forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const page = item.dataset.page;
-                    switchPage(page);
-                });
-            });
-            
-            // Profile Dropdown
-            profileDropdownBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                profileDropdown.classList.toggle('show');
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                profileDropdown.classList.remove('show');
-            });
-            
-            // Logout
-            logoutBtn.addEventListener('click', handleLogout);
-            
-            // Copy User ID
-            copyUserId.addEventListener('click', copyToClipboard);
-            
-            // Quick Actions
-            startChatBtn.addEventListener('click', showStartChatModal);
-            createGroupBtn.addEventListener('click', showCreateGroupModal);
-            addContactBtn.addEventListener('click', showAddContactModal);
-            shareIdBtn.addEventListener('click', shareUserId);
-            viewAllChats.addEventListener('click', (e) => {
-                e.preventDefault();
-                // In a full implementation, this would show all chats
-                showToast('View all chats feature coming soon', 'info');
-            });
-            
-            // Page Actions
-            createZyneBtn.addEventListener('click', showCreateZyneModal);
-            createGroupPageBtn.addEventListener('click', showCreateGroupModal);
-            addContactPageBtn.addEventListener('click', showAddContactModal);
-            
-            // Search Contacts
-            searchContacts.addEventListener('input', searchContactsHandler);
-            
-            // Floating Button
-            floatingChatBtn.addEventListener('click', showStartChatModal);
-            
-            // Modal Close Buttons
-            closeModalButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const modal = btn.closest('.modal-overlay');
-                    modal.classList.remove('active');
-                });
-            });
-            
-            // Start Chat Modal
-            searchUserId.addEventListener('input', searchUserHandler);
-            
-            // Add Contact Modal
-            contactUserId.addEventListener('input', searchContactHandler);
-            
-            // Create Group Modal
-            uploadGroupPhotoBtn.addEventListener('click', () => groupPhoto.click());
-            groupPhoto.addEventListener('change', handleGroupPhotoUpload);
-            addMemberBtn.addEventListener('click', addGroupMember);
-            addMemberId.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') addGroupMember();
-            });
-            cancelGroup.addEventListener('click', () => createGroupModal.classList.remove('active'));
-            createGroupButton.addEventListener('click', createGroup);
-            
-            // Create Zyne Modal
-            zyneText.addEventListener('input', updateZyneCharCount);
-            zyneAddPhoto.addEventListener('click', () => {
-                // Implementation for adding photo to Zyne
-                showToast('Photo upload feature coming soon', 'info');
-            });
-            zyneAddVideo.addEventListener('click', () => {
-                // Implementation for adding video to Zyne
-                showToast('Video upload feature coming soon', 'info');
-            });
-            postZyne.addEventListener('click', postZyneHandler);
-            
-            // Tab Buttons
-            tabButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    tabButtons.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    // In a full implementation, this would switch between received and sent requests
-                });
-            });
-        }
-
-        function switchPage(page) {
+        // Show Page
+        function showPage(pageId) {
             // Update navigation
-            navItems.forEach(item => {
+            document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
-                if (item.dataset.page === page) {
-                    item.classList.add('active');
-                }
             });
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
             
-            // Update pages
-            pages.forEach(p => {
-                p.classList.remove('active');
-                if (p.id === `${page}Page`) {
-                    p.classList.add('active');
-                }
+            // Show page
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
             });
+            document.getElementById(pageId + 'Page').classList.add('active');
             
-            // Load page data if needed
-            switch(page) {
-                case 'contacts':
-                    loadContacts();
-                    break;
-                case 'requests':
-                    loadRequests();
+            // Load page data
+            switch(pageId) {
+                case 'zynes':
+                    loadZynes();
                     break;
                 case 'groups':
                     loadGroups();
                     break;
-                case 'zynes':
-                    loadZynes();
+                case 'requests':
+                    loadChatRequests();
                     break;
-                case 'home':
-                    loadRecentChats();
+                case 'contacts':
+                    loadContacts();
                     break;
             }
         }
 
+        // Load User Data
+        async function loadUserData() {
+            try {
+                const userSnapshot = await database.ref('users/' + currentUser.uid).once('value');
+                userData = userSnapshot.val();
+                
+                if (!userData) {
+                    await logout();
+                    return;
+                }
+                
+                // Update UI
+                document.getElementById('userName').textContent = userData.fullName;
+                document.getElementById('userIdDisplay').textContent = userData.userId;
+                document.getElementById('dropdownUserName').textContent = userData.fullName;
+                document.getElementById('dropdownUserId').textContent = userData.userId;
+                
+                // Update profile pictures
+                const profilePic = userData.profileImage || 'zynaps.png';
+                document.getElementById('headerProfilePic').src = profilePic;
+                document.getElementById('dropdownProfilePic').src = profilePic;
+                document.getElementById('profileModalPic').src = profilePic;
+                
+                // Update status
+                const statusIndicator = document.getElementById('statusIndicator');
+                statusIndicator.className = `status-indicator ${userData.status}`;
+                
+                // Load contacts
+                await loadContactsList();
+                
+                // Load recent chats
+                await loadRecentChats();
+                
+                // Listen for real-time updates
+                setupRealtimeListeners();
+                
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showToast('Error loading data', 'error');
+            }
+        }
+
+        // Load Contacts
+        async function loadContactsList() {
+            try {
+                contacts = [];
+                
+                if (userData.contacts) {
+                    const contactIds = Object.keys(userData.contacts);
+                    
+                    for (const contactId of contactIds) {
+                        const contactSnapshot = await database.ref('users').orderByChild('userId').equalTo(contactId).once('value');
+                        if (contactSnapshot.exists()) {
+                            contactSnapshot.forEach(childSnapshot => {
+                                const contactData = childSnapshot.val();
+                                contacts.push({
+                                    ...contactData,
+                                    firebaseId: childSnapshot.key
+                                });
+                            });
+                        }
+                    }
+                }
+                
+                updateContactsBadge();
+                renderContacts();
+                
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+            }
+        }
+
+        // Load Recent Chats
+        async function loadRecentChats() {
+            try {
+                recentChats = [];
+                const recentChatsList = document.getElementById('recentChatsList');
+                recentChatsList.innerHTML = '';
+                
+                if (!userData.chats) return;
+                
+                const chatIds = Object.keys(userData.chats);
+                
+                for (const chatId of chatIds) {
+                    const chatSnapshot = await database.ref('chats/' + chatId).once('value');
+                    if (chatSnapshot.exists()) {
+                        const chatData = chatSnapshot.val();
+                        
+                        // Get last message
+                        let lastMessage = 'No messages yet';
+                        let lastMessageTime = chatData.createdAt;
+                        
+                        if (chatData.messages) {
+                            const messageKeys = Object.keys(chatData.messages);
+                            if (messageKeys.length > 0) {
+                                const lastMessageKey = messageKeys[messageKeys.length - 1];
+                                const lastMsg = chatData.messages[lastMessageKey];
+                                lastMessage = lastMsg.type === 'text' ? lastMsg.content : `📎 ${lastMsg.type}`;
+                                lastMessageTime = lastMsg.timestamp;
+                            }
+                        }
+                        
+                        // Get participant info
+                        let participantId = chatData.participants.find(p => p !== currentUser.uid);
+                        let participantData = null;
+                        
+                        if (chatData.type === 'group') {
+                            participantData = {
+                                fullName: chatData.groupName,
+                                profileImage: chatData.groupImage || 'zynaps.png',
+                                userId: chatData.groupId
+                            };
+                        } else {
+                            const participantSnapshot = await database.ref('users/' + participantId).once('value');
+                            participantData = participantSnapshot.val();
+                        }
+                        
+                        if (participantData) {
+                            recentChats.push({
+                                ...chatData,
+                                participant: participantData,
+                                lastMessage,
+                                lastMessageTime
+                            });
+                            
+                            // Render chat item
+                            const timeAgo = getTimeAgo(lastMessageTime);
+                            const unreadCount = chatData.unreadCount?.[currentUser.uid] || 0;
+                            
+                            const chatItem = document.createElement('div');
+                            chatItem.className = 'contact-card';
+                            chatItem.onclick = () => openChat(chatId, chatData.type === 'group' ? 'group' : participantData.userId);
+                            chatItem.innerHTML = `
+                                <img src="${participantData.profileImage || 'zynaps.png'}" alt="Profile" class="profile-pic">
+                                <div class="contact-info">
+                                    <h4>${participantData.fullName}</h4>
+                                    <p>${lastMessage}</p>
+                                    <span class="time">${timeAgo}</span>
+                                </div>
+                                ${unreadCount > 0 ? `<div class="badge">${unreadCount}</div>` : ''}
+                            `;
+                            
+                            recentChatsList.appendChild(chatItem);
+                        }
+                    }
+                }
+                
+                if (recentChats.length === 0) {
+                    recentChatsList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-comments"></i>
+                            <h3>No chats yet</h3>
+                            <p>Start a new conversation by clicking the + button</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error loading recent chats:', error);
+            }
+        }
+
+        // Load Zynes
+        async function loadZynes() {
+            try {
+                const zynesContainer = document.getElementById('zynesContainer');
+                zynesContainer.innerHTML = '<div class="empty-state"><div class="spinner-large"></div><p>Loading Zynes...</p></div>';
+                
+                zynes = [];
+                const myZynes = [];
+                const contactsZynes = [];
+                
+                // Load my zynes
+                if (userData.zynes) {
+                    const zyneIds = Object.keys(userData.zynes);
+                    for (const zyneId of zyneIds) {
+                        const zyneSnapshot = await database.ref('zynes/' + zyneId).once('value');
+                        if (zyneSnapshot.exists()) {
+                            const zyneData = zyneSnapshot.val();
+                            myZynes.push(zyneData);
+                        }
+                    }
+                }
+                
+                // Load contacts' zynes
+                for (const contact of contacts) {
+                    if (contact.zynes) {
+                        const zyneIds = Object.keys(contact.zynes);
+                        for (const zyneId of zyneIds) {
+                            const zyneSnapshot = await database.ref('zynes/' + zyneId).once('value');
+                            if (zyneSnapshot.exists()) {
+                                const zyneData = zyneSnapshot.val();
+                                contactsZynes.push({
+                                    ...zyneData,
+                                    user: contact
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                // Sort by timestamp (newest first)
+                myZynes.sort((a, b) => b.timestamp - a.timestamp);
+                contactsZynes.sort((a, b) => b.timestamp - a.timestamp);
+                
+                // Render
+                zynesContainer.innerHTML = '';
+                
+                // My zynes section
+                if (myZynes.length > 0) {
+                    const mySection = document.createElement('div');
+                    mySection.innerHTML = '<h3 style="margin-bottom: 16px; color: var(--gray-700);">My Zynes</h3>';
+                    zynesContainer.appendChild(mySection);
+                    
+                    myZynes.forEach(zyne => {
+                        renderZyne(zyne, userData, true);
+                    });
+                }
+                
+                // Contacts' zynes section
+                if (contactsZynes.length > 0) {
+                    const contactsSection = document.createElement('div');
+                    contactsSection.innerHTML = '<h3 style="margin: 24px 0 16px; color: var(--gray-700);">Contacts Zynes</h3>';
+                    zynesContainer.appendChild(contactsSection);
+                    
+                    contactsZynes.forEach(zyne => {
+                        renderZyne(zyne.zyne, zyne.user, false);
+                    });
+                }
+                
+                if (myZynes.length === 0 && contactsZynes.length === 0) {
+                    zynesContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-circle"></i>
+                            <h3>No Zynes yet</h3>
+                            <p>Be the first to share a status update!</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error loading zynes:', error);
+                showToast('Error loading Zynes', 'error');
+            }
+        }
+
+        // Render Zyne
+        function renderZyne(zyne, user, isMine) {
+            const zynesContainer = document.getElementById('zynesContainer');
+            
+            const timeAgo = getTimeAgo(zyne.timestamp);
+            const mediaHtml = zyne.media ? `
+                <div style="margin-top: 12px;">
+                    ${zyne.media.type === 'image' ? 
+                        `<img src="${zyne.media.url}" alt="Zyne" style="width: 100%; border-radius: var(--border-radius-medium);">` :
+                        `<video src="${zyne.media.url}" controls style="width: 100%; border-radius: var(--border-radius-medium);"></video>`
+                    }
+                </div>
+            ` : '';
+            
+            const zyneElement = document.createElement('div');
+            zyneElement.className = 'request-card';
+            zyneElement.innerHTML = `
+                <img src="${user.profileImage || 'zynaps.png'}" alt="Profile" class="profile-pic">
+                <div class="request-info">
+                    <h4>${user.fullName} ${isMine ? '(You)' : ''}</h4>
+                    <p>${zyne.text}</p>
+                    ${mediaHtml}
+                    <span class="time">${timeAgo}</span>
+                </div>
+                ${isMine ? `
+                    <div class="request-actions">
+                        <button class="action-btn reject-btn" onclick="deleteZyne('${zyne.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+            
+            zynesContainer.appendChild(zyneElement);
+        }
+
+        // Load Groups
+        async function loadGroups() {
+            try {
+                const groupsContainer = document.getElementById('groupsContainer');
+                groupsContainer.innerHTML = '<div class="empty-state"><div class="spinner-large"></div><p>Loading groups...</p></div>';
+                
+                groups = [];
+                
+                if (userData.groups) {
+                    const groupIds = Object.keys(userData.groups);
+                    
+                    for (const groupId of groupIds) {
+                        const groupSnapshot = await database.ref('groups/' + groupId).once('value');
+                        if (groupSnapshot.exists()) {
+                            const groupData = groupSnapshot.val();
+                            groups.push(groupData);
+                        }
+                    }
+                }
+                
+                // Render groups
+                groupsContainer.innerHTML = '';
+                
+                if (groups.length > 0) {
+                    groups.forEach(group => {
+                        const timeAgo = getTimeAgo(group.createdAt);
+                        const membersCount = Object.keys(group.members || {}).length;
+                        const unreadCount = group.unreadCount?.[currentUser.uid] || 0;
+                        
+                        const groupElement = document.createElement('div');
+                        groupElement.className = 'group-card';
+                        groupElement.onclick = () => openChat(group.id, 'group');
+                        groupElement.innerHTML = `
+                            <img src="${group.groupImage || 'zynaps.png'}" alt="Group" class="profile-pic">
+                            <div class="group-info">
+                                <h4>${group.groupName}</h4>
+                                <p>${membersCount} members</p>
+                                <span class="time">Created ${timeAgo}</span>
+                            </div>
+                            ${unreadCount > 0 ? `<div class="badge">${unreadCount}</div>` : ''}
+                        `;
+                        
+                        groupsContainer.appendChild(groupElement);
+                    });
+                } else {
+                    groupsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h3>No groups yet</h3>
+                            <p>Create your first group to start chatting with multiple people</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error loading groups:', error);
+                showToast('Error loading groups', 'error');
+            }
+        }
+
+        // Load Chat Requests
+        async function loadChatRequests() {
+            try {
+                const requestsContainer = document.getElementById('requestsContainer');
+                requestsContainer.innerHTML = '<div class="empty-state"><div class="spinner-large"></div><p>Loading requests...</p></div>';
+                
+                chatRequests = [];
+                
+                if (userData.chatRequests) {
+                    const requestIds = Object.keys(userData.chatRequests);
+                    
+                    for (const requestId of requestIds) {
+                        const requestSnapshot = await database.ref('chatRequests/' + requestId).once('value');
+                        if (requestSnapshot.exists()) {
+                            const requestData = requestSnapshot.val();
+                            
+                            // Get sender info
+                            const senderSnapshot = await database.ref('users/' + requestData.senderId).once('value');
+                            if (senderSnapshot.exists()) {
+                                const senderData = senderSnapshot.val();
+                                chatRequests.push({
+                                    ...requestData,
+                                    id: requestId,
+                                    sender: senderData
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                // Render requests
+                requestsContainer.innerHTML = '';
+                
+                if (chatRequests.length > 0) {
+                    chatRequests.forEach(request => {
+                        const timeAgo = getTimeAgo(request.timestamp);
+                        
+                        const requestElement = document.createElement('div');
+                        requestElement.className = 'request-card';
+                        requestElement.innerHTML = `
+                            <img src="${request.sender.profileImage || 'zynaps.png'}" alt="Profile" class="profile-pic">
+                            <div class="request-info">
+                                <h4>${request.sender.fullName}</h4>
+                                <p>${request.sender.userId}</p>
+                                <span class="time">${timeAgo}</span>
+                            </div>
+                            <div class="request-actions">
+                                <button class="action-btn accept-btn" onclick="acceptChatRequest('${request.id}', '${request.senderId}')">
+                                    <i class="fas fa-check"></i> Accept
+                                </button>
+                                <button class="action-btn reject-btn" onclick="rejectChatRequest('${request.id}')">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </div>
+                        `;
+                        
+                        requestsContainer.appendChild(requestElement);
+                    });
+                } else {
+                    requestsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-user-plus"></i>
+                            <h3>No pending requests</h3>
+                            <p>When someone sends you a chat request, it will appear here</p>
+                        </div>
+                    `;
+                }
+                
+                updateRequestsBadge();
+                
+            } catch (error) {
+                console.error('Error loading chat requests:', error);
+                showToast('Error loading requests', 'error');
+            }
+        }
+
+        // Render Contacts
+        function renderContacts() {
+            const contactsContainer = document.getElementById('contactsContainer');
+            const searchTerm = document.getElementById('searchContacts').value.toLowerCase();
+            
+            contactsContainer.innerHTML = '';
+            
+            const filteredContacts = contacts.filter(contact => 
+                contact.fullName.toLowerCase().includes(searchTerm) ||
+                contact.userId.toLowerCase().includes(searchTerm) ||
+                contact.phoneNumber.includes(searchTerm)
+            );
+            
+            if (filteredContacts.length > 0) {
+                filteredContacts.forEach(contact => {
+                    const timeAgo = getTimeAgo(contact.lastSeen);
+                    const statusClass = contact.status === 'online' ? 'online' : 'offline';
+                    
+                    const contactElement = document.createElement('div');
+                    contactElement.className = 'contact-card';
+                    contactElement.onclick = () => openChat(contact.userId, 'user');
+                    contactElement.innerHTML = `
+                        <img src="${contact.profileImage || 'zynaps.png'}" alt="Profile" class="profile-pic">
+                        <div class="contact-info">
+                            <h4>${contact.fullName}</h4>
+                            <p>${contact.userId}</p>
+                            <span class="status ${statusClass}">${contact.status === 'online' ? 'Online' : timeAgo}</span>
+                        </div>
+                        <div class="contact-actions">
+                            <button class="action-btn chat-btn" onclick="event.stopPropagation(); openChat('${contact.userId}', 'user')">
+                                <i class="fas fa-comment"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    contactsContainer.appendChild(contactElement);
+                });
+            } else {
+                contactsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-address-book"></i>
+                        <h3>No contacts yet</h3>
+                        <p>Add contacts by sending them a chat request</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Search Contacts
+        function searchContacts() {
+            renderContacts();
+        }
+
+        // Update Badges
+        function updateBadges() {
+            updateRequestsBadge();
+            updateZynesBadge();
+            updateGroupsBadge();
+        }
+
+        function updateRequestsBadge() {
+            const badge = document.getElementById('requestsBadge');
+            const count = chatRequests.length;
+            
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function updateZynesBadge() {
+            const badge = document.getElementById('zynesBadge');
+            // You can implement logic to count unviewed zynes
+            badge.style.display = 'none';
+        }
+
+        function updateGroupsBadge() {
+            const badge = document.getElementById('groupsBadge');
+            const unreadCount = groups.reduce((total, group) => {
+                return total + (group.unreadCount?.[currentUser.uid] || 0);
+            }, 0);
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Modal Functions
+        function showModal(modalId) {
+            modalOverlay.classList.add('active');
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            document.querySelectorAll('.modal-content').forEach(modal => {
+                modal.style.display = 'none';
+            });
+            
+            // Reset modal states
+            resetModals();
+        }
+
+        function resetModals() {
+            // Reset start chat modal
+            document.getElementById('searchUserId').value = '';
+            document.getElementById('searchPlaceholder').style.display = 'block';
+            document.getElementById('userFound').style.display = 'none';
+            document.getElementById('searchError').style.display = 'none';
+            document.getElementById('sendRequestBtn').style.display = 'none';
+            
+            // Reset create group modal
+            document.getElementById('groupName').value = '';
+            document.getElementById('groupPreviewPlaceholder').style.display = 'block';
+            document.getElementById('groupPreviewImage').style.display = 'none';
+            groupImageFile = null;
+            selectedMembers = [];
+            updateMembersList();
+            
+            // Reset post zyne modal
+            document.getElementById('zyneText').value = '';
+            document.getElementById('zyneCharCount').textContent = '0';
+            document.getElementById('zyneMediaPreview').innerHTML = '';
+            zyneMediaFile = null;
+        }
+
+        // Start Chat Modal Functions
         function showStartChatModal() {
-            startChatModal.classList.add('active');
-            searchUserId.value = '';
-            searchResult.innerHTML = `
-                <div class="search-placeholder">
-                    <i class="fas fa-search"></i>
-                    <p>Enter a Zynapse ID to search for users</p>
-                </div>`;
+            showModal('startChatModal');
         }
 
-        async function searchUserHandler() {
-            const userIdInput = searchUserId.value.trim().toUpperCase();
+        async function searchUser() {
+            const userId = document.getElementById('searchUserId').value.trim().toUpperCase();
+            const searchPlaceholder = document.getElementById('searchPlaceholder');
+            const userFound = document.getElementById('userFound');
+            const searchError = document.getElementById('searchError');
+            const sendRequestBtn = document.getElementById('sendRequestBtn');
             
-            if (userIdInput.length < 8) {
-                searchResult.innerHTML = `
-                    <div class="search-placeholder">
-                        <i class="fas fa-search"></i>
-                        <p>Enter a Zynapse ID (ZYN-XXXX)</p>
-                    </div>`;
-                return;
-            }
-            
-            if (!userIdInput.startsWith('ZYN-') || userIdInput.length !== 8) {
-                searchResult.innerHTML = `
-                    <div class="error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Invalid Zynapse ID format. Use ZYN-XXXX</p>
-                    </div>`;
+            if (userId.length < 8 || !userId.startsWith('ZYN-')) {
+                searchPlaceholder.style.display = 'block';
+                userFound.style.display = 'none';
+                searchError.style.display = 'none';
+                sendRequestBtn.style.display = 'none';
                 return;
             }
             
             try {
-                // Search for user by ID
-                const snapshot = await database.ref(`userIds/${userIdInput}`).once('value');
-                const targetUserId = snapshot.val();
+                const userSnapshot = await database.ref('users').orderByChild('userId').equalTo(userId).once('value');
                 
-                if (!targetUserId) {
-                    searchResult.innerHTML = `
-                        <div class="error">
-                            <i class="fas fa-user-times"></i>
-                            <p>User not found</p>
-                        </div>`;
+                if (!userSnapshot.exists()) {
+                    searchPlaceholder.style.display = 'none';
+                    userFound.style.display = 'none';
+                    searchError.style.display = 'block';
+                    searchError.textContent = 'User not found';
+                    sendRequestBtn.style.display = 'none';
                     return;
                 }
+                
+                let foundUser = null;
+                userSnapshot.forEach(childSnapshot => {
+                    foundUser = childSnapshot.val();
+                    foundUser.firebaseId = childSnapshot.key;
+                });
                 
                 // Check if it's the current user
-                if (targetUserId === userData.uid) {
-                    searchResult.innerHTML = `
-                        <div class="error">
-                            <i class="fas fa-user"></i>
-                            <p>That's your own ID!</p>
-                        </div>`;
-                    return;
-                }
-                
-                // Get user details
-                const userSnapshot = await database.ref(`users/${targetUserId}`).once('value');
-                const user = userSnapshot.val();
-                
-                if (!user) {
-                    searchResult.innerHTML = `
-                        <div class="error">
-                            <i class="fas fa-user-times"></i>
-                            <p>User not found</p>
-                        </div>`;
+                if (foundUser.firebaseId === currentUser.uid) {
+                    searchPlaceholder.style.display = 'none';
+                    userFound.style.display = 'none';
+                    searchError.style.display = 'block';
+                    searchError.textContent = 'Cannot send request to yourself';
+                    sendRequestBtn.style.display = 'none';
                     return;
                 }
                 
                 // Check if already a contact
-                const isContact = contacts && contacts[targetUserId];
+                const isContact = userData.contacts && userData.contacts[foundUser.userId];
                 
-                // Display user found
-                searchResult.innerHTML = `
-                    <div class="user-found">
-                        <img src="${user.profileUrl || 'zynaps.png'}" alt="${user.name}" class="profile-pic">
-                        <div>
-                            <h4>${user.name}</h4>
-                            <p>${user.userId}</p>
-                            ${isContact ? '<p class="already-contact"><i class="fas fa-check"></i> Already in contacts</p>' : ''}
-                        </div>
-                        <div class="action-buttons">
-                            ${!isContact ? `
-                                <button class="action-btn accept-btn" id="sendRequestBtn">
-                                    <i class="fas fa-paper-plane"></i> Send Request
-                                </button>
-                            ` : ''}
-                            <button class="action-btn chat-btn" id="startChatDirectBtn">
-                                <i class="fas fa-comment"></i> Chat
-                            </button>
-                        </div>
-                    </div>`;
+                // Update UI
+                document.getElementById('foundUserName').textContent = foundUser.fullName;
+                document.getElementById('foundUserId').textContent = foundUser.userId;
+                document.getElementById('foundUserPic').src = foundUser.profileImage || 'zynaps.png';
+                document.getElementById('foundUserStatus').textContent = isContact ? 'Already in contacts' : 'Not in contacts';
+                document.getElementById('foundUserStatus').className = isContact ? 'already-contact' : '';
                 
-                // Add event listeners to buttons
-                if (!isContact) {
-                    document.getElementById('sendRequestBtn').addEventListener('click', () => sendChatRequest(targetUserId));
-                }
-                document.getElementById('startChatDirectBtn').addEventListener('click', () => {
-                    if (isContact) {
-                        startChatWithUser(user);
-                    } else {
-                        showToast('Add this user to contacts first', 'warning');
-                    }
-                });
+                searchPlaceholder.style.display = 'none';
+                userFound.style.display = 'block';
+                searchError.style.display = 'none';
+                sendRequestBtn.style.display = !isContact ? 'block' : 'none';
                 
             } catch (error) {
                 console.error('Error searching user:', error);
-                searchResult.innerHTML = `
-                    <div class="error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Error searching for user</p>
-                    </div>`;
+                searchPlaceholder.style.display = 'none';
+                userFound.style.display = 'none';
+                searchError.style.display = 'block';
+                searchError.textContent = 'Error searching user';
+                sendRequestBtn.style.display = 'none';
             }
         }
 
-        async function sendChatRequest(targetUserId) {
+        async function sendChatRequest() {
+            const userId = document.getElementById('searchUserId').value.trim().toUpperCase();
+            
             try {
+                // Get recipient user
+                const userSnapshot = await database.ref('users').orderByChild('userId').equalTo(userId).once('value');
+                if (!userSnapshot.exists()) {
+                    showToast('User not found', 'error');
+                    return;
+                }
+                
+                let recipientId = null;
+                userSnapshot.forEach(childSnapshot => {
+                    recipientId = childSnapshot.key;
+                });
+                
+                // Check if request already exists
+                const existingRequest = await database.ref('chatRequests')
+                    .orderByChild('senderId_recipientId')
+                    .equalTo(currentUser.uid + '_' + recipientId)
+                    .once('value');
+                
+                if (existingRequest.exists()) {
+                    showToast('Request already sent', 'warning');
+                    return;
+                }
+                
+                // Create chat request
+                const requestId = database.ref().child('chatRequests').push().key;
                 const requestData = {
+                    id: requestId,
+                    senderId: currentUser.uid,
+                    recipientId: recipientId,
+                    senderUserId: userData.userId,
+                    recipientUserId: userId,
                     timestamp: Date.now(),
                     status: 'pending'
                 };
                 
-                // Add to target user's chat requests
-                await database.ref(`users/${targetUserId}/chatRequests/${userData.uid}`).set(Date.now());
+                // Save request
+                await database.ref('chatRequests/' + requestId).set(requestData);
                 
-                // Show success
-                showToast('Chat request sent successfully', 'success');
-                startChatModal.classList.remove('active');
+                // Add to recipient's requests
+                await database.ref('users/' + recipientId + '/chatRequests/' + requestId).set(true);
+                
+                showToast('Chat request sent', 'success');
+                closeModal();
                 
             } catch (error) {
                 console.error('Error sending chat request:', error);
-                showToast('Failed to send chat request', 'error');
-            }
-        }
-
-        async function acceptRequest(senderId) {
-            try {
-                // Add to contacts
-                await database.ref(`users/${userData.uid}/contacts/${senderId}`).set(true);
-                await database.ref(`users/${senderId}/contacts/${userData.uid}`).set(true);
-                
-                // Remove from requests
-                await database.ref(`users/${userData.uid}/chatRequests/${senderId}`).remove();
-                
-                // Create chat record for both users
-                const chatId = generateChatId(userData.uid, senderId);
-                const chatData = {
-                    id: chatId,
-                    participants: {
-                        [userData.uid]: true,
-                        [senderId]: true
-                    },
-                    lastMessage: '',
-                    lastMessageTime: Date.now(),
-                    type: 'user'
-                };
-                
-                await database.ref(`chats/${chatId}`).set(chatData);
-                await database.ref(`users/${userData.uid}/chats/${chatId}`).set({
-                    withUserId: senderId,
-                    lastMessageTime: Date.now(),
-                    type: 'user'
-                });
-                await database.ref(`users/${senderId}/chats/${chatId}`).set({
-                    withUserId: userData.uid,
-                    lastMessageTime: Date.now(),
-                    type: 'user'
-                });
-                
-                // Send notification to sender
-                await sendNotification(senderId, {
-                    type: 'request_accepted',
-                    fromUserId: userData.uid,
-                    fromUserName: userData.name,
-                    timestamp: Date.now(),
-                    message: `${userData.name} accepted your chat request`
-                });
-                
-                showToast('Request accepted', 'success');
-                
-                // Start chat with the user
-                const senderSnapshot = await database.ref(`users/${senderId}`).once('value');
-                const sender = senderSnapshot.val();
-                startChatWithUser(sender);
-                
-            } catch (error) {
-                console.error('Error accepting request:', error);
-                showToast('Failed to accept request', 'error');
-            }
-        }
-
-        async function rejectRequest(senderId) {
-            try {
-                await database.ref(`users/${userData.uid}/chatRequests/${senderId}`).remove();
-                showToast('Request rejected', 'success');
-            } catch (error) {
-                console.error('Error rejecting request:', error);
-                showToast('Failed to reject request', 'error');
-            }
-        }
-
-        function showAddContactModal() {
-            addContactModal.classList.add('active');
-            contactUserId.value = '';
-            contactSearchResult.innerHTML = `
-                <div class="search-placeholder">
-                    <i class="fas fa-search"></i>
-                    <p>Enter a Zynapse ID to add as contact</p>
-                </div>`;
-        }
-
-        async function searchContactHandler() {
-            const userIdInput = contactUserId.value.trim().toUpperCase();
-            
-            if (userIdInput.length < 8) {
-                contactSearchResult.innerHTML = `
-                    <div class="search-placeholder">
-                        <i class="fas fa-search"></i>
-                        <p>Enter a Zynapse ID (ZYN-XXXX)</p>
-                    </div>`;
-                return;
-            }
-            
-            if (!userIdInput.startsWith('ZYN-') || userIdInput.length !== 8) {
-                contactSearchResult.innerHTML = `
-                    <div class="error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Invalid Zynapse ID format. Use ZYN-XXXX</p>
-                    </div>`;
-                return;
-            }
-            
-            try {
-                // Search for user by ID
-                const snapshot = await database.ref(`userIds/${userIdInput}`).once('value');
-                const targetUserId = snapshot.val();
-                
-                if (!targetUserId) {
-                    contactSearchResult.innerHTML = `
-                        <div class="error">
-                            <i class="fas fa-user-times"></i>
-                            <p>User not found</p>
-                        </div>`;
-                    return;
-                }
-                
-                // Check if it's the current user
-                if (targetUserId === userData.uid) {
-                    contactSearchResult.innerHTML = `
-                        <div class="error">
-                            <i class="fas fa-user"></i>
-                            <p>That's your own ID!</p>
-                        </div>`;
-                    return;
-                }
-                
-                // Get user details
-                const userSnapshot = await database.ref(`users/${targetUserId}`).once('value');
-                const user = userSnapshot.val();
-                
-                if (!user) {
-                    contactSearchResult.innerHTML = `
-                        <div class="error">
-                            <i class="fas fa-user-times"></i>
-                            <p>User not found</p>
-                        </div>`;
-                    return;
-                }
-                
-                // Check if already a contact
-                const isContact = contacts && contacts[targetUserId];
-                
-                // Display user found
-                contactSearchResult.innerHTML = `
-                    <div class="user-found">
-                        <img src="${user.profileUrl || 'zynaps.png'}" alt="${user.name}" class="profile-pic">
-                        <div>
-                            <h4>${user.name}</h4>
-                            <p>${user.userId}</p>
-                            ${isContact ? '<p class="already-contact"><i class="fas fa-check"></i> Already a contact</p>' : ''}
-                        </div>
-                        <div class="action-buttons">
-                            ${!isContact ? `
-                                <button class="action-btn accept-btn" id="addContactBtn">
-                                    <i class="fas fa-user-plus"></i> Add Contact
-                                </button>
-                            ` : ''}
-                        </div>
-                    </div>`;
-                
-                // Add event listener to add button
-                if (!isContact) {
-                    document.getElementById('addContactBtn').addEventListener('click', () => addContact(targetUserId));
-                }
-                
-            } catch (error) {
-                console.error('Error searching user:', error);
-                contactSearchResult.innerHTML = `
-                    <div class="error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Error searching for user</p>
-                    </div>`;
-            }
-        }
-
-        async function addContact(targetUserId) {
-            try {
-                // Send chat request instead of directly adding
-                await database.ref(`users/${targetUserId}/chatRequests/${userData.uid}`).set(Date.now());
-                
-                showToast('Chat request sent', 'success');
-                addContactModal.classList.remove('active');
-                
-            } catch (error) {
-                console.error('Error adding contact:', error);
                 showToast('Failed to send request', 'error');
             }
         }
 
-        async function removeContact(contactId) {
-            if (!confirm('Remove this contact?')) return;
-            
-            try {
-                // Remove from both users' contacts
-                await database.ref(`users/${userData.uid}/contacts/${contactId}`).remove();
-                await database.ref(`users/${contactId}/contacts/${userData.uid}`).remove();
-                
-                showToast('Contact removed', 'success');
-                
-            } catch (error) {
-                console.error('Error removing contact:', error);
-                showToast('Failed to remove contact', 'error');
-            }
-        }
-
+        // Create Group Modal Functions
         function showCreateGroupModal() {
-            createGroupModal.classList.add('active');
-            groupName.value = '';
-            groupPhotoPreview.innerHTML = `
-                <div class="preview-placeholder">
-                    <i class="fas fa-users"></i>
-                    <span>No image selected</span>
-                    <p>Click to upload</p>
-                </div>`;
-            groupMembersList.innerHTML = `
-                <div class="empty-members">
-                    <i class="fas fa-user-plus"></i>
-                    <p>Add members using their Zynapse ID</p>
-                </div>`;
-            addMemberId.value = '';
+            showModal('createGroupModal');
         }
 
-        function handleGroupPhotoUpload(event) {
+        function previewGroupImage(event) {
             const file = event.target.files[0];
             if (!file) return;
             
-            // Preview image
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Image size must be less than 5MB', 'error');
+                return;
+            }
+            
+            if (!file.type.match('image.*')) {
+                showToast('Please select an image file', 'error');
+                return;
+            }
+            
+            groupImageFile = file;
             const reader = new FileReader();
-            reader.onload = (e) => {
-                groupPhotoPreview.innerHTML = `<img src="${e.target.result}" alt="Group Photo Preview">`;
+            
+            reader.onload = function(e) {
+                const previewImage = document.getElementById('groupPreviewImage');
+                const previewPlaceholder = document.getElementById('groupPreviewPlaceholder');
+                
+                previewImage.src = e.target.result;
+                previewImage.style.display = 'block';
+                previewPlaceholder.style.display = 'none';
             };
+            
             reader.readAsDataURL(file);
         }
 
-        let groupMembers = [];
-
-        async function addGroupMember() {
-            const userIdInput = addMemberId.value.trim().toUpperCase();
+        async function searchMember(event) {
+            if (event.key !== 'Enter') return;
             
-            if (!userIdInput.startsWith('ZYN-') || userIdInput.length !== 8) {
-                showToast('Invalid Zynapse ID format', 'error');
+            const input = document.getElementById('addMemberInput').value.trim();
+            const resultDiv = document.getElementById('memberSearchResult');
+            
+            if (!input) {
+                resultDiv.style.display = 'none';
                 return;
             }
             
             try {
-                // Find user by ID
-                const snapshot = await database.ref(`userIds/${userIdInput}`).once('value');
-                const targetUserId = snapshot.val();
+                // Search by User ID
+                const userSnapshot = await database.ref('users').orderByChild('userId').equalTo(input.toUpperCase()).once('value');
                 
-                if (!targetUserId) {
-                    showToast('User not found', 'error');
+                if (!userSnapshot.exists()) {
+                    resultDiv.innerHTML = '<div class="error">User not found</div>';
+                    resultDiv.style.display = 'block';
                     return;
                 }
                 
-                // Check if already added
-                if (groupMembers.includes(targetUserId)) {
-                    showToast('User already added', 'warning');
-                    return;
-                }
-                
-                // Get user details
-                const userSnapshot = await database.ref(`users/${targetUserId}`).once('value');
-                const user = userSnapshot.val();
-                
-                if (!user) {
-                    showToast('User not found', 'error');
-                    return;
-                }
-                
-                // Add to members list
-                groupMembers.push(targetUserId);
-                
-                // Update UI
-                if (groupMembersList.querySelector('.empty-members')) {
-                    groupMembersList.innerHTML = '';
-                }
-                
-                const memberTag = document.createElement('div');
-                memberTag.className = 'member-tag';
-                memberTag.innerHTML = `
-                    <span>${user.name}</span>
-                    <button class="remove-member" data-user-id="${targetUserId}">&times;</button>
-                `;
-                
-                groupMembersList.appendChild(memberTag);
-                
-                // Update count
-                document.querySelector('.members-count').textContent = `${groupMembers.length} members`;
-                
-                // Clear input
-                addMemberId.value = '';
-                
-                // Add remove event listener
-                memberTag.querySelector('.remove-member').addEventListener('click', (e) => {
-                    const userId = e.target.dataset.userId;
-                    groupMembers = groupMembers.filter(id => id !== userId);
-                    memberTag.remove();
-                    document.querySelector('.members-count').textContent = `${groupMembers.length} members`;
-                    
-                    if (groupMembers.length === 0) {
-                        groupMembersList.innerHTML = `
-                            <div class="empty-members">
-                                <i class="fas fa-user-plus"></i>
-                                <p>Add members using their Zynapse ID</p>
-                            </div>`;
-                    }
+                let foundUser = null;
+                userSnapshot.forEach(childSnapshot => {
+                    foundUser = childSnapshot.val();
+                    foundUser.firebaseId = childSnapshot.key;
                 });
                 
+                // Check if already added
+                const isAlreadyAdded = selectedMembers.some(member => member.userId === foundUser.userId);
+                const isCurrentUser = foundUser.firebaseId === currentUser.uid;
+                
+                if (isAlreadyAdded || isCurrentUser) {
+                    resultDiv.innerHTML = '<div class="error">User already added or cannot add yourself</div>';
+                    resultDiv.style.display = 'block';
+                    return;
+                }
+                
+                // Show result
+                resultDiv.innerHTML = `
+                    <div class="user-found">
+                        <img src="${foundUser.profileImage || 'zynaps.png'}" alt="Profile" class="profile-pic">
+                        <div class="user-info">
+                            <h4>${foundUser.fullName}</h4>
+                            <p>${foundUser.userId}</p>
+                            <button class="btn-primary" onclick="addMember('${foundUser.firebaseId}', '${foundUser.userId}', '${foundUser.fullName}')">
+                                Add to Group
+                            </button>
+                        </div>
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+                
             } catch (error) {
-                console.error('Error adding group member:', error);
-                showToast('Failed to add member', 'error');
+                console.error('Error searching member:', error);
+                resultDiv.innerHTML = '<div class="error">Error searching user</div>';
+                resultDiv.style.display = 'block';
             }
         }
 
-        async function createGroup() {
-            const name = groupName.value.trim();
+        function addMember(firebaseId, userId, fullName) {
+            // Check if already added
+            if (selectedMembers.some(member => member.userId === userId)) {
+                showToast('User already added', 'warning');
+                return;
+            }
             
-            if (!name) {
+            selectedMembers.push({ firebaseId, userId, fullName });
+            updateMembersList();
+            
+            // Clear search
+            document.getElementById('addMemberInput').value = '';
+            document.getElementById('memberSearchResult').style.display = 'none';
+            
+            showToast(`${fullName} added to group`, 'success');
+        }
+
+        function removeMember(userId) {
+            selectedMembers = selectedMembers.filter(member => member.userId !== userId);
+            updateMembersList();
+        }
+
+        function updateMembersList() {
+            const membersList = document.getElementById('membersList');
+            const membersCount = document.getElementById('membersCount');
+            
+            membersList.innerHTML = '';
+            membersCount.textContent = `${selectedMembers.length} members`;
+            
+            if (selectedMembers.length === 0) {
+                membersList.innerHTML = `
+                    <div class="empty-members">
+                        <i class="fas fa-user-plus"></i>
+                        <p>Search and add members by User ID</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            selectedMembers.forEach(member => {
+                const memberTag = document.createElement('div');
+                memberTag.className = 'member-tag';
+                memberTag.innerHTML = `
+                    <span>${member.fullName} (${member.userId})</span>
+                    <button class="remove-member" onclick="removeMember('${member.userId}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                membersList.appendChild(memberTag);
+            });
+        }
+
+        async function createGroup() {
+            const groupName = document.getElementById('groupName').value.trim();
+            
+            if (!groupName) {
                 showToast('Please enter a group name', 'error');
                 return;
             }
             
-            if (groupMembers.length === 0) {
-                showToast('Add at least one member to the group', 'error');
+            if (selectedMembers.length === 0) {
+                showToast('Please add at least one member', 'error');
                 return;
             }
             
             try {
-                // Generate group ID
-                const groupId = `GRP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                // Upload group image if exists
+                let groupImageUrl = null;
+                if (groupImageFile) {
+                    groupImageUrl = await uploadToCloudinary(groupImageFile, 'groups');
+                }
+                
+                // Create group ID
+                const groupId = 'GRP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                const groupRef = database.ref('groups/' + groupId);
                 
                 // Prepare group data
                 const groupData = {
                     id: groupId,
-                    name: name,
-                    createdBy: userData.uid,
+                    groupName: groupName,
+                    groupImage: groupImageUrl,
                     createdAt: Date.now(),
-                    lastActive: Date.now(),
+                    createdBy: currentUser.uid,
                     members: {
-                        [userData.uid]: {
+                        [currentUser.uid]: {
                             joinedAt: Date.now(),
-                            isAdmin: true
+                            role: 'admin'
                         }
                     },
-                    admins: [userData.uid]
+                    admins: [currentUser.uid],
+                    messages: {}
                 };
                 
-                // Add members
-                groupMembers.forEach(memberId => {
-                    groupData.members[memberId] = {
+                // Add selected members
+                selectedMembers.forEach(member => {
+                    groupData.members[member.firebaseId] = {
                         joinedAt: Date.now(),
-                        isAdmin: false
+                        role: 'member'
                     };
                 });
                 
-                // Upload group photo if selected
-                if (groupPhoto.files[0]) {
-                    try {
-                        const photoUrl = await uploadToCloudinary(groupPhoto.files[0], 'groups');
-                        groupData.photoUrl = photoUrl;
-                    } catch (error) {
-                        console.error('Failed to upload group photo:', error);
-                    }
+                // Save group
+                await groupRef.set(groupData);
+                
+                // Add group to all members' group lists
+                const allMembers = [currentUser.uid, ...selectedMembers.map(m => m.firebaseId)];
+                
+                for (const memberId of allMembers) {
+                    await database.ref('users/' + memberId + '/groups/' + groupId).set(true);
+                    
+                    // Create chat reference for each member
+                    const chatId = database.ref().child('chats').push().key;
+                    const chatData = {
+                        id: chatId,
+                        type: 'group',
+                        groupId: groupId,
+                        participants: allMembers,
+                        createdAt: Date.now(),
+                        unreadCount: {}
+                    };
+                    
+                    await database.ref('chats/' + chatId).set(chatData);
+                    await database.ref('users/' + memberId + '/chats/' + chatId).set(true);
                 }
                 
-                // Save group to database
-                await database.ref(`groups/${groupId}`).set(groupData);
-                
-                // Add group to each member's groups list
-                const allMembers = [userData.uid, ...groupMembers];
-                const updatePromises = allMembers.map(memberId => {
-                    return database.ref(`users/${memberId}/groups/${groupId}`).set(true);
-                });
-                
-                await Promise.all(updatePromises);
-                
-                // Create initial group chat
-                const chatData = {
-                    id: groupId,
-                    type: 'group',
-                    groupId: groupId,
-                    lastMessage: 'Group created',
-                    lastMessageTime: Date.now(),
-                    participants: groupData.members
-                };
-                
-                await database.ref(`chats/${groupId}`).set(chatData);
-                
-                // Send notifications to members
-                const notificationPromises = groupMembers.map(memberId => {
-                    return sendNotification(memberId, {
-                        type: 'group_invite',
-                        groupId: groupId,
-                        groupName: name,
-                        fromUserId: userData.uid,
-                        fromUserName: userData.name,
-                        timestamp: Date.now(),
-                        message: `${userData.name} added you to group "${name}"`
-                    });
-                });
-                
-                await Promise.all(notificationPromises);
-                
                 showToast('Group created successfully', 'success');
-                createGroupModal.classList.remove('active');
-                
-                // Reset form
-                groupMembers = [];
+                closeModal();
+                loadGroups();
                 
             } catch (error) {
                 console.error('Error creating group:', error);
@@ -1661,295 +2853,359 @@
             }
         }
 
-        function showCreateZyneModal() {
-            createZyneModal.classList.add('active');
-            zyneText.value = '';
-            updateZyneCharCount();
-            zyneMediaPreview.innerHTML = '';
-        }
-
-        function updateZyneCharCount() {
-            const count = zyneText.value.length;
-            zyneCharCount.textContent = count;
+        // Post Zyne Modal Functions
+        function showPostZyneModal() {
+            showModal('postZyneModal');
             
-            if (count > 200) {
-                zyneCharCount.style.color = 'var(--red)';
-            } else if (count > 180) {
-                zyneCharCount.style.color = 'var(--orange)';
-            } else {
-                zyneCharCount.style.color = 'var(--gray-500)';
-            }
-        }
-
-        async function postZyneHandler() {
-            const text = zyneText.value.trim();
-            
-            if (!text && zyneMediaPreview.children.length === 0) {
-                showToast('Add text or media to post a Zyne', 'error');
-                return;
-            }
-            
-            if (text.length > 200) {
-                showToast('Zyne text too long (max 200 characters)', 'error');
-                return;
-            }
-            
-            try {
-                const zyneId = `ZNE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-                
-                const zyneData = {
-                    id: zyneId,
-                    userId: userData.uid,
-                    userName: userData.name,
-                    userProfile: userData.profileUrl,
-                    text: text,
-                    createdAt: Date.now(),
-                    expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
-                    viewers: {}
-                };
-                
-                // In a full implementation, media would be uploaded here
-                
-                await database.ref(`zynes/${zyneId}`).set(zyneData);
-                await database.ref(`users/${userData.uid}/zynes/${zyneId}`).set(Date.now());
-                
-                showToast('Zyne posted successfully', 'success');
-                createZyneModal.classList.remove('active');
-                
-            } catch (error) {
-                console.error('Error posting Zyne:', error);
-                showToast('Failed to post Zyne', 'error');
-            }
-        }
-
-        function startChatWithUser(user) {
-            // Generate chat ID
-            const chatId = generateChatId(userData.uid, user.uid);
-            
-            // Redirect to chat page with user data
-            const chatData = {
-                chatId: chatId,
-                userId: user.uid,
-                userName: user.name,
-                userProfile: user.profileUrl,
-                userZynId: user.userId,
-                type: 'user'
-            };
-            
-            localStorage.setItem('currentChat', JSON.stringify(chatData));
-            window.location.href = `chat.html?chat=${chatId}&type=user&with=${user.uid}`;
-        }
-
-        function enterGroup(groupId) {
-            // Redirect to chat page with group data
-            const chatData = {
-                chatId: groupId,
-                type: 'group',
-                groupId: groupId
-            };
-            
-            localStorage.setItem('currentChat', JSON.stringify(chatData));
-            window.location.href = `chat.html?chat=${groupId}&type=group`;
-        }
-
-        function generateChatId(userId1, userId2) {
-            const sortedIds = [userId1, userId2].sort();
-            return `CHAT-${sortedIds[0]}-${sortedIds[1]}`;
-        }
-
-        async function uploadToCloudinary(file, folder = 'general') {
-            return new Promise((resolve, reject) => {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-                formData.append('folder', `${CLOUDINARY_CONFIG.folder}/${folder}`);
-                formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
-                
-                fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.secure_url) {
-                        resolve(data.secure_url);
-                    } else {
-                        reject(new Error('Upload failed'));
-                    }
-                })
-                .catch(error => reject(error));
+            // Update character counter
+            document.getElementById('zyneText').addEventListener('input', function() {
+                document.getElementById('zyneCharCount').textContent = this.value.length;
             });
         }
 
-        async function sendNotification(userId, notification) {
-            try {
-                await database.ref(`notifications/${userId}`).push(notification);
-            } catch (error) {
-                console.error('Error sending notification:', error);
-            }
+        function attachZyneMedia(type) {
+            const input = document.getElementById('zyneMediaInput');
+            input.accept = type === 'photo' ? 'image/*' : 'video/*';
+            input.click();
         }
 
-        function showNotification(notification) {
-            // Play notification sound
-            try {
-                notificationSound.currentTime = 0;
-                notificationSound.play();
-            } catch (error) {
-                console.error('Error playing notification sound:', error);
+        function handleZyneMedia(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Check file size (50MB max)
+            if (file.size > 50 * 1024 * 1024) {
+                showToast('File size must be less than 50MB', 'error');
+                return;
             }
             
-            // Show toast notification
-            showToast(notification.message, 'info');
+            // Check file type
+            const isImage = file.type.startsWith('image/');
+            const isVideo = file.type.startsWith('video/');
             
-            // Update badges based on notification type
-            switch(notification.type) {
-                case 'message':
-                    // Update chat badges
-                    break;
-                case 'request_received':
-                    updateRequestsBadge();
-                    break;
-                case 'group_invite':
-                    updateGroupsBadge();
-                    break;
+            if (!isImage && !isVideo) {
+                showToast('Please select an image or video file', 'error');
+                return;
             }
-        }
-
-        function updateRequestsBadge() {
-            const count = Object.keys(chatRequests || {}).length;
-            if (count > 0) {
-                requestsBadge.textContent = count > 99 ? '99+' : count;
-                requestsBadge.style.display = 'flex';
-            } else {
-                requestsBadge.style.display = 'none';
-            }
-        }
-
-        function updateGroupsBadge() {
-            // In a full implementation, this would show unread group messages
-            groupsBadge.style.display = 'none';
-        }
-
-        function updateZynesBadge() {
-            // In a full implementation, this would show new Zynes
-            zynesBadge.style.display = 'none';
-        }
-
-        function updateOnlineStatus() {
-            // In a full implementation, this would update online status indicators
-        }
-
-        function searchContactsHandler() {
-            const searchTerm = searchContacts.value.toLowerCase();
-            const contactCards = document.querySelectorAll('.contact-card');
             
-            contactCards.forEach(card => {
-                const name = card.querySelector('h4').textContent.toLowerCase();
-                const userId = card.querySelector('.user-id')?.textContent.toLowerCase() || '';
+            zyneMediaFile = file;
+            
+            const preview = document.getElementById('zyneMediaPreview');
+            preview.innerHTML = '';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
                 
-                if (name.includes(searchTerm) || userId.includes(searchTerm)) {
-                    card.style.display = 'flex';
+                if (isImage) {
+                    previewItem.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview">
+                        <button class="remove-preview" onclick="clearZyneMedia()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
                 } else {
-                    card.style.display = 'none';
+                    previewItem.innerHTML = `
+                        <video src="${e.target.result}" controls></video>
+                        <button class="remove-preview" onclick="clearZyneMedia()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                }
+                
+                preview.appendChild(previewItem);
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function clearZyneMedia() {
+            zyneMediaFile = null;
+            document.getElementById('zyneMediaPreview').innerHTML = '';
+            document.getElementById('zyneMediaInput').value = '';
+        }
+
+        async function postZyne() {
+            const text = document.getElementById('zyneText').value.trim();
+            
+            if (!text && !zyneMediaFile) {
+                showToast('Please add text or media', 'error');
+                return;
+            }
+            
+            try {
+                // Upload media if exists
+                let mediaData = null;
+                if (zyneMediaFile) {
+                    const mediaUrl = await uploadToCloudinary(zyneMediaFile, 'zynes');
+                    mediaData = {
+                        url: mediaUrl,
+                        type: zyneMediaFile.type.startsWith('image/') ? 'image' : 'video'
+                    };
+                }
+                
+                // Create zyne
+                const zyneId = database.ref().child('zynes').push().key;
+                const zyneData = {
+                    id: zyneId,
+                    userId: currentUser.uid,
+                    text: text,
+                    media: mediaData,
+                    timestamp: Date.now(),
+                    expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+                };
+                
+                // Save zyne
+                await database.ref('zynes/' + zyneId).set(zyneData);
+                await database.ref('users/' + currentUser.uid + '/zynes/' + zyneId).set(true);
+                
+                showToast('Zyne posted successfully', 'success');
+                closeModal();
+                
+                if (document.getElementById('zynesPage').classList.contains('active')) {
+                    loadZynes();
+                }
+                
+            } catch (error) {
+                console.error('Error posting zyne:', error);
+                showToast('Failed to post zyne', 'error');
+            }
+        }
+
+        async function deleteZyne(zyneId) {
+            if (!confirm('Are you sure you want to delete this Zyne?')) return;
+            
+            try {
+                await database.ref('zynes/' + zyneId).remove();
+                await database.ref('users/' + currentUser.uid + '/zynes/' + zyneId).remove();
+                
+                showToast('Zyne deleted', 'success');
+                loadZynes();
+                
+            } catch (error) {
+                console.error('Error deleting zyne:', error);
+                showToast('Failed to delete zyne', 'error');
+            }
+        }
+
+        // Accept Chat Request
+        async function acceptChatRequest(requestId, senderId) {
+            try {
+                // Update request status
+                await database.ref('chatRequests/' + requestId).update({
+                    status: 'accepted',
+                    acceptedAt: Date.now()
+                });
+                
+                // Remove from recipient's requests
+                await database.ref('users/' + currentUser.uid + '/chatRequests/' + requestId).remove();
+                
+                // Add to contacts for both users
+                const senderSnapshot = await database.ref('users/' + senderId).once('value');
+                const senderData = senderSnapshot.val();
+                
+                // Add sender to recipient's contacts
+                await database.ref('users/' + currentUser.uid + '/contacts/' + senderData.userId).set(true);
+                
+                // Add recipient to sender's contacts
+                await database.ref('users/' + senderId + '/contacts/' + userData.userId).set(true);
+                
+                // Create chat
+                const chatId = database.ref().child('chats').push().key;
+                const chatData = {
+                    id: chatId,
+                    type: 'private',
+                    participants: [currentUser.uid, senderId],
+                    createdAt: Date.now(),
+                    messages: {},
+                    unreadCount: {
+                        [currentUser.uid]: 0,
+                        [senderId]: 0
+                    }
+                };
+                
+                await database.ref('chats/' + chatId).set(chatData);
+                
+                // Add chat to both users
+                await database.ref('users/' + currentUser.uid + '/chats/' + chatId).set(true);
+                await database.ref('users/' + senderId + '/chats/' + chatId).set(true);
+                
+                showToast('Chat request accepted', 'success');
+                loadChatRequests();
+                loadContactsList();
+                
+            } catch (error) {
+                console.error('Error accepting chat request:', error);
+                showToast('Failed to accept request', 'error');
+            }
+        }
+
+        // Reject Chat Request
+        async function rejectChatRequest(requestId) {
+            try {
+                // Get request data to notify sender
+                const requestSnapshot = await database.ref('chatRequests/' + requestId).once('value');
+                const requestData = requestSnapshot.val();
+                
+                // Update request status
+                await database.ref('chatRequests/' + requestId).update({
+                    status: 'rejected',
+                    rejectedAt: Date.now()
+                });
+                
+                // Remove from recipient's requests
+                await database.ref('users/' + currentUser.uid + '/chatRequests/' + requestId).remove();
+                
+                showToast('Chat request rejected', 'success');
+                loadChatRequests();
+                
+            } catch (error) {
+                console.error('Error rejecting chat request:', error);
+                showToast('Failed to reject request', 'error');
+            }
+        }
+
+        // Open Chat
+        function openChat(chatId, type) {
+            if (type === 'group') {
+                window.location.href = `chat.html?type=group&id=${chatId}`;
+            } else {
+                window.location.href = `chat.html?type=user&id=${chatId}`;
+            }
+        }
+
+        // Show Profile Modal
+        function showProfileModal() {
+            if (!userData) return;
+            
+            document.getElementById('profileName').value = userData.fullName;
+            document.getElementById('profileUserId').value = userData.userId;
+            document.getElementById('profilePhone').value = userData.phoneNumber;
+            document.getElementById('profileEmail').value = userData.email;
+            
+            showModal('profileModal');
+        }
+
+        // Show Settings Modal
+        function showSettingsModal() {
+            showToast('Settings feature coming soon', 'info');
+        }
+
+        // Show Notifications Modal
+        function showNotificationsModal() {
+            showToast('Notifications settings coming soon', 'info');
+        }
+
+        // Upload to Cloudinary
+        async function uploadToCloudinary(file, folder = 'general') {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+            formData.append('folder', `${CLOUDINARY_CONFIG.folder}/${folder}`);
+            formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
+            
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                return data.secure_url;
+            } catch (error) {
+                console.error('Cloudinary upload error:', error);
+                throw error;
+            }
+        }
+
+        // Get Time Ago
+        function getTimeAgo(timestamp) {
+            const seconds = Math.floor((Date.now() - timestamp) / 1000);
+            
+            if (seconds < 60) return 'just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+            
+            return new Date(timestamp).toLocaleDateString();
+        }
+
+        // Setup Realtime Listeners
+        function setupRealtimeListeners() {
+            // Listen for chat requests
+            database.ref('users/' + currentUser.uid + '/chatRequests').on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    loadChatRequests();
+                }
+            });
+            
+            // Listen for new chats
+            database.ref('users/' + currentUser.uid + '/chats').on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    loadRecentChats();
+                }
+            });
+            
+            // Listen for new groups
+            database.ref('users/' + currentUser.uid + '/groups').on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    loadGroups();
+                }
+            });
+            
+            // Listen for new zynes from contacts
+            database.ref('zynes').orderByChild('timestamp').startAt(Date.now() - (24 * 60 * 60 * 1000)).on('value', (snapshot) => {
+                if (document.getElementById('zynesPage').classList.contains('active')) {
+                    loadZynes();
                 }
             });
         }
 
-        function shareUserId() {
-            if (navigator.share) {
-                navigator.share({
-                    title: 'My Zynapse ID',
-                    text: `Connect with me on Zynapse! My ID is: ${userData.userId}`,
-                    url: window.location.href
-                });
-            } else {
-                copyToClipboard();
-                showToast('User ID copied to clipboard', 'success');
-            }
-        }
-
-        async function copyToClipboard() {
+        // Logout
+        async function logout() {
             try {
-                await navigator.clipboard.writeText(userData.userId);
-                showToast('User ID copied to clipboard', 'success');
-            } catch (error) {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = userData.userId;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showToast('User ID copied to clipboard', 'success');
-            }
-        }
-
-        async function handleLogout() {
-            try {
-                // Update online status
-                if (userData) {
-                    await database.ref(`users/${userData.uid}`).update({
-                        isOnline: false,
-                        lastActive: Date.now()
+                if (currentUser && userData) {
+                    await database.ref('users/' + currentUser.uid).update({
+                        status: 'offline',
+                        lastSeen: Date.now()
                     });
                 }
                 
-                // Sign out
                 await auth.signOut();
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('currentChat');
-                
-                // Redirect to login
                 window.location.href = 'index.html';
-                
             } catch (error) {
-                console.error('Error logging out:', error);
-                showToast('Failed to log out', 'error');
+                console.error('Logout error:', error);
+                window.location.href = 'index.html';
             }
         }
 
-        function formatTime(timestamp) {
-            if (!timestamp) return 'Never';
-            
-            const date = new Date(timestamp);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-            
-            if (diffMins < 1) return 'Just now';
-            if (diffMins < 60) return `${diffMins}m ago`;
-            if (diffHours < 24) return `${diffHours}h ago`;
-            if (diffDays < 7) return `${diffDays}d ago`;
-            
-            return date.toLocaleDateString();
-        }
-
-        function showToast(message, type = 'info') {
-            const toastContainer = document.querySelector('.toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            let icon = 'fa-info-circle';
-            switch (type) {
-                case 'success': icon = 'fa-check-circle'; break;
-                case 'error': icon = 'fa-exclamation-circle'; break;
-                case 'warning': icon = 'fa-exclamation-triangle'; break;
+        // Initialize App
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                loadingScreen.style.display = 'flex';
+                appHome.style.display = 'none';
+                
+                await loadUserData();
+                
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    appHome.style.display = 'flex';
+                }, 500);
+                
+            } else {
+                window.location.href = 'index.html';
             }
-            
-            toast.innerHTML = `
-                <i class="fas ${icon}"></i>
-                <span>${message}</span>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Remove toast after 3 seconds
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
+        });
+
+        // Initialize
+        setTimeout(() => {
+            if (!currentUser) {
+                loadingScreen.classList.add('hidden');
+            }
+        }, 2000);
     </script>
 </body>
 </html>
