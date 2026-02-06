@@ -1,3 +1,9 @@
+// Import Firebase modules
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getDatabase, ref, set, get, push, child, update, onValue, remove, query, orderByChild, equalTo, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
+
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
@@ -11,13 +17,28 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const analytics = firebase.analytics();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const database = getDatabase(app);
+const analytics = getAnalytics(app);
 
-// Firebase services
-const auth = firebase.auth();
-const database = firebase.database();
-const storage = firebase.storage();
-
-// Export Firebase services
-export { firebase, app, analytics, auth, database, storage };
+export { 
+    auth, 
+    database, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut, 
+    onAuthStateChanged,
+    ref, 
+    set, 
+    get, 
+    push, 
+    child, 
+    update, 
+    onValue, 
+    remove, 
+    query, 
+    orderByChild, 
+    equalTo,
+    serverTimestamp
+};
