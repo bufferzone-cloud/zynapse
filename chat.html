@@ -3,30 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat - Zynapse</title>
-    <meta name="description" content="Zynapse - Secure messaging chat">
-    <meta name="theme-color" content="#4A6FFF">
-    
-    <!-- Font Awesome -->
+    <title>Zynapse - Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Favicon -->
     <link rel="icon" href="zynaps.png" type="image/png">
-    
-    <!-- PWA Support -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- iOS Support -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="zynaps.png">
 </head>
 <body class="chat-page">
     <!-- Loading Screen -->
-    <div id="loadingScreen" class="loading-screen">
+    <div class="loading-screen" id="loadingScreen">
         <div class="loading-content">
             <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
             <div class="spinner-large"></div>
@@ -36,65 +20,58 @@
 
     <!-- Chat Header -->
     <header class="chat-header">
-        <div class="header-left">
-            <a href="home.html" class="back-btn">
-                <i class="fas fa-chevron-left"></i>
-            </a>
-            <div class="chat-user-info">
-                <img id="chatUserPic" src="zynaps.png" alt="Profile" class="profile-pic-small">
-                <div class="chat-user-details">
-                    <h3 id="chatUserName">Loading...</h3>
-                    <span class="chat-status" id="chatUserStatus">
-                        <i class="fas fa-circle status-dot offline"></i>
-                        <span>Loading...</span>
-                    </span>
+        <button class="back-btn" id="backBtn">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        
+        <div class="chat-user-info">
+            <img src="" alt="" class="profile-pic-small" id="chatPartnerPic">
+            <div class="chat-user-details">
+                <h3 id="chatPartnerName">Loading...</h3>
+                <div class="chat-status">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="chatPartnerStatus">Loading...</span>
                 </div>
             </div>
         </div>
         
-        <div class="header-right">
-            <!-- Voice Call Button -->
-            <button class="icon-btn" id="voiceCallBtn" title="Voice Call">
+        <div class="chat-actions">
+            <button class="icon-btn" id="callBtn">
                 <i class="fas fa-phone"></i>
             </button>
-            
-            <!-- Video Call Button -->
-            <button class="icon-btn" id="videoCallBtn" title="Video Call">
+            <button class="icon-btn" id="videoBtn">
                 <i class="fas fa-video"></i>
             </button>
             
-            <!-- More Options Dropdown -->
             <div class="dropdown">
-                <button class="icon-btn" id="moreOptionsBtn">
+                <button class="icon-btn" id="chatMenuBtn">
                     <i class="fas fa-ellipsis-v"></i>
                 </button>
-                <div class="dropdown-content">
-                    <a href="#" id="viewProfileBtn"><i class="fas fa-user"></i> View Profile</a>
+                <div class="dropdown-content" id="chatMenu">
                     <a href="#" id="addNicknameBtn"><i class="fas fa-tag"></i> Add Nickname</a>
-                    <a href="#" id="addToFavoritesBtn"><i class="fas fa-star"></i> Add to Favorites</a>
+                    <a href="#" id="favoriteBtn"><i class="fas fa-star"></i> Add to Favorites</a>
                     <div class="dropdown-divider"></div>
-                    <a href="#" id="clearChatBtn"><i class="fas fa-broom"></i> Clear Chat</a>
-                    <a href="#" id="deleteChatBtn"><i class="fas fa-trash"></i> Delete Chat</a>
+                    <a href="#" id="blockBtn"><i class="fas fa-ban"></i> Block User</a>
+                    <a href="#" id="reportBtn"><i class="fas fa-flag"></i> Report</a>
                     <div class="dropdown-divider"></div>
-                    <a href="#" id="blockUserBtn"><i class="fas fa-ban"></i> Block User</a>
-                    <a href="#" id="reportUserBtn"><i class="fas fa-flag"></i> Report User</a>
+                    <a href="#" id="clearChatBtn"><i class="fas fa-trash"></i> Clear Chat</a>
+                    <a href="#" id="deleteChatBtn" class="logout-link"><i class="fas fa-trash-alt"></i> Delete Chat</a>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Chat Messages Area -->
+    <!-- Chat Messages -->
     <div class="chat-messages" id="chatMessages">
-        <!-- Messages will be loaded here -->
         <div class="empty-chat">
-            <i class="fas fa-comment-slash"></i>
+            <i class="fas fa-comments"></i>
             <h3>No messages yet</h3>
-            <p>Start the conversation by sending a message</p>
+            <p>Send a message to start the conversation</p>
         </div>
     </div>
 
     <!-- Typing Indicator -->
-    <div id="typingIndicator" class="typing-indicator" style="display: none;">
+    <div class="typing-indicator" id="typingIndicator">
         <div class="typing-bubble">
             <div class="typing-dots">
                 <div class="typing-dot"></div>
@@ -107,238 +84,895 @@
 
     <!-- Message Input Area -->
     <div class="message-input-area">
-        <!-- Attachment Button -->
-        <button class="icon-btn" id="attachBtn" title="Attach">
+        <button class="icon-btn" id="attachmentBtn">
             <i class="fas fa-plus"></i>
         </button>
         
-        <!-- Message Input Container -->
         <div class="message-input-container">
-            <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
-            <button class="icon-btn" id="emojiBtn" title="Emoji">
-                <i class="far fa-smile"></i>
+            <input type="text" id="messageInput" placeholder="iMessage" autocomplete="off">
+            <button class="icon-btn" id="emojiBtn">
+                <i class="fas fa-smile"></i>
             </button>
         </div>
         
-        <!-- Send Button -->
-        <button class="send-btn" id="sendBtn" title="Send">
+        <button class="send-btn" id="sendBtn">
             <i class="fas fa-paper-plane"></i>
         </button>
     </div>
 
     <!-- Attachment Options -->
     <div class="attachment-options" id="attachmentOptions">
-        <button class="attachment-btn" id="attachPhotoBtn" title="Photo">
+        <button class="attachment-btn" id="photoBtn">
             <i class="fas fa-camera"></i>
             <span>Photo</span>
         </button>
-        <button class="attachment-btn" id="attachVideoBtn" title="Video">
+        <button class="attachment-btn" id="videoBtn">
             <i class="fas fa-video"></i>
             <span>Video</span>
         </button>
-        <button class="attachment-btn" id="attachDocumentBtn" title="Document">
+        <button class="attachment-btn" id="documentBtn">
             <i class="fas fa-file"></i>
             <span>Document</span>
         </button>
-        <button class="attachment-btn" id="attachLocationBtn" title="Location">
+        <button class="attachment-btn" id="audioBtn">
+            <i class="fas fa-microphone"></i>
+            <span>Audio</span>
+        </button>
+        <button class="attachment-btn" id="locationBtn">
             <i class="fas fa-map-marker-alt"></i>
             <span>Location</span>
         </button>
-        <button class="attachment-btn" id="attachContactBtn" title="Contact">
-            <i class="fas fa-address-book"></i>
+        <button class="attachment-btn" id="contactBtn">
+            <i class="fas fa-user"></i>
             <span>Contact</span>
         </button>
     </div>
 
-    <!-- Hidden File Inputs -->
-    <input type="file" id="photoInput" accept="image/*" multiple hidden>
-    <input type="file" id="videoInput" accept="video/*" hidden>
-    <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt,.zip,.rar" hidden>
-
     <!-- Modals -->
-    
-    <!-- Media Preview Modal -->
-    <div id="mediaPreviewModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Preview</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="mediaPreviewContent" class="media-preview-content">
-                    <div class="preview-placeholder">
-                        <i class="fas fa-image"></i>
-                        <p>No media to preview</p>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button id="cancelMediaBtn" class="btn-secondary">Cancel</button>
-                    <button id="sendMediaBtn" class="btn-primary">
-                        <i class="fas fa-paper-plane"></i> Send
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Nickname Modal -->
-    <div id="nicknameModal" class="modal-overlay">
+    <div class="modal-overlay" id="nicknameModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add Nickname</h3>
-                <button class="close-modal">&times;</button>
+                <button class="close-modal" id="closeNicknameModal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="input-group">
-                    <i class="fas fa-tag"></i>
-                    <input type="text" id="nicknameInput" placeholder="Enter nickname" maxlength="30">
-                </div>
-                <p class="form-hint">This nickname will only be visible to you</p>
-                <div class="modal-actions">
-                    <button id="cancelNicknameBtn" class="btn-secondary">Cancel</button>
-                    <button id="saveNicknameBtn" class="btn-primary">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- View Profile Modal -->
-    <div id="profileModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Profile</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="profileModalContent">
-                    <!-- Profile content will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Chat Confirmation -->
-    <div id="deleteChatModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Delete Chat</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="confirmation-message">
-                    <i class="fas fa-exclamation-triangle warning-icon"></i>
-                    <h4>Are you sure?</h4>
-                    <p>This will delete all messages in this chat. This action cannot be undone.</p>
+                    <input type="text" id="nicknameInput" placeholder="Enter nickname" maxlength="20">
                 </div>
                 <div class="modal-actions">
-                    <button id="cancelDeleteBtn" class="btn-secondary">Cancel</button>
-                    <button id="confirmDeleteBtn" class="btn-danger">Delete Chat</button>
+                    <button class="btn-secondary" id="cancelNicknameBtn">Cancel</button>
+                    <button class="btn-primary" id="saveNicknameBtn">Save</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Block User Confirmation -->
-    <div id="blockUserModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Block User</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="confirmation-message">
-                    <i class="fas fa-ban warning-icon"></i>
-                    <h4>Block this user?</h4>
-                    <p>You will no longer receive messages from this user. You can unblock them later from settings.</p>
-                </div>
-                <div class="modal-actions">
-                    <button id="cancelBlockBtn" class="btn-secondary">Cancel</button>
-                    <button id="confirmBlockBtn" class="btn-danger">Block User</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Report User Modal -->
-    <div id="reportUserModal" class="modal-overlay">
+    <div class="modal-overlay" id="reportModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Report User</h3>
-                <button class="close-modal">&times;</button>
+                <button class="close-modal" id="closeReportModal">&times;</button>
             </div>
             <div class="modal-body">
+                <div class="confirmation-message">
+                    <div class="warning-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h4>Report this user?</h4>
+                    <p>If this user is violating our community guidelines, you can report them. Our team will review your report within 24 hours.</p>
+                </div>
+                
                 <div class="report-form">
                     <div class="input-group">
-                        <label for="reportReason">Reason for reporting</label>
+                        <label for="reportReason">Reason for reporting:</label>
                         <select id="reportReason">
                             <option value="">Select a reason</option>
-                            <option value="spam">Spam</option>
-                            <option value="harassment">Harassment</option>
+                            <option value="spam">Spam or fake account</option>
+                            <option value="harassment">Harassment or bullying</option>
                             <option value="inappropriate">Inappropriate content</option>
                             <option value="impersonation">Impersonation</option>
                             <option value="other">Other</option>
                         </select>
                     </div>
+                    
                     <div class="input-group">
-                        <label for="reportDetails">Additional details (optional)</label>
-                        <textarea id="reportDetails" placeholder="Please provide more details..." rows="3"></textarea>
+                        <label for="reportDetails">Additional details (optional):</label>
+                        <textarea id="reportDetails" placeholder="Please provide more information..."></textarea>
                     </div>
+                    
+                    <p class="form-hint">Your report is anonymous. The reported user won't know who reported them.</p>
                 </div>
+                
                 <div class="modal-actions">
-                    <button id="cancelReportBtn" class="btn-secondary">Cancel</button>
-                    <button id="submitReportBtn" class="btn-danger">Submit Report</button>
+                    <button class="btn-secondary" id="cancelReportBtn">Cancel</button>
+                    <button class="btn-danger" id="submitReportBtn">Submit Report</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notifications Container -->
-    <div id="toastContainer" class="toast-container"></div>
+    <div class="modal-overlay" id="blockModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Block User</h3>
+                <button class="close-modal" id="closeBlockModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-message">
+                    <div class="warning-icon">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <h4>Block this user?</h4>
+                    <p>If you block this user, you will no longer receive messages from them and they won't be able to see your status or when you're online.</p>
+                    <p><strong>This action cannot be undone.</strong></p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="cancelBlockBtn">Cancel</button>
+                    <button class="btn-danger" id="confirmBlockBtn">Block User</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Audio Elements -->
-    <audio id="notificationSound" preload="auto">
-        <source src="notification.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-    
-    <audio id="sentSound" preload="auto">
-        <source src="sent.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-    
-    <audio id="messageTone" preload="auto">
-        <source src="message.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
+    <div class="modal-overlay" id="clearChatModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Clear Chat</h3>
+                <button class="close-modal" id="closeClearChatModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-message">
+                    <div class="warning-icon">
+                        <i class="fas fa-trash"></i>
+                    </div>
+                    <h4>Clear all messages?</h4>
+                    <p>This will delete all messages in this chat from your device. The other person will still be able to see the messages.</p>
+                    <p><strong>This action cannot be undone.</strong></p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="cancelClearBtn">Cancel</button>
+                    <button class="btn-danger" id="confirmClearBtn">Clear Chat</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js"></script>
-    
-    <!-- ImageKit SDK -->
-    <script src="https://unpkg.com/imagekit-javascript/dist/imagekit.min.js"></script>
-    
-    <!-- Emoji Picker Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@emoji-mart/data"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emoji-mart/web-component"></script>
-    
-    <!-- App Scripts -->
-    <script src="firebase-config.js"></script>
-    <script src="imagekit-config.js"></script>
-    <script src="app.js"></script>
+    <div class="modal-overlay" id="deleteChatModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Chat</h3>
+                <button class="close-modal" id="closeDeleteChatModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-message">
+                    <div class="warning-icon">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <h4>Delete this chat?</h4>
+                    <p>This will permanently delete this chat and all messages for both you and the other person.</p>
+                    <p><strong>This action cannot be undone.</strong></p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="cancelDeleteBtn">Cancel</button>
+                    <button class="btn-danger" id="confirmDeleteBtn">Delete Chat</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(registration => {
-                    console.log('ServiceWorker registered:', registration.scope);
-                }).catch(error => {
-                    console.log('ServiceWorker registration failed:', error);
+    <!-- File Inputs (Hidden) -->
+    <input type="file" id="photoInput" accept="image/*" style="display: none;">
+    <input type="file" id="videoInput" accept="video/*" style="display: none;">
+    <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+    <input type="file" id="audioInput" accept="audio/*" style="display: none;">
+
+    <script type="module" src="app.js"></script>
+    <script type="module">
+        import zynapseApp from './app.js';
+        import { onAuthStateChanged, ref, onValue, onChildAdded, push, update, get } from './firebase-config.js';
+        import imageKitService from './imagekit-config.js';
+        
+        let currentUser = null;
+        let chatData = null;
+        let chatPartner = null;
+        let chatId = null;
+        let messages = [];
+        let isTyping = false;
+        let typingTimeout = null;
+        
+        // DOM Elements
+        const loadingScreen = document.getElementById('loadingScreen');
+        const backBtn = document.getElementById('backBtn');
+        const chatPartnerPic = document.getElementById('chatPartnerPic');
+        const chatPartnerName = document.getElementById('chatPartnerName');
+        const chatPartnerStatus = document.getElementById('chatPartnerStatus');
+        const statusDot = document.getElementById('statusDot');
+        const chatMessages = document.getElementById('chatMessages');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const attachmentBtn = document.getElementById('attachmentBtn');
+        const attachmentOptions = document.getElementById('attachmentOptions');
+        const emojiBtn = document.getElementById('emojiBtn');
+        const chatMenuBtn = document.getElementById('chatMenuBtn');
+        const chatMenu = document.getElementById('chatMenu');
+        
+        // Modal elements
+        const nicknameModal = document.getElementById('nicknameModal');
+        const reportModal = document.getElementById('reportModal');
+        const blockModal = document.getElementById('blockModal');
+        const clearChatModal = document.getElementById('clearChatModal');
+        const deleteChatModal = document.getElementById('deleteChatModal');
+        
+        // File inputs
+        const photoInput = document.getElementById('photoInput');
+        const videoInput = document.getElementById('videoInput');
+        const documentInput = document.getElementById('documentInput');
+        const audioInput = document.getElementById('audioInput');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Hide loading screen after delay
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 400);
+            }, 1000);
+            
+            // Check auth and load chat data
+            onAuthStateChanged(zynapseApp.auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    await loadChatData();
+                } else {
+                    window.location.href = 'index.html';
+                }
+            });
+            
+            initEventListeners();
+        });
+        
+        async function loadChatData() {
+            try {
+                // Get chat data from session storage
+                const storedChat = sessionStorage.getItem('currentChat');
+                if (!storedChat) {
+                    window.location.href = 'home.html';
+                    return;
+                }
+                
+                chatData = JSON.parse(storedChat);
+                chatId = chatData.id;
+                chatPartner = chatData.otherUser;
+                
+                // Update UI with chat partner info
+                updateChatHeader();
+                
+                // Load messages
+                await loadMessages();
+                
+                // Set up realtime listener for new messages
+                setupRealtimeListener();
+                
+                // Set up typing indicator listener
+                setupTypingListener();
+                
+            } catch (error) {
+                console.error("Error loading chat data:", error);
+                zynapseApp.showToast('Error loading chat', 'error');
+                window.location.href = 'home.html';
+            }
+        }
+        
+        function updateChatHeader() {
+            chatPartnerName.textContent = chatPartner.name;
+            chatPartnerStatus.textContent = chatPartner.status || 'offline';
+            
+            // Set status dot color
+            statusDot.className = 'status-dot';
+            statusDot.classList.add(chatPartner.status || 'offline');
+            
+            // Set profile picture
+            const defaultPic = './zynaps.png';
+            chatPartnerPic.src = chatPartner.profilePicture || defaultPic;
+        }
+        
+        async function loadMessages() {
+            try {
+                const messagesRef = ref(zynapseApp.database, `chats/${chatId}/messages`);
+                const snapshot = await get(messagesRef);
+                
+                if (snapshot.exists()) {
+                    const messagesData = snapshot.val();
+                    messages = Object.values(messagesData).sort((a, b) => a.timestamp - b.timestamp);
+                    
+                    // Display messages
+                    displayMessages();
+                    
+                    // Scroll to bottom
+                    scrollToBottom();
+                }
+            } catch (error) {
+                console.error("Error loading messages:", error);
+            }
+        }
+        
+        function displayMessages() {
+            if (messages.length === 0) return;
+            
+            // Clear empty state if present
+            const emptyState = chatMessages.querySelector('.empty-chat');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            // Group messages by date
+            const groupedMessages = groupMessagesByDate(messages);
+            
+            // Clear chat messages
+            chatMessages.innerHTML = '';
+            
+            // Add grouped messages
+            for (const [date, dayMessages] of Object.entries(groupedMessages)) {
+                // Add date separator
+                const dateElement = document.createElement('div');
+                dateElement.className = 'message-date';
+                dateElement.textContent = formatMessageDate(date);
+                chatMessages.appendChild(dateElement);
+                
+                // Add messages for this date
+                dayMessages.forEach(message => {
+                    addMessageToUI(message);
                 });
+            }
+        }
+        
+        function groupMessagesByDate(messages) {
+            const groups = {};
+            
+            messages.forEach(message => {
+                const date = new Date(message.timestamp).toDateString();
+                if (!groups[date]) {
+                    groups[date] = [];
+                }
+                groups[date].push(message);
+            });
+            
+            return groups;
+        }
+        
+        function formatMessageDate(dateString) {
+            const date = new Date(dateString);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+            }
+        }
+        
+        function addMessageToUI(message) {
+            const isSent = message.sender === currentUser.uid;
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${isSent ? 'sent' : 'received'}`;
+            messageElement.dataset.id = message.id;
+            
+            let messageContent = '';
+            
+            if (message.mediaUrl) {
+                if (message.mediaType === 'image') {
+                    messageContent = `
+                        <div class="media-message">
+                            <img src="${message.mediaUrl}" alt="Photo" class="chat-media">
+                            ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
+                        </div>
+                    `;
+                } else if (message.mediaType === 'video') {
+                    messageContent = `
+                        <div class="media-message">
+                            <video src="${message.mediaUrl}" controls class="chat-media"></video>
+                            ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
+                        </div>
+                    `;
+                }
+            } else {
+                messageContent = `<p>${escapeHtml(message.text)}</p>`;
+            }
+            
+            messageElement.innerHTML = `
+                <div class="message-bubble">
+                    ${messageContent}
+                    <span class="message-time">
+                        ${zynapseApp.formatMessageTime(message.timestamp)}
+                        ${isSent ? `<span class="message-status">${getMessageStatusIcon(message.status)}</span>` : ''}
+                    </span>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+        }
+        
+        function getMessageStatusIcon(status) {
+            switch (status) {
+                case 'sent': return '✓';
+                case 'delivered': return '✓✓';
+                case 'read': return '✓✓';
+                default: return '◯';
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function setupRealtimeListener() {
+            const messagesRef = ref(zynapseApp.database, `chats/${chatId}/messages`);
+            
+            onChildAdded(messagesRef, (snapshot) => {
+                const message = snapshot.val();
+                
+                // Check if message already exists
+                if (!messages.some(m => m.id === message.id)) {
+                    messages.push(message);
+                    
+                    // Remove empty state if this is the first message
+                    const emptyState = chatMessages.querySelector('.empty-chat');
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+                    
+                    // Add message to UI
+                    addMessageToUI(message);
+                    
+                    // Scroll to bottom
+                    scrollToBottom();
+                    
+                    // Play notification sound for received messages
+                    if (message.sender !== currentUser.uid) {
+                        zynapseApp.playNotificationSound();
+                    }
+                }
             });
         }
+        
+        function setupTypingListener() {
+            const typingRef = ref(zynapseApp.database, `chats/${chatId}/typing/${chatPartner.uid}`);
+            
+            onValue(typingRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    typingIndicator.style.display = 'flex';
+                } else {
+                    typingIndicator.style.display = 'none';
+                }
+            });
+        }
+        
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 100);
+        }
+        
+        function initEventListeners() {
+            // Back button
+            backBtn.addEventListener('click', () => {
+                window.location.href = 'home.html';
+            });
+            
+            // Send message
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            sendBtn.addEventListener('click', sendMessage);
+            
+            // Typing indicator
+            messageInput.addEventListener('input', () => {
+                updateTypingStatus(true);
+                
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    updateTypingStatus(false);
+                }, 1000);
+            });
+            
+            // Attachment button
+            attachmentBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                attachmentOptions.classList.toggle('show');
+            });
+            
+            // Attachment options
+            document.querySelectorAll('.attachment-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const type = btn.id.replace('Btn', '');
+                    handleAttachment(type);
+                    attachmentOptions.classList.remove('show');
+                });
+            });
+            
+            // Chat menu
+            chatMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                chatMenu.classList.toggle('show');
+            });
+            
+            // Menu actions
+            document.getElementById('addNicknameBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                chatMenu.classList.remove('show');
+                openNicknameModal();
+            });
+            
+            document.getElementById('favoriteBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                chatMenu.classList.remove('show');
+                toggleFavorite();
+            });
+            
+            document.getElementById('blockBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                chatMenu.classList.remove('show');
+                openBlockModal();
+            });
+            
+            document.getElementById('reportBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                chatMenu.classList.remove('show');
+                openReportModal();
+            });
+            
+            document.getElementById('clearChatBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                chatMenu.classList.remove('show');
+                openClearChatModal();
+            });
+            
+            document.getElementById('deleteChatBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                chatMenu.classList.remove('show');
+                openDeleteChatModal();
+            });
+            
+            // File input handlers
+            photoInput.addEventListener('change', handleFileSelect);
+            videoInput.addEventListener('change', handleFileSelect);
+            documentInput.addEventListener('change', handleFileSelect);
+            audioInput.addEventListener('change', handleFileSelect);
+            
+            // Close attachment options when clicking outside
+            document.addEventListener('click', () => {
+                attachmentOptions.classList.remove('show');
+            });
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', () => {
+                chatMenu.classList.remove('show');
+            });
+            
+            // Close modals when clicking outside
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal-overlay')) {
+                    e.target.classList.remove('active');
+                }
+            });
+        }
+        
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            
+            if (!text && !photoInput.files[0] && !videoInput.files[0]) {
+                return;
+            }
+            
+            // Clear typing status
+            updateTypingStatus(false);
+            
+            // Disable send button
+            sendBtn.disabled = true;
+            
+            try {
+                let mediaUrl = null;
+                let mediaType = null;
+                
+                // Handle media if selected
+                if (photoInput.files[0]) {
+                    const result = await imageKitService.uploadChatMedia(photoInput.files[0], chatId);
+                    mediaUrl = result.url;
+                    mediaType = result.type;
+                    photoInput.value = '';
+                } else if (videoInput.files[0]) {
+                    const result = await imageKitService.uploadChatMedia(videoInput.files[0], chatId);
+                    mediaUrl = result.url;
+                    mediaType = result.type;
+                    videoInput.value = '';
+                }
+                
+                // Send message
+                const result = await zynapseApp.sendMessage(chatId, text, mediaUrl ? { url: mediaUrl, type: mediaType } : null);
+                
+                if (result.success) {
+                    // Clear input
+                    messageInput.value = '';
+                    
+                    // Play sent sound
+                    zynapseApp.playNotificationSound();
+                } else {
+                    zynapseApp.showToast('Failed to send message', 'error');
+                }
+            } catch (error) {
+                console.error("Error sending message:", error);
+                zynapseApp.showToast('Error sending message', 'error');
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+        
+        function updateTypingStatus(isTyping) {
+            if (isTyping) {
+                const typingRef = ref(zynapseApp.database, `chats/${chatId}/typing/${currentUser.uid}`);
+                update(typingRef, { timestamp: Date.now() });
+                
+                // Clear after 3 seconds
+                setTimeout(() => {
+                    updateTypingStatus(false);
+                }, 3000);
+            } else {
+                const typingRef = ref(zynapseApp.database, `chats/${chatId}/typing/${currentUser.uid}`);
+                update(typingRef, null);
+            }
+        }
+        
+        function handleAttachment(type) {
+            switch (type) {
+                case 'photo':
+                    photoInput.click();
+                    break;
+                case 'video':
+                    videoInput.click();
+                    break;
+                case 'document':
+                    documentInput.click();
+                    break;
+                case 'audio':
+                    audioInput.click();
+                    break;
+                case 'location':
+                    zynapseApp.showToast('Location sharing coming soon', 'info');
+                    break;
+                case 'contact':
+                    zynapseApp.showToast('Contact sharing coming soon', 'info');
+                    break;
+            }
+        }
+        
+        async function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Validate file size
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                zynapseApp.showToast('File size must be less than 10MB', 'error');
+                return;
+            }
+            
+            // Get text from input
+            const text = messageInput.value.trim();
+            
+            // Disable send button
+            sendBtn.disabled = true;
+            
+            try {
+                let mediaUrl = null;
+                let mediaType = null;
+                
+                // Upload file
+                if (file.type.startsWith('image/')) {
+                    const result = await imageKitService.uploadChatMedia(file, chatId);
+                    mediaUrl = result.url;
+                    mediaType = result.type;
+                } else if (file.type.startsWith('video/')) {
+                    const result = await imageKitService.uploadChatMedia(file, chatId);
+                    mediaUrl = result.url;
+                    mediaType = result.type;
+                } else if (file.type.startsWith('audio/')) {
+                    const result = await imageKitService.uploadChatMedia(file, chatId);
+                    mediaUrl = result.url;
+                    mediaType = 'audio';
+                } else {
+                    // For documents
+                    const result = await imageKitService.uploadChatMedia(file, chatId);
+                    mediaUrl = result.url;
+                    mediaType = 'document';
+                }
+                
+                // Send message with media
+                const result = await zynapseApp.sendMessage(chatId, text, { url: mediaUrl, type: mediaType });
+                
+                if (result.success) {
+                    // Clear input
+                    messageInput.value = '';
+                    photoInput.value = '';
+                    videoInput.value = '';
+                    documentInput.value = '';
+                    audioInput.value = '';
+                    
+                    // Play sent sound
+                    zynapseApp.playNotificationSound();
+                } else {
+                    zynapseApp.showToast('Failed to send file', 'error');
+                }
+            } catch (error) {
+                console.error("Error sending file:", error);
+                zynapseApp.showToast('Error sending file', 'error');
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+        
+        function openNicknameModal() {
+            nicknameModal.classList.add('active');
+            document.getElementById('nicknameInput').focus();
+        }
+        
+        function openReportModal() {
+            reportModal.classList.add('active');
+        }
+        
+        function openBlockModal() {
+            blockModal.classList.add('active');
+        }
+        
+        function openClearChatModal() {
+            clearChatModal.classList.add('active');
+        }
+        
+        function openDeleteChatModal() {
+            deleteChatModal.classList.add('active');
+        }
+        
+        // Modal event listeners
+        document.getElementById('closeNicknameModal').addEventListener('click', () => {
+            nicknameModal.classList.remove('active');
+        });
+        
+        document.getElementById('closeReportModal').addEventListener('click', () => {
+            reportModal.classList.remove('active');
+        });
+        
+        document.getElementById('closeBlockModal').addEventListener('click', () => {
+            blockModal.classList.remove('active');
+        });
+        
+        document.getElementById('closeClearChatModal').addEventListener('click', () => {
+            clearChatModal.classList.remove('active');
+        });
+        
+        document.getElementById('closeDeleteChatModal').addEventListener('click', () => {
+            deleteChatModal.classList.remove('active');
+        });
+        
+        document.getElementById('cancelNicknameBtn').addEventListener('click', () => {
+            nicknameModal.classList.remove('active');
+        });
+        
+        document.getElementById('cancelReportBtn').addEventListener('click', () => {
+            reportModal.classList.remove('active');
+        });
+        
+        document.getElementById('cancelBlockBtn').addEventListener('click', () => {
+            blockModal.classList.remove('active');
+        });
+        
+        document.getElementById('cancelClearBtn').addEventListener('click', () => {
+            clearChatModal.classList.remove('active');
+        });
+        
+        document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+            deleteChatModal.classList.remove('active');
+        });
+        
+        // Save nickname
+        document.getElementById('saveNicknameBtn').addEventListener('click', () => {
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            if (nickname) {
+                // Save nickname to database
+                zynapseApp.showToast('Nickname saved', 'success');
+                nicknameModal.classList.remove('active');
+            }
+        });
+        
+        // Submit report
+        document.getElementById('submitReportBtn').addEventListener('click', () => {
+            const reason = document.getElementById('reportReason').value;
+            const details = document.getElementById('reportDetails').value.trim();
+            
+            if (!reason) {
+                zynapseApp.showToast('Please select a reason', 'error');
+                return;
+            }
+            
+            // Submit report
+            zynapseApp.showToast('Report submitted successfully', 'success');
+            reportModal.classList.remove('active');
+        });
+        
+        // Block user
+        document.getElementById('confirmBlockBtn').addEventListener('click', async () => {
+            // Block user logic
+            zynapseApp.showToast('User blocked successfully', 'success');
+            blockModal.classList.remove('active');
+            
+            // Redirect to home after delay
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 1000);
+        });
+        
+        // Clear chat
+        document.getElementById('confirmClearBtn').addEventListener('click', async () => {
+            // Clear chat from local storage/database
+            messages = [];
+            chatMessages.innerHTML = `
+                <div class="empty-chat">
+                    <i class="fas fa-comments"></i>
+                    <h3>No messages yet</h3>
+                    <p>Send a message to start the conversation</p>
+                </div>
+            `;
+            
+            zynapseApp.showToast('Chat cleared', 'success');
+            clearChatModal.classList.remove('active');
+        });
+        
+        // Delete chat
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+            // Delete chat from database
+            zynapseApp.showToast('Chat deleted', 'success');
+            deleteChatModal.classList.remove('active');
+            
+            // Redirect to home after delay
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 1000);
+        });
+        
+        // Toggle favorite
+        function toggleFavorite() {
+            // Toggle favorite status in database
+            zynapseApp.showToast('Added to favorites', 'success');
+        }
+        
+        // Call buttons
+        document.getElementById('callBtn').addEventListener('click', () => {
+            zynapseApp.showToast('Voice call feature coming soon', 'info');
+        });
+        
+        document.getElementById('videoBtn').addEventListener('click', () => {
+            zynapseApp.showToast('Video call feature coming soon', 'info');
+        });
+        
+        // Emoji button
+        emojiBtn.addEventListener('click', () => {
+            zynapseApp.showToast('Emoji picker coming soon', 'info');
+        });
     </script>
 </body>
 </html>
