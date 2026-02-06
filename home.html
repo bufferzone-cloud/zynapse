@@ -6,7 +6,7 @@
     <title>Zynapse - Home</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="zynaps.png" type="image/png">
+    <link rel="icon" type="image/png" href="zynaps.png">
 </head>
 <body>
     <!-- Loading Screen -->
@@ -14,56 +14,50 @@
         <div class="loading-content">
             <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
             <div class="spinner-large"></div>
-            <p>Loading Zynapse...</p>
+            <p>Loading your conversations...</p>
         </div>
     </div>
 
-    <!-- App Container -->
-    <div class="app-home" style="display: none;">
+    <!-- Main App Container -->
+    <div class="app-home" id="appContainer" style="display: none;">
         <!-- Header -->
         <header class="app-header">
             <div class="header-left">
                 <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
                 <div class="user-info">
-                    <h2 id="userName">User Name</h2>
+                    <h2 id="userName">Loading...</h2>
                     <div class="user-id-container">
-                        <span class="user-id" id="userIdDisplay">ZYN-0000</span>
-                        <button class="copy-btn" id="copyUserIdBtn" title="Copy ID">
+                        <span class="user-id" id="userID">ZYN-0000</span>
+                        <button class="copy-btn" id="copyUserIDBtn" title="Copy User ID">
                             <i class="far fa-copy"></i>
                         </button>
                     </div>
                 </div>
             </div>
-
+            
             <div class="header-right">
-                <div class="status-indicator online" id="statusIndicator">
-                    <div class="status-dot"></div>
-                </div>
-                <button class="profile-btn" id="profileMenuBtn">
-                    <img src="" alt="Profile" class="profile-pic-small" id="headerProfilePic">
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-            </div>
-
-            <!-- Profile Dropdown -->
-            <div class="dropdown">
-                <div class="dropdown-content" id="profileDropdown">
-                    <div class="dropdown-profile">
-                        <img src="" alt="Profile" class="dropdown-profile-pic" id="dropdownProfilePic">
-                        <div class="dropdown-profile-info">
-                            <strong id="dropdownUserName"></strong>
-                            <span id="dropdownUserId"></span>
+                <div class="dropdown">
+                    <button class="profile-btn" id="profileDropdownBtn">
+                        <img src="" alt="Profile" class="profile-pic-small" id="headerProfilePic" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjM2IiBoZWlnaHQ9IjM2IiByeD0iMTgiIGZpbGw9IiNlOWU5ZTkiLz4KPHBhdGggZD0iTTE4IDIwQzIxLjMxMzcgMjAgMjQgMTcuMzEzNyAyNCAxNEMyNCAxMC42ODYzIDIxLjMxMzcgOCAxOCA4QzE0LjY4NjMgOCAxMiAxMC42ODYzIDEyIDE0QzEyIDE3LjMxMzcgMTQuNjg2MyAyMCAxOCAyMFoiIGZpbGw9IiNjMGMwYzAiLz4KPHBhdGggZD0iTTE4IDIyQzEyLjQ3NzEgMjIgOCAyNi40NzcxIDggMzJIMjhDMTggMjYgMTIgMjIgMTggMjJaIiBmaWxsPSIjYzBjMGMwIi8+Cjwvc3ZnPgo='">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-content" id="profileDropdown">
+                        <div class="dropdown-profile">
+                            <img src="" alt="Profile" class="dropdown-profile-pic" id="dropdownProfilePic" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iMjAiIGZpbGw9IiNlOWU5ZTkiLz4KPHBhdGggZD0iTTIwIDIyQzI0LjQxODMgMjIgMjggMTguNDE4MyAyOCAxNEMyOCA5LjU4MTcyIDI0LjQxODMgNiAyMCA2QzE1LjU4MTcgNiAxMiA5LjU4MTcyIDEyIDE0QzEyIDE4LjQxODMgMTUuNTgxNyAyMiAyMCAyMloiIGZpbGw9IiNjMGMwYzAiLz4KPHBhdGggZD0iTTIwIDI0QzEzLjM3MjYgMjQgOCAyOS4zNzI2IDggMzZIMzJDMjYgMjggMjIgMjQgMjAgMjRaIiBmaWxsPSIjYzBjMGMwIi8+Cjwvc3ZnPgo='">
+                            <div class="dropdown-profile-info">
+                                <strong id="dropdownUserName">Loading...</strong>
+                                <span id="dropdownUserID">ZYN-0000</span>
+                            </div>
                         </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" id="editProfileBtn"><i class="fas fa-user-edit"></i> Edit Profile</a>
+                        <a href="#" id="settingsBtn"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#" id="appearanceBtn"><i class="fas fa-palette"></i> Appearance</a>
+                        <a href="#" id="notificationsBtn"><i class="fas fa-bell"></i> Notifications</a>
+                        <a href="#" id="privacyBtn"><i class="fas fa-shield-alt"></i> Privacy</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                     </div>
-                    <a href="#" id="editProfileBtn"><i class="fas fa-user-edit"></i> Edit Profile</a>
-                    <a href="#" id="statusSettingsBtn"><i class="fas fa-circle"></i> Status Settings</a>
-                    <a href="#" id="appSettingsBtn"><i class="fas fa-cog"></i> App Settings</a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" id="themeSettingsBtn"><i class="fas fa-palette"></i> Theme</a>
-                    <a href="#" id="notificationSettingsBtn"><i class="fas fa-bell"></i> Notifications</a>
-                    <a href="#" id="privacySettingsBtn"><i class="fas fa-shield-alt"></i> Privacy</a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                 </div>
             </div>
         </header>
@@ -92,51 +86,54 @@
             <a href="#" class="nav-item" data-page="contacts">
                 <i class="fas fa-address-book"></i>
                 <span>CONTACTS</span>
-                <span class="badge" id="contactsBadge" style="display: none;">0</span>
             </a>
         </nav>
 
-        <!-- Main Content -->
+        <!-- Main Content Area -->
         <main class="app-main">
             <!-- Home Page -->
             <div class="page active" id="homePage">
                 <div class="home-content">
                     <div class="welcome-message">
                         <h1>Welcome to Zynapse</h1>
-                        <p>Secure messaging for Zambia</p>
+                        <p>Connect with friends and family instantly</p>
                     </div>
-
+                    
                     <div class="quick-actions">
-                        <div class="quick-action-card" id="startNewChatBtn">
+                        <div class="quick-action-card" id="startChatCard">
                             <i class="fas fa-comment-medical"></i>
-                            <h3>New Chat</h3>
-                            <p>Start a private conversation</p>
+                            <h3>Start Chat</h3>
+                            <p>Begin a new conversation</p>
                         </div>
-                        <div class="quick-action-card" id="createGroupBtn">
+                        <div class="quick-action-card" id="createGroupCard">
                             <i class="fas fa-users"></i>
                             <h3>Create Group</h3>
                             <p>Chat with multiple people</p>
                         </div>
-                        <div class="quick-action-card" id="addZyneBtn">
-                            <i class="fas fa-circle"></i>
-                            <h3>Add Zyne</h3>
-                            <p>Share your status</p>
+                        <div class="quick-action-card" id="addContactCard">
+                            <i class="fas fa-user-plus"></i>
+                            <h3>Add Contact</h3>
+                            <p>Expand your network</p>
                         </div>
-                        <div class="quick-action-card" id="scanCodeBtn">
-                            <i class="fas fa-qrcode"></i>
-                            <h3>Scan Code</h3>
-                            <p>Add contacts quickly</p>
+                        <div class="quick-action-card" id="viewZynesCard">
+                            <i class="fas fa-circle"></i>
+                            <h3>View Zynes</h3>
+                            <p>See status updates</p>
                         </div>
                     </div>
-
-                    <!-- Recent Chats -->
+                    
                     <div class="recent-chats-section">
                         <div class="section-header">
                             <h3>Recent Chats</h3>
                             <a href="#" class="view-all" id="viewAllChats">View All</a>
                         </div>
-                        <div class="recent-chats-list" id="recentChatsList">
-                            <!-- Dynamic content will be loaded here -->
+                        <div class="chats-container" id="recentChatsList">
+                            <!-- Recent chats will be loaded here -->
+                            <div class="empty-state">
+                                <i class="fas fa-comments"></i>
+                                <h3>No chats yet</h3>
+                                <p>Start a conversation by clicking the chat button below</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -147,17 +144,35 @@
                 <div class="page-header">
                     <h2>Zynes</h2>
                     <div class="header-actions">
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" placeholder="Search Zynes..." id="zynesSearch">
+                        <div class="tabs">
+                            <button class="tab-btn active" data-tab="myZynes">My Zynes</button>
+                            <button class="tab-btn" data-tab="viewZynes">View Zynes</button>
                         </div>
-                        <button class="icon-btn" id="addZynePageBtn">
-                            <i class="fas fa-plus"></i>
+                        <button class="btn-primary" id="addZyneBtn">
+                            <i class="fas fa-plus"></i> Add Zyne
                         </button>
                     </div>
                 </div>
-                <div class="zynes-container" id="zynesContainer">
-                    <!-- Dynamic content will be loaded here -->
+                
+                <div class="zynes-container" id="myZynesTab">
+                    <!-- User's own Zynes will be loaded here -->
+                    <div class="empty-state">
+                        <i class="fas fa-circle"></i>
+                        <h3>No Zynes yet</h3>
+                        <p>Share a photo, video, or text that disappears after 24 hours</p>
+                        <button class="btn-primary" id="createFirstZyneBtn" style="margin-top: 20px;">
+                            <i class="fas fa-plus"></i> Create Your First Zyne
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="zynes-container" id="viewZynesTab" style="display: none;">
+                    <!-- Contacts' Zynes will be loaded here -->
+                    <div class="empty-state">
+                        <i class="fas fa-eye"></i>
+                        <h3>No Zynes to view</h3>
+                        <p>When your contacts post Zynes, they'll appear here</p>
+                    </div>
                 </div>
             </div>
 
@@ -168,30 +183,55 @@
                     <div class="header-actions">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" placeholder="Search groups..." id="groupsSearch">
+                            <input type="text" id="searchGroups" placeholder="Search groups...">
                         </div>
-                        <button class="btn-primary" id="createNewGroupBtn">
-                            <i class="fas fa-plus"></i> New Group
+                        <button class="btn-primary" id="createGroupBtn">
+                            <i class="fas fa-plus"></i> Create Group
                         </button>
                     </div>
                 </div>
-                <div class="groups-container" id="groupsContainer">
-                    <!-- Dynamic content will be loaded here -->
+                
+                <div class="groups-container" id="groupsList">
+                    <!-- Groups will be loaded here -->
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No groups yet</h3>
+                        <p>Create a group to chat with multiple people at once</p>
+                        <button class="btn-primary" id="createFirstGroupBtn" style="margin-top: 20px;">
+                            <i class="fas fa-plus"></i> Create Your First Group
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Requests Page -->
+            <!-- Chat Requests Page -->
             <div class="page" id="requestsPage">
                 <div class="page-header">
                     <h2>Chat Requests</h2>
-                    <div class="tabs">
-                        <button class="tab-btn active" data-tab="incoming">Incoming</button>
-                        <button class="tab-btn" data-tab="outgoing">Outgoing</button>
-                        <button class="tab-btn" data-tab="blocked">Blocked</button>
+                    <div class="header-actions">
+                        <div class="tabs">
+                            <button class="tab-btn active" data-tab="incomingRequests">Incoming</button>
+                            <button class="tab-btn" data-tab="sentRequests">Sent</button>
+                        </div>
                     </div>
                 </div>
-                <div class="requests-container" id="requestsContainer">
-                    <!-- Dynamic content will be loaded here -->
+                
+                <div class="requests-container" id="incomingRequestsTab">
+                    <!-- Incoming requests will be loaded here -->
+                    <div class="empty-state">
+                        <i class="fas fa-user-clock"></i>
+                        <h3>No pending requests</h3>
+                        <p>When someone sends you a chat request, it will appear here</p>
+                    </div>
+                </div>
+                
+                <div class="requests-container" id="sentRequestsTab" style="display: none;">
+                    <!-- Sent requests will be loaded here -->
+                    <div class="empty-state">
+                        <i class="fas fa-paper-plane"></i>
+                        <h3>No sent requests</h3>
+                        <p>Requests you've sent will appear here</p>
+                    </div>
                 </div>
             </div>
 
@@ -202,27 +242,35 @@
                     <div class="header-actions">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" placeholder="Search contacts..." id="contactsSearch">
+                            <input type="text" id="searchContacts" placeholder="Search contacts...">
                         </div>
                         <button class="btn-primary" id="addContactBtn">
-                            <i class="fas fa-user-plus"></i> Add
+                            <i class="fas fa-user-plus"></i> Add Contact
                         </button>
                     </div>
                 </div>
-                <div class="contacts-container" id="contactsContainer">
-                    <!-- Dynamic content will be loaded here -->
+                
+                <div class="contacts-container" id="contactsList">
+                    <!-- Contacts will be loaded here -->
+                    <div class="empty-state">
+                        <i class="fas fa-address-book"></i>
+                        <h3>No contacts yet</h3>
+                        <p>Add contacts to start chatting</p>
+                        <button class="btn-primary" id="addFirstContactBtn" style="margin-top: 20px;">
+                            <i class="fas fa-user-plus"></i> Add Your First Contact
+                        </button>
+                    </div>
                 </div>
             </div>
         </main>
 
-        <!-- Floating Chat Button -->
-        <button class="floating-btn" id="floatingChatBtn">
+        <!-- Floating Action Button -->
+        <button class="floating-btn" id="startChatFloatingBtn">
             <i class="fas fa-comment"></i>
-            <span>Start Chat</span>
+            <span>CHAT</span>
         </button>
 
         <!-- Modals -->
-        <!-- Start Chat Modal -->
         <div class="modal-overlay" id="startChatModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -232,67 +280,51 @@
                 <div class="modal-body">
                     <div class="input-group">
                         <i class="fas fa-id-card"></i>
-                        <input type="text" id="searchUserId" placeholder="Enter Zynapse ID (ZYN-XXXX)">
+                        <input type="text" id="searchUserID" placeholder="Enter User ID (ZYN-XXXX)" maxlength="8" pattern="ZYN-\d{4}">
                     </div>
                     
-                    <div class="search-placeholder" id="searchPlaceholder">
-                        <i class="fas fa-search"></i>
-                        <p>Enter a Zynapse ID to search for users</p>
+                    <div class="search-result" id="userSearchResult">
+                        <div class="search-placeholder">
+                            <i class="fas fa-search"></i>
+                            <p>Enter a User ID to search for users</p>
+                        </div>
                     </div>
                     
-                    <div class="search-result" id="searchResult">
-                        <!-- User will be displayed here -->
+                    <div class="modal-actions">
+                        <button class="btn-secondary" id="cancelSearchBtn">Cancel</button>
+                        <button class="btn-primary" id="sendRequestBtn" style="display: none;">Send Chat Request</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Add Zyne Modal -->
-        <div class="modal-overlay" id="addZyneModal">
+        <div class="modal-overlay" id="addContactModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Add Zyne</h3>
-                    <button class="close-modal" id="closeAddZyneModal">&times;</button>
+                    <h3>Add Contact</h3>
+                    <button class="close-modal" id="closeAddContactModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="input-group">
-                        <i class="fas fa-pen"></i>
-                        <input type="text" id="zyneText" placeholder="What's on your mind? (Optional)" maxlength="250">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="contactUserID" placeholder="Enter User ID (ZYN-XXXX)" maxlength="8" pattern="ZYN-\d{4}">
                     </div>
-                    <div class="character-counter">
-                        <span id="zyneCharCount">0/250</span>
+                    
+                    <div class="search-result" id="contactSearchResult">
+                        <div class="search-placeholder">
+                            <i class="fas fa-search"></i>
+                            <p>Enter a User ID to search for users</p>
+                        </div>
                     </div>
-
-                    <div class="media-preview" id="zyneMediaPreview">
-                        <!-- Media preview will be shown here -->
-                    </div>
-
-                    <div class="media-buttons">
-                        <button class="btn-media" id="addZynePhoto">
-                            <i class="fas fa-image"></i>
-                        </button>
-                        <button class="btn-media" id="addZyneVideo">
-                            <i class="fas fa-video"></i>
-                        </button>
-                    </div>
-
-                    <div class="form-options">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="zynePrivate" checked>
-                            <span class="checkmark"></span>
-                            Private (Only contacts can see)
-                        </label>
-                    </div>
-
+                    
                     <div class="modal-actions">
-                        <button class="btn-secondary" id="cancelZyne">Cancel</button>
-                        <button class="btn-primary" id="postZyneBtn">Post Zyne</button>
+                        <button class="btn-secondary" id="cancelContactSearchBtn">Cancel</button>
+                        <button class="btn-primary" id="addContactConfirmBtn" style="display: none;">Add Contact</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Create Group Modal -->
         <div class="modal-overlay" id="createGroupModal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -304,103 +336,153 @@
                         <i class="fas fa-users"></i>
                         <input type="text" id="groupName" placeholder="Group Name" required>
                     </div>
-
+                    
+                    <div class="input-group">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="addMemberInput" placeholder="Add members by User ID (ZYN-XXXX)">
+                    </div>
+                    
+                    <div class="members-container">
+                        <div class="members-header">
+                            <h4>Group Members</h4>
+                            <span class="members-count"><span id="memberCount">1</span> members</span>
+                        </div>
+                        <div class="members-list" id="groupMembersList">
+                            <div class="member-tag" id="currentUserMember">
+                                <span id="currentUserName">You</span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="profile-upload-section">
                         <label class="upload-label">Group Photo (Optional)</label>
                         <div class="profile-upload-container">
                             <div class="upload-preview" id="groupPhotoPreview">
                                 <div class="preview-placeholder">
                                     <i class="fas fa-users"></i>
-                                    <span>No image selected</span>
+                                    <span>No photo selected</span>
+                                    <p>JPEG, PNG up to 5MB</p>
                                 </div>
                             </div>
                             <div class="upload-buttons">
-                                <button class="btn-upload" id="uploadGroupPhotoBtn">
-                                    <i class="fas fa-upload"></i>
-                                    Choose Photo
+                                <button type="button" class="btn-upload" id="uploadGroupPhotoBtn">
+                                    <i class="fas fa-upload"></i> Upload Photo
                                 </button>
-                                <input type="file" id="groupPhoto" accept="image/*" style="display: none;">
+                                <button type="button" class="btn-remove" id="removeGroupPhotoBtn" style="display: none;">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
                             </div>
                         </div>
+                        <input type="file" id="groupPhotoInput" accept="image/*" style="display: none;">
                     </div>
-
-                    <div class="members-container">
-                        <div class="members-header">
-                            <h4>Add Members</h4>
-                            <span class="members-count">Added: <span id="membersCount">0</span></span>
-                        </div>
-                        <div class="input-group">
-                            <i class="fas fa-user-plus"></i>
-                            <input type="text" id="addMemberInput" placeholder="Enter Zynapse ID to add member">
-                        </div>
-                        <div class="members-list" id="membersList">
-                            <div class="empty-members">
-                                <i class="fas fa-users"></i>
-                                <p>No members added yet</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-options">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="groupPrivate" checked>
-                            <span class="checkmark"></span>
-                            Private Group
-                        </label>
-                    </div>
-
+                    
                     <div class="modal-actions">
-                        <button class="btn-secondary" id="cancelGroup">Cancel</button>
-                        <button class="btn-primary" id="createGroupBtnModal">Create Group</button>
+                        <button class="btn-secondary" id="cancelCreateGroupBtn">Cancel</button>
+                        <button class="btn-primary" id="createGroupConfirmBtn">Create Group</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Add Contact Modal -->
-        <div class="modal-overlay" id="addContactModal">
+        <div class="modal-overlay" id="addZyneModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Add Contact</h3>
-                    <button class="close-modal" id="closeAddContactModal">&times;</button>
+                    <h3>Add New Zyne</h3>
+                    <button class="close-modal" id="closeAddZyneModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="input-group">
-                        <i class="fas fa-id-card"></i>
-                        <input type="text" id="contactUserId" placeholder="Enter Zynapse ID (ZYN-XXXX)" required>
+                        <i class="fas fa-comment"></i>
+                        <input type="text" id="zyneText" placeholder="What's on your mind? (Optional)" maxlength="500">
+                        <div class="character-counter">
+                            <span id="zyneCharCount">0</span>/500
+                        </div>
                     </div>
                     
-                    <div class="search-placeholder" id="contactSearchPlaceholder">
-                        <i class="fas fa-search"></i>
-                        <p>Enter a Zynapse ID to find user</p>
+                    <div class="media-preview" id="zyneMediaPreview">
+                        <!-- Media preview will appear here -->
                     </div>
                     
-                    <div class="search-result" id="contactSearchResult">
-                        <!-- User will be displayed here -->
+                    <div class="media-buttons">
+                        <button class="btn-media" id="addZynePhotoBtn" title="Add Photo">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <button class="btn-media" id="addZyneVideoBtn" title="Add Video">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <input type="file" id="zynePhotoInput" accept="image/*" style="display: none;">
+                        <input type="file" id="zyneVideoInput" accept="video/*" style="display: none;">
                     </div>
                     
                     <div class="modal-actions">
-                        <button class="btn-secondary" id="cancelAddContact">Cancel</button>
-                        <button class="btn-primary" id="sendContactRequestBtn">Send Request</button>
+                        <button class="btn-secondary" id="cancelAddZyneBtn">Cancel</button>
+                        <button class="btn-primary" id="postZyneBtn">Post Zyne</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="editProfileModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit Profile</h3>
+                    <button class="close-modal" id="closeEditProfileModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="profile-upload-section">
+                        <label class="upload-label">Profile Picture</label>
+                        <div class="profile-upload-container">
+                            <div class="upload-preview" id="editProfilePreview">
+                                <div class="preview-placeholder">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>No photo selected</span>
+                                </div>
+                            </div>
+                            <div class="upload-buttons">
+                                <button type="button" class="btn-upload" id="uploadEditProfileBtn">
+                                    <i class="fas fa-upload"></i> Change Photo
+                                </button>
+                                <button type="button" class="btn-remove" id="removeEditProfileBtn" style="display: none;">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                        <input type="file" id="editProfilePhoto" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="editFullName" placeholder="Full Name" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="editPhoneNumber" placeholder="Phone Number" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="editEmail" placeholder="Email Address" required readonly>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="btn-secondary" id="cancelEditProfileBtn">Cancel</button>
+                        <button class="btn-primary" id="saveProfileBtn">Save Changes</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Toast Container -->
-        <div class="toast-container"></div>
+        <div class="toast-container" id="toastContainer"></div>
     </div>
 
-    <!-- Firebase SDK -->
+    <audio id="notificationSound" src="notification.mp3" preload="auto"></audio>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    
-    <!-- Cloudinary Widget -->
-    <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
-    
-    <!-- App Script -->
+    <script src="https://unpkg.com/cloudinary@1.28.2/cloudinary-core/cloudinary-core-shrinkwrap.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
