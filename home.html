@@ -4,15 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynapse - Home</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="zynaps.png">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <!-- ImageKit SDK -->
-    <script src="https://unpkg.com/imagekit-javascript/dist/imagekit.min.js"></script>
 </head>
 <body class="app-home">
     <!-- Loading Screen -->
@@ -31,48 +25,21 @@
             <div class="user-info">
                 <h2 id="userName">Loading...</h2>
                 <div class="user-id-container">
-                    <span class="user-id" id="userIdDisplay">ZYN-XXXX</span>
-                    <button class="copy-btn" id="copyUserIdBtn" title="Copy User ID">
+                    <span class="user-id" id="userZynId">ZYN-XXXX</span>
+                    <button class="copy-btn" title="Copy ID">
                         <i class="fas fa-copy"></i>
                     </button>
                 </div>
             </div>
         </div>
-        
         <div class="header-right">
-            <div class="dropdown" id="profileDropdown">
-                <button class="profile-btn" id="profileBtn">
-                    <img src="" alt="Profile" class="profile-pic-small" id="userProfilePic">
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-                <div class="dropdown-content" id="profileDropdownContent">
-                    <div class="dropdown-profile">
-                        <img src="" alt="Profile" class="dropdown-profile-pic" id="dropdownProfilePic">
-                        <div class="dropdown-profile-info">
-                            <strong id="dropdownUserName"></strong>
-                            <span id="dropdownUserId"></span>
-                        </div>
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" id="editProfileLink">
-                        <i class="fas fa-user-edit"></i>
-                        Edit Profile
-                    </a>
-                    <a href="#" id="settingsLink">
-                        <i class="fas fa-cog"></i>
-                        Settings
-                    </a>
-                    <a href="#" id="zambiaThemeLink">
-                        <i class="fas fa-flag"></i>
-                        Zambia Theme
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="logout-link" id="logoutLink">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Log Out
-                    </a>
-                </div>
+            <div class="status-indicator online" title="Online">
+                <div class="status-dot"></div>
             </div>
+            <button class="profile-btn">
+                <img src="zynaps.png" alt="Profile" class="profile-pic-small" id="headerProfilePic">
+                <i class="fas fa-chevron-down"></i>
+            </button>
         </div>
     </header>
 
@@ -83,19 +50,16 @@
             <span>HOME</span>
         </a>
         <a href="#" class="nav-item" data-page="zynes">
-            <i class="fas fa-fire"></i>
+            <i class="fas fa-eye"></i>
             <span>ZYNES</span>
-            <span class="badge" id="zynesBadge" style="display: none;">0</span>
         </a>
         <a href="#" class="nav-item" data-page="groups">
             <i class="fas fa-users"></i>
             <span>GROUPS</span>
-            <span class="badge" id="groupsBadge" style="display: none;">0</span>
         </a>
         <a href="#" class="nav-item" data-page="requests">
             <i class="fas fa-user-plus"></i>
             <span>REQUESTS</span>
-            <span class="badge" id="requestsBadge" style="display: none;">0</span>
         </a>
         <a href="#" class="nav-item" data-page="contacts">
             <i class="fas fa-address-book"></i>
@@ -114,40 +78,35 @@
                 </div>
                 
                 <div class="quick-actions">
-                    <div class="quick-action-card" id="startQuickChat">
-                        <i class="fas fa-comment"></i>
+                    <div class="quick-action-card" onclick="showStartChatModal()">
+                        <i class="fas fa-comment-medical"></i>
                         <h3>Start Chat</h3>
                         <p>Begin a new conversation</p>
                     </div>
-                    <div class="quick-action-card" id="addContact">
-                        <i class="fas fa-user-plus"></i>
-                        <h3>Add Contact</h3>
-                        <p>Add new people to chat with</p>
-                    </div>
-                    <div class="quick-action-card" id="createGroup">
+                    <div class="quick-action-card" onclick="showModal('createGroupModal')">
                         <i class="fas fa-users"></i>
                         <h3>Create Group</h3>
-                        <p>Start a group conversation</p>
+                        <p>Start a group chat</p>
                     </div>
-                    <div class="quick-action-card" id="postZyne">
-                        <i class="fas fa-fire"></i>
-                        <h3>Post Zyne</h3>
+                    <div class="quick-action-card" onclick="showModal('postStatusModal')">
+                        <i class="fas fa-eye"></i>
+                        <h3>Post Status</h3>
                         <p>Share with your contacts</p>
                     </div>
+                    <div class="quick-action-card" onclick="loadPageData('contacts')">
+                        <i class="fas fa-user-friends"></i>
+                        <h3>Add Friends</h3>
+                        <p>Connect with people</p>
+                    </div>
                 </div>
-                
+
                 <div class="recent-chats-section">
                     <div class="section-header">
                         <h3>Recent Chats</h3>
-                        <a href="#" class="view-all" id="viewAllChats">View All</a>
+                        <a href="#" class="view-all">View All</a>
                     </div>
                     <div class="recent-chats-list" id="recentChatsList">
-                        <!-- Recent chats will be loaded here -->
-                        <div class="empty-state">
-                            <i class="fas fa-comments"></i>
-                            <h3>No chats yet</h3>
-                            <p>Start a chat by clicking the button below</p>
-                        </div>
+                        <!-- Chats will be loaded here -->
                     </div>
                 </div>
             </div>
@@ -160,20 +119,15 @@
                 <div class="header-actions">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search Zynes..." id="searchZynes">
+                        <input type="text" placeholder="Search statuses...">
                     </div>
-                    <button class="btn-primary" id="createZyneBtn">
-                        <i class="fas fa-plus"></i>
-                        New Zyne
+                    <button class="btn-primary" onclick="showModal('postStatusModal')">
+                        <i class="fas fa-plus"></i> New Status
                     </button>
                 </div>
             </div>
             <div class="zynes-container" id="zynesContainer">
-                <div class="empty-state">
-                    <i class="fas fa-fire"></i>
-                    <h3>No Zynes yet</h3>
-                    <p>Posts from your contacts will appear here</p>
-                </div>
+                <!-- Status updates will be loaded here -->
             </div>
         </div>
 
@@ -184,20 +138,15 @@
                 <div class="header-actions">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search groups..." id="searchGroups">
+                        <input type="text" placeholder="Search groups...">
                     </div>
-                    <button class="btn-primary" id="createGroupBtn">
-                        <i class="fas fa-plus"></i>
-                        New Group
+                    <button class="btn-primary" onclick="showModal('createGroupModal')">
+                        <i class="fas fa-plus"></i> Create Group
                     </button>
                 </div>
             </div>
             <div class="groups-container" id="groupsContainer">
-                <div class="empty-state">
-                    <i class="fas fa-users"></i>
-                    <h3>No groups yet</h3>
-                    <p>Create or join a group to start chatting</p>
-                </div>
+                <!-- Groups will be loaded here -->
             </div>
         </div>
 
@@ -205,17 +154,15 @@
         <div class="page" id="requestsPage">
             <div class="page-header">
                 <h2>Chat Requests</h2>
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="incoming">Incoming</button>
-                    <button class="tab-btn" data-tab="sent">Sent</button>
+                <div class="header-actions">
+                    <div class="tabs">
+                        <button class="tab-btn active">Incoming</button>
+                        <button class="tab-btn">Sent</button>
+                    </div>
                 </div>
             </div>
             <div class="requests-container" id="requestsContainer">
-                <div class="empty-state">
-                    <i class="fas fa-user-plus"></i>
-                    <h3>No pending requests</h3>
-                    <p>When someone sends you a chat request, it will appear here</p>
-                </div>
+                <!-- Chat requests will be loaded here -->
             </div>
         </div>
 
@@ -226,112 +173,70 @@
                 <div class="header-actions">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search contacts..." id="searchContacts">
+                        <input type="text" placeholder="Search contacts...">
                     </div>
-                    <button class="btn-primary" id="addContactBtn">
-                        <i class="fas fa-user-plus"></i>
-                        Add Contact
-                    </button>
                 </div>
             </div>
             <div class="contacts-container" id="contactsContainer">
-                <div class="empty-state">
-                    <i class="fas fa-address-book"></i>
-                    <h3>No contacts yet</h3>
-                    <p>Add contacts to start chatting</p>
-                </div>
+                <!-- Contacts will be loaded here -->
             </div>
         </div>
     </main>
 
-    <!-- Floating Start Chat Button -->
-    <button class="floating-btn" id="startChatBtn">
+    <!-- Floating Action Button -->
+    <button class="floating-btn" onclick="showStartChatModal()">
         <i class="fas fa-comment"></i>
         <span>Start Chat</span>
     </button>
 
+    <!-- Profile Dropdown -->
+    <div class="dropdown">
+        <div class="dropdown-content" id="profileDropdown">
+            <div class="dropdown-profile">
+                <img src="zynaps.png" alt="Profile" class="dropdown-profile-pic" id="dropdownProfilePic">
+                <div class="dropdown-profile-info">
+                    <strong id="dropdownUserName">User Name</strong>
+                    <span id="dropdownUserZynId">ZYN-XXXX</span>
+                </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="#"><i class="fas fa-user"></i> My Profile</a>
+            <a href="#"><i class="fas fa-cog"></i> Settings</a>
+            <a href="#"><i class="fas fa-moon"></i> Appearance</a>
+            <a href="#"><i class="fas fa-bell"></i> Notifications</a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
     <!-- Start Chat Modal -->
     <div class="modal-overlay" id="startChatModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Start New Chat</h3>
-                <button type="button" class="close-modal" id="closeStartChatModal">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="input-group">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchUserId" placeholder="Enter User ID (ZYN-XXXX)">
+                <p>Enter the ZYN ID of the person you want to chat with</p>
+                <div class="input-group" style="margin: 20px 0;">
+                    <i class="fas fa-id-card"></i>
+                    <input type="text" id="searchUserId" placeholder="Enter ZYN ID (e.g., ZYN-1234)" style="text-transform: uppercase;">
                 </div>
-                
-                <div class="search-result" id="userSearchResult">
-                    <div class="search-placeholder" id="searchPlaceholder">
-                        <i class="fas fa-search"></i>
-                        <p>Enter a User ID to search for users</p>
-                    </div>
-                    
-                    <div class="user-found" id="userFoundResult" style="display: none;">
-                        <img src="" alt="User" class="profile-pic" id="foundUserPic">
-                        <div class="found-user-info">
-                            <h4 id="foundUserName"></h4>
-                            <p id="foundUserId"></p>
-                            <p class="already-contact" id="alreadyContact" style="display: none;">Already in contacts</p>
-                        </div>
-                    </div>
-                    
-                    <div class="error" id="searchError" style="display: none;">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>User not found</p>
-                    </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <div class="action-buttons">
-                        <button class="btn-secondary" id="cancelSearchBtn">Cancel</button>
-                        <button class="btn-primary" id="sendRequestBtn" style="display: none;">Send Chat Request</button>
-                        <button class="btn-primary" id="startChatDirectBtn" style="display: none;">Start Chat</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Create Zyne Modal -->
-    <div class="modal-overlay" id="createZyneModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Create New Zyne</h3>
-                <button type="button" class="close-modal" id="closeCreateZyneModal">
-                    <i class="fas fa-times"></i>
+                <button class="btn-primary full-width" id="searchUserBtn">
+                    <i class="fas fa-search"></i> Search User
                 </button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group">
-                    <i class="fas fa-pen"></i>
-                    <textarea id="zyneText" placeholder="What's on your mind?" rows="3"></textarea>
-                </div>
-                <div class="character-counter">
-                    <span id="zyneCharCount">0</span>/500
-                </div>
                 
-                <div class="media-preview" id="zyneMediaPreview">
-                    <!-- Media preview will appear here -->
-                </div>
-                
-                <div class="media-buttons">
-                    <button class="btn-media" id="addZyneImageBtn" title="Add Image">
-                        <i class="fas fa-image"></i>
-                    </button>
-                    <button class="btn-media" id="addZyneVideoBtn" title="Add Video">
-                        <i class="fas fa-video"></i>
-                    </button>
-                    <input type="file" id="zyneImageInput" accept="image/*" style="display: none;">
-                    <input type="file" id="zyneVideoInput" accept="video/*" style="display: none;">
-                </div>
-                
-                <div class="modal-actions">
-                    <button class="btn-primary" id="postZyneBtn">Post Zyne</button>
+                <div class="search-result" id="searchResult">
+                    <div class="user-found" id="userFound">
+                        <!-- User info will be displayed here -->
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn-primary" id="sendRequestBtn">
+                            <i class="fas fa-paper-plane"></i> Send Chat Request
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -342,1159 +247,102 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Create New Group</h3>
-                <button type="button" class="close-modal" id="closeCreateGroupModal">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="input-group">
+                <div class="input-group" style="margin-bottom: 20px;">
                     <i class="fas fa-users"></i>
-                    <input type="text" id="groupName" placeholder="Group Name">
-                </div>
-                
-                <div class="profile-upload-section">
-                    <label class="upload-label">Group Photo</label>
-                    <div class="profile-upload-container">
-                        <div class="upload-preview" id="groupProfilePreview">
-                            <div class="preview-placeholder">
-                                <i class="fas fa-users"></i>
-                                <span>No image selected</span>
-                            </div>
-                        </div>
-                        <div class="upload-buttons">
-                            <button type="button" class="btn-upload" id="uploadGroupProfileBtn">
-                                <i class="fas fa-upload"></i>
-                                Choose Photo
-                            </button>
-                        </div>
-                    </div>
-                    <input type="file" id="groupProfileImage" accept="image/*" style="display: none;">
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-user-plus"></i>
-                    <input type="text" id="addMemberInput" placeholder="Add member by User ID">
-                    <button type="button" class="btn-media" id="addMemberBtn">
-                        <i class="fas fa-plus"></i>
-                    </button>
+                    <input type="text" id="groupName" placeholder="Group Name" required>
                 </div>
                 
                 <div class="members-container">
                     <div class="members-header">
-                        <h4>Group Members</h4>
-                        <span class="members-count" id="memberCount">1 member</span>
+                        <h4>Add Members</h4>
+                        <span class="members-count">0 members</span>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="groupMembers" placeholder="Enter ZYN IDs separated by commas">
                     </div>
                     <div class="members-list" id="groupMembersList">
-                        <div class="member-tag">
-                            <span id="currentUserMember">You</span>
+                        <div class="empty-members">
+                            <i class="fas fa-user-plus"></i>
+                            <p>No members added yet</p>
                         </div>
                     </div>
                 </div>
                 
                 <div class="modal-actions">
-                    <button class="btn-primary" id="createGroupSubmitBtn">Create Group</button>
+                    <button class="btn-secondary" onclick="closeModal('createGroupModal')">Cancel</button>
+                    <button class="btn-primary" id="createGroupBtn">Create Group</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Status Modal -->
+    <div class="modal-overlay" id="postStatusModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Post Status Update</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <select id="statusType" style="width: 100%; padding: 16px; border: 2px solid var(--gray-200); border-radius: var(--border-radius-medium);">
+                        <option value="text">Text Status</option>
+                        <option value="image">Image Status</option>
+                        <option value="video">Video Status</option>
+                    </select>
+                </div>
+                
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <textarea id="statusContent" placeholder="What's on your mind?" rows="4"></textarea>
+                </div>
+                
+                <div id="statusMediaSection" style="display: none;">
+                    <input type="file" id="statusFile" accept="image/*,video/*" style="display: none;">
+                    <button type="button" class="btn-secondary full-width" onclick="document.getElementById('statusFile').click()">
+                        <i class="fas fa-upload"></i> Choose File
+                    </button>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal('postStatusModal')">Cancel</button>
+                    <button class="btn-primary" id="postStatusBtn">Post Status</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-container"></div>
 
-    <script type="module" src="firebase-config.js"></script>
-    <script type="module" src="imagekit-config.js"></script>
     <script type="module" src="app.js"></script>
     <script>
-        // Current user data
-        let currentUserData = null;
-        let contacts = [];
-        let groups = [];
-        let chatRequests = [];
-        let zynes = [];
+        // Utility functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
 
-        // Initialize home page
-        async function initHomePage() {
-            try {
-                // Check authentication
-                const { auth } = await import('./firebase-config.js');
-                const user = auth.currentUser;
-                
-                if (!user) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-                
-                // Load user data
-                await loadCurrentUser();
-                
-                // Set up event listeners
-                setupEventListeners();
-                
-                // Load initial data
-                await loadInitialData();
-                
-                // Hide loading screen
-                document.getElementById('loadingScreen').classList.add('hidden');
-                setTimeout(() => {
-                    document.getElementById('loadingScreen').style.display = 'none';
-                }, 400);
-                
-                // Set up real-time listeners
-                setupRealtimeListeners();
-                
-            } catch (error) {
-                console.error('Error initializing home page:', error);
-                showToast('Error loading app', 'error');
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Handle status type change
+        document.getElementById('statusType')?.addEventListener('change', function() {
+            const mediaSection = document.getElementById('statusMediaSection');
+            if (this.value === 'image' || this.value === 'video') {
+                mediaSection.style.display = 'block';
+            } else {
+                mediaSection.style.display = 'none';
             }
-        }
+        });
 
-        // Load current user data
-        async function loadCurrentUser() {
-            try {
-                const { auth, database } = await import('./firebase-config.js');
-                const user = auth.currentUser;
-                
-                // Find user by Firebase UID
-                const usersSnapshot = await database.ref('users').orderByChild('firebaseUid').equalTo(user.uid).once('value');
-                
-                if (usersSnapshot.exists()) {
-                    const users = usersSnapshot.val();
-                    const userId = Object.keys(users)[0];
-                    currentUserData = users[userId];
-                    currentUserData.userId = userId;
-                    
-                    // Update UI
-                    document.getElementById('userName').textContent = currentUserData.name;
-                    document.getElementById('userIdDisplay').textContent = currentUserData.userId;
-                    document.getElementById('dropdownUserName').textContent = currentUserData.name;
-                    document.getElementById('dropdownUserId').textContent = currentUserData.userId;
-                    
-                    // Set profile picture
-                    if (currentUserData.profilePicUrl) {
-                        document.getElementById('userProfilePic').src = currentUserData.profilePicUrl;
-                        document.getElementById('dropdownProfilePic').src = currentUserData.profilePicUrl;
-                    }
-                    
-                    // Update status to online
-                    await database.ref(`users/${userId}`).update({
-                        status: 'online',
-                        lastLogin: Date.now()
-                    });
-                }
-                
-            } catch (error) {
-                console.error('Error loading user data:', error);
-                throw error;
-            }
-        }
-
-        // Set up event listeners
-        function setupEventListeners() {
-            // Navigation
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const page = item.getAttribute('data-page');
-                    switchPage(page);
-                    
-                    // Update active state
-                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                    item.classList.add('active');
-                });
-            });
-
-            // Copy User ID
-            document.getElementById('copyUserIdBtn').addEventListener('click', () => {
-                const userId = currentUserData?.userId;
-                if (userId) {
-                    navigator.clipboard.writeText(userId);
-                    showToast('User ID copied to clipboard', 'success');
-                }
-            });
-
-            // Profile dropdown
-            document.getElementById('profileBtn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('profileDropdownContent').classList.toggle('show');
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.dropdown')) {
-                    document.getElementById('profileDropdownContent').classList.remove('show');
-                }
-            });
-
-            // Logout
-            document.getElementById('logoutLink').addEventListener('click', async (e) => {
-                e.preventDefault();
-                const { logout } = await import('./app.js');
-                await logout();
-            });
-
-            // Edit Profile
-            document.getElementById('editProfileLink').addEventListener('click', (e) => {
-                e.preventDefault();
-                showEditProfileModal();
-            });
-
-            // Settings
-            document.getElementById('settingsLink').addEventListener('click', (e) => {
-                e.preventDefault();
-                showSettingsModal();
-            });
-
-            // Zambia Theme
-            document.getElementById('zambiaThemeLink').addEventListener('click', (e) => {
-                e.preventDefault();
-                applyZambiaTheme();
-            });
-
-            // Start Chat button
-            document.getElementById('startChatBtn').addEventListener('click', () => {
-                document.getElementById('startChatModal').classList.add('active');
-                document.getElementById('searchUserId').focus();
-            });
-
-            // Quick action cards
-            document.getElementById('startQuickChat').addEventListener('click', () => {
-                document.getElementById('startChatModal').classList.add('active');
-            });
-
-            document.getElementById('addContact').addEventListener('click', () => {
-                switchPage('contacts');
-                setTimeout(() => {
-                    document.getElementById('addContactBtn').click();
-                }, 100);
-            });
-
-            document.getElementById('createGroup').addEventListener('click', () => {
-                document.getElementById('createGroupModal').classList.add('active');
-            });
-
-            document.getElementById('postZyne').addEventListener('click', () => {
-                document.getElementById('createZyneModal').classList.add('active');
-            });
-
-            // Modal close buttons
-            document.getElementById('closeStartChatModal').addEventListener('click', () => {
-                document.getElementById('startChatModal').classList.remove('active');
-                resetStartChatModal();
-            });
-
-            document.getElementById('closeCreateZyneModal').addEventListener('click', () => {
-                document.getElementById('createZyneModal').classList.remove('active');
-                resetZyneModal();
-            });
-
-            document.getElementById('closeCreateGroupModal').addEventListener('click', () => {
-                document.getElementById('createGroupModal').classList.remove('active');
-                resetGroupModal();
-            });
-
-            // Cancel buttons
-            document.getElementById('cancelSearchBtn').addEventListener('click', () => {
-                document.getElementById('startChatModal').classList.remove('active');
-                resetStartChatModal();
-            });
-
-            // User ID search
-            const searchUserIdInput = document.getElementById('searchUserId');
-            let searchTimeout;
-            
-            searchUserIdInput.addEventListener('input', () => {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(searchUser, 500);
-            });
-
-            // Send chat request
-            document.getElementById('sendRequestBtn').addEventListener('click', async () => {
-                const foundUserId = document.getElementById('foundUserId').textContent;
-                if (foundUserId) {
-                    const { sendChatRequest } = await import('./app.js');
-                    await sendChatRequest(foundUserId);
-                    document.getElementById('startChatModal').classList.remove('active');
-                    resetStartChatModal();
-                }
-            });
-
-            // Start chat directly (if already in contacts)
-            document.getElementById('startChatDirectBtn').addEventListener('click', async () => {
-                const foundUserId = document.getElementById('foundUserId').textContent;
-                if (foundUserId && currentUserData) {
-                    // Find chat ID
-                    const chatId = `CHAT_${[currentUserData.userId, foundUserId].sort().join('_')}`;
-                    window.location.href = `chat.html?chatId=${chatId}`;
-                }
-            });
-
-            // Zyne character counter
-            const zyneText = document.getElementById('zyneText');
-            const zyneCharCount = document.getElementById('zyneCharCount');
-            
-            zyneText.addEventListener('input', () => {
-                zyneCharCount.textContent = zyneText.value.length;
-            });
-
-            // Zyne media buttons
-            document.getElementById('addZyneImageBtn').addEventListener('click', () => {
-                document.getElementById('zyneImageInput').click();
-            });
-
-            document.getElementById('addZyneVideoBtn').addEventListener('click', () => {
-                document.getElementById('zyneVideoInput').click();
-            });
-
-            document.getElementById('zyneImageInput').addEventListener('change', handleZyneMediaSelect);
-            document.getElementById('zyneVideoInput').addEventListener('change', handleZyneMediaSelect);
-
-            // Post Zyne
-            document.getElementById('postZyneBtn').addEventListener('click', postZyne);
-
-            // Group creation
-            document.getElementById('createGroupBtn').addEventListener('click', () => {
-                document.getElementById('createGroupModal').classList.add('active');
-            });
-
-            document.getElementById('uploadGroupProfileBtn').addEventListener('click', () => {
-                document.getElementById('groupProfileImage').click();
-            });
-
-            document.getElementById('groupProfileImage').addEventListener('change', handleGroupProfileSelect);
-
-            document.getElementById('addMemberBtn').addEventListener('click', addGroupMember);
-
-            document.getElementById('createGroupSubmitBtn').addEventListener('click', createGroup);
-
-            // Add contact button
-            document.getElementById('addContactBtn').addEventListener('click', () => {
-                document.getElementById('startChatModal').classList.add('active');
-            });
-        }
-
-        // Load initial data
-        async function loadInitialData() {
-            if (!currentUserData) return;
-            
-            try {
-                const { database } = await import('./firebase-config.js');
-                
-                // Load contacts
-                const contactIds = Object.keys(currentUserData.contacts || {});
-                if (contactIds.length > 0) {
-                    const contactPromises = contactIds.map(async (contactId) => {
-                        const snapshot = await database.ref(`users/${contactId}`).once('value');
-                        if (snapshot.exists()) {
-                            return {
-                                userId: contactId,
-                                ...snapshot.val()
-                            };
-                        }
-                        return null;
-                    });
-                    
-                    contacts = (await Promise.all(contactPromises)).filter(Boolean);
-                    renderContacts();
-                }
-                
-                // Load chat requests
-                await loadRequestsList();
-                
-                // Load recent chats
-                await loadRecentChats();
-                
-                // Load groups
-                await loadGroupsList();
-                
-            } catch (error) {
-                console.error('Error loading initial data:', error);
-            }
-        }
-
-        // Switch between pages
-        function switchPage(page) {
-            // Hide all pages
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            
-            // Show selected page
-            const pageElement = document.getElementById(`${page}Page`);
-            if (pageElement) {
-                pageElement.classList.add('active');
-                
-                // Load page-specific data
-                switch (page) {
-                    case 'contacts':
-                        renderContacts();
-                        break;
-                    case 'requests':
-                        loadRequestsList();
-                        break;
-                    case 'groups':
-                        loadGroupsList();
-                        break;
-                    case 'zynes':
-                        loadZynes();
-                        break;
-                }
-            }
-        }
-
-        // Search for user by ID
-        async function searchUser() {
-            const userId = document.getElementById('searchUserId').value.trim().toUpperCase();
-            
-            // Reset results
-            document.getElementById('searchPlaceholder').style.display = 'none';
-            document.getElementById('userFoundResult').style.display = 'none';
-            document.getElementById('searchError').style.display = 'none';
-            document.getElementById('sendRequestBtn').style.display = 'none';
-            document.getElementById('startChatDirectBtn').style.display = 'none';
-            
-            if (!userId || !userId.startsWith('ZYN-')) {
-                document.getElementById('searchPlaceholder').style.display = 'block';
-                return;
-            }
-            
-            try {
-                const { database } = await import('./firebase-config.js');
-                const snapshot = await database.ref(`users/${userId}`).once('value');
-                
-                if (snapshot.exists()) {
-                    const userData = snapshot.val();
-                    
-                    // Don't show current user
-                    if (userId === currentUserData?.userId) {
-                        document.getElementById('searchError').style.display = 'block';
-                        document.getElementById('searchError').innerHTML = `
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>You cannot chat with yourself</p>
-                        `;
-                        return;
-                    }
-                    
-                    // Show user found
-                    document.getElementById('foundUserName').textContent = userData.name;
-                    document.getElementById('foundUserId').textContent = userId;
-                    
-                    if (userData.profilePicUrl) {
-                        document.getElementById('foundUserPic').src = userData.profilePicUrl;
-                    } else {
-                        document.getElementById('foundUserPic').src = '';
-                        document.getElementById('foundUserPic').alt = userData.name;
-                    }
-                    
-                    // Check if already in contacts
-                    const isContact = currentUserData?.contacts && currentUserData.contacts[userId];
-                    document.getElementById('alreadyContact').style.display = isContact ? 'block' : 'none';
-                    
-                    // Show appropriate button
-                    if (isContact) {
-                        document.getElementById('startChatDirectBtn').style.display = 'block';
-                    } else {
-                        document.getElementById('sendRequestBtn').style.display = 'block';
-                    }
-                    
-                    document.getElementById('userFoundResult').style.display = 'flex';
-                    
-                } else {
-                    document.getElementById('searchError').style.display = 'block';
-                }
-                
-            } catch (error) {
-                console.error('Error searching user:', error);
-                document.getElementById('searchError').style.display = 'block';
-            }
-        }
-
-        // Reset start chat modal
-        function resetStartChatModal() {
-            document.getElementById('searchUserId').value = '';
-            document.getElementById('searchPlaceholder').style.display = 'block';
-            document.getElementById('userFoundResult').style.display = 'none';
-            document.getElementById('searchError').style.display = 'none';
-            document.getElementById('sendRequestBtn').style.display = 'none';
-            document.getElementById('startChatDirectBtn').style.display = 'none';
-        }
-
-        // Load chat requests
-        window.loadRequestsList = async function() {
-            if (!currentUserData) return;
-            
-            try {
-                const { database } = await import('./firebase-config.js');
-                const requests = currentUserData.chatRequests || {};
-                const requestList = [];
-                
-                for (const requestId in requests) {
-                    const request = requests[requestId];
-                    if (request.status === 'pending') {
-                        const senderSnapshot = await database.ref(`users/${request.from}`).once('value');
-                        if (senderSnapshot.exists()) {
-                            const senderData = senderSnapshot.val();
-                            requestList.push({
-                                requestId: requestId,
-                                from: request.from,
-                                name: senderData.name,
-                                profilePicUrl: senderData.profilePicUrl,
-                                timestamp: request.timestamp
-                            });
-                        }
-                    }
-                }
-                
-                chatRequests = requestList;
-                renderChatRequests();
-                
-                // Update badge
-                const badge = document.getElementById('requestsBadge');
-                if (requestList.length > 0) {
-                    badge.textContent = requestList.length;
-                    badge.style.display = 'block';
-                } else {
-                    badge.style.display = 'none';
-                }
-                
-            } catch (error) {
-                console.error('Error loading requests:', error);
-            }
-        }
-
-        // Render chat requests
-        function renderChatRequests() {
-            const container = document.getElementById('requestsContainer');
-            
-            if (chatRequests.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-user-plus"></i>
-                        <h3>No pending requests</h3>
-                        <p>When someone sends you a chat request, it will appear here</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = '';
-            
-            chatRequests.forEach(request => {
-                const requestCard = document.createElement('div');
-                requestCard.className = 'request-card';
-                requestCard.innerHTML = `
-                    <img src="${request.profilePicUrl || ''}" alt="${request.name}" class="profile-pic" 
-                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNSIgY3k9IjI1IiByPSIyNSIgZmlsbD0iI0ZGRiIgc3Ryb2tlPSIjRUVFIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMjUgMTVjNS41MjggMCAxMCA0LjQ3MiAxMCAxMHMtNC40NzIgMTAtMTAgMTAtMTAtNC40NzItMTAtMTAgNC40NzItMTAgMTAtMTB6bTAgNGE2IDYgMCAxMDAgMTIgNiA2IDAgMDAwLTEyeiIgZmlsbD0iIzhFOEU4RSIvPjwvc3ZnPg=='">
-                    <div class="request-info">
-                        <h4>${request.name}</h4>
-                        <p>${request.from}</p>
-                        <p class="time">${formatTime(request.timestamp)}</p>
-                    </div>
-                    <div class="request-actions">
-                        <button class="action-btn accept-btn" data-request-id="${request.requestId}">
-                            <i class="fas fa-check"></i>
-                            Accept
-                        </button>
-                        <button class="action-btn reject-btn" data-request-id="${request.requestId}">
-                            <i class="fas fa-times"></i>
-                            Reject
-                        </button>
-                    </div>
-                `;
-                
-                container.appendChild(requestCard);
-                
-                // Add event listeners
-                const acceptBtn = requestCard.querySelector('.accept-btn');
-                const rejectBtn = requestCard.querySelector('.reject-btn');
-                
-                acceptBtn.addEventListener('click', async () => {
-                    const { handleChatRequest } = await import('./app.js');
-                    await handleChatRequest(request.requestId, 'accept');
-                });
-                
-                rejectBtn.addEventListener('click', async () => {
-                    const { handleChatRequest } = await import('./app.js');
-                    await handleChatRequest(request.requestId, 'reject');
-                });
-            });
-        }
-
-        // Render contacts
-        function renderContacts() {
-            const container = document.getElementById('contactsContainer');
-            
-            if (contacts.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-address-book"></i>
-                        <h3>No contacts yet</h3>
-                        <p>Add contacts to start chatting</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = '';
-            
-            contacts.forEach(contact => {
-                const contactCard = document.createElement('div');
-                contactCard.className = 'contact-card';
-                contactCard.innerHTML = `
-                    <img src="${contact.profilePicUrl || ''}" alt="${contact.name}" class="profile-pic"
-                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNSIgY3k9IjI1IiByPSIyNSIgZmlsbD0iI0ZGRiIgc3Ryb2tlPSIjRUVFIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMjUgMTVjNS41MjggMCAxMCA0LjQ3MiAxMCAxMHMtNC40NzIgMTAtMTAgMTAtMTAtNC40NzItMTAtMTAgNC40NzItMTAgMTAtMTB6bTAgNGE2IDYgMCAxMDAgMTIgNiA2IDAgMDAwLTEyeiIgZmlsbD0iIzhFOEU4RSIvPjwvc3ZnPg=='">
-                    <div class="contact-info">
-                        <h4>${contact.name}</h4>
-                        <p>${contact.userId}</p>
-                        <p class="status ${contact.status || 'offline'}">
-                            ${contact.status === 'online' ? 'Online' : `Last seen ${formatTime(contact.lastSeen)}`}
-                        </p>
-                    </div>
-                    <div class="contact-actions">
-                        <button class="action-btn chat-btn" data-user-id="${contact.userId}">
-                            <i class="fas fa-comment"></i>
-                            Chat
-                        </button>
-                    </div>
-                `;
-                
-                container.appendChild(contactCard);
-                
-                // Add chat button listener
-                const chatBtn = contactCard.querySelector('.chat-btn');
-                chatBtn.addEventListener('click', () => {
-                    const chatId = `CHAT_${[currentUserData.userId, contact.userId].sort().join('_')}`;
-                    window.location.href = `chat.html?chatId=${chatId}`;
-                });
-            });
-        }
-
-        // Load recent chats
-        async function loadRecentChats() {
-            if (!currentUserData) return;
-            
-            try {
-                const { database } = await import('./firebase-config.js');
-                const contactIds = Object.keys(currentUserData.contacts || {});
-                
-                if (contactIds.length === 0) {
-                    // Show empty state
-                    return;
-                }
-                
-                // For each contact, get the chat
-                const chatPromises = contactIds.map(async (contactId) => {
-                    const chatId = `CHAT_${[currentUserData.userId, contactId].sort().join('_')}`;
-                    const chatSnapshot = await database.ref(`chats/${chatId}`).once('value');
-                    
-                    if (chatSnapshot.exists()) {
-                        const chatData = chatSnapshot.val();
-                        const contactSnapshot = await database.ref(`users/${contactId}`).once('value');
-                        
-                        if (contactSnapshot.exists()) {
-                            const contactData = contactSnapshot.val();
-                            return {
-                                chatId: chatId,
-                                contactId: contactId,
-                                contactName: contactData.name,
-                                profilePicUrl: contactData.profilePicUrl,
-                                lastMessage: chatData.lastMessage,
-                                lastMessageTime: chatData.lastMessageTime,
-                                unreadCount: 0 // You can implement unread count logic
-                            };
-                        }
-                    }
-                    return null;
-                });
-                
-                const chats = (await Promise.all(chatPromises)).filter(Boolean);
-                
-                // Sort by last message time
-                chats.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
-                
-                // Render recent chats
-                renderRecentChats(chats.slice(0, 5)); // Show only 5 most recent
-                
-            } catch (error) {
-                console.error('Error loading recent chats:', error);
-            }
-        }
-
-        // Render recent chats
-        function renderRecentChats(chats) {
-            const container = document.getElementById('recentChatsList');
-            
-            if (chats.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-comments"></i>
-                        <h3>No chats yet</h3>
-                        <p>Start a chat by clicking the button below</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = '';
-            
-            chats.forEach(chat => {
-                const chatItem = document.createElement('div');
-                chatItem.className = 'contact-card';
-                chatItem.style.cursor = 'pointer';
-                chatItem.innerHTML = `
-                    <img src="${chat.profilePicUrl || ''}" alt="${chat.contactName}" class="profile-pic"
-                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNSIgY3k9IjI1IiByPSIyNSIgZmlsbD0iI0ZGRiIgc3Ryb2tlPSIjRUVFIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMjUgMTVjNS41MjggMCAxMCA0LjQ3MiAxMCAxMHMtNC40NzIgMTAtMTAgMTAtMTAtNC40NzItMTAtMTAgNC40NzItMTAgMTAtMTB6bTAgNGE2IDYgMCAxMDAgMTIgNiA2IDAgMDAwLTEyeiIgZmlsbD0iIzhFOEU4RSIvPjwvc3ZnPg=='">
-                    <div class="contact-info">
-                        <h4>${chat.contactName}</h4>
-                        <p class="last-message">${chat.lastMessage || 'No messages yet'}</p>
-                        <p class="time">${formatTime(chat.lastMessageTime)}</p>
-                    </div>
-                `;
-                
-                chatItem.addEventListener('click', () => {
-                    window.location.href = `chat.html?chatId=${chat.chatId}`;
-                });
-                
-                container.appendChild(chatItem);
-            });
-        }
-
-        // Load groups
-        async function loadGroupsList() {
-            if (!currentUserData) return;
-            
-            try {
-                const { database } = await import('./firebase-config.js');
-                const groupIds = Object.keys(currentUserData.groups || {});
-                
-                if (groupIds.length === 0) {
-                    // Show empty state
-                    return;
-                }
-                
-                const groupPromises = groupIds.map(async (groupId) => {
-                    const groupSnapshot = await database.ref(`groups/${groupId}`).once('value');
-                    if (groupSnapshot.exists()) {
-                        return {
-                            groupId: groupId,
-                            ...groupSnapshot.val()
-                        };
-                    }
-                    return null;
-                });
-                
-                groups = (await Promise.all(groupPromises)).filter(Boolean);
-                renderGroups();
-                
-            } catch (error) {
-                console.error('Error loading groups:', error);
-            }
-        }
-
-        // Render groups
-        function renderGroups() {
-            const container = document.getElementById('groupsContainer');
-            
-            if (groups.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>No groups yet</h3>
-                        <p>Create or join a group to start chatting</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = '';
-            
-            groups.forEach(group => {
-                const groupCard = document.createElement('div');
-                groupCard.className = 'group-card';
-                groupCard.style.cursor = 'pointer';
-                groupCard.innerHTML = `
-                    <img src="${group.profilePicUrl || ''}" alt="${group.name}" class="profile-pic"
-                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNSIgY3k9IjI1IiByPSIyNSIgZmlsbD0iI0ZGRiIgc3Ryb2tlPSIjRUVFIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMzUgMTVoLTIwYy0xLjY1NyAwLTMgMS4zNDMtMyAzdjE0YzAgMS42NTcgMS4zNDMgMyAzIDNoMjBjMS42NTcgMCAzLTEuMzQzIDMtM1YxOGMwLTEuNjU3LTEuMzQzLTMtMy0zem0tMTAgMTJhNCA0IDAgMTEwLTggNCA0IDAgMDEwIDh6IiBmaWxsPSIjOEU4RThFIi8+PC9zdmc+'">
-                    <div class="group-info">
-                        <h4>${group.name}</h4>
-                        <p>${Object.keys(group.members || {}).length} members</p>
-                        <p class="last-message">${group.lastMessage || 'No messages yet'}</p>
-                    </div>
-                `;
-                
-                groupCard.addEventListener('click', () => {
-                    window.location.href = `chat.html?groupId=${group.groupId}`;
-                });
-                
-                container.appendChild(groupCard);
-            });
-        }
-
-        // Load Zynes
-        async function loadZynes() {
-            // Implement Zynes loading logic
-            // This would load Zynes from contacts
-        }
-
-        // Handle Zyne media selection
-        function handleZyneMediaSelect(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const previewContainer = document.getElementById('zyneMediaPreview');
-            
-            // Remove existing preview
-            previewContainer.innerHTML = '';
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                if (file.type.startsWith('image')) {
-                    previewContainer.innerHTML = `
-                        <div class="preview-item">
-                            <img src="${event.target.result}" alt="Preview">
-                            <button type="button" class="remove-preview" onclick="removeZyneMedia()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `;
-                } else if (file.type.startsWith('video')) {
-                    previewContainer.innerHTML = `
-                        <div class="preview-item">
-                            <video src="${event.target.result}" controls></video>
-                            <button type="button" class="remove-preview" onclick="removeZyneMedia()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    `;
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Remove Zyne media
-        window.removeZyneMedia = function() {
-            document.getElementById('zyneMediaPreview').innerHTML = '';
-            document.getElementById('zyneImageInput').value = '';
-            document.getElementById('zyneVideoInput').value = '';
-        };
-
-        // Post Zyne
-        async function postZyne() {
-            const text = document.getElementById('zyneText').value.trim();
-            const imageInput = document.getElementById('zyneImageInput');
-            const videoInput = document.getElementById('zyneVideoInput');
-            
-            if (!text && !imageInput.files[0] && !videoInput.files[0]) {
-                showToast('Please add text or media to post', 'error');
-                return;
-            }
-            
-            try {
-                const { database, uploadMedia } = await import('./imagekit-config.js');
-                
-                let mediaUrl = '';
-                let mediaType = '';
-                
-                // Handle media upload
-                if (imageInput.files[0]) {
-                    const result = await uploadMedia(imageInput.files[0], `zyne_${Date.now()}.jpg`, ['zyne', 'image']);
-                    mediaUrl = result.url;
-                    mediaType = 'image';
-                } else if (videoInput.files[0]) {
-                    const result = await uploadMedia(videoInput.files[0], `zyne_${Date.now()}.mp4`, ['zyne', 'video']);
-                    mediaUrl = result.url;
-                    mediaType = 'video';
-                }
-                
-                // Create Zyne
-                const zyneId = `ZYNE_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                const zyneData = {
-                    id: zyneId,
-                    userId: currentUserData.userId,
-                    text: text,
-                    mediaUrl: mediaUrl,
-                    mediaType: mediaType,
-                    timestamp: Date.now(),
-                    expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
-                    views: {}
-                };
-                
-                await database.ref(`zynes/${zyneId}`).set(zyneData);
-                
-                // Add to user's Zynes
-                await database.ref(`users/${currentUserData.userId}/zynes/${zyneId}`).set(true);
-                
-                showToast('Zyne posted successfully', 'success');
-                document.getElementById('createZyneModal').classList.remove('active');
-                resetZyneModal();
-                
-            } catch (error) {
-                console.error('Error posting Zyne:', error);
-                showToast('Failed to post Zyne', 'error');
-            }
-        }
-
-        // Reset Zyne modal
-        function resetZyneModal() {
-            document.getElementById('zyneText').value = '';
-            document.getElementById('zyneCharCount').textContent = '0';
-            document.getElementById('zyneMediaPreview').innerHTML = '';
-            document.getElementById('zyneImageInput').value = '';
-            document.getElementById('zyneVideoInput').value = '';
-        }
-
-        // Handle group profile selection
-        function handleGroupProfileSelect(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const preview = document.getElementById('groupProfilePreview');
-                preview.innerHTML = `<img src="${event.target.result}" alt="Group Preview">`;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Add group member
-        async function addGroupMember() {
-            const memberId = document.getElementById('addMemberInput').value.trim().toUpperCase();
-            
-            if (!memberId || !memberId.startsWith('ZYN-')) {
-                showToast('Please enter a valid User ID', 'error');
-                return;
-            }
-            
-            if (memberId === currentUserData.userId) {
-                showToast('You are already a member', 'info');
-                return;
-            }
-            
-            try {
-                const { database } = await import('./firebase-config.js');
-                const snapshot = await database.ref(`users/${memberId}`).once('value');
-                
-                if (!snapshot.exists()) {
-                    showToast('User not found', 'error');
-                    return;
-                }
-                
-                const userData = snapshot.val();
-                const membersList = document.getElementById('groupMembersList');
-                
-                // Check if already added
-                const existingMember = membersList.querySelector(`[data-user-id="${memberId}"]`);
-                if (existingMember) {
-                    showToast('User already added', 'info');
-                    return;
-                }
-                
-                // Add member tag
-                const memberTag = document.createElement('div');
-                memberTag.className = 'member-tag';
-                memberTag.setAttribute('data-user-id', memberId);
-                memberTag.innerHTML = `
-                    <span>${userData.name}</span>
-                    <button type="button" class="remove-member" onclick="removeGroupMember('${memberId}')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                
-                membersList.appendChild(memberTag);
-                
-                // Update member count
-                updateMemberCount();
-                
-                // Clear input
-                document.getElementById('addMemberInput').value = '';
-                
-            } catch (error) {
-                console.error('Error adding group member:', error);
-                showToast('Failed to add member', 'error');
-            }
-        }
-
-        // Remove group member
-        window.removeGroupMember = function(memberId) {
-            const memberTag = document.querySelector(`[data-user-id="${memberId}"]`);
-            if (memberTag) {
-                memberTag.remove();
-                updateMemberCount();
-            }
-        };
-
-        // Update member count
-        function updateMemberCount() {
-            const membersList = document.getElementById('groupMembersList');
-            const memberCount = membersList.querySelectorAll('.member-tag').length;
-            document.getElementById('memberCount').textContent = `${memberCount} member${memberCount !== 1 ? 's' : ''}`;
-        }
-
-        // Create group
-        async function createGroup() {
-            const groupName = document.getElementById('groupName').value.trim();
-            const profileImage = document.getElementById('groupProfileImage');
-            const membersList = document.getElementById('groupMembersList');
-            
-            if (!groupName) {
-                showToast('Please enter a group name', 'error');
-                return;
-            }
-            
-            // Get member IDs
-            const memberTags = membersList.querySelectorAll('.member-tag');
-            const memberIds = Array.from(memberTags).map(tag => tag.getAttribute('data-user-id'));
-            
-            if (memberIds.length === 0) {
-                showToast('Please add at least one member', 'error');
-                return;
-            }
-            
-            try {
-                const { database, uploadMedia } = await import('./imagekit-config.js');
-                
-                // Handle group photo upload
-                let profilePicUrl = '';
-                if (profileImage.files[0]) {
-                    const result = await uploadMedia(
-                        profileImage.files[0],
-                        `group_${Date.now()}.jpg`,
-                        ['group', 'profile']
-                    );
-                    profilePicUrl = result.url;
-                }
-                
-                // Create group
-                const groupId = `GROUP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                const groupData = {
-                    id: groupId,
-                    name: groupName,
-                    profilePicUrl: profilePicUrl,
-                    admin: currentUserData.userId,
-                    created: Date.now(),
-                    members: {
-                        [currentUserData.userId]: {
-                            joined: Date.now(),
-                            role: 'admin'
-                        }
-                    }
-                };
-                
-                // Add members
-                memberIds.forEach(memberId => {
-                    groupData.members[memberId] = {
-                        joined: Date.now(),
-                        role: 'member'
-                    };
-                });
-                
-                await database.ref(`groups/${groupId}`).set(groupData);
-                
-                // Add group to each member's groups list
-                const updates = {};
-                updates[`users/${currentUserData.userId}/groups/${groupId}`] = true;
-                
-                memberIds.forEach(memberId => {
-                    updates[`users/${memberId}/groups/${groupId}`] = true;
-                });
-                
-                await database.ref().update(updates);
-                
-                showToast('Group created successfully', 'success');
-                document.getElementById('createGroupModal').classList.remove('active');
-                resetGroupModal();
-                
-                // Refresh groups list
-                await loadGroupsList();
-                
-            } catch (error) {
-                console.error('Error creating group:', error);
-                showToast('Failed to create group', 'error');
-            }
-        }
-
-        // Reset group modal
-        function resetGroupModal() {
-            document.getElementById('groupName').value = '';
-            document.getElementById('groupProfilePreview').innerHTML = `
-                <div class="preview-placeholder">
-                    <i class="fas fa-users"></i>
-                    <span>No image selected</span>
-                </div>
-            `;
-            document.getElementById('groupProfileImage').value = '';
-            document.getElementById('addMemberInput').value = '';
-            document.getElementById('groupMembersList').innerHTML = `
-                <div class="member-tag">
-                    <span id="currentUserMember">You</span>
-                </div>
-            `;
-            updateMemberCount();
-        }
-
-        // Set up real-time listeners
-        function setupRealtimeListeners() {
-            if (!currentUserData) return;
-            
-            const { database } = firebase;
-            
-            // Listen for new chat requests
-            database.ref(`users/${currentUserData.userId}/chatRequests`).on('child_added', (snapshot) => {
-                const request = snapshot.val();
-                if (request.status === 'pending') {
-                    // Update badge
-                    const badge = document.getElementById('requestsBadge');
-                    const currentCount = parseInt(badge.textContent) || 0;
-                    badge.textContent = currentCount + 1;
-                    badge.style.display = 'block';
-                    
-                    // Play notification sound
-                    playNotificationSound();
-                    
-                    // Show toast notification
-                    showToast('New chat request received', 'info');
-                }
-            });
-            
-            // Listen for new messages in chats
-            const contactIds = Object.keys(currentUserData.contacts || {});
-            contactIds.forEach(contactId => {
-                const chatId = `CHAT_${[currentUserData.userId, contactId].sort().join('_')}`;
-                database.ref(`chats/${chatId}/messages`).limitToLast(1).on('child_added', (snapshot) => {
-                    const message = snapshot.val();
-                    if (message.sender !== currentUserData.userId) {
-                        // Play notification sound for new message
-                        playNotificationSound();
-                        
-                        // Update recent chats
-                        loadRecentChats();
-                    }
-                });
-            });
-        }
-
-        // Show edit profile modal
-        function showEditProfileModal() {
-            // Implement edit profile modal
-            showToast('Edit profile feature coming soon', 'info');
-        }
-
-        // Show settings modal
-        function showSettingsModal() {
-            // Implement settings modal
-            showToast('Settings feature coming soon', 'info');
-        }
-
-        // Apply Zambia theme
-        function applyZambiaTheme() {
-            // Add Zambia flag colors as accent
-            document.documentElement.style.setProperty('--blue', '#0072C6'); // Zambian blue
-            document.documentElement.style.setProperty('--green', '#009739'); // Zambian green
-            document.documentElement.style.setProperty('--red', '#CE1126'); // Zambian red
-            document.documentElement.style.setProperty('--black', '#000000'); // Zambian black
-            
-            showToast('Zambia theme applied!', 'success');
-        }
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initHomePage);
+        // Hide loading screen
+        setTimeout(() => {
+            document.getElementById('loadingScreen').classList.add('hidden');
+        }, 1000);
     </script>
 </body>
 </html>
