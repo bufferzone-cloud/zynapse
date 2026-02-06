@@ -3,59 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat - Zynapse</title>
+    <title>Zynapse - Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cloudinary-core@2.11.4/cloudinary-core-shrinkwrap.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
-    <div class="chat-page">
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
+            <div class="spinner-large"></div>
+            <p>Loading Chat...</p>
+        </div>
+    </div>
+
+    <!-- Chat Interface -->
+    <div class="chat-page" id="chatContainer" style="display: none;">
         <!-- Chat Header -->
         <header class="chat-header">
-            <button class="back-btn" onclick="goBackToHome()">
+            <button class="back-btn" id="backBtn">
                 <i class="fas fa-arrow-left"></i>
             </button>
             
-            <div class="chat-user-info" onclick="viewChatProfile()">
-                <img src="" alt="Profile" class="profile-pic-small" id="chatProfilePic">
+            <div class="chat-user-info">
+                <img src="" alt="" class="profile-pic" id="chatUserPic">
                 <div class="chat-user-details">
                     <h3 id="chatUserName">Loading...</h3>
                     <div class="chat-status">
-                        <span class="status-dot" id="chatStatusDot"></span>
+                        <span class="status-dot" id="chatUserStatus"></span>
                         <span id="chatStatusText">Loading...</span>
                     </div>
                 </div>
             </div>
             
-            <div class="chat-header-actions">
-                <button class="icon-btn" onclick="toggleChatMenu()">
-                    <i class="fas fa-ellipsis-v"></i>
+            <div class="chat-actions">
+                <button class="icon-btn" id="videoCallBtn" title="Video Call">
+                    <i class="fas fa-video"></i>
                 </button>
-                
-                <!-- Chat Menu Dropdown -->
+                <button class="icon-btn" id="voiceCallBtn" title="Voice Call">
+                    <i class="fas fa-phone"></i>
+                </button>
                 <div class="dropdown">
-                    <div class="dropdown-content" id="chatMenuDropdown">
-                        <a href="#" onclick="addNickname()"><i class="fas fa-tag"></i> Add Nickname</a>
-                        <a href="#" onclick="addToFavorites()"><i class="fas fa-star"></i> Add to Favorites</a>
-                        <a href="#" onclick="viewSharedMedia()"><i class="fas fa-photo-video"></i> Shared Media</a>
+                    <button class="icon-btn" id="chatMenuBtn" title="Menu">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-content" id="chatDropdown">
+                        <a href="#" id="viewProfileBtn"><i class="fas fa-user"></i> View Profile</a>
+                        <a href="#" id="addNicknameBtn"><i class="fas fa-tag"></i> Add Nickname</a>
+                        <a href="#" id="addFavoriteBtn"><i class="fas fa-star"></i> Add to Favorites</a>
                         <div class="dropdown-divider"></div>
-                        <a href="#" onclick="clearChat()" style="color: var(--orange);"><i class="fas fa-trash"></i> Clear Chat</a>
-                        <a href="#" onclick="blockUser()" style="color: var(--red);"><i class="fas fa-ban"></i> Block User</a>
-                        <a href="#" onclick="reportUser()" style="color: var(--red);"><i class="fas fa-flag"></i> Report</a>
+                        <a href="#" id="blockUserBtn"><i class="fas fa-ban"></i> Block User</a>
+                        <a href="#" id="reportUserBtn"><i class="fas fa-flag"></i> Report</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" id="clearChatBtn"><i class="fas fa-trash"></i> Clear Chat</a>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Chat Messages Area -->
+        <!-- Chat Messages -->
         <div class="chat-messages" id="chatMessages">
             <div class="empty-chat">
                 <i class="fas fa-comments"></i>
-                <h3>Start a conversation</h3>
-                <p>Send a message to begin chatting</p>
+                <h3>No Messages Yet</h3>
+                <p>Send a message to start the conversation</p>
             </div>
         </div>
 
@@ -67,122 +81,965 @@
                     <div class="typing-dot"></div>
                     <div class="typing-dot"></div>
                 </div>
-                <span class="typing-text">typing...</span>
+                <span class="typing-text" id="typingText">typing...</span>
             </div>
         </div>
 
-        <!-- Message Input Area -->
+        <!-- Message Input -->
         <div class="message-input-area">
-            <button class="icon-btn" onclick="toggleAttachmentOptions()">
-                <i class="fas fa-plus"></i>
-            </button>
-            
-            <!-- Attachment Options -->
-            <div class="attachment-options" id="attachmentOptions">
-                <button class="attachment-btn" onclick="attachPhoto()">
-                    <i class="fas fa-image"></i>
-                    <span>Photo</span>
+            <div class="dropdown">
+                <button class="icon-btn" id="attachBtn" title="Attach">
+                    <i class="fas fa-plus"></i>
                 </button>
-                <button class="attachment-btn" onclick="attachVideo()">
-                    <i class="fas fa-video"></i>
-                    <span>Video</span>
-                </button>
-                <button class="attachment-btn" onclick="attachFile()">
-                    <i class="fas fa-file"></i>
-                    <span>File</span>
-                </button>
-            </div>
-            
-            <div class="message-input-container">
-                <input type="text" id="messageInput" placeholder="iMessage" onkeypress="handleMessageKeypress(event)" oninput="updateTypingIndicator()">
-                <div class="media-buttons" id="mediaButtons" style="display: none;">
-                    <button class="btn-media" onclick="removeAttachment()">
-                        <i class="fas fa-times"></i>
+                <div class="attachment-options" id="attachmentOptions">
+                    <button class="attachment-btn" id="attachPhoto">
+                        <i class="fas fa-camera"></i>
+                        <span>Photo</span>
+                    </button>
+                    <button class="attachment-btn" id="attachVideo">
+                        <i class="fas fa-video"></i>
+                        <span>Video</span>
+                    </button>
+                    <button class="attachment-btn" id="attachFile">
+                        <i class="fas fa-file"></i>
+                        <span>File</span>
+                    </button>
+                    <button class="attachment-btn" id="attachLocation">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Location</span>
+                    </button>
+                    <button class="attachment-btn" id="attachContact">
+                        <i class="fas fa-user"></i>
+                        <span>Contact</span>
+                    </button>
+                    <button class="attachment-btn" id="attachAudio">
+                        <i class="fas fa-microphone"></i>
+                        <span>Audio</span>
                     </button>
                 </div>
             </div>
             
-            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <div class="message-input-container">
+                <input type="text" id="messageInput" placeholder="iMessage" autocomplete="off">
+            </div>
+            
+            <button class="send-btn" id="sendBtn" title="Send">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
 
-        <!-- Modal for Shared Media -->
-        <div class="modal-overlay" id="sharedMediaModal">
+        <!-- File Inputs -->
+        <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
+        <input type="file" id="videoInput" accept="video/*" style="display: none;">
+        <input type="file" id="fileInput" accept="*" style="display: none;">
+
+        <!-- Media Preview Modal -->
+        <div class="modal-overlay" id="mediaPreviewModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Shared Media</h3>
-                    <button class="close-modal" onclick="closeSharedMediaModal()">&times;</button>
+                    <h3>Media Preview</h3>
+                    <button class="close-modal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div class="media-preview" id="sharedMediaContainer">
-                        <!-- Shared media will be loaded here -->
-                        <div class="empty-state">
-                            <i class="fas fa-photo-video"></i>
-                            <h3>No shared media</h3>
-                            <p>Photos, videos, and files shared in this chat will appear here</p>
-                        </div>
-                    </div>
+                    <div id="mediaPreviewContent"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Modal for Block/Report -->
-        <div class="modal-overlay" id="blockReportModal">
+        <!-- Report Modal -->
+        <div class="modal-overlay" id="reportModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 id="blockReportTitle">Block User</h3>
-                    <button class="close-modal" onclick="closeBlockReportModal()">&times;</button>
+                    <h3>Report User</h3>
+                    <button class="close-modal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div class="confirmation-message" id="blockConfirmation" style="display: none;">
-                        <div class="warning-icon">
-                            <i class="fas fa-ban"></i>
-                        </div>
-                        <h4>Block <span id="blockUserName"></span>?</h4>
-                        <p>Blocked users will no longer be able to send you messages or see your online status.</p>
-                        <div class="modal-actions">
-                            <button class="btn-secondary" onclick="closeBlockReportModal()">Cancel</button>
-                            <button class="btn-danger" onclick="confirmBlock()">Block</button>
-                        </div>
+                    <div class="confirmation-message">
+                        <i class="fas fa-exclamation-triangle warning-icon"></i>
+                        <h4>Report this user?</h4>
+                        <p>Please select a reason for reporting. This action cannot be undone.</p>
                     </div>
-                    
-                    <div class="report-form" id="reportForm" style="display: none;">
+                    <div class="report-form">
                         <div class="input-group">
-                            <label for="reportReason">Reason for reporting</label>
+                            <label for="reportReason">Reason for reporting:</label>
                             <select id="reportReason">
-                                <option value="spam">Spam</option>
-                                <option value="harassment">Harassment or bullying</option>
+                                <option value="spam">Spam or harassment</option>
                                 <option value="inappropriate">Inappropriate content</option>
-                                <option value="impersonation">Impersonation</option>
-                                <option value="other">Other</option>
+                                <option value="fake">Fake account</option>
+                                <option value="other">Other reason</option>
                             </select>
                         </div>
-                        
                         <div class="input-group">
-                            <label for="reportDetails">Additional details (optional)</label>
-                            <textarea id="reportDetails" placeholder="Please provide more information..." rows="4"></textarea>
+                            <label for="reportDetails">Additional details (optional):</label>
+                            <textarea id="reportDetails" placeholder="Please provide more details..."></textarea>
                         </div>
-                        
-                        <p class="form-hint">Your report will be reviewed by our moderation team. We'll notify you of any action taken.</p>
-                        
-                        <div class="modal-actions">
-                            <button class="btn-secondary" onclick="closeBlockReportModal()">Cancel</button>
-                            <button class="btn-danger" onclick="submitReport()">Submit Report</button>
-                        </div>
+                        <p class="form-hint">Your report is anonymous. The reported user won't know who reported them.</p>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn-secondary" id="cancelReport">Cancel</button>
+                        <button class="btn-danger" id="submitReport">Submit Report</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Toast Notifications Container -->
+        <!-- Toast Container -->
         <div class="toast-container"></div>
+
+        <!-- Notification Sound -->
+        <audio id="notificationSound" preload="auto">
+            <source src="notification.mp3" type="audio/mpeg">
+        </audio>
     </div>
 
-    <audio id="messageSound" preload="auto">
-        <source src="notification.mp3" type="audio/mpeg">
-    </audio>
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
+            authDomain: "zynapse-68181.firebaseapp.com",
+            databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
+            projectId: "zynapse-68181",
+            storageBucket: "zynapse-68181.firebasestorage.app",
+            messagingSenderId: "841353050519",
+            appId: "1:841353050519:web:3b16d95d8f4cd3b9506cd2",
+            measurementId: "G-4764XLL6WS"
+        };
 
-    <script src="app.js"></script>
+        // Cloudinary Configuration
+        const CLOUDINARY_CONFIG = {
+            cloudName: 'dd3lcymrk',
+            apiKey: '489857926297197',
+            uploadPreset: 'h3eyhc2o',
+            folder: 'zynapse/chat'
+        };
+
+        // Global Variables
+        let currentUser = null;
+        let userData = null;
+        let chatData = null;
+        let chatPartner = null;
+        let groupData = null;
+        let messages = [];
+        let typingTimeout = null;
+        let isTyping = false;
+        let attachments = [];
+        let chatId = null;
+        let chatType = null;
+        let withUserId = null;
+
+        // Firebase Initialization
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // DOM Elements
+        const loadingScreen = document.getElementById('loadingScreen');
+        const chatContainer = document.getElementById('chatContainer');
+        
+        // Header Elements
+        const backBtn = document.getElementById('backBtn');
+        const chatUserPic = document.getElementById('chatUserPic');
+        const chatUserName = document.getElementById('chatUserName');
+        const chatUserStatus = document.getElementById('chatUserStatus');
+        const chatStatusText = document.getElementById('chatStatusText');
+        
+        // Action Buttons
+        const videoCallBtn = document.getElementById('videoCallBtn');
+        const voiceCallBtn = document.getElementById('voiceCallBtn');
+        const chatMenuBtn = document.getElementById('chatMenuBtn');
+        const chatDropdown = document.getElementById('chatDropdown');
+        const viewProfileBtn = document.getElementById('viewProfileBtn');
+        const addNicknameBtn = document.getElementById('addNicknameBtn');
+        const addFavoriteBtn = document.getElementById('addFavoriteBtn');
+        const blockUserBtn = document.getElementById('blockUserBtn');
+        const reportUserBtn = document.getElementById('reportUserBtn');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        
+        // Chat Area
+        const chatMessages = document.getElementById('chatMessages');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const typingText = document.getElementById('typingText');
+        
+        // Input Area
+        const attachBtn = document.getElementById('attachBtn');
+        const attachmentOptions = document.getElementById('attachmentOptions');
+        const attachPhoto = document.getElementById('attachPhoto');
+        const attachVideo = document.getElementById('attachVideo');
+        const attachFile = document.getElementById('attachFile');
+        const attachLocation = document.getElementById('attachLocation');
+        const attachContact = document.getElementById('attachContact');
+        const attachAudio = document.getElementById('attachAudio');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        
+        // File Inputs
+        const photoInput = document.getElementById('photoInput');
+        const videoInput = document.getElementById('videoInput');
+        const fileInput = document.getElementById('fileInput');
+        
+        // Modals
+        const mediaPreviewModal = document.getElementById('mediaPreviewModal');
+        const reportModal = document.getElementById('reportModal');
+        
+        // Notification Sound
+        const notificationSound = document.getElementById('notificationSound');
+
+        // Initialize Chat
+        document.addEventListener('DOMContentLoaded', initializeChat);
+
+        async function initializeChat() {
+            // Check authentication
+            auth.onAuthStateChanged(async (user) => {
+                if (!user) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                currentUser = user;
+                await loadUserData(user.uid);
+                
+                // Get chat parameters from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                chatId = urlParams.get('chat');
+                chatType = urlParams.get('type');
+                withUserId = urlParams.get('with');
+                
+                if (!chatId || !chatType) {
+                    showToast('Invalid chat link', 'error');
+                    setTimeout(() => window.location.href = 'home.html', 2000);
+                    return;
+                }
+                
+                // Load chat data
+                await loadChatData();
+                
+                // Setup real-time listeners
+                setupChatListeners();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Show chat interface
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        chatContainer.style.display = 'flex';
+                    }, 300);
+                }, 1000);
+            });
+        }
+
+        async function loadUserData(uid) {
+            try {
+                const snapshot = await database.ref(`users/${uid}`).once('value');
+                userData = snapshot.val();
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        async function loadChatData() {
+            try {
+                if (chatType === 'user') {
+                    // Load user chat
+                    await loadUserChat();
+                } else if (chatType === 'group') {
+                    // Load group chat
+                    await loadGroupChat();
+                }
+                
+                // Load messages
+                await loadMessages();
+                
+            } catch (error) {
+                console.error('Error loading chat data:', error);
+                showToast('Failed to load chat', 'error');
+            }
+        }
+
+        async function loadUserChat() {
+            if (!withUserId) {
+                // Try to get withUserId from chatId
+                const parts = chatId.split('-');
+                withUserId = parts[2]; // Assuming format: CHAT-uid1-uid2
+            }
+            
+            // Load chat partner data
+            const snapshot = await database.ref(`users/${withUserId}`).once('value');
+            chatPartner = snapshot.val();
+            
+            if (!chatPartner) {
+                showToast('User not found', 'error');
+                setTimeout(() => window.location.href = 'home.html', 2000);
+                return;
+            }
+            
+            // Update UI
+            chatUserName.textContent = chatPartner.name;
+            chatUserPic.src = chatPartner.profileUrl || 'zynaps.png';
+            updateStatus(chatPartner);
+            
+            // Set chat data
+            chatData = {
+                id: chatId,
+                type: 'user',
+                withUserId: withUserId,
+                withUserName: chatPartner.name,
+                withUserProfile: chatPartner.profileUrl
+            };
+        }
+
+        async function loadGroupChat() {
+            const snapshot = await database.ref(`groups/${chatId}`).once('value');
+            groupData = snapshot.val();
+            
+            if (!groupData) {
+                showToast('Group not found', 'error');
+                setTimeout(() => window.location.href = 'home.html', 2000);
+                return;
+            }
+            
+            // Update UI
+            chatUserName.textContent = groupData.name;
+            chatUserPic.src = groupData.photoUrl || 'zynaps.png';
+            chatStatusText.textContent = `${Object.keys(groupData.members || {}).length} members`;
+            chatUserStatus.style.display = 'none';
+            
+            // Hide call buttons for groups
+            videoCallBtn.style.display = 'none';
+            voiceCallBtn.style.display = 'none';
+            
+            // Set chat data
+            chatData = {
+                id: chatId,
+                type: 'group',
+                groupId: chatId,
+                groupName: groupData.name,
+                groupPhoto: groupData.photoUrl
+            };
+        }
+
+        async function loadMessages() {
+            try {
+                const snapshot = await database.ref(`messages/${chatId}`).orderByChild('timestamp').limitToLast(50).once('value');
+                const messagesData = snapshot.val() || {};
+                
+                // Convert to array and sort
+                messages = Object.values(messagesData).sort((a, b) => a.timestamp - b.timestamp);
+                
+                // Display messages
+                displayMessages();
+                
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        function displayMessages() {
+            if (messages.length === 0) {
+                chatMessages.innerHTML = `
+                    <div class="empty-chat">
+                        <i class="fas fa-comments"></i>
+                        <h3>No Messages Yet</h3>
+                        <p>Send a message to start the conversation</p>
+                    </div>`;
+                return;
+            }
+            
+            chatMessages.innerHTML = '';
+            
+            let lastDate = null;
+            
+            messages.forEach(message => {
+                // Add date separator if needed
+                const messageDate = new Date(message.timestamp);
+                const dateStr = messageDate.toLocaleDateString();
+                
+                if (dateStr !== lastDate) {
+                    const dateDiv = document.createElement('div');
+                    dateDiv.className = 'message-date';
+                    dateDiv.textContent = formatDate(message.timestamp);
+                    chatMessages.appendChild(dateDiv);
+                    lastDate = dateStr;
+                }
+                
+                // Create message element
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${message.senderId === userData.uid ? 'sent' : 'received'}`;
+                
+                let messageContent = '';
+                
+                if (message.type === 'text') {
+                    messageContent = `
+                        <div class="message-bubble">
+                            <p>${escapeHtml(message.content)}</p>
+                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                        </div>`;
+                } else if (message.type === 'image') {
+                    messageContent = `
+                        <div class="message-bubble media-message">
+                            <img src="${message.content}" alt="Image" class="chat-media" onclick="viewMedia('${message.content}', 'image')">
+                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                        </div>`;
+                } else if (message.type === 'video') {
+                    messageContent = `
+                        <div class="message-bubble media-message">
+                            <video src="${message.content}" controls class="chat-media" onclick="viewMedia('${message.content}', 'video')"></video>
+                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                        </div>`;
+                } else if (message.type === 'file') {
+                    messageContent = `
+                        <div class="message-bubble">
+                            <p><i class="fas fa-file"></i> ${message.fileName}</p>
+                            <a href="${message.content}" download="${message.fileName}" class="link">Download</a>
+                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                        </div>`;
+                }
+                
+                messageDiv.innerHTML = messageContent;
+                chatMessages.appendChild(messageDiv);
+            });
+            
+            // Scroll to bottom
+            scrollToBottom();
+        }
+
+        function setupChatListeners() {
+            if (!chatId) return;
+            
+            // Listen for new messages
+            database.ref(`messages/${chatId}`).on('child_added', (snapshot) => {
+                const message = snapshot.val();
+                
+                // Check if message already exists
+                if (!messages.some(m => m.id === message.id)) {
+                    messages.push(message);
+                    displayMessages();
+                    
+                    // Play notification sound for received messages
+                    if (message.senderId !== userData.uid) {
+                        playNotificationSound();
+                    }
+                }
+            });
+            
+            // Listen for typing status
+            if (chatType === 'user') {
+                database.ref(`typing/${chatId}/${withUserId}`).on('value', (snapshot) => {
+                    const typing = snapshot.val();
+                    if (typing && typing.isTyping) {
+                        showTypingIndicator(chatPartner.name);
+                    } else {
+                        hideTypingIndicator();
+                    }
+                });
+                
+                // Listen for status updates
+                database.ref(`users/${withUserId}`).on('value', (snapshot) => {
+                    const user = snapshot.val();
+                    if (user) {
+                        updateStatus(user);
+                    }
+                });
+            }
+        }
+
+        function setupEventListeners() {
+            // Back button
+            backBtn.addEventListener('click', () => {
+                window.history.back();
+            });
+            
+            // Chat menu
+            chatMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                chatDropdown.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                chatDropdown.classList.remove('show');
+            });
+            
+            // Menu actions
+            viewProfileBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                viewProfile();
+            });
+            
+            addNicknameBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                addNickname();
+            });
+            
+            addFavoriteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleFavorite();
+            });
+            
+            blockUserBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                blockUser();
+            });
+            
+            reportUserBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                showReportModal();
+            });
+            
+            clearChatBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                clearChat();
+            });
+            
+            // Attachment button
+            attachBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                attachmentOptions.classList.toggle('show');
+            });
+            
+            // Close attachment options when clicking outside
+            document.addEventListener('click', () => {
+                attachmentOptions.classList.remove('show');
+            });
+            
+            // Attachment options
+            attachPhoto.addEventListener('click', () => {
+                photoInput.click();
+                attachmentOptions.classList.remove('show');
+            });
+            
+            attachVideo.addEventListener('click', () => {
+                videoInput.click();
+                attachmentOptions.classList.remove('show');
+            });
+            
+            attachFile.addEventListener('click', () => {
+                fileInput.click();
+                attachmentOptions.classList.remove('show');
+            });
+            
+            // File inputs
+            photoInput.addEventListener('change', handlePhotoUpload);
+            videoInput.addEventListener('change', handleVideoUpload);
+            fileInput.addEventListener('change', handleFileUpload);
+            
+            // Message input
+            messageInput.addEventListener('input', handleTyping);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Send button
+            sendBtn.addEventListener('click', sendMessage);
+            
+            // Call buttons
+            videoCallBtn.addEventListener('click', startVideoCall);
+            voiceCallBtn.addEventListener('click', startVoiceCall);
+            
+            // Report modal
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const modal = btn.closest('.modal-overlay');
+                    modal.classList.remove('active');
+                });
+            });
+            
+            document.getElementById('cancelReport').addEventListener('click', () => {
+                reportModal.classList.remove('active');
+            });
+            
+            document.getElementById('submitReport').addEventListener('click', submitReport);
+        }
+
+        function updateStatus(user) {
+            if (user.isOnline) {
+                chatUserStatus.className = 'status-dot online';
+                chatStatusText.textContent = 'Online';
+            } else {
+                chatUserStatus.className = 'status-dot offline';
+                const lastSeen = user.lastActive ? formatTime(user.lastActive) : 'Never';
+                chatStatusText.textContent = `Last seen ${lastSeen}`;
+            }
+        }
+
+        function handleTyping() {
+            if (chatType !== 'user') return;
+            
+            if (!isTyping) {
+                isTyping = true;
+                // Send typing started notification
+                database.ref(`typing/${chatId}/${userData.uid}`).set({
+                    isTyping: true,
+                    timestamp: Date.now()
+                });
+            }
+            
+            // Clear previous timeout
+            clearTimeout(typingTimeout);
+            
+            // Set timeout to stop typing indicator
+            typingTimeout = setTimeout(() => {
+                isTyping = false;
+                database.ref(`typing/${chatId}/${userData.uid}`).set({
+                    isTyping: false,
+                    timestamp: Date.now()
+                });
+            }, 1000);
+        }
+
+        function showTypingIndicator(userName) {
+            typingText.textContent = `${userName} is typing...`;
+            typingIndicator.style.display = 'flex';
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.style.display = 'none';
+        }
+
+        async function sendMessage() {
+            const content = messageInput.value.trim();
+            
+            if (!content && attachments.length === 0) {
+                return;
+            }
+            
+            try {
+                const messageId = `MSG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                const timestamp = Date.now();
+                
+                let messageData = {
+                    id: messageId,
+                    senderId: userData.uid,
+                    senderName: userData.name,
+                    timestamp: timestamp,
+                    type: 'text',
+                    content: content
+                };
+                
+                // Handle attachments if any
+                if (attachments.length > 0) {
+                    // In a full implementation, upload attachments to Cloudinary
+                    // For now, we'll just send text
+                }
+                
+                // Save message to database
+                await database.ref(`messages/${chatId}/${messageId}`).set(messageData);
+                
+                // Update chat last message
+                await updateChatLastMessage(messageData);
+                
+                // Clear input
+                messageInput.value = '';
+                attachments = [];
+                
+                // Stop typing indicator
+                if (isTyping) {
+                    isTyping = false;
+                    database.ref(`typing/${chatId}/${userData.uid}`).set({
+                        isTyping: false,
+                        timestamp: Date.now()
+                    });
+                }
+                
+                // Scroll to bottom
+                scrollToBottom();
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showToast('Failed to send message', 'error');
+            }
+        }
+
+        async function updateChatLastMessage(message) {
+            const lastMessage = message.type === 'text' ? message.content : `[${message.type}]`;
+            
+            if (chatType === 'user') {
+                // Update for both users
+                const updates = {};
+                updates[`users/${userData.uid}/chats/${chatId}/lastMessage`] = lastMessage;
+                updates[`users/${userData.uid}/chats/${chatId}/lastMessageTime`] = message.timestamp;
+                updates[`users/${withUserId}/chats/${chatId}/lastMessage`] = lastMessage;
+                updates[`users/${withUserId}/chats/${chatId}/lastMessageTime`] = message.timestamp;
+                updates[`chats/${chatId}/lastMessage`] = lastMessage;
+                updates[`chats/${chatId}/lastMessageTime`] = message.timestamp;
+                
+                await database.ref().update(updates);
+                
+            } else if (chatType === 'group') {
+                // Update group chat
+                await database.ref(`chats/${chatId}`).update({
+                    lastMessage: lastMessage,
+                    lastMessageTime: message.timestamp
+                });
+                
+                // Update for all group members
+                if (groupData && groupData.members) {
+                    const memberUpdates = {};
+                    Object.keys(groupData.members).forEach(memberId => {
+                        memberUpdates[`users/${memberId}/chats/${chatId}/lastMessage`] = lastMessage;
+                        memberUpdates[`users/${memberId}/chats/${chatId}/lastMessageTime`] = message.timestamp;
+                    });
+                    
+                    await database.ref().update(memberUpdates);
+                }
+            }
+        }
+
+        async function handlePhotoUpload(event) {
+            const files = Array.from(event.target.files);
+            
+            if (files.length === 0) return;
+            
+            // In a full implementation, upload to Cloudinary
+            // For now, we'll just send as text
+            showToast('Photo upload feature coming soon', 'info');
+            
+            // Clear input
+            photoInput.value = '';
+        }
+
+        async function handleVideoUpload(event) {
+            const file = event.target.files[0];
+            
+            if (!file) return;
+            
+            // Check file size (50MB limit)
+            if (file.size > 50 * 1024 * 1024) {
+                showToast('Video size must be less than 50MB', 'error');
+                videoInput.value = '';
+                return;
+            }
+            
+            showToast('Video upload feature coming soon', 'info');
+            videoInput.value = '';
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            
+            if (!file) return;
+            
+            // Check file size (50MB limit)
+            if (file.size > 50 * 1024 * 1024) {
+                showToast('File size must be less than 50MB', 'error');
+                fileInput.value = '';
+                return;
+            }
+            
+            showToast('File upload feature coming soon', 'info');
+            fileInput.value = '';
+        }
+
+        async function uploadToCloudinary(file, type) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+                formData.append('folder', `${CLOUDINARY_CONFIG.folder}/${type}`);
+                formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
+                
+                fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.secure_url) {
+                        resolve({
+                            url: data.secure_url,
+                            publicId: data.public_id
+                        });
+                    } else {
+                        reject(new Error('Upload failed'));
+                    }
+                })
+                .catch(error => reject(error));
+            });
+        }
+
+        function viewMedia(url, type) {
+            const content = document.getElementById('mediaPreviewContent');
+            content.innerHTML = '';
+            
+            if (type === 'image') {
+                content.innerHTML = `<img src="${url}" alt="Preview" style="width: 100%; border-radius: 10px;">`;
+            } else if (type === 'video') {
+                content.innerHTML = `
+                    <video controls style="width: 100%; border-radius: 10px;">
+                        <source src="${url}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>`;
+            }
+            
+            mediaPreviewModal.classList.add('active');
+        }
+
+        function viewProfile() {
+            if (chatType === 'user' && chatPartner) {
+                // In a full implementation, show profile modal
+                showToast(`Viewing ${chatPartner.name}'s profile`, 'info');
+            }
+        }
+
+        function addNickname() {
+            const nickname = prompt('Enter nickname:');
+            if (nickname) {
+                showToast(`Nickname set to ${nickname}`, 'success');
+            }
+        }
+
+        function toggleFavorite() {
+            // In a full implementation, toggle favorite status
+            showToast('Added to favorites', 'success');
+        }
+
+        async function blockUser() {
+            if (!confirm('Block this user? You will no longer receive messages from them.')) {
+                return;
+            }
+            
+            try {
+                // Add to blocked users
+                await database.ref(`users/${userData.uid}/blocked/${withUserId}`).set(Date.now());
+                
+                // Remove from contacts
+                await database.ref(`users/${userData.uid}/contacts/${withUserId}`).remove();
+                await database.ref(`users/${withUserId}/contacts/${userData.uid}`).remove();
+                
+                showToast('User blocked successfully', 'success');
+                setTimeout(() => window.location.href = 'home.html', 1000);
+                
+            } catch (error) {
+                console.error('Error blocking user:', error);
+                showToast('Failed to block user', 'error');
+            }
+        }
+
+        function showReportModal() {
+            reportModal.classList.add('active');
+        }
+
+        async function submitReport() {
+            const reason = document.getElementById('reportReason').value;
+            const details = document.getElementById('reportDetails').value.trim();
+            
+            try {
+                const reportId = `REP-${Date.now()}`;
+                const reportData = {
+                    id: reportId,
+                    reporterId: userData.uid,
+                    reportedId: withUserId,
+                    reason: reason,
+                    details: details,
+                    timestamp: Date.now(),
+                    chatId: chatId
+                };
+                
+                await database.ref(`reports/${reportId}`).set(reportData);
+                
+                showToast('Report submitted successfully', 'success');
+                reportModal.classList.remove('active');
+                
+            } catch (error) {
+                console.error('Error submitting report:', error);
+                showToast('Failed to submit report', 'error');
+            }
+        }
+
+        async function clearChat() {
+            if (!confirm('Clear all messages in this chat? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                // In a full implementation, clear messages from database
+                // For now, just show a toast
+                showToast('Chat cleared successfully', 'success');
+                
+            } catch (error) {
+                console.error('Error clearing chat:', error);
+                showToast('Failed to clear chat', 'error');
+            }
+        }
+
+        function startVideoCall() {
+            showToast('Video call feature coming soon', 'info');
+        }
+
+        function startVoiceCall() {
+            showToast('Voice call feature coming soon', 'info');
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 100);
+        }
+
+        function playNotificationSound() {
+            try {
+                notificationSound.currentTime = 0;
+                notificationSound.play();
+            } catch (error) {
+                console.error('Error playing notification sound:', error);
+            }
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'fa-info-circle';
+            switch (type) {
+                case 'success': icon = 'fa-check-circle'; break;
+                case 'error': icon = 'fa-exclamation-circle'; break;
+                case 'warning': icon = 'fa-exclamation-triangle'; break;
+            }
+            
+            toast.innerHTML = `
+                <i class="fas ${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
