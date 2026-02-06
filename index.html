@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zynapse - Sign Up</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="signup-page">
+    <div class="signup-container">
+        <!-- Step 1: Welcome Screen -->
+        <div id="welcome-step" class="signup-step active">
+            <div class="logo-container">
+                <img src="zynaps.png" alt="Zynapse Logo" class="main-logo">
+                <h1>ZYN<span class="accent">APSE</span></h1>
+            </div>
+            <div class="welcome-text">
+                <h2>Welcome to Zynapse</h2>
+                <p>Experience seamless communication with end-to-end encryption and intuitive design. Connect with friends, share moments, and collaborate in groups.</p>
+                <p class="powered-by">Powered by <span class="buffer-zone">Buffer Zone</span></p>
+            </div>
+            <button class="btn-primary" onclick="nextStep()">Get Started</button>
+        </div>
+
+        <!-- Step 2: Registration Form -->
+        <div id="register-step" class="signup-step">
+            <div class="form-header">
+                <div class="back-button" onclick="prevStep()">
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+                <h2>Create Account</h2>
+            </div>
+            
+            <form id="register-form" onsubmit="registerUser(event)">
+                <div class="profile-upload">
+                    <div class="upload-container">
+                        <input type="file" id="profile-pic" accept="image/*" hidden>
+                        <label for="profile-pic" class="upload-label">
+                            <i class="fas fa-camera"></i>
+                            <span>Upload Profile</span>
+                        </label>
+                        <div class="preview-container">
+                            <img id="profile-preview" src="" alt="Profile Preview">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" id="name" placeholder="Full Name" required>
+                    <i class="fas fa-user"></i>
+                </div>
+
+                <div class="form-group">
+                    <input type="tel" id="phone" placeholder="Phone Number" required>
+                    <i class="fas fa-phone"></i>
+                </div>
+
+                <div class="form-group">
+                    <input type="email" id="email" placeholder="Email Address" required>
+                    <i class="fas fa-envelope"></i>
+                </div>
+
+                <div class="form-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                    <i class="fas fa-lock"></i>
+                </div>
+
+                <div class="form-group">
+                    <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+                    <i class="fas fa-lock"></i>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    <span id="register-text">Register</span>
+                    <div id="register-spinner" class="spinner"></div>
+                </button>
+            </form>
+
+            <p class="login-link">
+                Already have an account? <a href="#">Sign In</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="imagekit-config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
