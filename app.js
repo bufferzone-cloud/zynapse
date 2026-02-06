@@ -1,3 +1,16 @@
+/**
+ * Zynapse Application Controller
+ * Production Version
+ * 
+ * Features:
+ * - Full user authentication
+ * - Real-time chat with images/videos
+ * - Status updates (Zynes)
+ * - Group chats
+ * - Image/video handling via ImageKit
+ * - Firebase Realtime Database for text data
+ */
+
 // Main Application Controller
 class ZynapseApp {
     constructor() {
@@ -8,19 +21,35 @@ class ZynapseApp {
         this.isTyping = false;
         this.typingTimeout = null;
         this.realtimeListeners = {};
+        this.uploadQueue = [];
+        this.isProcessingQueue = false;
         
         this.init();
     }
 
     // Initialize application
     async init() {
-        this.bindEvents();
-        this.checkAuthState();
-        this.setupRealtimeListeners();
-        this.updateOnlineStatus();
+        console.log('Zynapse App Initializing...');
         
-        // Play notification sound test
-        this.playNotificationSound();
+        try {
+            this.bindEvents();
+            this.checkAuthState();
+            this.setupRealtimeListeners();
+            this.updateOnlineStatus();
+            
+            // Initialize ImageKit
+            if (window.imageKitHelpers && typeof window.imageKitHelpers.init === 'function') {
+                await window.imageKitHelpers.init();
+            }
+            
+            console.log('Zynapse App Initialized Successfully');
+            
+            // Play welcome sound
+            this.playNotificationSound();
+        } catch (error) {
+            console.error('App initialization failed:', error);
+            this.showToast('App initialization failed. Please refresh.', 'error');
+        }
     }
 
     // Bind all event listeners
@@ -42,35 +71,59 @@ class ZynapseApp {
         
         // Window events
         this.bindWindowEvents();
+        
+        // Global click handler
+        this.bindGlobalEvents();
     }
 
     // Authentication events
     bindAuthEvents() {
         // Welcome screen buttons
-        document.getElementById('signInBtn')?.addEventListener('click', () => this.showLoginForm());
-        document.getElementById('signUpBtn')?.addEventListener('click', () => this.showSignupForm());
+        const signInBtn = document.getElementById('signInBtn');
+        const signUpBtn = document.getElementById('signUpBtn');
+        
+        if (signInBtn) {
+            signInBtn.addEventListener('click', () => this.showLoginForm());
+        }
+        
+        if (signUpBtn) {
+            signUpBtn.addEventListener('click', () => this.showSignupForm());
+        }
         
         // Back buttons
-        document.getElementById('backToWelcome')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showWelcomeScreen();
-        });
+        const backToWelcome = document.getElementById('backToWelcome');
+        const backToWelcome2 = document.getElementById('backToWelcome2');
+        const haveAccount = document.getElementById('haveAccount');
         
-        document.getElementById('backToWelcome2')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showWelcomeScreen();
-        });
+        if (backToWelcome) {
+            backToWelcome.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showWelcomeScreen();
+            });
+        }
         
-        document.getElementById('haveAccount')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showLoginForm();
-        });
+        if (backToWelcome2) {
+            backToWelcome2.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showWelcomeScreen();
+            });
+        }
+        
+        if (haveAccount) {
+            haveAccount.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showLoginForm();
+            });
+        }
         
         // Forgot password
-        document.getElementById('forgotPassword')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showForgotPassword();
-        });
+        const forgotPassword = document.getElementById('forgotPassword');
+        if (forgotPassword) {
+            forgotPassword.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showForgotPassword();
+            });
+        }
         
         // Toggle password visibility
         document.querySelectorAll('.toggle-password').forEach(icon => {
@@ -84,197 +137,312 @@ class ZynapseApp {
         });
         
         // Profile picture upload
-        document.getElementById('uploadProfileBtn')?.addEventListener('click', () => {
-            document.getElementById('profileImage').click();
-        });
+        const uploadProfileBtn = document.getElementById('uploadProfileBtn');
+        const profileImage = document.getElementById('profileImage');
         
-        document.getElementById('profileImage')?.addEventListener('change', (e) => {
-            this.handleProfileImageUpload(e.target.files[0]);
-        });
+        if (uploadProfileBtn) {
+            uploadProfileBtn.addEventListener('click', () => {
+                if (profileImage) profileImage.click();
+            });
+        }
+        
+        if (profileImage) {
+            profileImage.addEventListener('change', (e) => {
+                this.handleProfileImageUpload(e.target.files[0]);
+            });
+        }
         
         // Login form submission
-        document.getElementById('loginFormFields')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleLogin();
-        });
+        const loginForm = document.getElementById('loginFormFields');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleLogin();
+            });
+        }
         
         // Signup form submission
-        document.getElementById('signupFormFields')?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleSignup();
-        });
+        const signupForm = document.getElementById('signupFormFields');
+        if (signupForm) {
+            signupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleSignup();
+            });
+        }
         
         // Logout button
-        document.getElementById('logoutBtn')?.addEventListener('click', () => {
-            this.handleLogout();
-        });
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.handleLogout();
+            });
+        }
     }
 
     // Home page events
     bindHomeEvents() {
         // Copy user ID button
-        document.getElementById('copyUserIdBtn')?.addEventListener('click', () => {
-            this.copyUserId();
-        });
+        const copyUserIdBtn = document.getElementById('copyUserIdBtn');
+        if (copyUserIdBtn) {
+            copyUserIdBtn.addEventListener('click', () => {
+                this.copyUserId();
+            });
+        }
         
         // Start chat button
-        document.getElementById('startChatBtn')?.addEventListener('click', () => {
-            this.showStartChatPopup();
-        });
+        const startChatBtn = document.getElementById('startChatBtn');
+        if (startChatBtn) {
+            startChatBtn.addEventListener('click', () => {
+                this.showStartChatPopup();
+            });
+        }
         
         // Search user ID input
-        document.getElementById('searchUserId')?.addEventListener('input', (e) => {
-            this.searchUserById(e.target.value);
-        });
+        const searchUserId = document.getElementById('searchUserId');
+        if (searchUserId) {
+            searchUserId.addEventListener('input', (e) => {
+                this.searchUserById(e.target.value);
+            });
+        }
         
         // Send request button
-        document.getElementById('sendRequestBtn')?.addEventListener('click', () => {
-            this.sendChatRequest();
-        });
+        const sendRequestBtn = document.getElementById('sendRequestBtn');
+        if (sendRequestBtn) {
+            sendRequestBtn.addEventListener('click', () => {
+                this.sendChatRequest();
+            });
+        }
         
         // Add Zyne button
-        document.getElementById('addZyneBtn')?.addEventListener('click', () => {
-            this.showAddZyneModal();
-        });
+        const addZyneBtn = document.getElementById('addZyneBtn');
+        if (addZyneBtn) {
+            addZyneBtn.addEventListener('click', () => {
+                this.showAddZyneModal();
+            });
+        }
         
         // Create group button
-        document.getElementById('createGroupBtn')?.addEventListener('click', () => {
-            this.showCreateGroupModal();
-        });
+        const createGroupBtn = document.getElementById('createGroupBtn');
+        if (createGroupBtn) {
+            createGroupBtn.addEventListener('click', () => {
+                this.showCreateGroupModal();
+            });
+        }
         
         // Add member button
-        document.getElementById('addMemberBtn')?.addEventListener('click', () => {
-            this.addGroupMember();
-        });
+        const addMemberBtn = document.getElementById('addMemberBtn');
+        if (addMemberBtn) {
+            addMemberBtn.addEventListener('click', () => {
+                this.addGroupMember();
+            });
+        }
         
         // Post Zyne button
-        document.getElementById('postZyneBtn')?.addEventListener('click', () => {
-            this.postZyne();
-        });
+        const postZyneBtn = document.getElementById('postZyneBtn');
+        if (postZyneBtn) {
+            postZyneBtn.addEventListener('click', () => {
+                this.postZyne();
+            });
+        }
         
         // Create group submit
-        document.getElementById('createGroupSubmitBtn')?.addEventListener('click', () => {
-            this.createGroup();
-        });
+        const createGroupSubmitBtn = document.getElementById('createGroupSubmitBtn');
+        if (createGroupSubmitBtn) {
+            createGroupSubmitBtn.addEventListener('click', () => {
+                this.createGroup();
+            });
+        }
         
         // Add photo/video to Zyne
-        document.getElementById('addPhotoBtn')?.addEventListener('click', () => {
-            document.getElementById('zynePhotoInput').click();
-        });
+        const addPhotoBtn = document.getElementById('addPhotoBtn');
+        const addVideoBtn = document.getElementById('addVideoBtn');
+        const zynePhotoInput = document.getElementById('zynePhotoInput');
+        const zyneVideoInput = document.getElementById('zyneVideoInput');
         
-        document.getElementById('addVideoBtn')?.addEventListener('click', () => {
-            document.getElementById('zyneVideoInput').click();
-        });
+        if (addPhotoBtn) {
+            addPhotoBtn.addEventListener('click', () => {
+                if (zynePhotoInput) zynePhotoInput.click();
+            });
+        }
         
-        document.getElementById('zynePhotoInput')?.addEventListener('change', (e) => {
-            this.handleZyneMediaUpload(e.target.files[0], 'image');
-        });
+        if (addVideoBtn) {
+            addVideoBtn.addEventListener('click', () => {
+                if (zyneVideoInput) zyneVideoInput.click();
+            });
+        }
         
-        document.getElementById('zyneVideoInput')?.addEventListener('change', (e) => {
-            this.handleZyneMediaUpload(e.target.files[0], 'video');
-        });
+        if (zynePhotoInput) {
+            zynePhotoInput.addEventListener('change', (e) => {
+                this.handleZyneMediaUpload(e.target.files[0], 'image');
+            });
+        }
+        
+        if (zyneVideoInput) {
+            zyneVideoInput.addEventListener('change', (e) => {
+                this.handleZyneMediaUpload(e.target.files[0], 'video');
+            });
+        }
         
         // Upload group image
-        document.getElementById('uploadGroupImageBtn')?.addEventListener('click', () => {
-            document.getElementById('groupImageInput').click();
-        });
+        const uploadGroupImageBtn = document.getElementById('uploadGroupImageBtn');
+        const groupImageInput = document.getElementById('groupImageInput');
         
-        document.getElementById('groupImageInput')?.addEventListener('change', (e) => {
-            this.handleGroupImageUpload(e.target.files[0]);
-        });
+        if (uploadGroupImageBtn) {
+            uploadGroupImageBtn.addEventListener('click', () => {
+                if (groupImageInput) groupImageInput.click();
+            });
+        }
+        
+        if (groupImageInput) {
+            groupImageInput.addEventListener('change', (e) => {
+                this.handleGroupImageUpload(e.target.files[0]);
+            });
+        }
     }
 
     // Chat page events
     bindChatEvents() {
         // Send message button
-        document.getElementById('sendBtn')?.addEventListener('click', () => {
-            this.sendMessage();
-        });
+        const sendBtn = document.getElementById('sendBtn');
+        if (sendBtn) {
+            sendBtn.addEventListener('click', () => {
+                this.sendMessage();
+            });
+        }
         
         // Message input enter key
-        document.getElementById('messageInput')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.sendMessage();
-            }
-        });
-        
-        // Message input typing indicator
-        document.getElementById('messageInput')?.addEventListener('input', () => {
-            this.handleTyping();
-        });
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+            
+            // Message input typing indicator
+            messageInput.addEventListener('input', () => {
+                this.handleTyping();
+            });
+        }
         
         // Attachment button
-        document.getElementById('attachBtn')?.addEventListener('click', () => {
-            this.toggleAttachmentOptions();
-        });
+        const attachBtn = document.getElementById('attachBtn');
+        if (attachBtn) {
+            attachBtn.addEventListener('click', () => {
+                this.toggleAttachmentOptions();
+            });
+        }
         
         // Attachment options
-        document.getElementById('attachPhotoBtn')?.addEventListener('click', () => {
-            document.getElementById('photoInput').click();
-        });
+        const attachPhotoBtn = document.getElementById('attachPhotoBtn');
+        const attachVideoBtn = document.getElementById('attachVideoBtn');
+        const attachDocumentBtn = document.getElementById('attachDocumentBtn');
+        const photoInput = document.getElementById('photoInput');
+        const videoInput = document.getElementById('videoInput');
+        const documentInput = document.getElementById('documentInput');
         
-        document.getElementById('attachVideoBtn')?.addEventListener('click', () => {
-            document.getElementById('videoInput').click();
-        });
+        if (attachPhotoBtn) {
+            attachPhotoBtn.addEventListener('click', () => {
+                if (photoInput) photoInput.click();
+            });
+        }
         
-        document.getElementById('attachDocumentBtn')?.addEventListener('click', () => {
-            document.getElementById('documentInput').click();
-        });
+        if (attachVideoBtn) {
+            attachVideoBtn.addEventListener('click', () => {
+                if (videoInput) videoInput.click();
+            });
+        }
         
-        // File inputs
-        document.getElementById('photoInput')?.addEventListener('change', (e) => {
-            this.handleFileUpload(e.target.files, 'image');
-        });
+        if (attachDocumentBtn) {
+            attachDocumentBtn.addEventListener('click', () => {
+                if (documentInput) documentInput.click();
+            });
+        }
         
-        document.getElementById('videoInput')?.addEventListener('change', (e) => {
-            this.handleFileUpload(e.target.files, 'video');
-        });
+        if (photoInput) {
+            photoInput.addEventListener('change', (e) => {
+                this.handleFileUpload(e.target.files, 'image');
+            });
+        }
         
-        document.getElementById('documentInput')?.addEventListener('change', (e) => {
-            this.handleFileUpload(e.target.files, 'document');
-        });
+        if (videoInput) {
+            videoInput.addEventListener('change', (e) => {
+                this.handleFileUpload(e.target.files, 'video');
+            });
+        }
+        
+        if (documentInput) {
+            documentInput.addEventListener('change', (e) => {
+                this.handleFileUpload(e.target.files, 'document');
+            });
+        }
         
         // Chat menu options
-        document.getElementById('addNicknameBtn')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showNicknameModal();
-        });
+        const addNicknameBtn = document.getElementById('addNicknameBtn');
+        const blockUserBtn = document.getElementById('blockUserBtn');
+        const addToFavoritesBtn = document.getElementById('addToFavoritesBtn');
+        const viewProfileBtn = document.getElementById('viewProfileBtn');
+        const deleteChatBtn = document.getElementById('deleteChatBtn');
+        const reportUserBtn = document.getElementById('reportUserBtn');
         
-        document.getElementById('blockUserBtn')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.blockUser();
-        });
+        if (addNicknameBtn) {
+            addNicknameBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showNicknameModal();
+            });
+        }
         
-        document.getElementById('addToFavoritesBtn')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.addToFavorites();
-        });
+        if (blockUserBtn) {
+            blockUserBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.blockUser();
+            });
+        }
         
-        document.getElementById('viewProfileBtn')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.viewUserProfile();
-        });
+        if (addToFavoritesBtn) {
+            addToFavoritesBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.addToFavorites();
+            });
+        }
         
-        document.getElementById('deleteChatBtn')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.deleteChat();
-        });
+        if (viewProfileBtn) {
+            viewProfileBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.viewUserProfile();
+            });
+        }
         
-        document.getElementById('reportUserBtn')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.reportUser();
-        });
+        if (deleteChatBtn) {
+            deleteChatBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.deleteChat();
+            });
+        }
+        
+        if (reportUserBtn) {
+            reportUserBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.reportUser();
+            });
+        }
         
         // Save nickname
-        document.getElementById('saveNicknameBtn')?.addEventListener('click', () => {
-            this.saveNickname();
-        });
+        const saveNicknameBtn = document.getElementById('saveNicknameBtn');
+        if (saveNicknameBtn) {
+            saveNicknameBtn.addEventListener('click', () => {
+                this.saveNickname();
+            });
+        }
         
         // Send media button
-        document.getElementById('sendMediaBtn')?.addEventListener('click', () => {
-            this.sendMediaMessage();
-        });
+        const sendMediaBtn = document.getElementById('sendMediaBtn');
+        if (sendMediaBtn) {
+            sendMediaBtn.addEventListener('click', () => {
+                this.sendMediaMessage();
+            });
+        }
     }
 
     // Navigation events
@@ -289,9 +457,12 @@ class ZynapseApp {
         });
         
         // Back button
-        document.querySelector('.back-btn')?.addEventListener('click', () => {
-            window.history.back();
-        });
+        const backBtn = document.querySelector('.back-btn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                window.history.back();
+            });
+        }
     }
 
     // Modal events
@@ -348,25 +519,76 @@ class ZynapseApp {
         });
     }
 
+    // Global events
+    bindGlobalEvents() {
+        // Click outside attachment options
+        document.addEventListener('click', (e) => {
+            const attachmentOptions = document.getElementById('attachmentOptions');
+            const attachBtn = document.getElementById('attachBtn');
+            
+            if (attachmentOptions && attachmentOptions.classList.contains('show') && 
+                !attachmentOptions.contains(e.target) && 
+                attachBtn && !attachBtn.contains(e.target)) {
+                attachmentOptions.classList.remove('show');
+            }
+        });
+        
+        // Handle clicks on dynamic elements
+        document.addEventListener('click', (e) => {
+            // Handle accept/reject request buttons
+            if (e.target.closest('.accept-btn')) {
+                const btn = e.target.closest('.accept-btn');
+                this.handleRequestAction(btn.dataset.requestId, 'accepted');
+            }
+            
+            if (e.target.closest('.reject-btn')) {
+                const btn = e.target.closest('.reject-btn');
+                this.handleRequestAction(btn.dataset.requestId, 'rejected');
+            }
+            
+            // Handle chat buttons in contacts
+            if (e.target.closest('.chat-btn')) {
+                const btn = e.target.closest('.chat-btn');
+                if (btn.dataset.userId) {
+                    this.startChat(btn.dataset.userId);
+                } else if (btn.dataset.groupId) {
+                    this.startGroupChat(btn.dataset.groupId);
+                }
+            }
+        });
+    }
+
     // Show welcome screen
     showWelcomeScreen() {
-        document.getElementById('welcomeScreen').style.display = 'block';
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('signupForm').style.display = 'none';
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        
+        if (welcomeScreen) welcomeScreen.style.display = 'block';
+        if (loginForm) loginForm.style.display = 'none';
+        if (signupForm) signupForm.style.display = 'none';
     }
 
     // Show login form
     showLoginForm() {
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'block';
-        document.getElementById('signupForm').style.display = 'none';
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        
+        if (welcomeScreen) welcomeScreen.style.display = 'none';
+        if (loginForm) loginForm.style.display = 'block';
+        if (signupForm) signupForm.style.display = 'none';
     }
 
     // Show signup form
     showSignupForm() {
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('signupForm').style.display = 'block';
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        
+        if (welcomeScreen) welcomeScreen.style.display = 'none';
+        if (loginForm) loginForm.style.display = 'none';
+        if (signupForm) signupForm.style.display = 'block';
     }
 
     // Show forgot password
@@ -379,8 +601,8 @@ class ZynapseApp {
 
     // Handle login
     async handleLogin() {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
+        const email = document.getElementById('loginEmail')?.value;
+        const password = document.getElementById('loginPassword')?.value;
         
         if (!email || !password) {
             this.showToast('Please fill in all fields', 'error');
@@ -399,6 +621,9 @@ class ZynapseApp {
             if (userData) {
                 this.showToast('Login successful!', 'success');
                 
+                // Update online status
+                await this.updateOnlineStatus('online');
+                
                 // Redirect to home page after short delay
                 setTimeout(() => {
                     window.location.href = 'home.html';
@@ -416,12 +641,12 @@ class ZynapseApp {
 
     // Handle signup
     async handleSignup() {
-        const name = document.getElementById('signupName').value;
-        const phone = document.getElementById('signupPhone').value;
-        const email = document.getElementById('signupEmail').value;
-        const password = document.getElementById('signupPassword').value;
-        const confirmPassword = document.getElementById('signupConfirmPassword').value;
-        const profileImage = document.getElementById('profileImage').files[0];
+        const name = document.getElementById('signupName')?.value;
+        const phone = document.getElementById('signupPhone')?.value;
+        const email = document.getElementById('signupEmail')?.value;
+        const password = document.getElementById('signupPassword')?.value;
+        const confirmPassword = document.getElementById('signupConfirmPassword')?.value;
+        const profileImage = document.getElementById('profileImage')?.files[0];
         
         // Validation
         if (!name || !phone || !email || !password || !confirmPassword) {
@@ -455,9 +680,31 @@ class ZynapseApp {
             
             if (profileImage) {
                 try {
-                    const uploadResult = await imageKitHelpers.uploadProfilePicture(profileImage, user.uid);
-                    profilePicUrl = uploadResult.originalUrl;
-                    profilePicThumbnail = uploadResult.thumbnailUrl;
+                    // Upload to ImageKit server
+                    const formData = new FormData();
+                    formData.append('file', profileImage);
+                    formData.append('fileName', `profile_${user.uid}_${Date.now()}.${profileImage.name.split('.').pop()}`);
+                    formData.append('folder', '/zynapse/profiles');
+                    
+                    const response = await fetch('https://imagekit-auth-server-uafl.onrender.com/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Profile picture upload failed');
+                    }
+                    
+                    const result = await response.json();
+                    profilePicUrl = result.url;
+                    
+                    // Generate thumbnail URL
+                    if (window.imageKitHelpers && window.imageKitHelpers.getOptimizedImage) {
+                        profilePicThumbnail = window.imageKitHelpers.getOptimizedImage(profilePicUrl, 150, 150);
+                    } else {
+                        profilePicThumbnail = profilePicUrl;
+                    }
+                    
                 } catch (uploadError) {
                     console.warn('Profile picture upload failed:', uploadError);
                     // Continue without profile picture
@@ -467,9 +714,9 @@ class ZynapseApp {
             // 4. Create user data object
             const userData = {
                 uid: user.uid,
-                name: name,
-                phone: phone,
-                email: email,
+                name: name.trim(),
+                phone: phone.trim(),
+                email: email.trim(),
                 zynapseId: zynapseId,
                 profilePic: profilePicUrl,
                 profilePicThumbnail: profilePicThumbnail || profilePicUrl,
@@ -494,6 +741,9 @@ class ZynapseApp {
             
             this.showToast('Account created successfully! Your Zynapse ID: ' + zynapseId, 'success');
             
+            // Update online status
+            await this.updateOnlineStatus('online');
+            
             // Auto login and redirect
             setTimeout(() => {
                 window.location.href = 'home.html';
@@ -511,16 +761,29 @@ class ZynapseApp {
     async handleProfileImageUpload(file) {
         if (!file) return;
         
-        if (!imageKitHelpers.isImageFile(file)) {
-            this.showToast('Please select an image file', 'error');
-            return;
-        }
+        const previewElement = document.getElementById('profilePreview');
+        if (!previewElement) return;
         
         try {
-            imageKitHelpers.validateFileSize(file, 5); // 5MB max
+            // Check if file is image
+            if (!file.type.startsWith('image/')) {
+                this.showToast('Please select an image file', 'error');
+                return;
+            }
             
-            const preview = await imageKitHelpers.createImagePreview(file);
-            const previewElement = document.getElementById('profilePreview');
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                this.showToast('Image size must be less than 5MB', 'error');
+                return;
+            }
+            
+            // Create preview
+            const preview = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
             
             previewElement.innerHTML = '';
             const img = document.createElement('img');
@@ -531,7 +794,8 @@ class ZynapseApp {
             previewElement.appendChild(img);
             
         } catch (error) {
-            this.showToast(error.message, 'error');
+            console.error('Profile image preview error:', error);
+            this.showToast('Failed to load image preview', 'error');
         }
     }
 
@@ -554,7 +818,9 @@ class ZynapseApp {
 
     // Copy user ID to clipboard
     copyUserId() {
-        const userId = document.getElementById('userID').textContent;
+        const userId = document.getElementById('userID')?.textContent;
+        if (!userId) return;
+        
         navigator.clipboard.writeText(userId).then(() => {
             this.showToast('Zynapse ID copied to clipboard', 'success');
         }).catch(err => {
@@ -565,14 +831,20 @@ class ZynapseApp {
 
     // Show start chat popup
     showStartChatPopup() {
-        document.getElementById('startChatPopup').style.display = 'block';
-        document.getElementById('searchUserId').focus();
+        const popup = document.getElementById('startChatPopup');
+        if (popup) {
+            popup.style.display = 'block';
+            const searchInput = document.getElementById('searchUserId');
+            if (searchInput) searchInput.focus();
+        }
     }
 
     // Search user by ID
     async searchUserById(zynapseId) {
         const searchResult = document.getElementById('userSearchResult');
         const sendRequestBtn = document.getElementById('sendRequestBtn');
+        
+        if (!searchResult || !sendRequestBtn) return;
         
         if (!zynapseId || zynapseId.length < 8) {
             searchResult.innerHTML = '';
@@ -604,7 +876,7 @@ class ZynapseApp {
                         <img src="${user.profilePicThumbnail || user.profilePic || 'zynaps.png'}" 
                              alt="${user.name}" class="profile-pic">
                         <div>
-                            <h4>${user.name}</h4>
+                            <h4>${this.escapeHtml(user.name)}</h4>
                             <p>${user.zynapseId}</p>
                             ${isContact ? '<p class="already-contact">Already in contacts</p>' : ''}
                         </div>
@@ -629,8 +901,9 @@ class ZynapseApp {
     // Send chat request
     async sendChatRequest() {
         const sendRequestBtn = document.getElementById('sendRequestBtn');
-        const zynapseId = sendRequestBtn.dataset.zynapseId;
+        if (!sendRequestBtn) return;
         
+        const zynapseId = sendRequestBtn.dataset.zynapseId;
         if (!zynapseId) return;
         
         try {
@@ -738,14 +1011,27 @@ class ZynapseApp {
                 
                 const zyneElement = document.createElement('div');
                 zyneElement.className = 'zyne-card';
+                
+                let mediaContent = '';
+                if (zyne.mediaUrl) {
+                    if (zyne.type === 'image') {
+                        mediaContent = `
+                            <img src="${this.getOptimizedImageUrl(zyne.mediaUrl, 400, 400)}" 
+                                 alt="Zyne" class="zyne-media">
+                        `;
+                    } else if (zyne.type === 'video') {
+                        mediaContent = `
+                            <video src="${zyne.mediaUrl}" 
+                                   controls 
+                                   class="zyne-media">
+                            </video>
+                        `;
+                    }
+                }
+                
                 zyneElement.innerHTML = `
                     <div class="zyne-content">
-                        ${zyne.mediaUrl ? `
-                            ${zyne.type === 'image' ? 
-                                `<img src="${imageKitHelpers.getOptimizedImage(zyne.mediaUrl, 400, 400)}" alt="Zyne">` :
-                                `<video src="${zyne.mediaUrl}" controls></video>`
-                            }
-                        ` : ''}
+                        ${mediaContent}
                         ${zyne.content ? `<p>${this.escapeHtml(zyne.content)}</p>` : ''}
                         <div class="zyne-info">
                             <span class="time">${timeAgo}</span>
@@ -811,15 +1097,6 @@ class ZynapseApp {
                 
                 container.appendChild(requestElement);
             }
-            
-            // Add event listeners to action buttons
-            container.querySelectorAll('.accept-btn').forEach(btn => {
-                btn.addEventListener('click', () => this.handleRequestAction(btn.dataset.requestId, 'accepted'));
-            });
-            
-            container.querySelectorAll('.reject-btn').forEach(btn => {
-                btn.addEventListener('click', () => this.handleRequestAction(btn.dataset.requestId, 'rejected'));
-            });
             
         } catch (error) {
             console.error('Error loading requests:', error);
@@ -911,14 +1188,6 @@ class ZynapseApp {
                 container.appendChild(contactElement);
             }
             
-            // Add event listeners to chat buttons
-            container.querySelectorAll('.chat-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const userId = btn.dataset.userId;
-                    this.startChat(userId);
-                });
-            });
-            
         } catch (error) {
             console.error('Error loading contacts:', error);
             container.innerHTML = '<p class="error">Error loading contacts</p>';
@@ -976,10 +1245,25 @@ class ZynapseApp {
         }
     }
 
+    // Start group chat
+    async startGroupChat(groupId) {
+        try {
+            // Redirect to chat page with group ID
+            window.location.href = `chat.html?groupId=${groupId}`;
+        } catch (error) {
+            console.error('Error starting group chat:', error);
+            this.showToast('Failed to start group chat', 'error');
+        }
+    }
+
     // Show add Zyne modal
     showAddZyneModal() {
-        document.getElementById('addZyneModal').style.display = 'block';
-        document.getElementById('zyneText').focus();
+        const modal = document.getElementById('addZyneModal');
+        if (modal) {
+            modal.style.display = 'block';
+            const zyneText = document.getElementById('zyneText');
+            if (zyneText) zyneText.focus();
+        }
     }
 
     // Handle Zyne media upload
@@ -987,23 +1271,50 @@ class ZynapseApp {
         if (!file) return;
         
         const previewContainer = document.getElementById('zyneMediaPreview');
+        if (!previewContainer) return;
         
         try {
-            let previewUrl;
+            // Validate file
+            if (type === 'image' && !file.type.startsWith('image/')) {
+                throw new Error('Please select an image file');
+            }
+            if (type === 'video' && !file.type.startsWith('video/')) {
+                throw new Error('Please select a video file');
+            }
             
+            // Validate size
+            const maxSize = type === 'image' ? 10 * 1024 * 1024 : 50 * 1024 * 1024; // 10MB for images, 50MB for videos
+            if (file.size > maxSize) {
+                throw new Error(`File size must be less than ${type === 'image' ? '10MB' : '50MB'}`);
+            }
+            
+            // Create preview
+            let previewUrl;
             if (type === 'image') {
-                if (!imageKitHelpers.isImageFile(file)) {
-                    throw new Error('Please select an image file');
-                }
-                imageKitHelpers.validateFileSize(file, 10);
-                previewUrl = await imageKitHelpers.createImagePreview(file);
+                previewUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsDataURL(file);
+                });
             } else if (type === 'video') {
-                if (!imageKitHelpers.isVideoFile(file)) {
-                    throw new Error('Please select a video file');
-                }
-                imageKitHelpers.validateFileSize(file, 50);
-                const preview = await imageKitHelpers.createVideoPreview(file);
-                previewUrl = preview.thumbnail;
+                previewUrl = await new Promise((resolve, reject) => {
+                    const video = document.createElement('video');
+                    video.preload = 'metadata';
+                    
+                    video.onloadedmetadata = () => {
+                        URL.revokeObjectURL(video.src);
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg'));
+                    };
+                    
+                    video.onerror = () => reject(new Error('Failed to load video'));
+                    video.src = URL.createObjectURL(file);
+                });
             }
             
             const previewItem = document.createElement('div');
@@ -1038,10 +1349,10 @@ class ZynapseApp {
 
     // Post Zyne
     async postZyne() {
-        const text = document.getElementById('zyneText').value;
+        const text = document.getElementById('zyneText')?.value || '';
         const previewItems = document.querySelectorAll('#zyneMediaPreview .preview-item');
         
-        if (!text && previewItems.length === 0) {
+        if (!text.trim() && previewItems.length === 0) {
             this.showToast('Please add text or media to post', 'error');
             return;
         }
@@ -1057,15 +1368,30 @@ class ZynapseApp {
                 const file = fileData.file;
                 const type = fileData.type;
                 
-                const uploadResult = await imageKitHelpers.uploadZyneMedia(file, this.currentUser.uid, type);
-                mediaUrl = uploadResult.originalUrl;
+                // Upload to ImageKit server
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('fileName', `zyne_${this.currentUser.uid}_${Date.now()}.${file.name.split('.').pop()}`);
+                formData.append('folder', '/zynapse/zynes');
+                
+                const response = await fetch('https://imagekit-auth-server-uafl.onrender.com/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Media upload failed');
+                }
+                
+                const result = await response.json();
+                mediaUrl = result.url;
                 mediaType = type;
             }
             
             // Create Zyne
             const result = await firebaseHelpers.createZyne(
                 this.currentUser.uid,
-                text,
+                text.trim(),
                 mediaType,
                 mediaUrl
             );
@@ -1075,11 +1401,15 @@ class ZynapseApp {
                 this.closeAllModals();
                 
                 // Clear form
-                document.getElementById('zyneText').value = '';
-                document.getElementById('zyneMediaPreview').innerHTML = '';
+                const zyneText = document.getElementById('zyneText');
+                const zyneMediaPreview = document.getElementById('zyneMediaPreview');
+                if (zyneText) zyneText.value = '';
+                if (zyneMediaPreview) zyneMediaPreview.innerHTML = '';
                 
                 // Reload Zynes
                 await this.loadZynes();
+            } else {
+                throw new Error(result.error);
             }
             
         } catch (error) {
@@ -1090,23 +1420,38 @@ class ZynapseApp {
 
     // Show create group modal
     showCreateGroupModal() {
-        document.getElementById('createGroupModal').style.display = 'block';
-        document.getElementById('groupName').focus();
+        const modal = document.getElementById('createGroupModal');
+        if (modal) {
+            modal.style.display = 'block';
+            const groupName = document.getElementById('groupName');
+            if (groupName) groupName.focus();
+        }
     }
 
     // Handle group image upload
     async handleGroupImageUpload(file) {
         if (!file) return;
         
-        if (!imageKitHelpers.isImageFile(file)) {
-            this.showToast('Please select an image file', 'error');
-            return;
-        }
+        const previewElement = document.getElementById('groupImagePreview');
+        if (!previewElement) return;
         
         try {
-            imageKitHelpers.validateFileSize(file, 5);
-            const preview = await imageKitHelpers.createImagePreview(file);
-            const previewElement = document.getElementById('groupImagePreview');
+            if (!file.type.startsWith('image/')) {
+                this.showToast('Please select an image file', 'error');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                this.showToast('Image size must be less than 5MB', 'error');
+                return;
+            }
+            
+            const preview = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
             
             previewElement.innerHTML = '';
             const img = document.createElement('img');
@@ -1127,8 +1472,11 @@ class ZynapseApp {
     // Add group member
     addGroupMember() {
         const input = document.getElementById('addMemberInput');
-        const zynapseId = input.value.trim().toUpperCase();
         const membersList = document.getElementById('membersList');
+        
+        if (!input || !membersList) return;
+        
+        const zynapseId = input.value.trim().toUpperCase();
         
         if (!zynapseId || !zynapseId.startsWith('ZYN-')) {
             this.showToast('Please enter a valid Zynapse ID', 'error');
@@ -1161,9 +1509,9 @@ class ZynapseApp {
 
     // Create group
     async createGroup() {
-        const groupName = document.getElementById('groupName').value.trim();
+        const groupName = document.getElementById('groupName')?.value.trim();
         const membersList = document.getElementById('membersList');
-        const memberTags = membersList.querySelectorAll('.member-tag');
+        const memberTags = membersList ? membersList.querySelectorAll('.member-tag') : [];
         
         if (!groupName) {
             this.showToast('Please enter group name', 'error');
@@ -1182,10 +1530,24 @@ class ZynapseApp {
             // Upload group image if exists
             let profilePic = null;
             const previewElement = document.getElementById('groupImagePreview');
-            if (previewElement.dataset.file) {
+            if (previewElement && previewElement.dataset.file) {
                 const file = JSON.parse(previewElement.dataset.file);
-                const uploadResult = await imageKitHelpers.uploadGroupImage(file, 'temp');
-                profilePic = uploadResult.originalUrl;
+                
+                // Upload to ImageKit server
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('fileName', `group_${Date.now()}.${file.name.split('.').pop()}`);
+                formData.append('folder', '/zynapse/groups');
+                
+                const response = await fetch('https://imagekit-auth-server-uafl.onrender.com/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    profilePic = result.url;
+                }
             }
             
             // Create group
@@ -1201,13 +1563,20 @@ class ZynapseApp {
                 this.closeAllModals();
                 
                 // Clear form
-                document.getElementById('groupName').value = '';
-                document.getElementById('groupImagePreview').innerHTML = 
-                    '<i class="fas fa-users"></i><span>Group Photo</span>';
-                document.getElementById('membersList').innerHTML = '';
+                const groupNameInput = document.getElementById('groupName');
+                const groupImagePreview = document.getElementById('groupImagePreview');
+                
+                if (groupNameInput) groupNameInput.value = '';
+                if (groupImagePreview) {
+                    groupImagePreview.innerHTML = '<i class="fas fa-users"></i><span>Group Photo</span>';
+                    delete groupImagePreview.dataset.file;
+                }
+                if (membersList) membersList.innerHTML = '';
                 
                 // Reload groups
                 await this.loadGroups();
+            } else {
+                throw new Error(result.error);
             }
             
         } catch (error) {
@@ -1272,6 +1641,8 @@ class ZynapseApp {
     // Send message
     async sendMessage() {
         const input = document.getElementById('messageInput');
+        if (!input) return;
+        
         const message = input.value.trim();
         
         if (!message || !this.currentChatId || !this.currentUser) return;
@@ -1325,7 +1696,9 @@ class ZynapseApp {
     // Toggle attachment options
     toggleAttachmentOptions() {
         const options = document.getElementById('attachmentOptions');
-        options.classList.toggle('show');
+        if (options) {
+            options.classList.toggle('show');
+        }
     }
 
     // Handle file upload for chat
@@ -1336,28 +1709,52 @@ class ZynapseApp {
         
         try {
             // Validate file
-            if (type === 'image' && !imageKitHelpers.isImageFile(file)) {
+            if (type === 'image' && !file.type.startsWith('image/')) {
                 throw new Error('Please select an image file');
             }
-            if (type === 'video' && !imageKitHelpers.isVideoFile(file)) {
+            if (type === 'video' && !file.type.startsWith('video/')) {
                 throw new Error('Please select a video file');
             }
             
             // Validate size
-            const maxSize = type === 'image' ? 10 : 50; // MB
-            imageKitHelpers.validateFileSize(file, maxSize);
+            const maxSize = type === 'image' ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+            if (file.size > maxSize) {
+                throw new Error(`File size must be less than ${type === 'image' ? '10MB' : '50MB'}`);
+            }
             
             // Create preview
             let previewUrl;
             if (type === 'image') {
-                previewUrl = await imageKitHelpers.createImagePreview(file);
+                previewUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsDataURL(file);
+                });
             } else if (type === 'video') {
-                const preview = await imageKitHelpers.createVideoPreview(file);
-                previewUrl = preview.thumbnail;
+                previewUrl = await new Promise((resolve, reject) => {
+                    const video = document.createElement('video');
+                    video.preload = 'metadata';
+                    
+                    video.onloadedmetadata = () => {
+                        URL.revokeObjectURL(video.src);
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg'));
+                    };
+                    
+                    video.onerror = () => reject(new Error('Failed to load video'));
+                    video.src = URL.createObjectURL(file);
+                });
             }
             
             // Show preview modal
             const previewContent = document.getElementById('mediaPreviewContent');
+            if (!previewContent) return;
+            
             previewContent.innerHTML = type === 'image' ?
                 `<img src="${previewUrl}" alt="Preview" style="max-width: 100%; border-radius: 10px;">` :
                 `<div style="position: relative;">
@@ -1372,7 +1769,10 @@ class ZynapseApp {
             });
             
             // Show modal
-            document.getElementById('mediaPreviewModal').style.display = 'block';
+            const modal = document.getElementById('mediaPreviewModal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
             this.toggleAttachmentOptions();
             
         } catch (error) {
@@ -1383,28 +1783,41 @@ class ZynapseApp {
     // Send media message
     async sendMediaMessage() {
         const previewContent = document.getElementById('mediaPreviewContent');
+        if (!previewContent || !previewContent.dataset.file) return;
+        
         const fileData = JSON.parse(previewContent.dataset.file);
         
         if (!fileData || !this.currentChatId || !this.currentUser) return;
         
         try {
-            // Upload to ImageKit
-            const uploadResult = await imageKitHelpers.uploadChatMedia(
-                fileData.file,
-                this.currentChatId,
-                fileData.type
-            );
+            // Upload to ImageKit server
+            const formData = new FormData();
+            formData.append('file', fileData.file);
+            formData.append('fileName', `${fileData.type}_${this.currentChatId}_${Date.now()}.${fileData.file.name.split('.').pop()}`);
+            formData.append('folder', `/zynapse/chat/${fileData.type === 'image' ? 'images' : 'videos'}`);
+            
+            const response = await fetch('https://imagekit-auth-server-uafl.onrender.com/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error('Media upload failed');
+            }
+            
+            const result = await response.json();
+            const mediaUrl = result.url;
             
             // Send message with media
-            const result = await firebaseHelpers.sendMessage(
+            const sendResult = await firebaseHelpers.sendMessage(
                 this.currentChatId,
                 this.currentUser.uid,
                 fileData.type === 'image' ? '📷 Photo' : '🎥 Video',
                 fileData.type,
-                uploadResult.optimizedUrl
+                mediaUrl
             );
             
-            if (result.success) {
+            if (sendResult.success) {
                 this.closeAllModals();
                 this.scrollToBottom();
                 this.playSentSound();
@@ -1418,13 +1831,20 @@ class ZynapseApp {
 
     // Show nickname modal
     showNicknameModal() {
-        document.getElementById('nicknameModal').style.display = 'block';
-        document.getElementById('nicknameInput').focus();
+        const modal = document.getElementById('nicknameModal');
+        if (modal) {
+            modal.style.display = 'block';
+            const nicknameInput = document.getElementById('nicknameInput');
+            if (nicknameInput) nicknameInput.focus();
+        }
     }
 
     // Save nickname
     async saveNickname() {
-        const nickname = document.getElementById('nicknameInput').value.trim();
+        const nicknameInput = document.getElementById('nicknameInput');
+        if (!nicknameInput) return;
+        
+        const nickname = nicknameInput.value.trim();
         
         if (!nickname) {
             this.showToast('Please enter a nickname', 'error');
@@ -1445,7 +1865,10 @@ class ZynapseApp {
             this.closeAllModals();
             
             // Update chat header
-            document.getElementById('chatUserName').textContent = nickname;
+            const chatUserName = document.getElementById('chatUserName');
+            if (chatUserName) {
+                chatUserName.textContent = nickname;
+            }
             
         } catch (error) {
             console.error('Error saving nickname:', error);
@@ -1568,21 +1991,32 @@ class ZynapseApp {
             if (user) {
                 this.currentUser = user;
                 
-                // Get user data
-                this.userData = await firebaseHelpers.getUserData(user.uid);
-                
-                // Update UI
-                this.updateUserUI();
-                
-                // Start realtime listeners
-                this.setupRealtimeListeners();
-                
-                // Update online status
-                this.updateOnlineStatus('online');
+                try {
+                    // Get user data
+                    this.userData = await firebaseHelpers.getUserData(user.uid);
+                    
+                    // Update UI
+                    this.updateUserUI();
+                    
+                    // Start realtime listeners
+                    this.setupRealtimeListeners();
+                    
+                    // Update online status
+                    await this.updateOnlineStatus('online');
+                    
+                    // Update requests badge
+                    await this.updateRequestsBadge();
+                    
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                }
                 
             } else {
                 this.currentUser = null;
                 this.userData = null;
+                
+                // Clear realtime listeners
+                this.clearRealtimeListeners();
                 
                 // Redirect to login if not on auth page
                 if (!window.location.pathname.includes('index.html') && 
@@ -1657,7 +2091,7 @@ class ZynapseApp {
             this.listenForTyping();
             
             // Mark messages as read
-            firebaseHelpers.markMessagesAsRead(this.currentChatId, otherUserId);
+            await firebaseHelpers.markMessagesAsRead(this.currentChatId, otherUserId);
             
         } catch (error) {
             console.error('Error loading chat data:', error);
@@ -1676,12 +2110,12 @@ class ZynapseApp {
             
             let lastDate = null;
             
-            for (const messageId in messages) {
-                const message = messages[messageId];
-                
+            // Sort messages by timestamp
+            const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
+            
+            for (const message of sortedMessages) {
                 // Format date
                 const messageDate = new Date(message.timestamp);
-                const today = new Date();
                 const dateStr = messageDate.toDateString();
                 
                 // Add date separator if date changed
@@ -1701,16 +2135,22 @@ class ZynapseApp {
                 if (message.type === 'text') {
                     messageContent = `<p>${this.escapeHtml(message.message)}</p>`;
                 } else if (message.type === 'image') {
+                    const optimizedUrl = this.getOptimizedImageUrl(message.mediaUrl, 300, 300);
                     messageContent = `
                         <div class="media-message">
-                            <img src="${imageKitHelpers.getOptimizedImage(message.mediaUrl, 300, 300)}" 
-                                 alt="Image" onclick="window.open('${message.mediaUrl}', '_blank')">
+                            <img src="${optimizedUrl}" 
+                                 alt="Image" 
+                                 class="chat-media"
+                                 onclick="window.open('${message.mediaUrl}', '_blank')">
                         </div>
                     `;
                 } else if (message.type === 'video') {
                     messageContent = `
                         <div class="media-message">
-                            <video src="${message.mediaUrl}" controls></video>
+                            <video src="${message.mediaUrl}" 
+                                   controls 
+                                   class="chat-media">
+                            </video>
                         </div>
                     `;
                 }
@@ -1732,6 +2172,7 @@ class ZynapseApp {
             
         } catch (error) {
             console.error('Error loading messages:', error);
+            container.innerHTML = '<p class="error">Error loading messages</p>';
         }
     }
 
@@ -1739,7 +2180,12 @@ class ZynapseApp {
     listenForNewMessages() {
         if (!this.currentChatId) return;
         
-        database.ref(`messages/${this.currentChatId}`).on('child_added', (snapshot) => {
+        const messageRef = database.ref(`messages/${this.currentChatId}`);
+        
+        // Store listener for cleanup
+        this.realtimeListeners['messages'] = messageRef;
+        
+        messageRef.on('child_added', (snapshot) => {
             const message = snapshot.val();
             
             // Skip if message is from current user (already added when sent)
@@ -1761,42 +2207,58 @@ class ZynapseApp {
     listenForTyping() {
         if (!this.currentChatId) return;
         
-        database.ref(`typing/${this.currentChatId}`).on('child_added', (snapshot) => {
+        const typingRef = database.ref(`typing/${this.currentChatId}`);
+        
+        // Store listener for cleanup
+        this.realtimeListeners['typing'] = typingRef;
+        
+        typingRef.on('child_added', (snapshot) => {
             if (snapshot.key !== this.currentUser.uid) {
                 this.showTypingIndicator(snapshot.key);
             }
         });
         
-        database.ref(`typing/${this.currentChatId}`).on('child_removed', () => {
+        typingRef.on('child_removed', () => {
             this.hideTypingIndicator();
         });
     }
 
     // Add message to chat
-    addMessageToChat(message) {
+    async addMessageToChat(message) {
         const container = document.getElementById('chatMessages');
         if (!container) return;
         
         // Remove typing indicator if exists
         this.hideTypingIndicator();
         
+        // Check if message already exists
+        const existingMessage = container.querySelector(`[data-message-id="${message.id}"]`);
+        if (existingMessage) return;
+        
         const messageElement = document.createElement('div');
         messageElement.className = `message ${message.senderId === this.currentUser.uid ? 'sent' : 'received'}`;
+        messageElement.dataset.messageId = message.id;
         
         let messageContent = '';
         if (message.type === 'text') {
             messageContent = `<p>${this.escapeHtml(message.message)}</p>`;
         } else if (message.type === 'image') {
+            const optimizedUrl = this.getOptimizedImageUrl(message.mediaUrl, 300, 300);
             messageContent = `
                 <div class="media-message">
-                    <img src="${imageKitHelpers.getOptimizedImage(message.mediaUrl, 300, 300)}" 
-                         alt="Image" onclick="window.open('${message.mediaUrl}', '_blank')">
+                    <img src="${optimizedUrl}" 
+                         alt="Image" 
+                         class="chat-media"
+                         onclick="window.open('${message.mediaUrl}', '_blank')">
                 </div>
             `;
         } else if (message.type === 'video') {
             messageContent = `
                 <div class="media-message">
-                    <video src="${message.mediaUrl}" controls></video>
+                    <video src="${message.mediaUrl}" 
+                           controls 
+                           class="chat-media">
+                    </video>
                 </div>
             `;
         }
@@ -1854,7 +2316,10 @@ class ZynapseApp {
     scrollToBottom() {
         const container = document.getElementById('chatMessages');
         if (container) {
-            container.scrollTop = container.scrollHeight;
+            // Small delay to ensure DOM is updated
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 100);
         }
     }
 
@@ -1872,11 +2337,26 @@ class ZynapseApp {
         this.listenForUserStatus();
     }
 
+    // Clear realtime listeners
+    clearRealtimeListeners() {
+        Object.values(this.realtimeListeners).forEach(listener => {
+            if (listener && typeof listener.off === 'function') {
+                listener.off();
+            }
+        });
+        this.realtimeListeners = {};
+    }
+
     // Listen for new chat requests
     listenForNewRequests() {
         if (!this.currentUser) return;
         
-        database.ref(`chatRequests/${this.currentUser.uid}`).on('child_added', (snapshot) => {
+        const requestsRef = database.ref(`chatRequests/${this.currentUser.uid}`);
+        
+        // Store listener for cleanup
+        this.realtimeListeners['requests'] = requestsRef;
+        
+        requestsRef.on('child_added', (snapshot) => {
             const request = snapshot.val();
             
             if (request.direction === 'received' && request.status === 'pending') {
@@ -1886,12 +2366,16 @@ class ZynapseApp {
                 // Play notification sound
                 this.playNotificationSound();
                 
-                // Show notification
+                // Show notification if permitted
                 if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification('New Chat Request', {
-                        body: `${request.fromUserName} sent you a chat request`,
-                        icon: 'zynaps.png'
-                    });
+                    try {
+                        new Notification('New Chat Request', {
+                            body: `${request.fromUserName} sent you a chat request`,
+                            icon: 'zynaps.png'
+                        });
+                    } catch (error) {
+                        console.error('Notification error:', error);
+                    }
                 }
                 
                 // Refresh requests page if active
@@ -1906,14 +2390,20 @@ class ZynapseApp {
     listenForAllNewMessages() {
         if (!this.currentUser) return;
         
-        database.ref(`userChats/${this.currentUser.uid}`).on('child_changed', (snapshot) => {
+        const userChatsRef = database.ref(`userChats/${this.currentUser.uid}`);
+        
+        // Store listener for cleanup
+        this.realtimeListeners['userChats'] = userChatsRef;
+        
+        userChatsRef.on('child_changed', (snapshot) => {
             const chat = snapshot.val();
             
             // Play notification sound if not in that chat
             if (chat.unreadCount > 0 && this.currentChatId !== snapshot.key) {
                 this.playNotificationSound();
                 
-                // Update unread badge on nav if implemented
+                // Update unread badge
+                this.updateUnreadBadges();
             }
         });
     }
@@ -1922,14 +2412,32 @@ class ZynapseApp {
     listenForUserStatus() {
         if (!this.currentUser) return;
         
-        // Listen for contacts status changes
-        database.ref('users').on('child_changed', (snapshot) => {
+        const usersRef = database.ref('users');
+        
+        // Store listener for cleanup
+        this.realtimeListeners['users'] = usersRef;
+        
+        usersRef.on('child_changed', (snapshot) => {
             const user = snapshot.val();
             
             // Update contact status if on contacts page
             if (this.currentPage === 'contacts') {
-                // This would require more specific implementation
-                // For now, just note that status changed
+                // Trigger a UI update (could be optimized)
+                this.loadContacts();
+            }
+            
+            // Update chat header status if viewing that user's chat
+            if (this.currentChatId) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const userId = urlParams.get('userId');
+                
+                if (userId === snapshot.key) {
+                    const chatUserStatus = document.getElementById('chatUserStatus');
+                    if (chatUserStatus) {
+                        chatUserStatus.textContent = user.status?.online ? 'Online' : 'Offline';
+                        chatUserStatus.style.color = user.status?.online ? '#34C759' : '#8E8E93';
+                    }
+                }
             }
         });
     }
@@ -1943,12 +2451,18 @@ class ZynapseApp {
             const requests = await firebaseHelpers.getChatRequests(this.currentUser.uid, 'received');
             const count = Object.keys(requests).length;
             
-            badge.textContent = count > 0 ? count : '';
+            badge.textContent = count > 0 ? (count > 99 ? '99+' : count.toString()) : '';
             badge.style.display = count > 0 ? 'flex' : 'none';
             
         } catch (error) {
             console.error('Error updating badge:', error);
         }
+    }
+
+    // Update unread badges
+    async updateUnreadBadges() {
+        // Implementation for updating unread message badges
+        // This would depend on your UI design
     }
 
     // Update online status
@@ -1969,7 +2483,17 @@ class ZynapseApp {
         });
         
         // Hide attachment options
-        document.getElementById('attachmentOptions')?.classList.remove('show');
+        const attachmentOptions = document.getElementById('attachmentOptions');
+        if (attachmentOptions) {
+            attachmentOptions.classList.remove('show');
+        }
+        
+        // Clear any previews
+        const mediaPreviewContent = document.getElementById('mediaPreviewContent');
+        if (mediaPreviewContent) {
+            mediaPreviewContent.innerHTML = '';
+            delete mediaPreviewContent.dataset.file;
+        }
     }
 
     // Show loading state
@@ -2008,9 +2532,19 @@ class ZynapseApp {
         
         document.body.appendChild(toast);
         
+        // Add animation
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
         // Remove after 3 seconds
         setTimeout(() => {
-            toast.remove();
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
         }, 3000);
     }
 
@@ -2026,18 +2560,35 @@ class ZynapseApp {
 
     // Play notification sound
     playNotificationSound() {
-        const sound = document.getElementById('notificationSound');
-        if (sound) {
-            sound.currentTime = 0;
-            sound.play().catch(e => console.log('Audio play failed:', e));
+        try {
+            const sound = document.getElementById('notificationSound');
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => {
+                    console.log('Audio play failed:', e);
+                    // Fallback: Create audio element dynamically
+                    const audio = new Audio('notification.mp3');
+                    audio.volume = 0.5;
+                    audio.play().catch(e => console.log('Fallback audio also failed:', e));
+                });
+            }
+        } catch (error) {
+            console.error('Error playing notification sound:', error);
         }
     }
 
     // Play sent sound
     playSentSound() {
-        // You can add a different sound for sent messages
-        // For now, use the same notification sound
-        this.playNotificationSound();
+        try {
+            const sound = document.getElementById('sentSound') || document.getElementById('notificationSound');
+            if (sound) {
+                sound.currentTime = 0;
+                sound.volume = 0.3;
+                sound.play().catch(e => console.log('Sent sound play failed:', e));
+            }
+        } catch (error) {
+            console.error('Error playing sent sound:', error);
+        }
     }
 
     // Generate Zynapse ID
@@ -2059,92 +2610,305 @@ class ZynapseApp {
 
     // Get error message
     getErrorMessage(error) {
-        switch(error.code) {
-            case 'auth/email-already-in-use':
-                return 'Email already in use';
-            case 'auth/invalid-email':
-                return 'Invalid email address';
-            case 'auth/operation-not-allowed':
-                return 'Operation not allowed';
-            case 'auth/weak-password':
-                return 'Password is too weak';
-            case 'auth/user-disabled':
-                return 'User account is disabled';
-            case 'auth/user-not-found':
-                return 'User not found';
-            case 'auth/wrong-password':
-                return 'Wrong password';
-            case 'auth/network-request-failed':
-                return 'Network error. Please check your connection';
-            default:
-                return error.message || 'An error occurred';
-        }
+        const errorMessages = {
+            'auth/email-already-in-use': 'Email already in use',
+            'auth/invalid-email': 'Invalid email address',
+            'auth/operation-not-allowed': 'Operation not allowed',
+            'auth/weak-password': 'Password is too weak',
+            'auth/user-disabled': 'User account is disabled',
+            'auth/user-not-found': 'User not found',
+            'auth/wrong-password': 'Wrong password',
+            'auth/network-request-failed': 'Network error. Please check your connection',
+            'auth/too-many-requests': 'Too many requests. Please try again later',
+            'auth/requires-recent-login': 'Please re-authenticate to continue',
+            'auth/invalid-credential': 'Invalid credentials',
+            'auth/invalid-verification-code': 'Invalid verification code',
+            'auth/invalid-verification-id': 'Invalid verification ID'
+        };
+        
+        return errorMessages[error.code] || error.message || 'An error occurred';
     }
 
     // Format time
     formatTime(timestamp) {
-        const date = new Date(timestamp);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        try {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (error) {
+            return '--:--';
+        }
     }
 
     // Format date
     formatDate(date) {
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        
-        if (date.toDateString() === today.toDateString()) {
-            return 'Today';
-        } else if (date.toDateString() === yesterday.toDateString()) {
-            return 'Yesterday';
-        } else {
-            return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        try {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else if (date.getFullYear() === today.getFullYear()) {
+                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            } else {
+                return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+            }
+        } catch (error) {
+            return 'Unknown date';
         }
     }
 
     // Get time ago
     getTimeAgo(timestamp) {
-        const now = Date.now();
-        const diff = now - timestamp;
-        
-        const minute = 60 * 1000;
-        const hour = 60 * minute;
-        const day = 24 * hour;
-        const week = 7 * day;
-        const month = 30 * day;
-        
-        if (diff < minute) {
-            return 'Just now';
-        } else if (diff < hour) {
-            const minutes = Math.floor(diff / minute);
-            return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-        } else if (diff < day) {
-            const hours = Math.floor(diff / hour);
-            return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-        } else if (diff < week) {
-            const days = Math.floor(diff / day);
-            return `${days} day${days > 1 ? 's' : ''} ago`;
-        } else if (diff < month) {
-            const weeks = Math.floor(diff / week);
-            return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
-        } else {
-            const months = Math.floor(diff / month);
-            return `${months} month${months > 1 ? 's' : ''} ago`;
+        try {
+            const now = Date.now();
+            const diff = now - timestamp;
+            
+            const minute = 60 * 1000;
+            const hour = 60 * minute;
+            const day = 24 * hour;
+            const week = 7 * day;
+            const month = 30 * day;
+            const year = 365 * day;
+            
+            if (diff < minute) {
+                return 'Just now';
+            } else if (diff < hour) {
+                const minutes = Math.floor(diff / minute);
+                return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            } else if (diff < day) {
+                const hours = Math.floor(diff / hour);
+                return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            } else if (diff < week) {
+                const days = Math.floor(diff / day);
+                return `${days} day${days > 1 ? 's' : ''} ago`;
+            } else if (diff < month) {
+                const weeks = Math.floor(diff / week);
+                return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+            } else if (diff < year) {
+                const months = Math.floor(diff / month);
+                return `${months} month${months > 1 ? 's' : ''} ago`;
+            } else {
+                const years = Math.floor(diff / year);
+                return `${years} year${years > 1 ? 's' : ''} ago`;
+            }
+        } catch (error) {
+            return 'Unknown time';
         }
     }
 
     // Escape HTML
     escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Get optimized image URL
+    getOptimizedImageUrl(url, width = 400, height = 400) {
+        if (!url) return '';
+        
+        try {
+            // Use ImageKit helpers if available
+            if (window.imageKitHelpers && typeof window.imageKitHelpers.getOptimizedImage === 'function') {
+                return window.imageKitHelpers.getOptimizedImage(url, width, height);
+            }
+            
+            // Fallback: If it's already an ImageKit URL, we can add transformations
+            if (url.includes('ik.imagekit.io')) {
+                return `${url}?tr=w-${width},h-${height},c-at_max`;
+            }
+            
+            return url;
+        } catch (error) {
+            console.error('Error optimizing image URL:', error);
+            return url;
+        }
+    }
+
+    // Queue upload for better performance
+    addToUploadQueue(file, type, callback) {
+        this.uploadQueue.push({ file, type, callback });
+        
+        if (!this.isProcessingQueue) {
+            this.processUploadQueue();
+        }
+    }
+
+    // Process upload queue
+    async processUploadQueue() {
+        if (this.uploadQueue.length === 0) {
+            this.isProcessingQueue = false;
+            return;
+        }
+        
+        this.isProcessingQueue = true;
+        
+        while (this.uploadQueue.length > 0) {
+            const upload = this.uploadQueue.shift();
+            try {
+                const result = await this.uploadToImageKit(upload.file, upload.type);
+                upload.callback(null, result);
+            } catch (error) {
+                upload.callback(error, null);
+            }
+            
+            // Small delay between uploads
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        this.isProcessingQueue = false;
+    }
+
+    // Upload to ImageKit (generic method)
+    async uploadToImageKit(file, folder = 'general') {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('fileName', `${folder}_${Date.now()}_${file.name}`);
+            formData.append('folder', `/zynapse/${folder}`);
+            
+            const response = await fetch('https://imagekit-auth-server-uafl.onrender.com/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Upload failed with status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (!result.url) {
+                throw new Error('No URL returned from server');
+            }
+            
+            return {
+                url: result.url,
+                fileId: result.fileId,
+                thumbnailUrl: result.thumbnailUrl || result.url
+            };
+            
+        } catch (error) {
+            console.error('ImageKit upload error:', error);
+            throw error;
+        }
+    }
+
+    // Handle network errors
+    handleNetworkError(error) {
+        console.error('Network error:', error);
+        
+        if (!navigator.onLine) {
+            this.showToast('You are offline. Please check your connection.', 'error');
+        } else {
+            this.showToast('Network error. Please try again.', 'error');
+        }
+    }
+
+    // Validate email
+    validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    // Validate phone number
+    validatePhone(phone) {
+        const re = /^[+]?[\d\s-]+$/;
+        return re.test(phone);
+    }
+
+    // Debounce function for performance
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Throttle function for performance
+    throttle(func, limit) {
+        let inThrottle;
+        return function(...args) {
+            if (!inThrottle) {
+                func.apply(this, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
     }
 }
 
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.zynapseApp = new ZynapseApp();
+    // Check for required dependencies
+    if (typeof firebase === 'undefined') {
+        console.error('Firebase is not loaded');
+        return;
+    }
+    
+    if (typeof firebaseHelpers === 'undefined') {
+        console.error('Firebase helpers are not loaded');
+        return;
+    }
+    
+    // Initialize app
+    try {
+        window.zynapseApp = new ZynapseApp();
+        console.log('Zynapse App instance created');
+    } catch (error) {
+        console.error('Failed to create Zynapse App:', error);
+        
+        // Show error to user
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #dc3545;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            z-index: 9999;
+        `;
+        errorDiv.textContent = 'Failed to initialize app. Please refresh the page.';
+        document.body.appendChild(errorDiv);
+    }
 });
 
-// Export for use in other files
+// Export for use in other files and debugging
 window.ZynapseApp = ZynapseApp;
+
+// Global error handler
+window.addEventListener('error', function(event) {
+    console.error('Global error:', event.error);
+    
+    // Don't show error for missing audio files
+    if (event.message && event.message.includes('audio')) {
+        return;
+    }
+    
+    // Show user-friendly error
+    if (window.zynapseApp && typeof window.zynapseApp.showToast === 'function') {
+        window.zynapseApp.showToast('An error occurred. Please try again.', 'error');
+    }
+});
+
+// Global promise rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    
+    // Show user-friendly error
+    if (window.zynapseApp && typeof window.zynapseApp.showToast === 'function') {
+        window.zynapseApp.showToast('An error occurred. Please try again.', 'error');
+    }
+});
