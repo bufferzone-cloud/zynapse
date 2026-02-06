@@ -1,565 +1,462 @@
-// Firebase Configuration
+// Import Firebase modules
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getDatabase, ref, set, get, update, remove, child, push, onValue, query, orderByChild, equalTo, onChildAdded, onChildChanged, onChildRemoved } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-storage.js";
+
+// Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
-    authDomain: "zynapse-68181.firebaseapp.com",
-    databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
-    projectId: "zynapse-68181",
-    storageBucket: "", // Removed storage bucket
-    messagingSenderId: "841353050519",
-    appId: "1:841353050519:web:271e2709246067bc506cd2",
-    measurementId: "G-J38CL5MRPF"
+  apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
+  authDomain: "zynapse-68181.firebaseapp.com",
+  databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
+  projectId: "zynapse-68181",
+  storageBucket: "zynapse-68181.firebasestorage.app",
+  messagingSenderId: "841353050519",
+  appId: "1:841353050519:web:3b16d95d8f4cd3b9506cd2",
+  measurementId: "G-4764XLL6WS"
 };
 
 // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const database = firebase.database();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const database = getDatabase(app);
+const storage = getStorage(app);
 
-// Firebase Auth State Listener
-let currentUser = null;
+// Generate ZYN-XXXX user ID
+function generateUserID() {
+  const randomNum = Math.floor(1000 + Math.random() * 9000);
+  return `ZYN-${randomNum}`;
+}
 
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        currentUser = user;
-        console.log("User authenticated:", user.uid);
-        
-        // Update UI based on authentication
-        if (typeof updateAuthUI === 'function') {
-            updateAuthUI(user);
+// Check if user ID is unique
+async function isUserIDUnique(userID) {
+  try {
+    const usersRef = ref(database, 'users');
+    const snapshot = await get(usersRef);
+    if (snapshot.exists()) {
+      const users = snapshot.val();
+      for (let uid in users) {
+        if (users[uid].userID === userID) {
+          return false;
         }
-        
-        // Start listening for real-time updates
-        if (typeof startRealtimeListeners === 'function') {
-            startRealtimeListeners(user.uid);
-        }
-    } else {
-        currentUser = null;
-        console.log("User signed out");
-        
-        // Redirect to login if not on auth page
-        if (!window.location.pathname.includes('index.html') && 
-            window.location.pathname !== '/') {
-            window.location.href = 'index.html';
-        }
+      }
     }
-});
+    return true;
+  } catch (error) {
+    console.error("Error checking user ID:", error);
+    return false;
+  }
+}
 
-// Firebase Helper Functions
-const firebaseHelpers = {
-    // Generate unique ID
-    generateId: () => {
-        return database.ref().push().key;
-    },
+// Get unique user ID
+async function getUniqueUserID() {
+  let userID;
+  let isUnique = false;
+  
+  while (!isUnique) {
+    userID = generateUserID();
+    isUnique = await isUserIDUnique(userID);
+  }
+  
+  return userID;
+}
 
-    // Get current timestamp
-    getTimestamp: () => {
-        return firebase.database.ServerValue.TIMESTAMP;
-    },
+// Store user data in Firebase
+async function storeUserData(userId, name, phone, email, userID, profilePicture = null) {
+  try {
+    const userData = {
+      name: name,
+      phone: phone,
+      email: email,
+      userID: userID,
+      profilePicture: profilePicture,
+      createdAt: Date.now(),
+      status: 'online',
+      lastSeen: Date.now(),
+      contacts: {}
+    };
+    
+    await set(ref(database, `users/${userId}`), userData);
+    await set(ref(database, `userIDs/${userID}`), userId);
+    
+    return true;
+  } catch (error) {
+    console.error("Error storing user data:", error);
+    return false;
+  }
+}
 
-    // Upload file to ImageKit server and get URL
-    uploadFile: async (file, path) => {
-        try {
-            // Create form data for ImageKit upload
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('fileName', `${path}/${Date.now()}_${file.name}`);
-            formData.append('folder', path);
-            
-            // Upload to ImageKit server
-            const response = await fetch('https://imagekit-auth-server-uafl.onrender.com/upload', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (!response.ok) {
-                throw new Error('Upload failed');
-            }
-            
-            const result = await response.json();
-            
-            // Get the image URL from ImageKit
-            const imageUrl = result.url || result.secure_url;
-            
-            if (!imageUrl) {
-                throw new Error('No URL returned from ImageKit');
-            }
-            
-            return imageUrl;
-            
-        } catch (error) {
-            console.error("Error uploading file:", error);
-            throw error;
-        }
-    },
-
-    // Get user data by UID
-    getUserData: async (userId) => {
-        try {
-            const snapshot = await database.ref('users/' + userId).once('value');
-            return snapshot.val();
-        } catch (error) {
-            console.error("Error getting user data:", error);
-            return null;
-        }
-    },
-
-    // Update user profile
-    updateUserProfile: async (userId, data) => {
-        try {
-            await database.ref('users/' + userId).update(data);
-            return true;
-        } catch (error) {
-            console.error("Error updating user profile:", error);
-            return false;
-        }
-    },
-
-    // Check if user exists by Zynapse ID
-    getUserByZynapseId: async (zynapseId) => {
-        try {
-            const snapshot = await database.ref('users')
-                .orderByChild('zynapseId')
-                .equalTo(zynapseId)
-                .once('value');
-            
-            if (snapshot.exists()) {
-                const userData = snapshot.val();
-                const userId = Object.keys(userData)[0];
-                return { id: userId, ...userData[userId] };
-            }
-            return null;
-        } catch (error) {
-            console.error("Error getting user by Zynapse ID:", error);
-            return null;
-        }
-    },
-
-    // Send chat request
-    sendChatRequest: async (fromUserId, toZynapseId, message = '') => {
-        try {
-            // Get recipient user data
-            const recipient = await firebaseHelpers.getUserByZynapseId(toZynapseId);
-            if (!recipient) {
-                throw new Error('User not found');
-            }
-
-            // Get sender user data
-            const senderData = await firebaseHelpers.getUserData(fromUserId);
-            
-            // Generate request ID
-            const requestId = firebaseHelpers.generateId();
-            
-            // Create request object
-            const request = {
-                id: requestId,
-                fromUserId: fromUserId,
-                fromUserName: senderData.name,
-                fromUserZynapseId: senderData.zynapseId,
-                fromUserProfilePic: senderData.profilePic || '',
-                toUserId: recipient.id,
-                toUserZynapseId: toZynapseId,
-                message: message,
-                status: 'pending', // pending, accepted, rejected
-                timestamp: firebaseHelpers.getTimestamp(),
-                read: false
-            };
-
-            // Save to both users' request lists
-            await database.ref(`chatRequests/${fromUserId}/${requestId}`).set({
-                ...request,
-                direction: 'sent'
-            });
-
-            await database.ref(`chatRequests/${recipient.id}/${requestId}`).set({
-                ...request,
-                direction: 'received'
-            });
-
-            // Add to recipient's notifications
-            await database.ref(`notifications/${recipient.id}/${requestId}`).set({
-                type: 'chat_request',
-                fromUserId: fromUserId,
-                fromUserName: senderData.name,
-                message: 'sent you a chat request',
-                timestamp: firebaseHelpers.getTimestamp(),
-                read: false
-            });
-
-            return { success: true, requestId };
-        } catch (error) {
-            console.error("Error sending chat request:", error);
-            return { success: false, error: error.message };
-        }
-    },
-
-    // Update chat request status
-    updateChatRequest: async (requestId, userId, status) => {
-        try {
-            // Update request status
-            await database.ref(`chatRequests/${userId}/${requestId}/status`).set(status);
-            
-            // Get request data
-            const snapshot = await database.ref(`chatRequests/${userId}/${requestId}`).once('value');
-            const request = snapshot.val();
-            
-            if (status === 'accepted') {
-                // Add each other to contacts
-                await database.ref(`contacts/${userId}/${request.fromUserId}`).set({
-                    zynapseId: request.fromUserZynapseId,
-                    name: request.fromUserName,
-                    profilePic: request.fromUserProfilePic,
-                    addedAt: firebaseHelpers.getTimestamp()
-                });
-
-                await database.ref(`contacts/${request.fromUserId}/${userId}`).set({
-                    zynapseId: request.toUserZynapseId,
-                    name: request.fromUserName, // This should be the other user's name
-                    profilePic: '', // Get from user data
-                    addedAt: firebaseHelpers.getTimestamp()
-                });
-
-                // Create chat room
-                const chatId = firebaseHelpers.generateId();
-                await database.ref(`chats/${chatId}`).set({
-                    participants: {
-                        [userId]: true,
-                        [request.fromUserId]: true
-                    },
-                    lastMessage: 'Chat started',
-                    lastMessageTime: firebaseHelpers.getTimestamp(),
-                    createdAt: firebaseHelpers.getTimestamp()
-                });
-
-                // Update user's chat list
-                await database.ref(`userChats/${userId}/${chatId}`).set({
-                    withUserId: request.fromUserId,
-                    lastMessage: 'Chat started',
-                    lastMessageTime: firebaseHelpers.getTimestamp(),
-                    unreadCount: 0
-                });
-
-                await database.ref(`userChats/${request.fromUserId}/${chatId}`).set({
-                    withUserId: userId,
-                    lastMessage: 'Chat started',
-                    lastMessageTime: firebaseHelpers.getTimestamp(),
-                    unreadCount: 0
-                });
-            }
-
-            // Notify the sender about the status change
-            await database.ref(`notifications/${request.fromUserId}/${requestId}_update`).set({
-                type: 'chat_request_update',
-                requestId: requestId,
-                status: status,
-                fromUserId: userId,
-                timestamp: firebaseHelpers.getTimestamp(),
-                read: false
-            });
-
-            return { success: true };
-        } catch (error) {
-            console.error("Error updating chat request:", error);
-            return { success: false, error: error.message };
-        }
-    },
-
-    // Send message
-    sendMessage: async (chatId, senderId, message, type = 'text', mediaUrl = null) => {
-        try {
-            const messageId = firebaseHelpers.generateId();
-            const messageData = {
-                id: messageId,
-                chatId: chatId,
-                senderId: senderId,
-                message: message,
-                type: type,
-                mediaUrl: mediaUrl,
-                timestamp: firebaseHelpers.getTimestamp(),
-                read: false,
-                delivered: false
-            };
-
-            // Save message
-            await database.ref(`messages/${chatId}/${messageId}`).set(messageData);
-            
-            // Update chat last message
-            await database.ref(`chats/${chatId}`).update({
-                lastMessage: type === 'text' ? message : `Sent a ${type}`,
-                lastMessageTime: firebaseHelpers.getTimestamp()
-            });
-
-            // Update user chat lists
-            const chatSnapshot = await database.ref(`chats/${chatId}/participants`).once('value');
-            const participants = chatSnapshot.val();
-            
-            for (const participantId in participants) {
-                if (participantId !== senderId) {
-                    await database.ref(`userChats/${participantId}/${chatId}`).update({
-                        lastMessage: type === 'text' ? message : `Sent a ${type}`,
-                        lastMessageTime: firebaseHelpers.getTimestamp(),
-                        unreadCount: firebase.database.ServerValue.increment(1)
-                    });
-                    
-                    // Send notification
-                    const senderData = await firebaseHelpers.getUserData(senderId);
-                    await database.ref(`notifications/${participantId}/${messageId}`).set({
-                        type: 'new_message',
-                        chatId: chatId,
-                        fromUserId: senderId,
-                        fromUserName: senderData.name,
-                        message: type === 'text' ? message : `Sent a ${type}`,
-                        timestamp: firebaseHelpers.getTimestamp(),
-                        read: false
-                    });
-                } else {
-                    await database.ref(`userChats/${participantId}/${chatId}`).update({
-                        lastMessage: type === 'text' ? message : `Sent a ${type}`,
-                        lastMessageTime: firebaseHelpers.getTimestamp()
-                    });
-                }
-            }
-
-            return { success: true, messageId };
-        } catch (error) {
-            console.error("Error sending message:", error);
-            return { success: false, error: error.message };
-        }
-    },
-
-    // Mark messages as read
-    markMessagesAsRead: async (chatId, userId) => {
-        try {
-            const snapshot = await database.ref(`messages/${chatId}`)
-                .orderByChild('senderId')
-                .equalTo(userId)
-                .once('value');
-            
-            const updates = {};
-            snapshot.forEach((childSnapshot) => {
-                updates[`messages/${chatId}/${childSnapshot.key}/read`] = true;
-            });
-            
-            await database.ref().update(updates);
-            return true;
-        } catch (error) {
-            console.error("Error marking messages as read:", error);
-            return false;
-        }
-    },
-
-    // Create Zyne (status)
-    createZyne: async (userId, content, type = 'text', mediaUrl = null) => {
-        try {
-            const zyneId = firebaseHelpers.generateId();
-            const zyneData = {
-                id: zyneId,
-                userId: userId,
-                content: content,
-                type: type,
-                mediaUrl: mediaUrl,
-                timestamp: firebaseHelpers.getTimestamp(),
-                expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours from now
-                views: 0,
-                viewers: {}
-            };
-
-            await database.ref(`zynes/${userId}/${zyneId}`).set(zyneData);
-            return { success: true, zyneId };
-        } catch (error) {
-            console.error("Error creating zyne:", error);
-            return { success: false, error: error.message };
-        }
-    },
-
-    // Create group
-    createGroup: async (userId, groupName, members, profilePic = null) => {
-        try {
-            const groupId = firebaseHelpers.generateId();
-            const groupData = {
-                id: groupId,
-                name: groupName,
-                createdBy: userId,
-                profilePic: profilePic,
-                members: {
-                    [userId]: {
-                        role: 'admin',
-                        joinedAt: firebaseHelpers.getTimestamp()
-                    }
-                },
-                createdAt: firebaseHelpers.getTimestamp(),
-                lastMessageTime: firebaseHelpers.getTimestamp()
-            };
-
-            // Add members
-            for (const memberZynapseId of members) {
-                const member = await firebaseHelpers.getUserByZynapseId(memberZynapseId);
-                if (member) {
-                    groupData.members[member.id] = {
-                        role: 'member',
-                        joinedAt: firebaseHelpers.getTimestamp()
-                    };
-                }
-            }
-
-            await database.ref(`groups/${groupId}`).set(groupData);
-            
-            // Add group to user's group list
-            for (const memberId in groupData.members) {
-                await database.ref(`userGroups/${memberId}/${groupId}`).set({
-                    name: groupName,
-                    profilePic: profilePic,
-                    lastMessageTime: firebaseHelpers.getTimestamp(),
-                    unreadCount: 0
-                });
-            }
-
-            return { success: true, groupId };
-        } catch (error) {
-            console.error("Error creating group:", error);
-            return { success: false, error: error.message };
-        }
-    },
-
-    // Get user's contacts
-    getContacts: async (userId) => {
-        try {
-            const snapshot = await database.ref(`contacts/${userId}`).once('value');
-            return snapshot.val() || {};
-        } catch (error) {
-            console.error("Error getting contacts:", error);
-            return {};
-        }
-    },
-
-    // Get user's chat requests
-    getChatRequests: async (userId, direction = 'received') => {
-        try {
-            const snapshot = await database.ref(`chatRequests/${userId}`).once('value');
-            const requests = snapshot.val() || {};
-            
-            // Filter by direction and status
-            const filteredRequests = {};
-            for (const requestId in requests) {
-                const request = requests[requestId];
-                if ((direction === 'all' || request.direction === direction) && request.status === 'pending') {
-                    filteredRequests[requestId] = request;
-                }
-            }
-            
-            return filteredRequests;
-        } catch (error) {
-            console.error("Error getting chat requests:", error);
-            return {};
-        }
-    },
-
-    // Get user's chats
-    getUserChats: async (userId) => {
-        try {
-            const snapshot = await database.ref(`userChats/${userId}`).once('value');
-            return snapshot.val() || {};
-        } catch (error) {
-            console.error("Error getting user chats:", error);
-            return {};
-        }
-    },
-
-    // Get messages for a chat
-    getChatMessages: async (chatId, limit = 50) => {
-        try {
-            const snapshot = await database.ref(`messages/${chatId}`)
-                .orderByChild('timestamp')
-                .limitToLast(limit)
-                .once('value');
-            return snapshot.val() || {};
-        } catch (error) {
-            console.error("Error getting chat messages:", error);
-            return {};
-        }
-    },
-
-    // Get user's Zynes
-    getUserZynes: async (userId) => {
-        try {
-            const snapshot = await database.ref(`zynes/${userId}`)
-                .orderByChild('timestamp')
-                .limitToLast(20)
-                .once('value');
-            return snapshot.val() || {};
-        } catch (error) {
-            console.error("Error getting user zynes:", error);
-            return {};
-        }
-    },
-
-    // Get user's groups
-    getUserGroups: async (userId) => {
-        try {
-            const snapshot = await database.ref(`userGroups/${userId}`).once('value');
-            const groups = snapshot.val() || {};
-            
-            // Get full group data
-            const groupsData = {};
-            for (const groupId in groups) {
-                const groupSnapshot = await database.ref(`groups/${groupId}`).once('value');
-                groupsData[groupId] = {
-                    ...groupSnapshot.val(),
-                    ...groups[groupId]
-                };
-            }
-            
-            return groupsData;
-        } catch (error) {
-            console.error("Error getting user groups:", error);
-            return {};
-        }
-    },
-
-    // Update user status
-    updateUserStatus: async (userId, status) => {
-        try {
-            await database.ref(`users/${userId}/status`).set({
-                online: status === 'online',
-                lastSeen: firebaseHelpers.getTimestamp()
-            });
-            return true;
-        } catch (error) {
-            console.error("Error updating user status:", error);
-            return false;
-        }
-    },
-
-    // Search users by name or Zynapse ID
-    searchUsers: async (query) => {
-        try {
-            const snapshot = await database.ref('users')
-                .orderByChild('name')
-                .startAt(query)
-                .endAt(query + '\uf8ff')
-                .once('value');
-            
-            const users = snapshot.val() || {};
-            
-            // Also search by Zynapse ID
-            const zynapseSnapshot = await database.ref('users')
-                .orderByChild('zynapseId')
-                .startAt(query)
-                .endAt(query + '\uf8ff')
-                .once('value');
-            
-            const zynapseUsers = zynapseSnapshot.val() || {};
-            
-            // Merge results
-            return { ...users, ...zynapseUsers };
-        } catch (error) {
-            console.error("Error searching users:", error);
-            return {};
-        }
+// Get user by ID
+async function getUserByID(zynID) {
+  try {
+    const userIDRef = ref(database, `userIDs/${zynID}`);
+    const userIDSnapshot = await get(userIDRef);
+    
+    if (!userIDSnapshot.exists()) {
+      return null;
     }
+    
+    const uid = userIDSnapshot.val();
+    const userRef = ref(database, `users/${uid}`);
+    const userSnapshot = await get(userRef);
+    
+    if (userSnapshot.exists()) {
+      return {
+        uid: uid,
+        ...userSnapshot.val()
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting user by ID:", error);
+    return null;
+  }
+}
+
+// Send chat request
+async function sendChatRequest(senderUID, receiverZynID) {
+  try {
+    const receiver = await getUserByID(receiverZynID);
+    if (!receiver) {
+      return { success: false, message: "User not found" };
+    }
+    
+    const requestId = push(ref(database, 'chatRequests')).key;
+    const requestData = {
+      id: requestId,
+      from: senderUID,
+      to: receiver.uid,
+      fromZynID: (await getUserData(senderUID)).userID,
+      status: 'pending',
+      timestamp: Date.now(),
+      seen: false
+    };
+    
+    await set(ref(database, `chatRequests/${requestId}`), requestData);
+    await set(ref(database, `users/${receiver.uid}/incomingRequests/${requestId}`), true);
+    await set(ref(database, `users/${senderUID}/sentRequests/${requestId}`), true);
+    
+    return { success: true, requestId: requestId };
+  } catch (error) {
+    console.error("Error sending chat request:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+// Get user data
+async function getUserData(userId) {
+  try {
+    const userRef = ref(database, `users/${userId}`);
+    const snapshot = await get(userRef);
+    return snapshot.exists() ? snapshot.val() : null;
+  } catch (error) {
+    console.error("Error getting user data:", error);
+    return null;
+  }
+}
+
+// Accept chat request
+async function acceptChatRequest(requestId, currentUserUID) {
+  try {
+    const requestRef = ref(database, `chatRequests/${requestId}`);
+    const requestSnapshot = await get(requestRef);
+    
+    if (!requestSnapshot.exists()) {
+      return false;
+    }
+    
+    const request = requestSnapshot.val();
+    if (request.to !== currentUserUID) {
+      return false;
+    }
+    
+    // Update request status
+    await update(requestRef, { status: 'accepted' });
+    
+    // Add to contacts both ways
+    const senderData = await getUserData(request.from);
+    const receiverData = await getUserData(request.to);
+    
+    await set(ref(database, `users/${request.from}/contacts/${request.to}`), {
+      userID: receiverData.userID,
+      name: receiverData.name,
+      profilePicture: receiverData.profilePicture,
+      addedAt: Date.now()
+    });
+    
+    await set(ref(database, `users/${request.to}/contacts/${request.from}`), {
+      userID: senderData.userID,
+      name: senderData.name,
+      profilePicture: senderData.profilePicture,
+      addedAt: Date.now()
+    });
+    
+    // Remove from pending requests
+    await remove(ref(database, `users/${request.to}/incomingRequests/${requestId}`));
+    await remove(ref(database, `users/${request.from}/sentRequests/${requestId}`));
+    
+    return true;
+  } catch (error) {
+    console.error("Error accepting chat request:", error);
+    return false;
+  }
+}
+
+// Reject chat request
+async function rejectChatRequest(requestId, currentUserUID) {
+  try {
+    const requestRef = ref(database, `chatRequests/${requestId}`);
+    const requestSnapshot = await get(requestRef);
+    
+    if (!requestSnapshot.exists()) {
+      return false;
+    }
+    
+    const request = requestSnapshot.val();
+    if (request.to !== currentUserUID) {
+      return false;
+    }
+    
+    // Update request status
+    await update(requestRef, { status: 'rejected' });
+    
+    // Remove from pending requests
+    await remove(ref(database, `users/${request.to}/incomingRequests/${requestId}`));
+    await remove(ref(database, `users/${request.from}/sentRequests/${requestId}`));
+    
+    // Delete request after 24 hours
+    setTimeout(async () => {
+      await remove(requestRef);
+    }, 24 * 60 * 60 * 1000);
+    
+    return true;
+  } catch (error) {
+    console.error("Error rejecting chat request:", error);
+    return false;
+  }
+}
+
+// Create chat room
+async function createChatRoom(user1UID, user2UID) {
+  try {
+    const chatId = [user1UID, user2UID].sort().join('_');
+    const chatRef = ref(database, `chats/${chatId}`);
+    
+    const chatData = {
+      participants: {
+        [user1UID]: true,
+        [user2UID]: true
+      },
+      lastMessage: '',
+      lastMessageTime: Date.now(),
+      createdAt: Date.now()
+    };
+    
+    await set(chatRef, chatData);
+    
+    // Add chat reference to both users
+    await set(ref(database, `users/${user1UID}/chats/${chatId}`), {
+      with: user2UID,
+      lastActive: Date.now()
+    });
+    
+    await set(ref(database, `users/${user2UID}/chats/${chatId}`), {
+      with: user1UID,
+      lastActive: Date.now()
+    });
+    
+    return chatId;
+  } catch (error) {
+    console.error("Error creating chat room:", error);
+    return null;
+  }
+}
+
+// Send message
+async function sendMessage(chatId, senderUID, message, mediaUrl = null, mediaType = null) {
+  try {
+    const messageId = push(ref(database, `chats/${chatId}/messages`)).key;
+    const messageData = {
+      id: messageId,
+      sender: senderUID,
+      text: message,
+      mediaUrl: mediaUrl,
+      mediaType: mediaType,
+      timestamp: Date.now(),
+      status: 'sent'
+    };
+    
+    await set(ref(database, `chats/${chatId}/messages/${messageId}`), messageData);
+    
+    // Update chat last message
+    await update(ref(database, `chats/${chatId}`), {
+      lastMessage: message,
+      lastMessageTime: Date.now(),
+      lastMessageSender: senderUID
+    });
+    
+    return messageId;
+  } catch (error) {
+    console.error("Error sending message:", error);
+    return null;
+  }
+}
+
+// Update message status
+async function updateMessageStatus(chatId, messageId, status) {
+  try {
+    await update(ref(database, `chats/${chatId}/messages/${messageId}`), {
+      status: status
+    });
+  } catch (error) {
+    console.error("Error updating message status:", error);
+  }
+}
+
+// Create group
+async function createGroup(name, creatorUID, members = [], description = '', profilePicture = null) {
+  try {
+    const groupId = push(ref(database, 'groups')).key;
+    
+    // Add creator to members
+    const allMembers = [...new Set([creatorUID, ...members])];
+    
+    const groupData = {
+      id: groupId,
+      name: name,
+      description: description,
+      creator: creatorUID,
+      admins: [creatorUID],
+      members: allMembers.reduce((acc, uid) => {
+        acc[uid] = true;
+        return acc;
+      }, {}),
+      profilePicture: profilePicture,
+      createdAt: Date.now()
+    };
+    
+    await set(ref(database, `groups/${groupId}`), groupData);
+    
+    // Add group to each member's groups
+    for (const memberUID of allMembers) {
+      await set(ref(database, `users/${memberUID}/groups/${groupId}`), true);
+    }
+    
+    // Send welcome message
+    const welcomeMessage = `Group "${name}" was created by ${(await getUserData(creatorUID)).name}`;
+    await sendGroupMessage(groupId, creatorUID, welcomeMessage);
+    
+    return groupId;
+  } catch (error) {
+    console.error("Error creating group:", error);
+    return null;
+  }
+}
+
+// Send group message
+async function sendGroupMessage(groupId, senderUID, message, mediaUrl = null, mediaType = null) {
+  try {
+    const messageId = push(ref(database, `groups/${groupId}/messages`)).key;
+    const messageData = {
+      id: messageId,
+      sender: senderUID,
+      text: message,
+      mediaUrl: mediaUrl,
+      mediaType: mediaType,
+      timestamp: Date.now()
+    };
+    
+    await set(ref(database, `groups/${groupId}/messages/${messageId}`), messageData);
+    
+    // Update group last message
+    await update(ref(database, `groups/${groupId}`), {
+      lastMessage: message,
+      lastMessageTime: Date.now(),
+      lastMessageSender: senderUID
+    });
+    
+    return messageId;
+  } catch (error) {
+    console.error("Error sending group message:", error);
+    return null;
+  }
+}
+
+// Add Zyne status
+async function addZyne(userUID, text = null, mediaUrl = null, mediaType = null) {
+  try {
+    const zyneId = push(ref(database, 'zynes')).key;
+    const zyneData = {
+      id: zyneId,
+      user: userUID,
+      text: text,
+      mediaUrl: mediaUrl,
+      mediaType: mediaType,
+      timestamp: Date.now(),
+      expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+    };
+    
+    await set(ref(database, `zynes/${zyneId}`), zyneData);
+    await set(ref(database, `users/${userUID}/zynes/${zyneId}`), true);
+    
+    // Schedule deletion after 24 hours
+    setTimeout(async () => {
+      await remove(ref(database, `zynes/${zyneId}`));
+      await remove(ref(database, `users/${userUID}/zynes/${zyneId}`));
+    }, 24 * 60 * 60 * 1000);
+    
+    return zyneId;
+  } catch (error) {
+    console.error("Error adding zyne:", error);
+    return null;
+  }
+}
+
+// Update user status
+async function updateUserStatus(userUID, status) {
+  try {
+    await update(ref(database, `users/${userUID}`), {
+      status: status,
+      lastSeen: Date.now()
+    });
+  } catch (error) {
+    console.error("Error updating user status:", error);
+  }
+}
+
+export {
+  auth,
+  database,
+  storage,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  getUniqueUserID,
+  storeUserData,
+  getUserData,
+  getUserByID,
+  sendChatRequest,
+  acceptChatRequest,
+  rejectChatRequest,
+  createChatRoom,
+  sendMessage,
+  updateMessageStatus,
+  createGroup,
+  sendGroupMessage,
+  addZyne,
+  updateUserStatus,
+  ref,
+  get,
+  set,
+  update,
+  remove,
+  push,
+  onValue,
+  query,
+  orderByChild,
+  equalTo,
+  onChildAdded,
+  onChildChanged,
+  onChildRemoved
 };
-
-// Export for use in other files
-window.firebaseApp = app;
-window.firebaseAuth = auth;
-window.firebaseDatabase = database;
-window.firebaseHelpers = firebaseHelpers;
