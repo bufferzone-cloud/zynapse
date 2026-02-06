@@ -1,44 +1,100 @@
-// ImageKit Configuration
-const imagekit = new ImageKit({
+// ImageKit Configuration using custom auth server
+const imageKitConfig = {
+    authEndpoint: "https://imagekit-auth-server-uafl.onrender.com/auth",
     publicKey: "public_lP5Vb+5SXLUjuoliJDp19GPOU6s=",
-    urlEndpoint: "https://ik.imagekit.io/48l5ydkzy",
-    authenticationEndpoint: "https://imagekit-auth.onrender.com/auth"
-});
+    urlEndpoint: "https://ik.imagekit.io/48l5ydkzy"
+};
 
 // ImageKit Helper Functions
 const imageKitHelpers = {
-    // Initialize ImageKit
-    init: function() {
-        console.log("ImageKit initialized successfully");
-        return imagekit;
+    // Initialize ImageKit with authentication
+    init: async function() {
+        try {
+            // Get authentication parameters from our server
+            const response = await fetch(imageKitConfig.authEndpoint);
+            const authParams = await response.json();
+            
+            // Create ImageKit instance with auth parameters
+            this.imagekit = new ImageKit({
+                publicKey: imageKitConfig.publicKey,
+                urlEndpoint: imageConfig.urlEndpoint,
+                ...authParams
+            });
+            
+            console.log("ImageKit initialized successfully");
+            return this.imagekit;
+        } catch (error) {
+            console.error("ImageKit initialization error:", error);
+            throw error;
+        }
     },
 
     // Generate image URL with transformations
-    generateImageUrl: function(path, transformations = []) {
-        return imagekit.url({
-            path: path,
-            transformation: transformations
-        });
+    generateImageUrl: function(url, transformations = []) {
+        if (!url) return '';
+        
+        try {
+            // Use ImageKit URL generator if available
+            if (this.imagekit) {
+                return this.imagekit.url({
+                    src: url,
+                    transformation: transformations
+                });
+            }
+            
+            // Fallback to manual URL construction
+            let imageUrl = url;
+            if (transformations.length > 0) {
+                const tr = transformations.map(t => 
+                    Object.entries(t).map(([k, v]) => `${k}-${v}`).join(',')
+                ).join('/');
+                imageUrl = `${url}?tr=${tr}`;
+            }
+            return imageUrl;
+        } catch (error) {
+            console.error("Error generating image URL:", error);
+            return url;
+        }
     },
 
-    // Upload file to ImageKit
-    uploadFile: function(file, fileName, folder = '/zynapse') {
-        return new Promise((resolve, reject) => {
-            imagekit.upload({
-                file: file,
-                fileName: fileName,
-                folder: folder,
-                tags: ['zynapse']
-            }, function(err, result) {
-                if (err) {
-                    console.error("ImageKit upload error:", err);
-                    reject(err);
-                } else {
-                    console.log("ImageKit upload success:", result);
-                    resolve(result);
-                }
+    // Upload file using custom server
+    uploadFile: async function(file, fileName, folder = '/zynapse') {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('fileName', fileName);
+            formData.append('folder', folder);
+            
+            const response = await fetch('https://imagekit-auth-server-uafl.onrender.com/upload', {
+                method: 'POST',
+                body: formData
             });
-        });
+            
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+            
+            const result = await response.json();
+            console.log("File upload success:", result);
+            
+            // Ensure we have the URL in the expected format
+            const fileUrl = result.url || result.secure_url || result.filePath;
+            if (!fileUrl) {
+                throw new Error('No URL returned from server');
+            }
+            
+            return {
+                url: fileUrl,
+                fileId: result.fileId || fileName,
+                thumbnailUrl: result.thumbnailUrl || fileUrl,
+                name: fileName,
+                size: file.size,
+                type: file.type
+            };
+        } catch (error) {
+            console.error("ImageKit upload error:", error);
+            throw error;
+        }
     },
 
     // Upload profile picture
@@ -48,18 +104,15 @@ const imageKitHelpers = {
             const result = await this.uploadFile(file, fileName, '/zynapse/profiles');
             
             // Generate thumbnail URL
-            const thumbnailUrl = imagekit.url({
-                src: result.url,
-                transformation: [{
-                    height: "150",
-                    width: "150",
-                    crop: "force"
-                }]
-            });
+            const thumbnailUrl = this.generateImageUrl(result.url, [{
+                height: "150",
+                width: "150",
+                crop: "force"
+            }]);
             
             return {
                 originalUrl: result.url,
-                thumbnailUrl: thumbnailUrl,
+                thumbnailUrl: thumbnailUrl || result.url,
                 fileId: result.fileId
             };
         } catch (error) {
@@ -80,27 +133,20 @@ const imageKitHelpers = {
             // Generate optimized versions
             let optimizedUrl = result.url;
             if (type === 'image') {
-                optimizedUrl = imagekit.url({
-                    src: result.url,
-                    transformation: [{
-                        height: "800",
-                        width: "800",
-                        crop: "at_max"
-                    }]
-                });
+                optimizedUrl = this.generateImageUrl(result.url, [{
+                    height: "800",
+                    width: "800",
+                    crop: "at_max"
+                }]);
             } else if (type === 'video') {
-                optimizedUrl = imagekit.url({
-                    src: result.url,
-                    transformation: [{
-                        height: "480",
-                        width: "854"
-                    }]
-                });
+                // For videos, we just return the original URL
+                // ImageKit provides video transformation support
+                optimizedUrl = result.url;
             }
             
             return {
                 originalUrl: result.url,
-                optimizedUrl: optimizedUrl,
+                optimizedUrl: optimizedUrl || result.url,
                 thumbnailUrl: type === 'video' ? result.thumbnailUrl : optimizedUrl,
                 fileId: result.fileId,
                 type: type
@@ -121,18 +167,15 @@ const imageKitHelpers = {
             const result = await this.uploadFile(file, fileName, folder);
             
             // Generate thumbnail for Zyne
-            const thumbnailUrl = imagekit.url({
-                src: result.url,
-                transformation: [{
-                    height: "400",
-                    width: "400",
-                    crop: "at_max"
-                }]
-            });
+            const thumbnailUrl = this.generateImageUrl(result.url, [{
+                height: "400",
+                width: "400",
+                crop: "at_max"
+            }]);
             
             return {
                 originalUrl: result.url,
-                thumbnailUrl: thumbnailUrl,
+                thumbnailUrl: thumbnailUrl || result.url,
                 fileId: result.fileId,
                 type: type
             };
@@ -149,18 +192,15 @@ const imageKitHelpers = {
             const result = await this.uploadFile(file, fileName, '/zynapse/groups');
             
             // Generate thumbnail
-            const thumbnailUrl = imagekit.url({
-                src: result.url,
-                transformation: [{
-                    height: "100",
-                    width: "100",
-                    crop: "force"
-                }]
-            });
+            const thumbnailUrl = this.generateImageUrl(result.url, [{
+                height: "100",
+                width: "100",
+                crop: "force"
+            }]);
             
             return {
                 originalUrl: result.url,
-                thumbnailUrl: thumbnailUrl,
+                thumbnailUrl: thumbnailUrl || result.url,
                 fileId: result.fileId
             };
         } catch (error) {
@@ -169,26 +209,37 @@ const imageKitHelpers = {
         }
     },
 
-    // Delete file from ImageKit
-    deleteFile: function(fileId) {
-        return new Promise((resolve, reject) => {
-            // Note: This requires server-side implementation
-            // as ImageKit JavaScript SDK doesn't support delete
-            console.log("Delete requested for file:", fileId);
-            resolve({ success: true });
-        });
+    // Delete file from ImageKit (requires server-side implementation)
+    deleteFile: async function(fileId) {
+        try {
+            const response = await fetch('https://imagekit-auth-server-uafl.onrender.com/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ fileId: fileId })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Delete failed');
+            }
+            
+            const result = await response.json();
+            console.log("Delete success for file:", fileId);
+            return { success: true, ...result };
+        } catch (error) {
+            console.error("Error deleting file:", error);
+            return { success: false, error: error.message };
+        }
     },
 
     // Generate optimized image URL
     getOptimizedImage: function(url, width = 400, height = 400) {
-        return imagekit.url({
-            src: url,
-            transformation: [{
-                height: height.toString(),
-                width: width.toString(),
-                crop: "at_max"
-            }]
-        });
+        return this.generateImageUrl(url, [{
+            height: height.toString(),
+            width: width.toString(),
+            crop: "at_max"
+        }]);
     },
 
     // Check if file is image
@@ -262,10 +313,10 @@ const imageKitHelpers = {
     }
 };
 
-// Initialize ImageKit
-document.addEventListener('DOMContentLoaded', function() {
+// Initialize ImageKit when DOM is loaded
+document.addEventListener('DOMContentLoaded', async function() {
     try {
-        imageKitHelpers.init();
+        await imageKitHelpers.init();
         console.log("ImageKit helpers initialized");
     } catch (error) {
         console.error("Failed to initialize ImageKit:", error);
@@ -273,5 +324,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Export for use in other files
-window.imageKit = imagekit;
 window.imageKitHelpers = imageKitHelpers;
+window.imageKitConfig = imageKitConfig;
