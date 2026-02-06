@@ -4,87 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynapse - Sign Up</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="signup-page">
     <div class="signup-container">
-        <!-- Step 1: Welcome Screen -->
-        <div id="welcome-step" class="signup-step active">
-            <div class="logo-container">
-                <img src="zynapse.png" alt="Zynapse Logo" class="main-logo">
-                <h1>ZYN<span class="accent">APSE</span></h1>
-            </div>
-            <div class="welcome-text">
-                <h2>Welcome to Zynapse</h2>
-                <p>Experience seamless communication with end-to-end encryption and intuitive design. Connect with friends, share moments, and collaborate in groups.</p>
-                <p class="powered-by">Powered by <span class="buffer-zone">Buffer Zone</span></p>
-            </div>
-            <button class="btn-primary" onclick="nextStep()">Get Started</button>
+        <div class="logo-section">
+            <img src="zynaps.png" alt="Zynapse Logo" class="main-logo">
+            <h1>Zynapse</h1>
+            <p class="tagline">Secure, private messaging reimagined</p>
+            <p class="description">Zynapse is a private messaging platform that combines the best of modern chat features with enhanced privacy controls and seamless media sharing.</p>
+            <p class="powered-by">Powered by Buffer Zone</p>
         </div>
 
-        <!-- Step 2: Registration Form -->
-        <div id="register-step" class="signup-step">
-            <div class="form-header">
-                <div class="back-button" onclick="prevStep()">
-                    <i class="fas fa-arrow-left"></i>
+        <div class="signup-form">
+            <h2>Create Account</h2>
+            <form id="signupForm">
+                <div class="input-group">
+                    <label for="name">
+                        <i class="fas fa-user"></i> Full Name
+                    </label>
+                    <input type="text" id="name" required placeholder="John Doe">
                 </div>
-                <h2>Create Account</h2>
-            </div>
-            
-            <form id="register-form" onsubmit="registerUser(event)">
-                <div class="profile-upload">
-                    <div class="upload-container">
-                        <input type="file" id="profile-pic" accept="image/*" hidden>
-                        <label for="profile-pic" class="upload-label">
-                            <i class="fas fa-camera"></i>
-                            <span>Upload Profile</span>
-                        </label>
-                        <div class="preview-container">
-                            <img id="profile-preview" src="" alt="Profile Preview">
-                        </div>
+
+                <div class="input-group">
+                    <label for="phone">
+                        <i class="fas fa-phone"></i> Phone Number
+                    </label>
+                    <input type="tel" id="phone" required placeholder="+1 (555) 123-4567">
+                </div>
+
+                <div class="input-group">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input type="email" id="email" required placeholder="john@example.com">
+                </div>
+
+                <div class="input-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+
+                <div class="input-group">
+                    <label for="profilePic">
+                        <i class="fas fa-camera"></i> Profile Picture
+                    </label>
+                    <div class="file-upload">
+                        <input type="file" id="profilePic" accept="image/*" hidden>
+                        <button type="button" class="upload-btn" id="uploadBtn">
+                            <i class="fas fa-cloud-upload-alt"></i> Choose Photo
+                        </button>
+                        <span id="fileName">No file chosen</span>
+                    </div>
+                    <div class="preview-container">
+                        <img id="previewImage" src="" alt="Preview">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <input type="text" id="name" placeholder="Full Name" required>
-                    <i class="fas fa-user"></i>
-                </div>
-
-                <div class="form-group">
-                    <input type="tel" id="phone" placeholder="Phone Number" required>
-                    <i class="fas fa-phone"></i>
-                </div>
-
-                <div class="form-group">
-                    <input type="email" id="email" placeholder="Email Address" required>
-                    <i class="fas fa-envelope"></i>
-                </div>
-
-                <div class="form-group">
-                    <input type="password" id="password" placeholder="Password" required>
-                    <i class="fas fa-lock"></i>
-                </div>
-
-                <div class="form-group">
-                    <input type="password" id="confirm-password" placeholder="Confirm Password" required>
-                    <i class="fas fa-lock"></i>
-                </div>
-
-                <button type="submit" class="btn-primary">
-                    <span id="register-text">Register</span>
-                    <div id="register-spinner" class="spinner"></div>
+                <button type="submit" class="submit-btn" id="registerBtn">
+                    <i class="fas fa-user-plus"></i> Register
                 </button>
-            </form>
 
-            <p class="login-link">
-                Already have an account? <a href="#">Sign In</a>
-            </p>
+                <p class="login-link">
+                    Already have an account? <a href="login.html">Sign In</a>
+                </p>
+            </form>
         </div>
     </div>
 
     <script src="firebase-config.js"></script>
     <script src="imagekit-config.js"></script>
     <script src="app.js"></script>
+    <script>
+        document.getElementById('profilePic').addEventListener('change', function(e) {
+            const fileName = document.getElementById('fileName');
+            const preview = document.getElementById('previewImage');
+            
+            if (this.files[0]) {
+                fileName.textContent = this.files[0].name;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        document.getElementById('uploadBtn').addEventListener('click', function() {
+            document.getElementById('profilePic').click();
+        });
+    </script>
 </body>
 </html>
