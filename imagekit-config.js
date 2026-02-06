@@ -1,50 +1,34 @@
-// ImageKit SDK initialization
-var imagekit = new ImageKit({
+// ImageKit Configuration
+const imagekit = new ImageKit({
     publicKey: "public_ugkwxlGDdps1zlFIMABNqd+oNZw=",
     urlEndpoint: "https://ik.imagekit.io/48l5ydkzy",
     authenticationEndpoint: "https://imagekit-auth.onrender.com/auth"
 });
 
-// Upload function
-function uploadFile(file, fileName, onProgress) {
+// Upload function with error handling
+async function uploadToImageKit(file, fileName, tags = []) {
     return new Promise((resolve, reject) => {
         imagekit.upload({
             file: file,
             fileName: fileName,
-            tags: ['zynapse', 'profile'],
-            useUniqueFileName: true
+            tags: tags,
+            folder: "/zynapse/profiles"
         }, function(err, result) {
             if (err) {
-                console.error("Upload error:", err);
+                console.error("ImageKit Upload Error:", err);
                 reject(err);
             } else {
-                console.log("Upload success:", result);
+                console.log("Upload successful:", result);
                 resolve(result);
             }
         });
     });
 }
 
-// Generate thumbnail URL
-function generateThumbnailUrl(url, width = 300, height = 300) {
+// Generate URL with transformations
+function generateImageKitURL(path, transformation = []) {
     return imagekit.url({
-        src: url,
-        transformation: [{
-            height: height.toString(),
-            width: width.toString(),
-            crop: 'fit'
-        }]
-    });
-}
-
-// Generate optimized image URL
-function generateOptimizedUrl(url, width, height, quality = 80) {
-    return imagekit.url({
-        src: url,
-        transformation: [{
-            height: height.toString(),
-            width: width.toString(),
-            quality: quality.toString()
-        }]
+        path: path,
+        transformation: transformation
     });
 }
