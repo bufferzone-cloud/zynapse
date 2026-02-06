@@ -4,7 +4,7 @@ const firebaseConfig = {
     authDomain: "zynapse-68181.firebaseapp.com",
     databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
     projectId: "zynapse-68181",
-    storageBucket: "zynapse-68181.firebasestorage.app",
+    storageBucket: "", // Removed storage bucket
     messagingSenderId: "841353050519",
     appId: "1:841353050519:web:271e2709246067bc506cd2",
     measurementId: "G-J38CL5MRPF"
@@ -56,30 +56,40 @@ const firebaseHelpers = {
         return firebase.database.ServerValue.TIMESTAMP;
     },
 
-    // Upload file to Firebase Storage
+    // Upload file to ImageKit server and get URL
     uploadFile: async (file, path) => {
-        return new Promise((resolve, reject) => {
-            const storageRef = firebase.storage().ref();
-            const fileRef = storageRef.child(`${path}/${Date.now()}_${file.name}`);
+        try {
+            // Create form data for ImageKit upload
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('fileName', `${path}/${Date.now()}_${file.name}`);
+            formData.append('folder', path);
             
-            const uploadTask = fileRef.put(file);
+            // Upload to ImageKit server
+            const response = await fetch('https://imagekit-auth-server-uafl.onrender.com/upload', {
+                method: 'POST',
+                body: formData
+            });
             
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    // Progress monitoring
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    console.log('Upload is ' + progress + '% done');
-                },
-                (error) => {
-                    reject(error);
-                },
-                () => {
-                    uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-                        resolve(downloadURL);
-                    });
-                }
-            );
-        });
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+            
+            const result = await response.json();
+            
+            // Get the image URL from ImageKit
+            const imageUrl = result.url || result.secure_url;
+            
+            if (!imageUrl) {
+                throw new Error('No URL returned from ImageKit');
+            }
+            
+            return imageUrl;
+            
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            throw error;
+        }
     },
 
     // Get user data by UID
