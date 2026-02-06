@@ -1,119 +1,177 @@
-// Global Variables
-let currentUser = null;
-let userData = null;
-let chatWithUser = null;
-let currentChatId = null;
-let listeners = [];
+// ===== FIREBASE CONFIGURATION =====
+const firebaseConfig = {
+    apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
+    authDomain: "zynapse-68181.firebaseapp.com",
+    databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
+    projectId: "zynapse-68181",
+    storageBucket: "zynapse-68181.firebasestorage.app",
+    messagingSenderId: "841353050519",
+    appId: "1:841353050519:web:3b16d95d8f4cd3b9506cd2",
+    measurementId: "G-4764XLL6WS"
+};
 
-// Toast Notification System
-class Toast {
-    static show(message, type = 'info', duration = 3000) {
-        const toastContainer = document.getElementById('toastContainer') || document.createElement('div');
-        if (!document.getElementById('toastContainer')) {
-            toastContainer.id = 'toastContainer';
-            toastContainer.className = 'toast-container';
-            document.body.appendChild(toastContainer);
-        }
+// ===== CLOUDINARY CONFIGURATION =====
+const cloudinaryConfig = {
+    cloudName: 'dd3lcymrk',
+    uploadPreset: 'h3eyhc2o',
+    folder: 'zynapse',
+    maxFileSize: 50 * 1024 * 1024, // 50MB
+    resourceType: 'auto'
+};
 
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        
-        const icon = {
-            'success': 'check-circle',
-            'error': 'exclamation-circle',
-            'warning': 'exclamation-triangle',
-            'info': 'info-circle'
-        }[type] || 'info-circle';
-
-        toast.innerHTML = `
-            <i class="fas fa-${icon}"></i>
-            <span>${message}</span>
-        `;
-
-        toastContainer.appendChild(toast);
-
-        // Remove toast after duration
-        setTimeout(() => {
-            toast.style.animation = 'fadeOut 0.3s ease forwards';
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 300);
-        }, duration);
-
-        return toast;
-    }
+// ===== FIREBASE INITIALIZATION =====
+let app, auth, database, storage;
+try {
+    app = firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    database = firebase.database();
+    storage = firebase.storage();
+} catch (error) {
+    console.error("Firebase initialization error:", error);
 }
 
-// Utility Functions
+// ===== GLOBAL VARIABLES =====
+let currentUser = null;
+let currentChat = null;
+let userData = null;
+let notificationSound = null;
+
+// ===== UTILITY FUNCTIONS =====
+function showToast(message, type = 'info') {
+    const container = document.querySelector('.toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+function generateUserId() {
+    return 'ZYN-' + Math.floor(1000 + Math.random() * 9000);
+}
+
 function formatTimestamp(timestamp) {
     if (!timestamp) return '';
     
-    const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+    const date = new Date(timestamp);
     const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    const diff = now - date;
     
-    return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric',
-        year: diffDays >= 365 ? 'numeric' : undefined
-    });
-}
-
-function generateZYNID() {
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    return `ZYN-${randomNum}`;
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+    if (diff < 86400000) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (diff < 604800000) return date.toLocaleDateString([], { weekday: 'short' });
+    return date.toLocaleDateString();
 }
 
 function playNotificationSound() {
+    if (!notificationSound) {
+        notificationSound = new Audio('notification.mp3');
+    }
+    notificationSound.play().catch(e => console.log("Audio play failed:", e));
+}
+
+// ===== AUTHENTICATION FUNCTIONS =====
+async function handleSignUp(formData) {
     try {
-        const audio = new Audio('notification.mp3');
-        audio.volume = 0.3;
-        audio.play().catch(e => console.log('Audio play failed:', e));
-    } catch (e) {
-        console.log('Notification sound error:', e);
+        const { email, password, fullName, phoneNumber, profileImage, gender, birthDate } = formData;
+        
+        // Create user in Firebase Auth
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const userId = generateUserId();
+        
+        // Upload profile picture to Cloudinary if exists
+        let profileUrl = '';
+        if (profileImage) {
+            profileUrl = await uploadToCloudinary(profileImage);
+        }
+        
+        // Save user data to Realtime Database
+        await database.ref('users/' + userCredential.user.uid).set({
+            userId: userId,
+            fullName: fullName,
+            phoneNumber: phoneNumber,
+            email: email,
+            profileUrl: profileUrl,
+            gender: gender || '',
+            birthDate: birthDate || '',
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            lastSeen: firebase.database.ServerValue.TIMESTAMP,
+            status: 'online',
+            contacts: {},
+            blockedUsers: {}
+        });
+        
+        // Save userId mapping
+        await database.ref('userIds/' + userId).set({
+            uid: userCredential.user.uid,
+            email: email
+        });
+        
+        showToast('Account created successfully!', 'success');
+        return true;
+    } catch (error) {
+        console.error('Sign up error:', error);
+        showToast(error.message, 'error');
+        return false;
     }
 }
 
-// Cloudinary Upload Function
-async function uploadToCloudinary(file, type = 'image') {
-    return new Promise((resolve, reject) => {
-        if (!file) {
-            reject(new Error('No file provided'));
-            return;
-        }
+async function handleLogin(email, password) {
+    try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        
+        // Update user status
+        await database.ref('users/' + userCredential.user.uid + '/status').set('online');
+        await database.ref('users/' + userCredential.user.uid + '/lastSeen').set(firebase.database.ServerValue.TIMESTAMP);
+        
+        return true;
+    } catch (error) {
+        console.error('Login error:', error);
+        showToast(error.message, 'error');
+        return false;
+    }
+}
 
+async function logout() {
+    try {
+        if (currentUser) {
+            await database.ref('users/' + currentUser.uid + '/status').set('offline');
+            await database.ref('users/' + currentUser.uid + '/lastSeen').set(firebase.database.ServerValue.TIMESTAMP);
+        }
+        await auth.signOut();
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+}
+
+// ===== CLOUDINARY FUNCTIONS =====
+async function uploadToCloudinary(file) {
+    return new Promise((resolve, reject) => {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', window.cloudinaryConfig.uploadPreset);
-        formData.append('folder', window.cloudinaryConfig.folder);
-
-        const endpoint = `https://api.cloudinary.com/v1_1/${window.cloudinaryConfig.cloudName}/${
-            type === 'video' ? 'video' : 'image'
-        }/upload`;
-
-        fetch(endpoint, {
+        formData.append('upload_preset', cloudinaryConfig.uploadPreset);
+        formData.append('cloud_name', cloudinaryConfig.cloudName);
+        formData.append('folder', cloudinaryConfig.folder);
+        
+        fetch(`https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/upload`, {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(data => {
             if (data.secure_url) {
-                resolve({
-                    url: data.secure_url,
-                    publicId: data.public_id,
-                    format: data.format,
-                    bytes: data.bytes
-                });
+                resolve(data.secure_url);
             } else {
                 reject(new Error('Upload failed'));
             }
@@ -125,293 +183,789 @@ async function uploadToCloudinary(file, type = 'image') {
     });
 }
 
-// Firebase Database Functions
-async function getUserData(userId) {
+// ===== CHAT FUNCTIONS =====
+async function sendMessage(receiverId, message, type = 'text', mediaUrl = '') {
     try {
-        const db = window.firebaseDatabase;
-        const userRef = ref(db, `users/${userId}`);
-        const snapshot = await get(userRef);
-        return snapshot.val();
-    } catch (error) {
-        console.error('Error getting user data:', error);
-        return null;
-    }
-}
-
-async function updateUserData(userId, data) {
-    try {
-        const db = window.firebaseDatabase;
-        const userRef = ref(db, `users/${userId}`);
-        await update(userRef, data);
+        const messageId = database.ref().child('messages').push().key;
+        const messageData = {
+            id: messageId,
+            senderId: currentUser.uid,
+            receiverId: receiverId,
+            message: message,
+            type: type,
+            mediaUrl: mediaUrl,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            read: false
+        };
+        
+        // Save message to database
+        await database.ref('messages/' + messageId).set(messageData);
+        
+        // Update chat metadata for both users
+        const chatId = [currentUser.uid, receiverId].sort().join('_');
+        const chatData = {
+            lastMessage: message,
+            lastMessageType: type,
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
+            participants: {
+                [currentUser.uid]: true,
+                [receiverId]: true
+            }
+        };
+        
+        await database.ref('chats/' + chatId).set(chatData);
+        
+        // Update user's recent chats
+        await database.ref('userChats/' + currentUser.uid + '/' + chatId).set({
+            with: receiverId,
+            lastMessage: message,
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+        
+        await database.ref('userChats/' + receiverId + '/' + chatId).set({
+            with: currentUser.uid,
+            lastMessage: message,
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+        
         return true;
     } catch (error) {
-        console.error('Error updating user data:', error);
+        console.error('Send message error:', error);
         return false;
     }
 }
 
-async function checkZYNIDExists(zynId) {
+async function sendChatRequest(receiverUserId) {
     try {
-        const db = window.firebaseDatabase;
-        const usersRef = ref(db, 'users');
-        const snapshot = await get(usersRef);
-        const users = snapshot.val();
-        
-        if (users) {
-            for (const userId in users) {
-                if (users[userId].zynId === zynId) {
-                    return { exists: true, userId };
-                }
-            }
+        // Find receiver by Zynapse ID
+        const receiverRef = await database.ref('userIds/' + receiverUserId).once('value');
+        if (!receiverRef.exists()) {
+            showToast('User not found', 'error');
+            return false;
         }
-        return { exists: false, userId: null };
+        
+        const receiverUid = receiverRef.val().uid;
+        const requestId = database.ref().child('chatRequests').push().key;
+        
+        const requestData = {
+            id: requestId,
+            senderId: currentUser.uid,
+            receiverId: receiverUid,
+            senderUserId: userData.userId,
+            status: 'pending',
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        
+        await database.ref('chatRequests/' + requestId).set(requestData);
+        await database.ref('userRequests/' + receiverUid + '/' + requestId).set(true);
+        
+        showToast('Chat request sent', 'success');
+        return true;
     } catch (error) {
-        console.error('Error checking ZYN-ID:', error);
-        return { exists: false, userId: null };
+        console.error('Send chat request error:', error);
+        showToast('Failed to send request', 'error');
+        return false;
     }
 }
 
-// Auth State Management
-function setupAuthStateListener() {
-    const auth = window.firebaseAuth;
-    
-    onAuthStateChanged(auth, async (user) => {
+// ===== USER MANAGEMENT FUNCTIONS =====
+async function searchUserByUserId(userId) {
+    try {
+        const userRef = await database.ref('userIds/' + userId).once('value');
+        if (!userRef.exists()) {
+            return null;
+        }
+        
+        const uid = userRef.val().uid;
+        const userDataRef = await database.ref('users/' + uid).once('value');
+        return userDataRef.val();
+    } catch (error) {
+        console.error('Search user error:', error);
+        return null;
+    }
+}
+
+async function addContact(contactUid) {
+    try {
+        await database.ref('users/' + currentUser.uid + '/contacts/' + contactUid).set(true);
+        await database.ref('users/' + contactUid + '/contacts/' + currentUser.uid).set(true);
+        return true;
+    } catch (error) {
+        console.error('Add contact error:', error);
+        return false;
+    }
+}
+
+// ===== EVENT LISTENERS FOR INDEX.HTML =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user is already logged in
+    auth.onAuthStateChanged(async (user) => {
         if (user) {
-            currentUser = user;
+            // User is logged in, redirect to home
+            window.location.href = 'home.html';
+        } else {
+            // Show welcome screen
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) {
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        document.getElementById('welcomeScreen').style.display = 'flex';
+                    }, 400);
+                }, 1000);
+            }
+        }
+    });
+    
+    // Welcome screen buttons
+    const signUpBtn = document.getElementById('signUpBtn');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    if (signUpBtn) {
+        signUpBtn.addEventListener('click', () => {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('signUpPage').style.display = 'flex';
+        });
+    }
+    
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
+        });
+    }
+    
+    // Back buttons
+    const backToWelcome = document.getElementById('backToWelcome');
+    const backToWelcomeFromLogin = document.getElementById('backToWelcomeFromLogin');
+    
+    if (backToWelcome) {
+        backToWelcome.addEventListener('click', () => {
+            document.getElementById('signUpPage').style.display = 'none';
+            document.getElementById('welcomeScreen').style.display = 'flex';
+        });
+    }
+    
+    if (backToWelcomeFromLogin) {
+        backToWelcomeFromLogin.addEventListener('click', () => {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('welcomeScreen').style.display = 'flex';
+        });
+    }
+    
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const target = this.getAttribute('data-target');
+            const input = document.getElementById(target);
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    });
+    
+    // Sign up form steps
+    const nextToProfile = document.getElementById('nextToProfile');
+    const backToStep1 = document.getElementById('backToStep1');
+    
+    if (nextToProfile) {
+        nextToProfile.addEventListener('click', () => {
+            // Validate step 1
+            const fullName = document.getElementById('fullName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
             
-            // Get user data from database
-            const db = window.firebaseDatabase;
-            const userRef = ref(db, `users/${user.uid}`);
-            const snapshot = await get(userRef);
-            userData = snapshot.val();
-            
-            if (!userData) {
-                // User data doesn't exist, redirect to signup
-                window.location.href = 'index.html';
+            if (!fullName || !phoneNumber || !email || !password || !confirmPassword) {
+                showToast('Please fill in all required fields', 'error');
                 return;
             }
             
-            // Update user status to online
-            await updateUserData(user.uid, {
-                status: 'online',
-                lastSeen: new Date().toISOString()
-            });
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
             
-            // Show appropriate page
-            if (window.location.pathname.includes('home.html')) {
-                showHomePage();
-            } else if (window.location.pathname.includes('chat.html')) {
-                const urlParams = new URLSearchParams(window.location.search);
-                const chatWith = urlParams.get('chatWith');
-                if (chatWith) {
-                    await loadChat(chatWith);
+            if (password.length < 8) {
+                showToast('Password must be at least 8 characters', 'error');
+                return;
+            }
+            
+            if (!agreeTerms) {
+                showToast('You must agree to the terms and conditions', 'error');
+                return;
+            }
+            
+            // Move to step 2
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+        });
+    }
+    
+    if (backToStep1) {
+        backToStep1.addEventListener('click', () => {
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step1').style.display = 'block';
+        });
+    }
+    
+    // Profile image upload
+    const uploadProfileBtn = document.getElementById('uploadProfileBtn');
+    const profileImageInput = document.getElementById('profileImage');
+    const profilePreview = document.getElementById('profilePreview');
+    const removeProfileBtn = document.getElementById('removeProfileBtn');
+    let profileImageFile = null;
+    
+    if (uploadProfileBtn) {
+        uploadProfileBtn.addEventListener('click', () => {
+            profileImageInput.click();
+        });
+    }
+    
+    if (profileImageInput) {
+        profileImageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    showToast('Image must be less than 5MB', 'error');
+                    return;
                 }
-            }
-        } else {
-            // User not logged in, redirect to index
-            if (!window.location.pathname.includes('index.html')) {
-                window.location.href = 'index.html';
-            }
-        }
-    });
-}
-
-// Page Navigation
-function navigateTo(page) {
-    if (page === 'home') {
-        window.location.href = 'home.html';
-    } else if (page === 'chat') {
-        window.location.href = 'chat.html';
-    }
-}
-
-function showHomePage() {
-    const loadingScreen = document.getElementById('loadingScreen');
-    const appHome = document.getElementById('appHome');
-    
-    if (loadingScreen) loadingScreen.classList.add('hidden');
-    if (appHome) appHome.style.display = 'flex';
-    
-    // Update user info
-    if (userData) {
-        document.getElementById('userName').textContent = userData.fullName || 'User';
-        document.getElementById('userID').textContent = userData.zynId || 'ZYN-0000';
-        document.getElementById('dropdownUserName').textContent = userData.fullName || 'User';
-        document.getElementById('dropdownUserID').textContent = userData.zynId || 'ZYN-0000';
-        
-        if (userData.profilePic) {
-            const profilePics = document.querySelectorAll('#headerProfilePic, #dropdownProfilePic');
-            profilePics.forEach(pic => {
-                pic.src = userData.profilePic;
-                pic.onerror = () => {
-                    pic.src = 'zynaps.png';
+                
+                profileImageFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePreview.innerHTML = `<img src="${e.target.result}" alt="Profile Preview">`;
+                    removeProfileBtn.style.display = 'inline-flex';
                 };
-            });
-        }
+                reader.readAsDataURL(file);
+            }
+        });
     }
     
-    setupHomeListeners();
-    loadRecentChats();
-}
-
-async function loadRecentChats() {
-    if (!currentUser || !userData) return;
-    
-    const db = window.firebaseDatabase;
-    const chatsRef = ref(db, `chats/${currentUser.uid}`);
-    
-    // Listen for chat updates
-    const unsubscribe = onValue(chatsRef, (snapshot) => {
-        const chats = snapshot.val();
-        const recentChatsList = document.getElementById('recentChats');
-        
-        if (!recentChatsList) return;
-        
-        if (!chats) {
-            recentChatsList.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-comment-slash"></i>
-                    <h3>No Recent Chats</h3>
-                    <p>Start a conversation by clicking the chat button below</p>
+    if (removeProfileBtn) {
+        removeProfileBtn.addEventListener('click', () => {
+            profileImageFile = null;
+            profileImageInput.value = '';
+            profilePreview.innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-user-circle"></i>
+                    <span>No image selected</span>
+                    <p>Click to upload</p>
                 </div>
             `;
+            removeProfileBtn.style.display = 'none';
+        });
+    }
+    
+    // Registration
+    const registerBtn = document.getElementById('registerBtn');
+    if (registerBtn) {
+        registerBtn.addEventListener('click', async () => {
+            const fullName = document.getElementById('fullName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const gender = document.getElementById('gender').value;
+            const birthDate = document.getElementById('birthDate').value;
+            const showProfilePublic = document.getElementById('showProfilePublic').checked;
+            
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<div class="spinner"></div> Registering...';
+            
+            const success = await handleSignUp({
+                fullName,
+                phoneNumber,
+                email,
+                password,
+                profileImage: profileImageFile,
+                gender,
+                birthDate,
+                showProfilePublic
+            });
+            
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = 'Register <i class="fas fa-check"></i>';
+            
+            if (success) {
+                // Auto login after registration
+                await handleLogin(email, password);
+            }
+        });
+    }
+    
+    // Login form
+    const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+    if (loginSubmitBtn) {
+        loginSubmitBtn.addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showToast('Please enter email and password', 'error');
+                return;
+            }
+            
+            loginSubmitBtn.disabled = true;
+            const spinner = loginSubmitBtn.querySelector('.spinner');
+            const btnText = loginSubmitBtn.querySelector('.btn-text');
+            
+            spinner.style.display = 'block';
+            btnText.style.display = 'none';
+            
+            const success = await handleLogin(email, password);
+            
+            loginSubmitBtn.disabled = false;
+            spinner.style.display = 'none';
+            btnText.style.display = 'inline';
+            
+            if (!success) {
+                showToast('Login failed. Please check your credentials.', 'error');
+            }
+        });
+    }
+    
+    // Navigation between auth forms
+    const goToSignUp = document.getElementById('goToSignUp');
+    if (goToSignUp) {
+        goToSignUp.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('signUpPage').style.display = 'flex';
+        });
+    }
+});
+
+// ===== EVENT LISTENERS FOR HOME.HTML =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+            window.location.href = 'index.html';
             return;
         }
         
-        // Convert chats to array and sort by last message time
-        const chatArray = Object.entries(chats).map(([chatId, chat]) => {
-            return { chatId, ...chat };
-        }).sort((a, b) => {
-            return new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0);
-        }).slice(0, 5); // Show only 5 recent chats
+        currentUser = user;
         
-        recentChatsList.innerHTML = '';
+        // Load user data
+        const userRef = await database.ref('users/' + user.uid).once('value');
+        userData = userRef.val();
         
-        chatArray.forEach(chat => {
-            const chatCard = document.createElement('div');
-            chatCard.className = 'contact-card';
-            chatCard.innerHTML = `
-                <img src="${chat.userPic || 'zynaps.png'}" alt="${chat.userName}" class="profile-pic">
-                <div class="contact-info">
-                    <h4>${chat.userName}</h4>
-                    <p class="last-message">${chat.lastMessage || 'Start chatting'}</p>
-                    <p class="time">${formatTimestamp(chat.lastMessageTime)}</p>
-                </div>
-            `;
-            
-            chatCard.addEventListener('click', () => {
-                navigateToChat(chat.userId);
-            });
-            
-            recentChatsList.appendChild(chatCard);
+        if (!userData) {
+            await logout();
+            return;
+        }
+        
+        // Update UI with user data
+        updateUserUI();
+        
+        // Show app
+        const loadingScreen = document.getElementById('loadingScreen');
+        const appHome = document.querySelector('.app-home');
+        
+        if (loadingScreen) {
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    if (appHome) appHome.style.display = 'flex';
+                }, 400);
+            }, 1000);
+        }
+        
+        // Set up real-time listeners
+        setupRealtimeListeners();
+    });
+    
+    function updateUserUI() {
+        if (!userData) return;
+        
+        // Update header
+        const userName = document.getElementById('userName');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const headerProfilePic = document.getElementById('headerProfilePic');
+        const dropdownProfilePic = document.getElementById('dropdownProfilePic');
+        const dropdownUserName = document.getElementById('dropdownUserName');
+        const dropdownUserId = document.getElementById('dropdownUserId');
+        
+        if (userName) userName.textContent = userData.fullName;
+        if (userIdDisplay) userIdDisplay.textContent = userData.userId;
+        if (headerProfilePic) {
+            headerProfilePic.src = userData.profileUrl || 'zynaps.png';
+            headerProfilePic.onerror = () => {
+                headerProfilePic.src = 'zynaps.png';
+            };
+        }
+        if (dropdownProfilePic) {
+            dropdownProfilePic.src = userData.profileUrl || 'zynaps.png';
+            dropdownProfilePic.onerror = () => {
+                dropdownProfilePic.src = 'zynaps.png';
+            };
+        }
+        if (dropdownUserName) dropdownUserName.textContent = userData.fullName;
+        if (dropdownUserId) dropdownUserId.textContent = userData.userId;
+    }
+    
+    function setupRealtimeListeners() {
+        if (!currentUser) return;
+        
+        // Listen for chat requests
+        database.ref('userRequests/' + currentUser.uid).on('value', (snapshot) => {
+            updateRequestsBadge(snapshot.numChildren());
         });
         
-        // Store unsubscribe function
-        listeners.push(unsubscribe);
-    });
-}
-
-function navigateToChat(userId) {
-    window.location.href = `chat.html?chatWith=${userId}`;
-}
-
-async function loadChat(userId) {
-    if (!currentUser) return;
+        // Listen for new messages
+        database.ref('userChats/' + currentUser.uid).on('value', (snapshot) => {
+            updateUnreadMessages();
+        });
+    }
     
-    chatWithUser = await getUserData(userId);
-    if (!chatWithUser) {
-        Toast.show('User not found', 'error');
-        setTimeout(() => {
+    function updateRequestsBadge(count) {
+        const badge = document.getElementById('requestsBadge');
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+    
+    function updateUnreadMessages() {
+        // Implement unread message count logic
+    }
+    
+    // Copy User ID
+    const copyUserIdBtn = document.getElementById('copyUserIdBtn');
+    if (copyUserIdBtn) {
+        copyUserIdBtn.addEventListener('click', () => {
+            const userId = userData.userId;
+            navigator.clipboard.writeText(userId).then(() => {
+                showToast('User ID copied to clipboard', 'success');
+            });
+        });
+    }
+    
+    // Profile dropdown
+    const profileMenuBtn = document.getElementById('profileMenuBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    
+    if (profileMenuBtn) {
+        profileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('show');
+        });
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        if (profileDropdown) profileDropdown.classList.remove('show');
+    });
+    
+    // Logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
+    }
+    
+    // Navigation
+    const navItems = document.querySelectorAll('.nav-item');
+    const pages = document.querySelectorAll('.page');
+    
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const page = item.getAttribute('data-page');
+            
+            // Update active nav item
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Show corresponding page
+            pages.forEach(p => {
+                p.classList.remove('active');
+                if (p.id === page + 'Page') {
+                    p.classList.add('active');
+                }
+            });
+        });
+    });
+    
+    // Floating chat button
+    const floatingChatBtn = document.getElementById('floatingChatBtn');
+    const startChatModal = document.getElementById('startChatModal');
+    const closeStartChatModal = document.getElementById('closeStartChatModal');
+    const searchUserId = document.getElementById('searchUserId');
+    const searchResult = document.getElementById('searchResult');
+    
+    if (floatingChatBtn) {
+        floatingChatBtn.addEventListener('click', () => {
+            if (startChatModal) startChatModal.classList.add('active');
+        });
+    }
+    
+    if (closeStartChatModal) {
+        closeStartChatModal.addEventListener('click', () => {
+            if (startChatModal) startChatModal.classList.remove('active');
+        });
+    }
+    
+    // Search user by ID
+    if (searchUserId) {
+        let searchTimeout;
+        searchUserId.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            const userId = searchUserId.value.trim();
+            
+            if (userId.length === 8 && userId.startsWith('ZYN-')) {
+                searchTimeout = setTimeout(async () => {
+                    const user = await searchUserByUserId(userId);
+                    if (user && user.uid !== currentUser.uid) {
+                        displaySearchResult(user);
+                    } else {
+                        showSearchError('User not found');
+                    }
+                }, 500);
+            } else if (userId.length > 0) {
+                showSearchError('Invalid Zynapse ID format (ZYN-XXXX)');
+            } else {
+                clearSearchResult();
+            }
+        });
+    }
+    
+    function displaySearchResult(user) {
+        const searchPlaceholder = document.getElementById('searchPlaceholder');
+        if (searchPlaceholder) searchPlaceholder.style.display = 'none';
+        
+        if (searchResult) {
+            searchResult.innerHTML = `
+                <div class="user-found">
+                    <img src="${user.profileUrl || 'zynaps.png'}" alt="${user.fullName}" class="profile-pic">
+                    <div class="user-info">
+                        <h4>${user.fullName}</h4>
+                        <p>${user.userId}</p>
+                        ${user.status === 'online' ? '<p class="online-status"><i class="fas fa-circle"></i> Online</p>' : ''}
+                    </div>
+                    <button class="btn-primary" id="sendRequestBtn">Send Request</button>
+                </div>
+            `;
+            searchResult.classList.add('active');
+            
+            // Add event listener to send request button
+            setTimeout(() => {
+                const sendRequestBtn = document.getElementById('sendRequestBtn');
+                if (sendRequestBtn) {
+                    sendRequestBtn.addEventListener('click', async () => {
+                        const success = await sendChatRequest(user.userId);
+                        if (success) {
+                            startChatModal.classList.remove('active');
+                            searchUserId.value = '';
+                            clearSearchResult();
+                        }
+                    });
+                }
+            }, 100);
+        }
+    }
+    
+    function showSearchError(message) {
+        const searchPlaceholder = document.getElementById('searchPlaceholder');
+        if (searchPlaceholder) searchPlaceholder.style.display = 'none';
+        
+        if (searchResult) {
+            searchResult.innerHTML = `<p class="error">${message}</p>`;
+            searchResult.classList.add('active');
+        }
+    }
+    
+    function clearSearchResult() {
+        const searchPlaceholder = document.getElementById('searchPlaceholder');
+        if (searchPlaceholder) searchPlaceholder.style.display = 'block';
+        
+        if (searchResult) {
+            searchResult.innerHTML = '';
+            searchResult.classList.remove('active');
+        }
+    }
+    
+    // Quick action buttons
+    const startNewChatBtn = document.getElementById('startNewChatBtn');
+    const createGroupBtn = document.getElementById('createGroupBtn');
+    const addZyneBtn = document.getElementById('addZyneBtn');
+    
+    if (startNewChatBtn) {
+        startNewChatBtn.addEventListener('click', () => {
+            if (floatingChatBtn) floatingChatBtn.click();
+        });
+    }
+    
+    if (createGroupBtn) {
+        createGroupBtn.addEventListener('click', () => {
+            const createGroupModal = document.getElementById('createGroupModal');
+            if (createGroupModal) createGroupModal.classList.add('active');
+        });
+    }
+    
+    if (addZyneBtn) {
+        addZyneBtn.addEventListener('click', () => {
+            const addZyneModal = document.getElementById('addZyneModal');
+            if (addZyneModal) addZyneModal.classList.add('active');
+        });
+    }
+    
+    // Modal close buttons
+    const modalOverlays = document.querySelectorAll('.modal-overlay');
+    modalOverlays.forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
+            }
+        });
+    });
+    
+    // Character counter for Zyne text
+    const zyneText = document.getElementById('zyneText');
+    const zyneCharCount = document.getElementById('zyneCharCount');
+    
+    if (zyneText && zyneCharCount) {
+        zyneText.addEventListener('input', () => {
+            zyneCharCount.textContent = `${zyneText.value.length}/250`;
+        });
+    }
+});
+
+// ===== EVENT LISTENERS FOR CHAT.HTML =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        currentUser = user;
+        
+        // Get chat partner from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const chatWith = urlParams.get('chat');
+        
+        if (!chatWith) {
             window.location.href = 'home.html';
-        }, 1500);
-        return;
-    }
-    
-    // Generate chat ID (sorted to ensure consistency)
-    const participants = [currentUser.uid, userId].sort();
-    currentChatId = participants.join('_');
-    
-    // Update chat UI
-    const chatPage = document.getElementById('chatPage');
-    const loadingScreen = document.getElementById('loadingScreen');
-    
-    if (loadingScreen) loadingScreen.classList.add('hidden');
-    if (chatPage) chatPage.style.display = 'flex';
-    
-    document.getElementById('chatUserName').textContent = chatWithUser.fullName || 'User';
-    document.getElementById('chatUserStatusText').textContent = chatWithUser.status || 'Offline';
-    document.getElementById('blockUserName').textContent = chatWithUser.fullName || 'User';
-    
-    const statusDot = document.getElementById('chatUserStatus');
-    if (chatWithUser.status === 'online') {
-        statusDot.className = 'status-dot online';
-    } else {
-        statusDot.className = 'status-dot offline';
-    }
-    
-    if (chatWithUser.profilePic) {
-        const chatUserPic = document.getElementById('chatUserPic');
-        chatUserPic.src = chatWithUser.profilePic;
-        chatUserPic.onerror = () => {
-            chatUserPic.src = 'zynaps.png';
+            return;
+        }
+        
+        // Load user data
+        const userRef = await database.ref('users/' + user.uid).once('value');
+        userData = userRef.val();
+        
+        // Load chat partner data
+        const partnerRef = await database.ref('users/' + chatWith).once('value');
+        const partnerData = partnerRef.val();
+        
+        if (!partnerData) {
+            window.location.href = 'home.html';
+            return;
+        }
+        
+        currentChat = {
+            partnerId: chatWith,
+            partnerData: partnerData
         };
+        
+        // Update chat UI
+        updateChatUI();
+        
+        // Load messages
+        loadMessages();
+        
+        // Show chat page
+        const loadingScreen = document.getElementById('loadingScreen');
+        const chatPage = document.querySelector('.chat-page');
+        
+        if (loadingScreen) {
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    if (chatPage) chatPage.style.display = 'flex';
+                }, 400);
+            }, 1000);
+        }
+        
+        // Set up real-time message listener
+        setupMessageListener();
+    });
+    
+    function updateChatUI() {
+        if (!currentChat || !currentChat.partnerData) return;
+        
+        const chatUserName = document.getElementById('chatUserName');
+        const chatUserPic = document.getElementById('chatUserPic');
+        const chatUserStatus = document.getElementById('chatUserStatus');
+        const chatUserStatusText = document.getElementById('chatUserStatusText');
+        
+        if (chatUserName) chatUserName.textContent = currentChat.partnerData.fullName;
+        if (chatUserPic) {
+            chatUserPic.src = currentChat.partnerData.profileUrl || 'zynaps.png';
+            chatUserPic.onerror = () => {
+                chatUserPic.src = 'zynaps.png';
+            };
+        }
+        if (chatUserStatus) {
+            chatUserStatus.className = 'status-dot ' + (currentChat.partnerData.status || 'offline');
+        }
+        if (chatUserStatusText) {
+            chatUserStatusText.textContent = currentChat.partnerData.status === 'online' ? 'Online' : 'Last seen ' + formatTimestamp(currentChat.partnerData.lastSeen);
+        }
     }
     
-    // Set current date
-    const currentDate = new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-    document.getElementById('currentDate').textContent = currentDate;
+    async function loadMessages() {
+        if (!currentUser || !currentChat) return;
+        
+        const chatId = [currentUser.uid, currentChat.partnerId].sort().join('_');
+        const messagesRef = database.ref('messages').orderByChild('timestamp').limitToLast(50);
+        
+        messagesRef.on('value', (snapshot) => {
+            const messages = [];
+            snapshot.forEach((childSnapshot) => {
+                const message = childSnapshot.val();
+                if ((message.senderId === currentUser.uid && message.receiverId === currentChat.partnerId) ||
+                    (message.senderId === currentChat.partnerId && message.receiverId === currentUser.uid)) {
+                    messages.push(message);
+                }
+            });
+            
+            displayMessages(messages);
+        });
+    }
     
-    // Load messages
-    loadMessages();
-    setupChatListeners();
-}
-
-async function loadMessages() {
-    if (!currentChatId) return;
-    
-    const db = window.firebaseDatabase;
-    const messagesRef = ref(db, `messages/${currentChatId}`);
-    
-    const unsubscribe = onValue(messagesRef, (snapshot) => {
-        const messages = snapshot.val();
+    function displayMessages(messages) {
         const chatMessages = document.getElementById('chatMessages');
+        const emptyChatState = document.getElementById('emptyChatState');
         
         if (!chatMessages) return;
         
-        // Clear existing messages except date and typing indicator
-        const dateDiv = document.getElementById('currentDate');
-        const typingIndicator = document.getElementById('typingIndicator');
-        chatMessages.innerHTML = '';
-        if (dateDiv) chatMessages.appendChild(dateDiv);
-        
-        if (!messages) {
-            const emptyChat = document.createElement('div');
-            emptyChat.className = 'empty-chat';
-            emptyChat.innerHTML = `
-                <i class="fas fa-comment"></i>
-                <h3>No messages yet</h3>
-                <p>Say hello to start the conversation!</p>
-            `;
-            chatMessages.appendChild(emptyChat);
-            if (typingIndicator) chatMessages.appendChild(typingIndicator);
+        if (messages.length === 0) {
+            if (emptyChatState) emptyChatState.style.display = 'flex';
             return;
         }
         
-        // Convert messages to array and sort by timestamp
-        const messageArray = Object.entries(messages).map(([messageId, message]) => {
-            return { messageId, ...message };
-        }).sort((a, b) => {
-            return new Date(a.timestamp) - new Date(b.timestamp);
-        });
+        if (emptyChatState) emptyChatState.style.display = 'none';
+        
+        // Sort messages by timestamp
+        messages.sort((a, b) => a.timestamp - b.timestamp);
         
         // Group messages by date
         const groupedMessages = {};
-        messageArray.forEach(message => {
+        messages.forEach(message => {
             const date = new Date(message.timestamp).toDateString();
             if (!groupedMessages[date]) {
                 groupedMessages[date] = [];
@@ -419,1101 +973,298 @@ async function loadMessages() {
             groupedMessages[date].push(message);
         });
         
-        // Display messages
-        Object.entries(groupedMessages).forEach(([date, dateMessages]) => {
+        // Clear and display messages
+        chatMessages.innerHTML = '';
+        
+        Object.keys(groupedMessages).forEach(date => {
             // Add date separator
             const dateElement = document.createElement('div');
             dateElement.className = 'message-date';
-            dateElement.textContent = new Date(date).toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric'
+            dateElement.textContent = new Date(date).toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
             });
             chatMessages.appendChild(dateElement);
             
             // Add messages for this date
-            dateMessages.forEach(message => {
-                const messageElement = document.createElement('div');
-                messageElement.className = `message ${message.senderId === currentUser.uid ? 'sent' : 'received'}`;
-                
-                let content = '';
-                if (message.type === 'text') {
-                    content = `<p>${message.content}</p>`;
-                } else if (message.type === 'image') {
-                    content = `
-                        <div class="media-message">
-                            <img src="${message.content}" alt="Image" class="chat-media" onclick="openMediaPreview('${message.content}', 'image')">
-                            ${message.caption ? `<p>${message.caption}</p>` : ''}
-                        </div>
-                    `;
-                } else if (message.type === 'video') {
-                    content = `
-                        <div class="media-message">
-                            <video src="${message.content}" controls class="chat-media" onclick="openMediaPreview('${message.content}', 'video')"></video>
-                            ${message.caption ? `<p>${message.caption}</p>` : ''}
-                        </div>
-                    `;
-                } else if (message.type === 'file') {
-                    const fileName = message.fileName || 'File';
-                    const fileSize = message.fileSize ? ` (${formatFileSize(message.fileSize)})` : '';
-                    content = `
-                        <div class="file-message">
-                            <i class="fas fa-file"></i>
-                            <div>
-                                <strong>${fileName}${fileSize}</strong>
-                                <a href="${message.content}" download="${fileName}" class="link">Download</a>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                messageElement.innerHTML = `
-                    <div class="message-bubble">
-                        ${content}
-                        <span class="message-time">
-                            ${formatTimestamp(message.timestamp)}
-                            ${message.senderId === currentUser.uid ? 
-                                `<span class="message-status">${message.status || 'sent'}</span>` : ''}
-                        </span>
-                    </div>
-                `;
-                
+            groupedMessages[date].forEach(message => {
+                const messageElement = createMessageElement(message);
                 chatMessages.appendChild(messageElement);
             });
         });
-        
-        // Add typing indicator at the end
-        if (typingIndicator) chatMessages.appendChild(typingIndicator);
         
         // Scroll to bottom
         setTimeout(() => {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }, 100);
-    });
-    
-    listeners.push(unsubscribe);
-}
-
-// Event Listeners Setup
-function setupHomeListeners() {
-    // Navigation
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const page = item.getAttribute('data-page');
-            
-            // Update active state
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            item.classList.add('active');
-            
-            // Show page
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.getElementById(`${page}Page`).classList.add('active');
-        });
-    });
-    
-    // Floating chat button
-    const floatingChatBtn = document.getElementById('floatingChatBtn');
-    if (floatingChatBtn) {
-        floatingChatBtn.addEventListener('click', () => {
-            document.getElementById('startChatModal').classList.add('active');
-        });
     }
     
-    // Quick actions
-    const quickChat = document.getElementById('quickChat');
-    if (quickChat) {
-        quickChat.addEventListener('click', () => {
-            document.getElementById('startChatModal').classList.add('active');
-        });
-    }
-    
-    const quickGroup = document.getElementById('quickGroup');
-    if (quickGroup) {
-        quickGroup.addEventListener('click', () => {
-            document.getElementById('createGroupModal').classList.add('active');
-        });
-    }
-    
-    const quickStatus = document.getElementById('quickStatus');
-    if (quickStatus) {
-        quickStatus.addEventListener('click', () => {
-            document.getElementById('createZyneModal').classList.add('active');
-        });
-    }
-    
-    // Profile dropdown
-    const profileDropdownBtn = document.getElementById('profileDropdownBtn');
-    const profileDropdown = document.getElementById('profileDropdown');
-    if (profileDropdownBtn && profileDropdown) {
-        profileDropdownBtn.addEventListener('click', () => {
-            profileDropdown.classList.toggle('show');
-        });
+    function createMessageElement(message) {
+        const isSent = message.senderId === currentUser.uid;
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
         
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!profileDropdownBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
-                profileDropdown.classList.remove('show');
-            }
-        });
+        let messageContent = '';
+        if (message.type === 'text') {
+            messageContent = `<p>${message.message}</p>`;
+        } else if (message.type === 'image') {
+            messageContent = `
+                <div class="media-message">
+                    <img src="${message.mediaUrl}" alt="Image" class="chat-media" onclick="previewMedia('${message.mediaUrl}', 'image')">
+                    ${message.message ? `<p>${message.message}</p>` : ''}
+                </div>
+            `;
+        } else if (message.type === 'video') {
+            messageContent = `
+                <div class="media-message">
+                    <video src="${message.mediaUrl}" controls class="chat-media" onclick="previewMedia('${message.mediaUrl}', 'video')"></video>
+                    ${message.message ? `<p>${message.message}</p>` : ''}
+                </div>
+            `;
+        } else if (message.type === 'file') {
+            const fileName = message.message || 'File';
+            messageContent = `
+                <div class="file-message">
+                    <a href="${message.mediaUrl}" target="_blank" class="file-link">
+                        <i class="fas fa-file"></i>
+                        <span>${fileName}</span>
+                    </a>
+                </div>
+            `;
+        }
+        
+        messageDiv.innerHTML = `
+            <div class="message-bubble">
+                ${messageContent}
+                <span class="message-time">
+                    ${formatTimestamp(message.timestamp)}
+                    ${isSent ? `<span class="message-status">${message.read ? '✓✓' : '✓'}</span>` : ''}
+                </span>
+            </div>
+        `;
+        
+        return messageDiv;
     }
     
-    // Edit profile
-    const editProfileBtn = document.getElementById('editProfileBtn');
-    if (editProfileBtn) {
-        editProfileBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('editProfileModal').classList.add('active');
-            loadEditProfileData();
-        });
-    }
-    
-    // Logout
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const auth = window.firebaseAuth;
-            
-            // Update status to offline
-            if (currentUser) {
-                await updateUserData(currentUser.uid, {
-                    status: 'offline',
-                    lastSeen: new Date().toISOString()
-                });
-            }
-            
-            // Sign out
-            await signOut(auth);
-            window.location.href = 'index.html';
-        });
-    }
-    
-    // Start chat modal
-    const closeStartChatModal = document.getElementById('closeStartChatModal');
-    if (closeStartChatModal) {
-        closeStartChatModal.addEventListener('click', () => {
-            document.getElementById('startChatModal').classList.remove('active');
-        });
-    }
-    
-    // Search user for chat
-    const searchUserID = document.getElementById('searchUserID');
-    if (searchUserID) {
-        searchUserID.addEventListener('input', async (e) => {
-            const zynId = e.target.value.trim().toUpperCase();
-            const sendChatRequestBtn = document.getElementById('sendChatRequestBtn');
-            const userSearchResult = document.getElementById('userSearchResult');
-            
-            if (zynId.length === 8 && zynId.startsWith('ZYN-')) {
-                const { exists, userId } = await checkZYNIDExists(zynId);
-                
-                if (exists && userId !== currentUser.uid) {
-                    const user = await getUserData(userId);
-                    userSearchResult.innerHTML = `
-                        <div class="user-found">
-                            <img src="${user.profilePic || 'zynaps.png'}" alt="${user.fullName}" class="profile-pic">
-                            <div>
-                                <h4>${user.fullName}</h4>
-                                <p>${zynId}</p>
-                                <p class="status">${user.status || 'Offline'}</p>
-                            </div>
-                        </div>
-                    `;
-                    sendChatRequestBtn.style.display = 'block';
-                    sendChatRequestBtn.onclick = () => sendChatRequest(userId, zynId);
-                } else if (userId === currentUser.uid) {
-                    userSearchResult.innerHTML = `
-                        <div class="error">
-                            <p>You cannot send a chat request to yourself</p>
-                        </div>
-                    `;
-                    sendChatRequestBtn.style.display = 'none';
-                } else {
-                    userSearchResult.innerHTML = `
-                        <div class="error">
-                            <p>User with ZYN-ID ${zynId} not found</p>
-                        </div>
-                    `;
-                    sendChatRequestBtn.style.display = 'none';
+    function setupMessageListener() {
+        if (!currentUser || !currentChat) return;
+        
+        const chatId = [currentUser.uid, currentChat.partnerId].sort().join('_');
+        const messagesRef = database.ref('messages');
+        
+        messagesRef.orderByChild('timestamp').limitToLast(1).on('child_added', (snapshot) => {
+            const message = snapshot.val();
+            if ((message.senderId === currentUser.uid && message.receiverId === currentChat.partnerId) ||
+                (message.senderId === currentChat.partnerId && message.receiverId === currentUser.uid)) {
+                // Mark as read if received
+                if (message.receiverId === currentUser.uid && !message.read) {
+                    database.ref('messages/' + snapshot.key + '/read').set(true);
                 }
-            } else if (zynId.length > 0) {
-                userSearchResult.innerHTML = `
-                    <div class="error">
-                        <p>Please enter a valid ZYN-ID (format: ZYN-1234)</p>
-                    </div>
-                `;
-                sendChatRequestBtn.style.display = 'none';
-            } else {
-                userSearchResult.innerHTML = `
-                    <div class="search-placeholder">
-                        <i class="fas fa-search"></i>
-                        <p>Enter a ZYN-ID to find a user</p>
-                    </div>
-                `;
-                sendChatRequestBtn.style.display = 'none';
+                
+                // Play notification sound for received messages
+                if (message.senderId === currentChat.partnerId) {
+                    playNotificationSound();
+                }
             }
         });
     }
-}
-
-function setupChatListeners() {
+    
     // Back button
     const backToHome = document.getElementById('backToHome');
     if (backToHome) {
         backToHome.addEventListener('click', () => {
-            // Clean up listeners
-            listeners.forEach(unsubscribe => {
-                if (typeof unsubscribe === 'function') {
-                    unsubscribe();
-                }
-            });
-            listeners = [];
-            
             window.location.href = 'home.html';
         });
     }
     
-    // Message input
+    // Send message
     const messageInput = document.getElementById('messageInput');
     const sendMessageBtn = document.getElementById('sendMessageBtn');
     
-    if (messageInput && sendMessageBtn) {
-        messageInput.addEventListener('input', () => {
-            sendMessageBtn.disabled = messageInput.value.trim() === '';
+    if (sendMessageBtn && messageInput) {
+        sendMessageBtn.addEventListener('click', async () => {
+            const message = messageInput.value.trim();
+            if (!message || !currentChat) return;
+            
+            const success = await sendMessage(currentChat.partnerId, message, 'text');
+            if (success) {
+                messageInput.value = '';
+            }
         });
         
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage();
+                sendMessageBtn.click();
             }
         });
-        
-        sendMessageBtn.addEventListener('click', sendMessage);
     }
     
-    // Attachment button
-    const attachmentBtn = document.getElementById('attachmentBtn');
+    // Attachment functionality
+    const attachBtn = document.getElementById('attachBtn');
     const attachmentOptions = document.getElementById('attachmentOptions');
     
-    if (attachmentBtn && attachmentOptions) {
-        attachmentBtn.addEventListener('click', () => {
+    if (attachBtn) {
+        attachBtn.addEventListener('click', () => {
             attachmentOptions.classList.toggle('show');
         });
-        
-        // Close attachment options when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!attachmentBtn.contains(e.target) && !attachmentOptions.contains(e.target)) {
-                attachmentOptions.classList.remove('show');
+    }
+    
+    // Close attachment options when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!attachBtn.contains(e.target) && !attachmentOptions.contains(e.target)) {
+            attachmentOptions.classList.remove('show');
+        }
+    });
+    
+    // Media attachment
+    const attachPhoto = document.getElementById('attachPhoto');
+    const attachVideo = document.getElementById('attachVideo');
+    const attachFile = document.getElementById('attachFile');
+    
+    if (attachPhoto) {
+        attachPhoto.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    await sendMediaMessage(file, 'image');
+                }
+            };
+            input.click();
+            attachmentOptions.classList.remove('show');
+        });
+    }
+    
+    if (attachVideo) {
+        attachVideo.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'video/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    await sendMediaMessage(file, 'video');
+                }
+            };
+            input.click();
+            attachmentOptions.classList.remove('show');
+        });
+    }
+    
+    if (attachFile) {
+        attachFile.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    await sendMediaMessage(file, 'file');
+                }
+            };
+            input.click();
+            attachmentOptions.classList.remove('show');
+        });
+    }
+    
+    async function sendMediaMessage(file, type) {
+        try {
+            showToast('Uploading...', 'info');
+            const mediaUrl = await uploadToCloudinary(file);
+            
+            const caption = type === 'image' || type === 'video' ? 
+                prompt('Add a caption (optional):') || '' : 
+                file.name;
+            
+            const success = await sendMessage(currentChat.partnerId, caption, type, mediaUrl);
+            if (success) {
+                showToast('Sent', 'success');
             }
-        });
+        } catch (error) {
+            console.error('Send media error:', error);
+            showToast('Failed to send media', 'error');
+        }
     }
     
-    // Attachment options
-    const attachPhotoBtn = document.getElementById('attachPhotoBtn');
-    if (attachPhotoBtn) {
-        attachPhotoBtn.addEventListener('click', () => {
-            document.getElementById('photoInput').click();
-        });
-    }
-    
-    const attachVideoBtn = document.getElementById('attachVideoBtn');
-    if (attachVideoBtn) {
-        attachVideoBtn.addEventListener('click', () => {
-            document.getElementById('videoInput').click();
-        });
-    }
-    
-    const attachFileBtn = document.getElementById('attachFileBtn');
-    if (attachFileBtn) {
-        attachFileBtn.addEventListener('click', () => {
-            document.getElementById('fileInput').click();
-        });
-    }
-    
-    // File inputs
-    const photoInput = document.getElementById('photoInput');
-    if (photoInput) {
-        photoInput.addEventListener('change', (e) => {
-            handleFileUpload(e.target.files[0], 'image');
-        });
-    }
-    
-    const videoInput = document.getElementById('videoInput');
-    if (videoInput) {
-        videoInput.addEventListener('change', (e) => {
-            handleFileUpload(e.target.files[0], 'video');
-        });
-    }
-    
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput) {
-        fileInput.addEventListener('change', (e) => {
-            handleFileUpload(e.target.files[0], 'file');
-        });
-    }
-    
-    // Chat menu
+    // Chat dropdown menu
     const chatMenuBtn = document.getElementById('chatMenuBtn');
-    const chatMenuDropdown = document.getElementById('chatMenuDropdown');
+    const chatDropdown = document.getElementById('chatDropdown');
     
-    if (chatMenuBtn && chatMenuDropdown) {
-        chatMenuBtn.addEventListener('click', () => {
-            chatMenuDropdown.classList.toggle('show');
-        });
-        
-        document.addEventListener('click', (e) => {
-            if (!chatMenuBtn.contains(e.target) && !chatMenuDropdown.contains(e.target)) {
-                chatMenuDropdown.classList.remove('show');
-            }
+    if (chatMenuBtn) {
+        chatMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            chatDropdown.classList.toggle('show');
         });
     }
     
-    // Block user
+    document.addEventListener('click', () => {
+        if (chatDropdown) chatDropdown.classList.remove('show');
+    });
+    
+    // Block user functionality
     const blockUserBtn = document.getElementById('blockUserBtn');
+    const blockUserModal = document.getElementById('blockUserModal');
+    const confirmBlock = document.getElementById('confirmBlock');
+    
     if (blockUserBtn) {
-        blockUserBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('blockUserModal').classList.add('active');
+        blockUserBtn.addEventListener('click', () => {
+            if (blockUserModal) blockUserModal.classList.add('active');
+            if (chatDropdown) chatDropdown.classList.remove('show');
         });
     }
     
-    // Report user
-    const reportUserBtn = document.getElementById('reportUserBtn');
-    if (reportUserBtn) {
-        reportUserBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('reportUserModal').classList.add('active');
-        });
-    }
-    
-    // Clear chat
-    const clearChatBtn = document.getElementById('clearChatBtn');
-    if (clearChatBtn) {
-        clearChatBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('clearChatModal').classList.add('active');
-        });
-    }
-    
-    // Delete chat
-    const deleteChatBtn = document.getElementById('deleteChatBtn');
-    if (deleteChatBtn) {
-        deleteChatBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('deleteChatModal').classList.add('active');
-        });
-    }
-    
-    // Modal close buttons
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', () => {
-            btn.closest('.modal-overlay').classList.remove('active');
-        });
-    });
-    
-    // Confirm block
-    const confirmBlockBtn = document.getElementById('confirmBlockBtn');
-    if (confirmBlockBtn) {
-        confirmBlockBtn.addEventListener('click', async () => {
-            if (!currentUser || !chatWithUser) return;
+    if (confirmBlock) {
+        confirmBlock.addEventListener('click', async () => {
+            if (!currentChat) return;
             
-            const db = window.firebaseDatabase;
-            const blockRef = ref(db, `blocks/${currentUser.uid}/${chatWithUser.userId}`);
-            await set(blockRef, {
-                blockedAt: new Date().toISOString(),
-                blockedUserId: chatWithUser.userId,
-                blockedUserName: chatWithUser.fullName
-            });
-            
-            Toast.show(`${chatWithUser.fullName} has been blocked`, 'success');
-            document.getElementById('blockUserModal').classList.remove('active');
-            
-            // Go back to home
-            setTimeout(() => {
-                window.location.href = 'home.html';
-            }, 1500);
-        });
-    }
-    
-    // Cancel block
-    const cancelBlockBtn = document.getElementById('cancelBlockBtn');
-    if (cancelBlockBtn) {
-        cancelBlockBtn.addEventListener('click', () => {
-            document.getElementById('blockUserModal').classList.remove('active');
-        });
-    }
-    
-    // Submit report
-    const submitReportBtn = document.getElementById('submitReportBtn');
-    if (submitReportBtn) {
-        submitReportBtn.addEventListener('click', async () => {
-            const reason = document.getElementById('reportReason').value;
-            const details = document.getElementById('reportDetails').value;
-            
-            if (!reason) {
-                Toast.show('Please select a reason for reporting', 'error');
-                return;
+            try {
+                await database.ref('users/' + currentUser.uid + '/blockedUsers/' + currentChat.partnerId).set(true);
+                showToast('User blocked', 'success');
+                if (blockUserModal) blockUserModal.classList.remove('active');
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 1000);
+            } catch (error) {
+                console.error('Block user error:', error);
+                showToast('Failed to block user', 'error');
             }
-            
-            if (!currentUser || !chatWithUser) return;
-            
-            const db = window.firebaseDatabase;
-            const reportRef = ref(db, `reports/${chatWithUser.userId}/${Date.now()}`);
-            await set(reportRef, {
-                reporterId: currentUser.uid,
-                reportedUserId: chatWithUser.userId,
-                reason: reason,
-                details: details,
-                timestamp: new Date().toISOString()
-            });
-            
-            Toast.show('Report submitted successfully', 'success');
-            document.getElementById('reportUserModal').classList.remove('active');
-            
-            // Clear form
-            document.getElementById('reportReason').value = '';
-            document.getElementById('reportDetails').value = '';
         });
     }
     
-    // Cancel report
-    const cancelReportBtn = document.getElementById('cancelReportBtn');
-    if (cancelReportBtn) {
-        cancelReportBtn.addEventListener('click', () => {
-            document.getElementById('reportUserModal').classList.remove('active');
-        });
-    }
-    
-    // Confirm clear chat
-    const confirmClearChatBtn = document.getElementById('confirmClearChatBtn');
-    if (confirmClearChatBtn) {
-        confirmClearChatBtn.addEventListener('click', async () => {
-            if (!currentChatId) return;
-            
-            const db = window.firebaseDatabase;
-            const messagesRef = ref(db, `messages/${currentChatId}`);
-            await remove(messagesRef);
-            
-            Toast.show('Chat cleared successfully', 'success');
-            document.getElementById('clearChatModal').classList.remove('active');
-        });
-    }
-    
-    // Cancel clear chat
-    const cancelClearChatBtn = document.getElementById('cancelClearChatBtn');
-    if (cancelClearChatBtn) {
-        cancelClearChatBtn.addEventListener('click', () => {
-            document.getElementById('clearChatModal').classList.remove('active');
-        });
-    }
-    
-    // Confirm delete chat
-    const confirmDeleteChatBtn = document.getElementById('confirmDeleteChatBtn');
-    if (confirmDeleteChatBtn) {
-        confirmDeleteChatBtn.addEventListener('click', async () => {
-            if (!currentUser || !currentChatId) return;
-            
-            const db = window.firebaseDatabase;
-            
-            // Remove chat from user's chat list
-            const chatRef = ref(db, `chats/${currentUser.uid}/${chatWithUser.userId}`);
-            await remove(chatRef);
-            
-            Toast.show('Chat deleted successfully', 'success');
-            document.getElementById('deleteChatModal').classList.remove('active');
-            
-            // Go back to home
-            setTimeout(() => {
-                window.location.href = 'home.html';
-            }, 1500);
-        });
-    }
-    
-    // Cancel delete chat
-    const cancelDeleteChatBtn = document.getElementById('cancelDeleteChatBtn');
-    if (cancelDeleteChatBtn) {
-        cancelDeleteChatBtn.addEventListener('click', () => {
-            document.getElementById('deleteChatModal').classList.remove('active');
-        });
-    }
-}
-
-// Message Functions
-async function sendMessage() {
-    const messageInput = document.getElementById('messageInput');
-    const message = messageInput.value.trim();
-    
-    if (!message || !currentChatId || !currentUser || !chatWithUser) return;
-    
-    const db = window.firebaseDatabase;
-    const messageRef = ref(db, `messages/${currentChatId}/${Date.now()}`);
-    
-    const messageData = {
-        senderId: currentUser.uid,
-        content: message,
-        type: 'text',
-        timestamp: new Date().toISOString(),
-        status: 'sent'
-    };
-    
-    try {
-        await set(messageRef, messageData);
-        messageInput.value = '';
-        
-        // Update chat list for both users
-        await updateChatList(currentUser.uid, chatWithUser.userId, message, 'text');
-        await updateChatList(chatWithUser.userId, currentUser.uid, message, 'text');
-        
-        // Play sent sound
-        playNotificationSound();
-    } catch (error) {
-        console.error('Error sending message:', error);
-        Toast.show('Failed to send message', 'error');
-    }
-}
-
-async function updateChatList(userId, otherUserId, lastMessage, type) {
-    const db = window.firebaseDatabase;
-    const chatRef = ref(db, `chats/${userId}/${otherUserId}`);
-    
-    // Get other user's data
-    const otherUserData = await getUserData(otherUserId);
-    
-    const chatData = {
-        userId: otherUserId,
-        userName: otherUserData?.fullName || 'User',
-        userPic: otherUserData?.profilePic || null,
-        lastMessage: lastMessage,
-        lastMessageType: type,
-        lastMessageTime: new Date().toISOString(),
-        unreadCount: userId === currentUser.uid ? 0 : 1 // Increment if receiving
-    };
-    
-    await set(chatRef, chatData);
-}
-
-async function handleFileUpload(file, type) {
-    if (!file || !currentChatId || !currentUser || !chatWithUser) return;
-    
-    // Check file size (50MB limit)
-    if (file.size > 50 * 1024 * 1024) {
-        Toast.show('File size must be less than 50MB', 'error');
-        return;
-    }
-    
-    // Show loading
-    const sendMediaBtn = document.getElementById('sendMediaBtn');
-    const originalText = sendMediaBtn ? sendMediaBtn.innerHTML : '';
-    if (sendMediaBtn) {
-        sendMediaBtn.innerHTML = '<div class="spinner"></div>';
-        sendMediaBtn.disabled = true;
-    }
-    
-    try {
-        // Upload to Cloudinary
-        const uploadResult = await uploadToCloudinary(file, type);
-        
-        // Prepare message data
-        const db = window.firebaseDatabase;
-        const messageRef = ref(db, `messages/${currentChatId}/${Date.now()}`);
-        
-        const messageData = {
-            senderId: currentUser.uid,
-            content: uploadResult.url,
-            type: type,
-            timestamp: new Date().toISOString(),
-            status: 'sent',
-            fileName: file.name,
-            fileSize: file.size,
-            format: uploadResult.format
-        };
-        
-        // Send message
-        await set(messageRef, messageData);
-        
-        // Update chat lists
-        const caption = type === 'image' ? '📷 Photo' : type === 'video' ? '🎬 Video' : '📄 File';
-        await updateChatList(currentUser.uid, chatWithUser.userId, caption, type);
-        await updateChatList(chatWithUser.userId, currentUser.uid, caption, type);
-        
-        // Close modal and show success
-        document.getElementById('mediaPreviewModal').classList.remove('active');
-        Toast.show(`${type === 'image' ? 'Photo' : type === 'video' ? 'Video' : 'File'} sent successfully`, 'success');
-        playNotificationSound();
-        
-    } catch (error) {
-        console.error('Error uploading file:', error);
-        Toast.show('Failed to upload file', 'error');
-    } finally {
-        // Reset button
-        if (sendMediaBtn) {
-            sendMediaBtn.innerHTML = originalText;
-            sendMediaBtn.disabled = false;
-        }
-    }
-}
-
-// Helper Functions
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function openMediaPreview(url, type) {
-    const mediaPreviewContent = document.getElementById('mediaPreviewContent');
-    const mediaPreviewTitle = document.getElementById('mediaPreviewTitle');
-    const mediaPreviewModal = document.getElementById('mediaPreviewModal');
-    
-    if (!mediaPreviewContent || !mediaPreviewTitle || !mediaPreviewModal) return;
-    
-    mediaPreviewContent.innerHTML = '';
-    
-    if (type === 'image') {
-        mediaPreviewTitle.textContent = 'Photo Preview';
-        const img = document.createElement('img');
-        img.src = url;
-        img.style.maxWidth = '100%';
-        img.style.borderRadius = 'var(--border-radius-medium)';
-        mediaPreviewContent.appendChild(img);
-    } else if (type === 'video') {
-        mediaPreviewTitle.textContent = 'Video Preview';
-        const video = document.createElement('video');
-        video.src = url;
-        video.controls = true;
-        video.style.maxWidth = '100%';
-        video.style.borderRadius = 'var(--border-radius-medium)';
-        mediaPreviewContent.appendChild(video);
-    }
-    
-    mediaPreviewModal.classList.add('active');
-}
-
-// Load edit profile data
-function loadEditProfileData() {
-    if (!userData) return;
-    
-    document.getElementById('editFullName').value = userData.fullName || '';
-    document.getElementById('editPhoneNumber').value = userData.phoneNumber || '';
-    document.getElementById('editStatus').value = userData.status || 'Available';
-    
-    const editProfilePreview = document.getElementById('editProfilePreview');
-    if (userData.profilePic) {
-        editProfilePreview.innerHTML = `<img src="${userData.profilePic}" alt="Profile">`;
-    }
-}
-
-// Send chat request
-async function sendChatRequest(userId, zynId) {
-    if (!currentUser || !userData) return;
-    
-    const db = window.firebaseDatabase;
-    const requestRef = ref(db, `requests/${userId}/${currentUser.uid}`);
-    
-    const requestData = {
-        fromUserId: currentUser.uid,
-        fromUserName: userData.fullName,
-        fromUserPic: userData.profilePic,
-        fromUserZYN: userData.zynId,
-        toUserId: userId,
-        timestamp: new Date().toISOString(),
-        status: 'pending'
-    };
-    
-    try {
-        await set(requestRef, requestData);
-        Toast.show(`Chat request sent to ${zynId}`, 'success');
-        document.getElementById('startChatModal').classList.remove('active');
-        document.getElementById('searchUserID').value = '';
-    } catch (error) {
-        console.error('Error sending chat request:', error);
-        Toast.show('Failed to send chat request', 'error');
-    }
-}
-
-// Initialize App
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if user is logged in
-    const auth = window.firebaseAuth;
-    
-    // Setup auth state listener
-    setupAuthStateListener();
-    
-    // Index page specific listeners
-    if (window.location.pathname.includes('index.html')) {
-        setupIndexListeners();
-    }
-    
-    // Handle page visibility change (update online status)
-    document.addEventListener('visibilitychange', async () => {
-        if (currentUser) {
-            const status = document.hidden ? 'away' : 'online';
-            await updateUserData(currentUser.uid, {
-                status: status,
-                lastSeen: new Date().toISOString()
-            });
-        }
-    });
-    
-    // Handle beforeunload (update offline status)
-    window.addEventListener('beforeunload', async () => {
-        if (currentUser) {
-            await updateUserData(currentUser.uid, {
-                status: 'offline',
-                lastSeen: new Date().toISOString()
-            });
-        }
-        
-        // Clean up listeners
-        listeners.forEach(unsubscribe => {
-            if (typeof unsubscribe === 'function') {
-                unsubscribe();
-            }
+    // Modal close handlers
+    const modalCloseBtns = document.querySelectorAll('.close-modal');
+    modalCloseBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = this.closest('.modal-overlay');
+            if (modal) modal.classList.remove('active');
         });
     });
 });
 
-// Index Page Listeners
-function setupIndexListeners() {
-    // Show/hide password
-    document.getElementById('togglePassword')?.addEventListener('click', function() {
-        const passwordInput = document.getElementById('password');
-        const type = passwordInput.type === 'password' ? 'text' : 'password';
-        passwordInput.type = type;
-        this.classList.toggle('fa-eye');
-        this.classList.toggle('fa-eye-slash');
-    });
+// Global function for media preview
+window.previewMedia = function(url, type) {
+    const mediaPreviewModal = document.getElementById('mediaPreviewModal');
+    const mediaPreviewContent = document.getElementById('mediaPreviewContent');
     
-    document.getElementById('toggleLoginPassword')?.addEventListener('click', function() {
-        const passwordInput = document.getElementById('loginPassword');
-        const type = passwordInput.type === 'password' ? 'text' : 'password';
-        passwordInput.type = type;
-        this.classList.toggle('fa-eye');
-        this.classList.toggle('fa-eye-slash');
-    });
+    if (!mediaPreviewModal || !mediaPreviewContent) return;
     
-    // Navigation between welcome, signup, and login
-    document.getElementById('getStartedBtn')?.addEventListener('click', () => {
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('signupForm').style.display = 'block';
-    });
-    
-    document.getElementById('loginBtn')?.addEventListener('click', () => {
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'block';
-    });
-    
-    document.getElementById('backToWelcome')?.addEventListener('click', () => {
-        document.getElementById('signupForm').style.display = 'none';
-        document.getElementById('welcomeScreen').style.display = 'block';
-    });
-    
-    document.getElementById('backToWelcomeLogin')?.addEventListener('click', () => {
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('welcomeScreen').style.display = 'block';
-    });
-    
-    document.getElementById('switchToLogin')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('signupForm').style.display = 'none';
-        document.getElementById('loginForm').style.display = 'block';
-    });
-    
-    document.getElementById('switchToSignup')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('loginForm').style.display = 'none';
-        document.getElementById('signupForm').style.display = 'block';
-    });
-    
-    // Profile image upload
-    document.getElementById('uploadBtn')?.addEventListener('click', () => {
-        document.getElementById('profileImage').click();
-    });
-    
-    document.getElementById('profileImage')?.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                Toast.show('Image must be less than 5MB', 'error');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('profilePreview');
-                preview.innerHTML = `<img src="${e.target.result}" alt="Profile Preview">`;
-                document.getElementById('removeBtn').style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-    
-    document.getElementById('removeBtn')?.addEventListener('click', () => {
-        const preview = document.getElementById('profilePreview');
-        preview.innerHTML = `
-            <div class="preview-placeholder">
-                <i class="fas fa-user-circle"></i>
-                <span>No image selected</span>
-                <p>Max 5MB</p>
-            </div>
+    if (type === 'image') {
+        mediaPreviewContent.innerHTML = `<img src="${url}" alt="Preview" style="width: 100%; border-radius: 10px;">`;
+    } else if (type === 'video') {
+        mediaPreviewContent.innerHTML = `
+            <video src="${url}" controls style="width: 100%; border-radius: 10px;"></video>
         `;
-        document.getElementById('profileImage').value = '';
-        document.getElementById('removeBtn').style.display = 'none';
-    });
-    
-    // Sign up form submission
-    document.getElementById('signupFormElement')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const fullName = document.getElementById('fullName').value.trim();
-        const phoneNumber = document.getElementById('phoneNumber').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const termsAgreement = document.getElementById('termsAgreement').checked;
-        
-        // Validation
-        if (password !== confirmPassword) {
-            Toast.show('Passwords do not match', 'error');
-            return;
-        }
-        
-        if (!termsAgreement) {
-            Toast.show('You must agree to the terms and conditions', 'error');
-            return;
-        }
-        
-        // Show loading
-        const signupBtnText = document.getElementById('signupBtnText');
-        const signupSpinner = document.getElementById('signupSpinner');
-        if (signupBtnText && signupSpinner) {
-            signupBtnText.style.display = 'none';
-            signupSpinner.style.display = 'block';
-        }
-        
-        try {
-            const auth = window.firebaseAuth;
-            
-            // Create user in Firebase Auth
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-            
-            // Generate ZYN-ID
-            const zynId = generateZYNID();
-            
-            // Upload profile picture if exists
-            let profilePicUrl = null;
-            const profileImage = document.getElementById('profileImage').files[0];
-            if (profileImage) {
-                const uploadResult = await uploadToCloudinary(profileImage, 'image');
-                profilePicUrl = uploadResult.url;
-            }
-            
-            // Save user data to Firebase Database
-            const db = window.firebaseDatabase;
-            const userRef = ref(db, `users/${user.uid}`);
-            
-            const userData = {
-                uid: user.uid,
-                fullName: fullName,
-                phoneNumber: phoneNumber,
-                email: email,
-                zynId: zynId,
-                profilePic: profilePicUrl,
-                status: 'online',
-                createdAt: new Date().toISOString(),
-                lastSeen: new Date().toISOString()
-            };
-            
-            await set(userRef, userData);
-            
-            // Update auth profile
-            await updateProfile(user, {
-                displayName: fullName,
-                photoURL: profilePicUrl
-            });
-            
-            Toast.show('Account created successfully!', 'success');
-            
-            // Redirect to home page
-            setTimeout(() => {
-                window.location.href = 'home.html';
-            }, 1500);
-            
-        } catch (error) {
-            console.error('Sign up error:', error);
-            let message = 'Sign up failed';
-            
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    message = 'Email already in use';
-                    break;
-                case 'auth/invalid-email':
-                    message = 'Invalid email address';
-                    break;
-                case 'auth/weak-password':
-                    message = 'Password should be at least 6 characters';
-                    break;
-            }
-            
-            Toast.show(message, 'error');
-        } finally {
-            // Hide loading
-            if (signupBtnText && signupSpinner) {
-                signupBtnText.style.display = 'block';
-                signupSpinner.style.display = 'none';
-            }
-        }
-    });
-    
-    // Login form submission
-    document.getElementById('loginFormElement')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
-        const rememberMe = document.getElementById('rememberMe').checked;
-        
-        // Show loading
-        const loginBtnText = document.getElementById('loginBtnText');
-        const loginSpinner = document.getElementById('loginSpinner');
-        if (loginBtnText && loginSpinner) {
-            loginBtnText.style.display = 'none';
-            loginSpinner.style.display = 'block';
-        }
-        
-        try {
-            const auth = window.firebaseAuth;
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-            
-            // Get user data
-            const db = window.firebaseDatabase;
-            const userRef = ref(db, `users/${user.uid}`);
-            const snapshot = await get(userRef);
-            
-            if (!snapshot.exists()) {
-                Toast.show('User data not found', 'error');
-                await signOut(auth);
-                return;
-            }
-            
-            // Update status to online
-            await update(ref(db, `users/${user.uid}`), {
-                status: 'online',
-                lastSeen: new Date().toISOString()
-            });
-            
-            Toast.show('Login successful!', 'success');
-            
-            // Redirect to home page
-            setTimeout(() => {
-                window.location.href = 'home.html';
-            }, 1000);
-            
-        } catch (error) {
-            console.error('Login error:', error);
-            let message = 'Login failed';
-            
-            switch (error.code) {
-                case 'auth/user-not-found':
-                    message = 'User not found';
-                    break;
-                case 'auth/wrong-password':
-                    message = 'Incorrect password';
-                    break;
-                case 'auth/invalid-email':
-                    message = 'Invalid email address';
-                    break;
-                case 'auth/user-disabled':
-                    message = 'Account disabled';
-                    break;
-            }
-            
-            Toast.show(message, 'error');
-        } finally {
-            // Hide loading
-            if (loginBtnText && loginSpinner) {
-                loginBtnText.style.display = 'block';
-                loginSpinner.style.display = 'none';
-            }
-        }
-    });
-    
-    // Google sign in
-    document.getElementById('googleSignupBtn')?.addEventListener('click', handleGoogleSignIn);
-    document.getElementById('googleLoginBtn')?.addEventListener('click', handleGoogleSignIn);
-    
-    // Forgot password
-    document.getElementById('forgotPassword')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        Toast.show('Password reset feature coming soon', 'info');
-    });
-    
-    // Hide loading screen after 2 seconds
-    setTimeout(() => {
-        const loadingScreen = document.getElementById('loadingScreen');
-        const authPage = document.getElementById('authPage');
-        
-        if (loadingScreen) loadingScreen.classList.add('hidden');
-        if (authPage) authPage.style.display = 'flex';
-    }, 2000);
-}
-
-async function handleGoogleSignIn() {
-    try {
-        const auth = window.firebaseAuth;
-        const provider = window.firebaseGoogleProvider;
-        
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-        
-        // Check if user exists in database
-        const db = window.firebaseDatabase;
-        const userRef = ref(db, `users/${user.uid}`);
-        const snapshot = await get(userRef);
-        
-        if (!snapshot.exists()) {
-            // New user - create record
-            const zynId = generateZYNID();
-            const userData = {
-                uid: user.uid,
-                fullName: user.displayName || 'Google User',
-                email: user.email,
-                zynId: zynId,
-                profilePic: user.photoURL,
-                status: 'online',
-                createdAt: new Date().toISOString(),
-                lastSeen: new Date().toISOString(),
-                isGoogleUser: true
-            };
-            
-            await set(userRef, userData);
-            Toast.show('Account created successfully!', 'success');
-        } else {
-            // Existing user - update status
-            await update(userRef, {
-                status: 'online',
-                lastSeen: new Date().toISOString()
-            });
-            Toast.show('Login successful!', 'success');
-        }
-        
-        // Redirect to home page
-        setTimeout(() => {
-            window.location.href = 'home.html';
-        }, 1000);
-        
-    } catch (error) {
-        console.error('Google sign in error:', error);
-        Toast.show('Google sign in failed', 'error');
     }
-}
+    
+    mediaPreviewModal.classList.add('active');
+};
 
-// Make functions available globally for HTML event handlers
-window.openMediaPreview = openMediaPreview;
-window.navigateToChat = navigateToChat;
+// Make functions available globally for onclick handlers
+window.logout = logout;
+window.previewMedia = function(url, type) {
+    // Implementation from above
+};
