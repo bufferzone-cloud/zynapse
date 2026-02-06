@@ -3,12 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zynapse - Sign Up</title>
+    <title>Zynapse - Secure Messaging</title>
+    <meta name="description" content="Connect seamlessly with secure, instant messaging">
+    <meta name="theme-color" content="#4A6FFF">
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="zynaps.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="zynaps.png" type="image/png">
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- iOS Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="zynaps.png">
 </head>
 <body class="auth-page">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
+            <div class="spinner-large"></div>
+            <p>Loading Zynapse...</p>
+        </div>
+    </div>
+
+    <!-- Main Auth Container -->
     <div class="auth-container">
         <!-- Welcome Screen -->
         <div id="welcomeScreen" class="welcome-screen">
@@ -27,36 +53,59 @@
                     <i class="fas fa-user-plus"></i> Create Account
                 </button>
             </div>
+
+            <div class="welcome-footer">
+                <p>By continuing, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a></p>
+            </div>
         </div>
 
         <!-- Login Form -->
         <div id="loginForm" class="auth-form" style="display: none;">
             <div class="auth-header">
+                <button class="back-btn" id="backToWelcome">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
                 <img src="zynaps.png" alt="Logo" class="logo-small">
                 <h2>Welcome Back</h2>
                 <p>Sign in to your Zynapse account</p>
             </div>
             
-            <form id="loginFormFields">
+            <form id="loginFormFields" class="auth-form-content">
                 <div class="input-group">
                     <i class="fas fa-envelope"></i>
-                    <input type="email" id="loginEmail" placeholder="Email" required>
+                    <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
                 </div>
                 
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="loginPassword" placeholder="Password" required>
-                    <i class="fas fa-eye toggle-password"></i>
+                    <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+                    <i class="fas fa-eye toggle-password" id="toggleLoginPassword"></i>
                 </div>
                 
-                <button type="submit" class="btn-primary" id="loginSubmitBtn">
+                <div class="form-options">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        Remember me
+                    </label>
+                    <a href="#" id="forgotPassword" class="link">Forgot Password?</a>
+                </div>
+                
+                <button type="submit" class="btn-primary full-width" id="loginSubmitBtn">
                     <span id="loginBtnText">Sign In</span>
                     <div class="spinner" id="loginSpinner" style="display: none;"></div>
                 </button>
                 
-                <div class="auth-links">
-                    <a href="#" id="forgotPassword">Forgot Password?</a>
-                    <a href="#" id="backToWelcome">Back</a>
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
+                
+                <button type="button" class="btn-google" id="googleSignInBtn">
+                    <i class="fab fa-google"></i> Continue with Google
+                </button>
+                
+                <div class="auth-switch">
+                    <p>Don't have an account? <a href="#" id="haveAccount" class="link">Sign up</a></p>
                 </div>
             </form>
         </div>
@@ -64,72 +113,145 @@
         <!-- Sign Up Form -->
         <div id="signupForm" class="auth-form" style="display: none;">
             <div class="auth-header">
+                <button class="back-btn" id="backToWelcome2">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
                 <img src="zynaps.png" alt="Logo" class="logo-small">
                 <h2>Create Account</h2>
                 <p>Join Zynapse's secure messaging network</p>
             </div>
             
-            <form id="signupFormFields">
+            <form id="signupFormFields" class="auth-form-content">
                 <div class="input-group">
                     <i class="fas fa-user"></i>
-                    <input type="text" id="signupName" placeholder="Full Name" required>
+                    <input type="text" id="signupName" placeholder="Full Name" required autocomplete="name">
                 </div>
                 
                 <div class="input-group">
                     <i class="fas fa-phone"></i>
-                    <input type="tel" id="signupPhone" placeholder="Phone Number" required>
+                    <input type="tel" id="signupPhone" placeholder="Phone Number" required autocomplete="tel">
                 </div>
                 
                 <div class="input-group">
                     <i class="fas fa-envelope"></i>
-                    <input type="email" id="signupEmail" placeholder="Email" required>
+                    <input type="email" id="signupEmail" placeholder="Email" required autocomplete="email">
                 </div>
                 
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="signupPassword" placeholder="Password" required>
-                    <i class="fas fa-eye toggle-password"></i>
+                    <input type="password" id="signupPassword" placeholder="Password (min. 6 characters)" required autocomplete="new-password">
+                    <i class="fas fa-eye toggle-password" id="toggleSignupPassword"></i>
                 </div>
                 
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
+                    <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required autocomplete="new-password">
                 </div>
                 
-                <div class="profile-upload">
-                    <div class="upload-preview" id="profilePreview">
-                        <i class="fas fa-user-circle"></i>
-                        <span>Profile Picture</span>
+                <!-- Profile Picture Upload -->
+                <div class="profile-upload-section">
+                    <label class="upload-label">Profile Picture (Optional)</label>
+                    <div class="profile-upload-container">
+                        <div class="upload-preview" id="profilePreview">
+                            <div class="preview-placeholder">
+                                <i class="fas fa-user-circle"></i>
+                                <span>No image selected</span>
+                            </div>
+                        </div>
+                        <div class="upload-buttons">
+                            <button type="button" id="uploadProfileBtn" class="btn-upload">
+                                <i class="fas fa-cloud-upload-alt"></i> Choose Image
+                            </button>
+                            <input type="file" id="profileImage" accept="image/*" style="display: none;">
+                            <button type="button" id="removeProfileBtn" class="btn-remove" style="display: none;">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
+                        </div>
                     </div>
-                    <input type="file" id="profileImage" accept="image/*" style="display: none;">
-                    <button type="button" id="uploadProfileBtn" class="btn-upload">
-                        <i class="fas fa-cloud-upload-alt"></i> Upload Photo
-                    </button>
+                    <p class="upload-hint">Max size: 5MB. Supported: JPG, PNG, GIF</p>
                 </div>
                 
-                <button type="submit" class="btn-primary" id="signupSubmitBtn">
+                <div class="terms-agreement">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <span class="checkmark"></span>
+                        I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn-primary full-width" id="signupSubmitBtn">
                     <span id="signupBtnText">Create Account</span>
                     <div class="spinner" id="signupSpinner" style="display: none;"></div>
                 </button>
                 
-                <div class="auth-links">
-                    <a href="#" id="haveAccount">Already have an account?</a>
-                    <a href="#" id="backToWelcome2">Back</a>
+                <div class="auth-switch">
+                    <p>Already have an account? <a href="#" id="haveAccount2" class="link">Sign in</a></p>
                 </div>
             </form>
         </div>
+
+        <!-- Forgot Password Form -->
+        <div id="forgotPasswordForm" class="auth-form" style="display: none;">
+            <div class="auth-header">
+                <button class="back-btn" id="backToLogin">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <img src="zynaps.png" alt="Logo" class="logo-small">
+                <h2>Reset Password</h2>
+                <p>Enter your email to receive a reset link</p>
+            </div>
+            
+            <form id="forgotPasswordFormFields" class="auth-form-content">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="resetEmail" placeholder="Email" required autocomplete="email">
+                </div>
+                
+                <button type="submit" class="btn-primary full-width" id="resetPasswordBtn">
+                    <span id="resetBtnText">Send Reset Link</span>
+                    <div class="spinner" id="resetSpinner" style="display: none;"></div>
+                </button>
+                
+                <div class="auth-switch">
+                    <p>Remember your password? <a href="#" id="backToLoginLink" class="link">Sign in</a></p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Toast Notifications Container -->
+        <div id="toastContainer" class="toast-container"></div>
     </div>
 
-    <!-- Notification Sound -->
+    <!-- Audio Elements -->
     <audio id="notificationSound" preload="auto">
         <source src="notification.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
 
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js"></script>
+    
+    <!-- ImageKit SDK -->
+    <script src="https://unpkg.com/imagekit-javascript/dist/imagekit.min.js"></script>
+    
+    <!-- App Scripts -->
     <script src="firebase-config.js"></script>
     <script src="imagekit-config.js"></script>
     <script src="app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('ServiceWorker registered:', registration.scope);
+                }).catch(error => {
+                    console.log('ServiceWorker registration failed:', error);
+                });
+            });
+        }
+    </script>
 </body>
 </html>
