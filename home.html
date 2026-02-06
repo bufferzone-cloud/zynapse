@@ -3,623 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zynapse - Chat</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Zynapse - Home</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="zynapse.png">
 </head>
-<body class="dark-theme">
-    <div id="app">
-        <!-- Top Navigation Bar -->
-        <div class="top-nav">
-            <div class="nav-left">
-                <div class="app-logo">
-                    <div class="logo-glow-small">
-                        <img src="zynapse.png" alt="Zynapse Logo" class="logo-tiny">
-                    </div>
-                    <span class="app-name">Zynapse</span>
-                </div>
-                <div class="nav-divider"></div>
-                <div class="status-indicator">
-                    <div class="status-dot-indicator">
-                        <span class="status-dot online"></span>
-                    </div>
-                    <span id="global-status" class="status online">Online</span>
-                </div>
-            </div>
-            
-            <div class="nav-center">
-                <div class="nav-tabs">
-                    <button id="chats-btn" class="nav-tab active" data-tab="chats">
-                        <i class="fas fa-comment"></i>
-                        <span>Chats</span>
-                        <div class="tab-indicator"></div>
-                    </button>
-                    <button id="contacts-btn" class="nav-tab" data-tab="contacts">
-                        <i class="fas fa-user-friends"></i>
-                        <span>Contacts</span>
-                        <div class="tab-indicator"></div>
-                    </button>
-                    <button id="requests-btn" class="nav-tab" data-tab="requests">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Requests</span>
-                        <div class="tab-indicator"></div>
-                        <span class="nav-badge" id="requests-badge">0</span>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="nav-right">
-                <div class="nav-actions">
-                    <button id="new-chat-btn" class="nav-action-btn" title="New Chat">
-                        <i class="fas fa-edit"></i>
-                        <span class="tooltip">New Chat</span>
-                    </button>
-                    <button id="settings-btn" class="nav-action-btn" title="Settings">
-                        <i class="fas fa-cog"></i>
-                        <span class="tooltip">Settings</span>
-                    </button>
-                    <div class="user-menu">
-                        <button id="user-menu-btn" class="user-avatar-btn">
-                            <div class="avatar-wrapper">
-                                <div class="avatar-small" id="user-avatar">U</div>
-                                <span class="user-status online"></span>
-                            </div>
-                            <i class="fas fa-chevron-down dropdown-arrow"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content Area -->
-        <div class="main-content">
-            <!-- Chats Panel -->
-            <div id="chats-panel" class="content-panel active">
-                <div class="panel-header">
-                    <div class="panel-title">
-                        <h3>Recent Conversations</h3>
-                        <span class="panel-subtitle" id="chats-count">0 chats</span>
-                    </div>
-                    <div class="header-actions">
-                        <div class="search-box-wrapper">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="chats-search" placeholder="Search conversations...">
-                                <button class="search-clear hidden">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="header-buttons">
-                            <button id="filter-chats" class="icon-btn" title="Filter">
-                                <i class="fas fa-filter"></i>
-                            </button>
-                            <button id="sort-chats" class="icon-btn" title="Sort">
-                                <i class="fas fa-sort"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel-content">
-                    <div class="chat-list" id="chat-list">
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <i class="fas fa-comments"></i>
-                            </div>
-                            <h4>No conversations yet</h4>
-                            <p>Start a new chat to connect with friends and colleagues</p>
-                            <button class="btn btn-primary btn-glow" id="start-first-chat">
-                                <i class="fas fa-plus"></i>
-                                Start Your First Chat
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contacts Panel -->
-            <div id="contacts-panel" class="content-panel">
-                <div class="panel-header">
-                    <div class="panel-title">
-                        <h3>Your Contacts</h3>
-                        <span class="panel-subtitle" id="contacts-count">0 contacts</span>
-                    </div>
-                    <div class="header-actions">
-                        <div class="search-box-wrapper">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="contacts-search" placeholder="Search contacts...">
-                                <button class="search-clear hidden">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="header-buttons">
-                            <button id="add-contact-btn" class="btn btn-primary btn-small">
-                                <i class="fas fa-user-plus"></i>
-                                Add Contact
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel-content">
-                    <div class="contact-list" id="contact-list">
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <i class="fas fa-user-friends"></i>
-                            </div>
-                            <h4>No contacts yet</h4>
-                            <p>Add contacts to start chatting and sharing</p>
-                            <button class="btn btn-primary btn-glow" id="add-first-contact">
-                                <i class="fas fa-user-plus"></i>
-                                Add Your First Contact
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Requests Panel -->
-            <div id="requests-panel" class="content-panel">
-                <div class="panel-header">
-                    <div class="panel-title">
-                        <h3>Contact Requests</h3>
-                        <span class="panel-subtitle" id="requests-count">0 pending</span>
-                    </div>
-                    <div class="header-actions">
-                        <button id="refresh-requests" class="icon-btn" title="Refresh">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="panel-content">
-                    <div class="request-list" id="request-list">
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <i class="fas fa-user-plus"></i>
-                            </div>
-                            <h4>No pending requests</h4>
-                            <p>When someone sends you a contact request, it will appear here</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Active Chat Area -->
-            <div id="active-chat" class="chat-container hidden">
-                <div class="chat-header">
-                    <button id="back-to-chats" class="back-btn">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <div class="chat-user-info">
-                        <div class="chat-avatar">
-                            <div class="avatar-wrapper">
-                                <div class="avatar-small" id="active-chat-avatar">U</div>
-                                <span class="presence-indicator online" id="active-chat-status"></span>
-                            </div>
-                        </div>
-                        <div class="chat-user-details">
-                            <h4 id="active-chat-name">User Name</h4>
-                            <div class="chat-user-meta">
-                                <span id="active-chat-status-text" class="status online">Online</span>
-                                <span class="meta-separator">•</span>
-                                <span id="active-chat-last-seen">Last seen recently</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chat-actions">
-                        <button id="voice-call-btn" class="chat-action-btn" title="Voice call">
-                            <i class="fas fa-phone"></i>
-                        </button>
-                        <button id="video-call-btn" class="chat-action-btn" title="Video call">
-                            <i class="fas fa-video"></i>
-                        </button>
-                        <button id="chat-info-btn" class="chat-action-btn" title="Chat info">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="messages-container">
-                    <div class="messages-scroll-area" id="messages-scroll-area">
-                        <div class="messages" id="messages">
-                            <!-- Messages will be populated here -->
-                        </div>
-                        <div id="typing-indicator" class="typing-indicator hidden">
-                            <div class="typing-avatar">
-                                <div class="avatar-tiny" id="typing-avatar">U</div>
-                            </div>
-                            <div class="typing-content">
-                                <div class="typing-dots">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
-                                <span id="typing-user">User is typing...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="message-input-container">
-                    <div class="input-actions">
-                        <button id="emoji-btn" class="input-action-btn" title="Emoji">
-                            <i class="far fa-smile"></i>
-                        </button>
-                        
-                    </div>
-                    <div class="message-input-wrapper">
-                        <textarea id="message-input" placeholder="Type a message..." rows="1"></textarea>
-                        
-                    </div>
-                    <button id="send-btn" class="send-btn" title="Send message" disabled>
-                        <i class="fas fa-paper-plane"></i>
+<body class="home-page">
+    <!-- Top Navigation -->
+    <header class="app-header">
+        <div class="header-left">
+            <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
+            <div class="user-info">
+                <span id="user-name" class="user-name">John Doe</span>
+                <div class="user-id-container">
+                    <span id="user-id" class="user-id">ZYN-0000</span>
+                    <button class="copy-btn" onclick="copyUserId()">
+                        <i class="far fa-copy"></i>
                     </button>
                 </div>
             </div>
         </div>
-
-        <!-- Modals -->
-        <!-- New Chat Modal -->
-        <div id="new-chat-modal" class="modal">
-            <div class="modal-backdrop"></div>
-            <div class="modal-container">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <div class="modal-icon">
-                            <i class="fas fa-edit"></i>
-                        </div>
-                        <h3>Start New Chat</h3>
-                        <button id="close-new-chat" class="icon-btn modal-close">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="search-container">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="new-chat-search" placeholder="Search users by name, email, or username...">
-                                <button class="search-clear hidden">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="modal-section">
-                            <h4>Suggested Contacts</h4>
-                            <div class="user-list-modal" id="user-list-modal">
-                                <!-- Users will be populated here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add Contact Modal -->
-        <div id="add-contact-modal" class="modal">
-            <div class="modal-backdrop"></div>
-            <div class="modal-container">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <div class="modal-icon">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <h3>Add New Contact</h3>
-                        <button id="close-add-contact" class="icon-btn modal-close">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label for="contact-search">
-                                <i class="fas fa-search"></i>
-                                Find User
-                            </label>
-                            <input type="text" id="contact-search" placeholder="Enter user's email, username, or User ID">
-                            <div class="input-focus-line"></div>
-                            <p class="input-hint">
-                                <i class="fas fa-info-circle"></i>
-                                You can find User ID in the user's profile section
-                            </p>
-                        </div>
-                        <div id="search-results" class="search-results hidden">
-                            <!-- Search results will appear here -->
-                        </div>
-                        <div class="form-group">
-                            <label for="contact-message">
-                                <i class="fas fa-comment"></i>
-                                Personal Message (Optional)
-                            </label>
-                            <textarea id="contact-message" placeholder="Add a personal message to introduce yourself..." rows="3"></textarea>
-                            <div class="input-focus-line"></div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button id="cancel-add-contact" class="btn btn-secondary">Cancel</button>
-                        <button id="send-contact-request" class="btn btn-primary">
-                            <span class="btn-text">Send Contact Request</span>
-                            <div class="btn-loading">
-                                <i class="fas fa-spinner fa-spin"></i>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Settings Modal -->
-        <div id="settings-modal" class="modal">
-            <div class="modal-backdrop"></div>
-            <div class="modal-container large">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <div class="modal-icon">
-                            <i class="fas fa-cog"></i>
-                        </div>
-                        <h3>Account Settings</h3>
-                        <button id="close-settings" class="icon-btn modal-close">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="settings-tabs">
-                            <button class="settings-tab active" data-tab="profile">Profile</button>
-                            <button class="settings-tab" data-tab="preferences">Preferences</button>
-                            <button class="settings-tab" data-tab="privacy">Privacy</button>
-                            <button class="settings-tab" data-tab="security">Security</button>
-                        </div>
-                        
-                        <div class="settings-content">
-                            <!-- Profile Tab -->
-                            <div id="profile-tab" class="settings-tab-content active">
-                                <div class="settings-section">
-                                    <h4>Profile Information</h4>
-                                    <div class="profile-preview">
-                                        <div class="profile-avatar-section">
-                                            <div class="avatar-large" id="settings-avatar">U</div>
-                                            <button class="btn btn-secondary btn-small change-avatar">
-                                                <i class="fas fa-camera"></i>
-                                                Change
-                                            </button>
-                                        </div>
-                                        <div class="profile-info">
-                                            <h5 id="settings-name">User Name</h5>
-                                            <p id="settings-username">@username</p>
-                                            <div class="profile-details">
-                                                <div class="detail-item">
-                                                    <i class="fas fa-phone"></i>
-                                                    <span id="settings-phone">+1234567890</span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <i class="fas fa-envelope"></i>
-                                                    <span id="settings-email">user@example.com</span>
-                                                </div>
-                                                <div class="detail-item user-id-item">
-                                                    <i class="fas fa-id-card"></i>
-                                                    <div class="user-id-container">
-                                                        <span class="user-id-label">User ID:</span>
-                                                        <span class="user-id-value" id="settings-user-id">loading...</span>
-                                                        <button class="copy-id-btn" title="Copy User ID">
-                                                            <i class="fas fa-copy"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button id="edit-profile-btn" class="btn btn-primary">
-                                            <i class="fas fa-edit"></i>
-                                            Edit Profile
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div class="settings-section">
-                                    <h4>Account Status</h4>
-                                    <div class="status-options">
-                                        <button class="status-option active" data-status="online">
-                                            <span class="status-dot online"></span>
-                                            <span class="status-label">Online</span>
-                                            <span class="status-description">Available to chat</span>
-                                        </button>
-                                        <button class="status-option" data-status="away">
-                                            <span class="status-dot away"></span>
-                                            <span class="status-label">Away</span>
-                                            <span class="status-description">Away from keyboard</span>
-                                        </button>
-                                        <button class="status-option" data-status="busy">
-                                            <span class="status-dot busy"></span>
-                                            <span class="status-label">Busy</span>
-                                            <span class="status-description">Do not disturb</span>
-                                        </button>
-                                        <button class="status-option" data-status="offline">
-                                            <span class="status-dot offline"></span>
-                                            <span class="status-label">Offline</span>
-                                            <span class="status-description">Appear offline</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Preferences Tab -->
-                            <div id="preferences-tab" class="settings-tab-content">
-                                <div class="settings-section">
-                                    <h4>Theme & Appearance</h4>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Dark Mode</span>
-                                            <span class="setting-description">Use dark theme interface</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="dark-mode-toggle" checked>
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Compact Mode</span>
-                                            <span class="setting-description">Use compact chat layout</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="compact-mode-toggle">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div class="settings-section">
-                                    <h4>Notifications & Sounds</h4>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Message Sounds</span>
-                                            <span class="setting-description">Play sounds for new messages</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="message-sounds" checked>
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Desktop Notifications</span>
-                                            <span class="setting-description">Show desktop notifications</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="desktop-notifications" checked>
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div class="settings-section">
-                                    <h4>Chat Preferences</h4>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Read Receipts</span>
-                                            <span class="setting-description">Let others see when you've read their messages</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="read-receipts" checked>
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                    <div class="setting-item toggle-setting">
-                                        <div class="setting-details">
-                                            <span class="setting-title">Typing Indicators</span>
-                                            <span class="setting-description">Show when others are typing</span>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="typing-indicators" checked>
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Privacy Tab -->
-                            <div id="privacy-tab" class="settings-tab-content">
-                                <div class="settings-section">
-                                    <h4>Privacy Settings</h4>
-                                    <div class="privacy-options">
-                                        <div class="privacy-option">
-                                            <div class="privacy-details">
-                                                <span class="privacy-title">Who can add you as a contact</span>
-                                                <span class="privacy-description">Control who can send you contact requests</span>
-                                            </div>
-                                            <select class="privacy-select">
-                                                <option value="everyone">Everyone</option>
-                                                <option value="contacts">Contacts of Contacts</option>
-                                                <option value="nobody">Nobody</option>
-                                            </select>
-                                        </div>
-                                        <div class="privacy-option">
-                                            <div class="privacy-details">
-                                                <span class="privacy-title">Profile Visibility</span>
-                                                <span class="privacy-description">Control who can see your profile information</span>
-                                            </div>
-                                            <select class="privacy-select">
-                                                <option value="public">Public</option>
-                                                <option value="contacts">Contacts Only</option>
-                                                <option value="private">Private</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Security Tab -->
-                            <div id="security-tab" class="settings-tab-content">
-                                <div class="settings-section">
-                                    <h4>Security Settings</h4>
-                                    <div class="security-options">
-                                        <button class="security-option">
-                                            <i class="fas fa-lock"></i>
-                                            <span>Change Password</span>
-                                            <i class="fas fa-chevron-right"></i>
-                                        </button>
-                                        <button class="security-option">
-                                            <i class="fas fa-shield-alt"></i>
-                                            <span>Two-Factor Authentication</span>
-                                            <i class="fas fa-chevron-right"></i>
-                                        </button>
-                                        <button class="security-option">
-                                            <i class="fas fa-desktop"></i>
-                                            <span>Active Sessions</span>
-                                            <i class="fas fa-chevron-right"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-footer">
-                        <button id="logout-btn" class="btn btn-danger btn-full">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Logout from Zynapse
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- User Menu Dropdown -->
-        <div id="user-menu-dropdown" class="dropdown hidden">
-            <div class="dropdown-item" data-action="profile">
-                <i class="fas fa-user"></i>
-                <span>My Profile</span>
-            </div>
-            <div class="dropdown-item" data-action="status">
-                <i class="fas fa-circle"></i>
-                <span>Set Status</span>
-            </div>
-            <div class="dropdown-item" data-action="settings">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </div>
-            <div class="dropdown-divider"></div>
-            <div class="dropdown-item" data-action="logout">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
-            </div>
-        </div>
-
-        <!-- Emoji Picker -->
-        <div id="emoji-picker" class="emoji-picker hidden"></div>
-
-        <!-- Notification Container -->
-        <div id="notification-container" class="notification-container"></div>
-
-        <!-- Online Users Indicator -->
         
+        <div class="header-right">
+            <button class="icon-btn" onclick="toggleMenu()">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="dropdown-menu" id="user-menu">
+                <a href="#"><i class="fas fa-user"></i> Profile</a>
+                <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                <a href="#"><i class="fas fa-moon"></i> Theme</a>
+                <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="main-content">
+        <!-- Home View -->
+        <div id="home-view" class="view active">
+            <div class="welcome-card">
+                <h2>Welcome to Zynapse</h2>
+                <p>Start connecting with friends and colleagues</p>
+            </div>
+            
+            <!-- Chat Requests Section -->
+            <div class="section" id="chat-requests-section">
+                <h3>Chat Requests</h3>
+                <div id="chat-requests-list">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Zynes View -->
+        <div id="zynes-view" class="view">
+            <div class="zynes-header">
+                <h2>Zynes</h2>
+                <button class="btn-primary" onclick="createZyne()">
+                    <i class="fas fa-plus"></i> Add Zyne
+                </button>
+            </div>
+            <div id="zynes-container">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+
+        <!-- Groups View -->
+        <div id="groups-view" class="view">
+            <div class="groups-header">
+                <h2>Groups</h2>
+                <button class="btn-primary" onclick="createGroup()">
+                    <i class="fas fa-plus"></i> Create Group
+                </button>
+            </div>
+            <div id="groups-container">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+
+        <!-- Contacts View -->
+        <div id="contacts-view" class="view">
+            <div class="contacts-header">
+                <h2>Contacts</h2>
+                <button class="btn-primary" onclick="addContact()">
+                    <i class="fas fa-plus"></i> Add Contact
+                </button>
+            </div>
+            <div id="contacts-list">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Chat Button -->
+    <button class="floating-btn" id="floating-chat-btn">
+        <i class="fas fa-comment"></i>
+    </button>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="switchView('home')">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </button>
+        <button class="nav-btn" onclick="switchView('zynes')">
+            <i class="fas fa-circle"></i>
+            <span>Zynes</span>
+        </button>
+        <button class="nav-btn" onclick="switchView('groups')">
+            <i class="fas fa-users"></i>
+            <span>Groups</span>
+        </button>
+        <button class="nav-btn" onclick="switchView('contacts')">
+            <i class="fas fa-address-book"></i>
+            <span>Contacts</span>
+        </button>
+        <button class="nav-btn" onclick="showChatRequests()">
+            <i class="fas fa-user-plus"></i>
+            <span>Requests</span>
+        </button>
+    </nav>
+
+    <!-- Start Chat Modal -->
+    <div class="modal" id="start-chat-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Start New Chat</h3>
+                <button class="close-btn" onclick="closeModal('start-chat-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="search-user-id" placeholder="Enter ZYN-ID (e.g., ZYN-1234)">
+                <div id="user-search-result" class="search-result"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal('start-chat-modal')">Cancel</button>
+                <button class="btn-primary" onclick="sendChatRequest()">Send Request</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
-    <!-- App Script -->
+    <audio id="notification-sound" src="notification.mp3" preload="auto"></audio>
+
+    <script src="firebase-config.js"></script>
+    <script src="imagekit-config.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
