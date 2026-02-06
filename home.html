@@ -3,980 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zynapse - Home</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Zynapse</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="zynaps.png">
 </head>
-<body>
-    <div class="app-container">
-        <!-- Navigation Sidebar -->
-        <div class="sidebar">
-            <div class="nav-logo">
-                <img src="zynaps.png" alt="Z Logo">
-            </div>
-            
-            <div class="nav-items">
-                <button class="nav-item active" data-page="home">
-                    <i class="fas fa-home"></i>
-                </button>
-                
-                <button class="nav-item" data-page="zynes">
-                    <i class="fas fa-circle"></i>
-                    <span class="nav-badge" id="zynesBadge" style="display: none;">3</span>
-                </button>
-                
-                <button class="nav-item" data-page="groups">
-                    <i class="fas fa-users"></i>
-                </button>
-                
-                <button class="nav-item" data-page="requests">
-                    <i class="fas fa-user-plus"></i>
-                    <span class="nav-badge" id="requestsBadge" style="display: none;">0</span>
-                </button>
-                
-                <button class="nav-item" data-page="contacts">
-                    <i class="fas fa-address-book"></i>
-                </button>
-            </div>
-            
-            <div class="nav-footer">
-                <button class="nav-item" id="logoutBtn" style="margin-top: auto;">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
-            </div>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Header -->
-            <div class="app-header">
-                <div class="header-left">
-                    <div class="user-avatar-small">
-                        <img id="userAvatar" src="" alt="User" style="width: 36px; height: 36px; border-radius: 50%;">
-                    </div>
-                    <div class="user-info">
-                        <div class="user-name" id="userName">Loading...</div>
-                        <div class="user-id">
-                            <span id="userId">ZYN-0000</span>
-                            <button class="copy-btn" id="copyUserId">
-                                <i class="far fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="header-right">
-                    <div class="dropdown">
-                        <button class="action-btn" id="settingsBtn">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <div class="dropdown-menu" id="settingsMenu">
-                            <div class="dropdown-item" id="editProfileBtn">
-                                <i class="fas fa-user-edit"></i>
-                                <span>Edit Profile</span>
-                            </div>
-                            <div class="dropdown-item" id="themeBtn">
-                                <i class="fas fa-palette"></i>
-                                <span>Appearance</span>
-                            </div>
-                            <div class="dropdown-item" id="notificationsBtn">
-                                <i class="fas fa-bell"></i>
-                                <span>Notifications</span>
-                            </div>
-                            <div class="dropdown-item danger" id="logoutBtnHeader">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Log Out</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Content Area -->
-            <div class="content-area" id="contentArea">
-                <!-- Home Content -->
-                <div id="homeContent" class="page-content">
-                    <div class="empty-state">
-                        <i class="fas fa-comments"></i>
-                        <h3>Welcome to Zynapse</h3>
-                        <p>Start a conversation by clicking the chat button below</p>
-                    </div>
-                </div>
-                
-                <!-- Zynes Content -->
-                <div id="zynesContent" class="page-content" style="display: none;">
-                    <div class="zynes-container" id="zynesContainer">
-                        <!-- Zynes will be loaded here -->
-                    </div>
-                </div>
-                
-                <!-- Groups Content -->
-                <div id="groupsContent" class="page-content" style="display: none;">
-                    <button class="btn create-group-btn">
-                        <i class="fas fa-plus"></i> Create New Group
+<body class="app-home">
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
+            <div class="user-info">
+                <h2 id="userName">User Name</h2>
+                <div class="user-id-container">
+                    <span id="userID">ZYN-0000</span>
+                    <button id="copyUserIdBtn" class="copy-btn" title="Copy ID">
+                        <i class="far fa-copy"></i>
                     </button>
-                    
-                    <div class="group-list" id="groupsList">
-                        <!-- Groups will be loaded here -->
-                    </div>
-                </div>
-                
-                <!-- Requests Content -->
-                <div id="requestsContent" class="page-content" style="display: none;">
-                    <div class="requests-list" id="requestsList">
-                        <!-- Chat requests will be loaded here -->
-                    </div>
-                </div>
-                
-                <!-- Contacts Content -->
-                <div id="contactsContent" class="page-content" style="display: none;">
-                    <div class="contacts-grid" id="contactsGrid">
-                        <!-- Contacts will be loaded here -->
-                    </div>
                 </div>
             </div>
         </div>
         
-        <!-- Floating Chat Button -->
-        <button class="floating-chat-btn" id="startChatBtn">
-            <i class="fas fa-comment"></i>
-        </button>
-    </div>
-    
-    <!-- Start Chat Popup -->
-    <div class="popup-overlay" id="chatPopup" style="display: none;">
-        <div class="popup-content">
-            <div class="popup-header">
-                <h3 class="popup-title">Start New Chat</h3>
-                <button class="close-popup" id="closeChatPopup">
-                    <i class="fas fa-times"></i>
+        <div class="header-right">
+            <div class="dropdown profile-dropdown">
+                <button class="profile-btn">
+                    <img id="headerProfilePic" src="zynaps.png" alt="Profile" class="profile-pic-small">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="#" id="profileSettings"><i class="fas fa-user-cog"></i> Profile Settings</a>
+                    <a href="#" id="appSettings"><i class="fas fa-cog"></i> App Settings</a>
+                    <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="app-nav">
+        <a href="#home" class="nav-item active" data-page="home">
+            <i class="fas fa-home"></i>
+            <span>HOME</span>
+        </a>
+        <a href="#zynes" class="nav-item" data-page="zynes">
+            <i class="fas fa-fire"></i>
+            <span>ZYNES</span>
+        </a>
+        <a href="#groups" class="nav-item" data-page="groups">
+            <i class="fas fa-users"></i>
+            <span>GROUPS</span>
+        </a>
+        <a href="#requests" class="nav-item" data-page="requests">
+            <i class="fas fa-user-clock"></i>
+            <span>REQUESTS</span>
+            <span class="badge" id="requestsBadge">0</span>
+        </a>
+        <a href="#contacts" class="nav-item" data-page="contacts">
+            <i class="fas fa-address-book"></i>
+            <span>CONTACTS</span>
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="app-main">
+        <!-- Home Page -->
+        <div id="homePage" class="page active">
+            <div class="home-content">
+                <div class="welcome-message">
+                    <h1>Welcome to Zynapse</h1>
+                    <p>Start connecting with others using their Zynapse ID</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zynes Page -->
+        <div id="zynesPage" class="page">
+            <div class="page-header">
+                <h2>Zynes</h2>
+                <button class="btn-primary" id="addZyneBtn">
+                    <i class="fas fa-plus"></i> Add Zyne
                 </button>
             </div>
-            
-            <div class="form-group">
-                <label for="recipientId">Enter Zynapse ID</label>
-                <input type="text" id="recipientId" class="form-control" placeholder="ZYN-XXXX">
-                <small style="color: var(--ios-gray-500); margin-top: 5px; display: block;">
-                    Enter the Zynapse ID of the person you want to chat with
-                </small>
+            <div id="zynesList" class="zynes-container">
+                <!-- Zynes will be loaded here -->
             </div>
-            
-            <div id="recipientInfo" style="display: none; margin: 20px 0; padding: 15px; background: var(--ios-gray-100); border-radius: var(--border-radius-md);">
-                <div class="contact-header">
-                    <div class="contact-avatar">
-                        <img id="recipientAvatar" src="" alt="User">
-                    </div>
-                    <div class="contact-info">
-                        <div class="contact-name" id="recipientName">Loading...</div>
-                        <div class="contact-status">
-                            <span class="status-dot" id="recipientStatus"></span>
-                            <span id="recipientStatusText">Loading...</span>
-                        </div>
-                    </div>
+        </div>
+
+        <!-- Groups Page -->
+        <div id="groupsPage" class="page">
+            <div class="page-header">
+                <h2>Groups</h2>
+                <button class="btn-primary" id="createGroupBtn">
+                    <i class="fas fa-plus"></i> Create Group
+                </button>
+            </div>
+            <div id="groupsList" class="groups-container">
+                <!-- Groups will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Chat Requests Page -->
+        <div id="requestsPage" class="page">
+            <div class="page-header">
+                <h2>Chat Requests</h2>
+            </div>
+            <div id="requestsList" class="requests-container">
+                <!-- Requests will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Contacts Page -->
+        <div id="contactsPage" class="page">
+            <div class="page-header">
+                <h2>Contacts</h2>
+            </div>
+            <div id="contactsList" class="contacts-container">
+                <!-- Contacts will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Start Chat Button -->
+    <button id="startChatBtn" class="floating-btn">
+        <i class="fas fa-comment-medical"></i>
+        <span>Start Chat</span>
+    </button>
+
+    <!-- Start Chat Popup -->
+    <div id="startChatPopup" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Start New Chat</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <i class="fas fa-id-card"></i>
+                    <input type="text" id="searchUserId" placeholder="Enter Zynapse ID (ZYN-XXXX)" maxlength="8">
+                </div>
+                <div id="userSearchResult" class="search-result">
+                    <!-- User info will appear here -->
+                </div>
+                <button id="sendRequestBtn" class="btn-primary" style="display: none;">
+                    <i class="fas fa-paper-plane"></i> Send Chat Request
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Zyne Modal -->
+    <div id="addZyneModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Zyne</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea id="zyneText" placeholder="What's on your mind?" rows="4"></textarea>
+                <div class="media-preview" id="zyneMediaPreview"></div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" id="addPhotoBtn">
+                        <i class="fas fa-camera"></i> Photo
+                    </button>
+                    <button class="btn-secondary" id="addVideoBtn">
+                        <i class="fas fa-video"></i> Video
+                    </button>
+                    <input type="file" id="zynePhotoInput" accept="image/*" hidden>
+                    <input type="file" id="zyneVideoInput" accept="video/*" hidden>
+                    <button id="postZyneBtn" class="btn-primary">
+                        <i class="fas fa-share"></i> Post Zyne
+                    </button>
                 </div>
             </div>
-            
-            <button class="btn" id="sendRequestBtn" style="display: none;">
-                <i class="fas fa-paper-plane"></i> Send Chat Request
-            </button>
-            
-            <button class="btn btn-secondary" id="lookupUserBtn">
-                <i class="fas fa-search"></i> Look Up User
-            </button>
         </div>
     </div>
-    
-    <!-- Notification -->
-    <div id="notification" class="notification">
-        <div class="notification-icon">
-            <i class="fas fa-bell"></i>
-        </div>
-        <div class="notification-content">
-            <div class="notification-title" id="notifTitle">Notification</div>
-            <div class="notification-message" id="notifMessage">Message</div>
-        </div>
-    </div>
-    
-    <script src="firebase-config.js"></script>
-    <script src="app.js"></script>
-    <script>
-        // Global variables
-        let currentUser = null;
-        let userData = null;
-        
-        // DOM Elements
-        const contentArea = document.getElementById('contentArea');
-        const navItems = document.querySelectorAll('.nav-item[data-page]');
-        const pageContents = document.querySelectorAll('.page-content');
-        const startChatBtn = document.getElementById('startChatBtn');
-        const chatPopup = document.getElementById('chatPopup');
-        const closeChatPopup = document.getElementById('closeChatPopup');
-        const recipientIdInput = document.getElementById('recipientId');
-        const lookupUserBtn = document.getElementById('lookupUserBtn');
-        const recipientInfo = document.getElementById('recipientInfo');
-        const sendRequestBtn = document.getElementById('sendRequestBtn');
-        const logoutBtns = document.querySelectorAll('#logoutBtn, #logoutBtnHeader');
-        const settingsBtn = document.getElementById('settingsBtn');
-        const settingsMenu = document.getElementById('settingsMenu');
-        const copyUserIdBtn = document.getElementById('copyUserId');
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Check authentication
-            const savedUser = localStorage.getItem('zynapse_user');
-            if (!savedUser) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            userData = JSON.parse(savedUser);
-            currentUser = auth.currentUser;
-            
-            if (!currentUser) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            // Update UI with user data
-            document.getElementById('userName').textContent = userData.name;
-            document.getElementById('userId').textContent = userData.userId;
-            document.getElementById('userAvatar').src = getOptimizedImageURL(userData.profilePicture, 36, 36);
-            
-            // Load initial data
-            await loadContacts();
-            await loadChatRequests();
-            await loadGroups();
-            
-            // Set up realtime listeners
-            setupRealtimeListeners();
-        });
-        
-        // Navigation
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const page = item.dataset.page;
-                
-                // Update active state
-                navItems.forEach(nav => nav.classList.remove('active'));
-                item.classList.add('active');
-                
-                // Show corresponding content
-                pageContents.forEach(content => {
-                    content.style.display = 'none';
-                });
-                
-                document.getElementById(`${page}Content`).style.display = 'block';
-                
-                // Load page-specific data
-                switch(page) {
-                    case 'contacts':
-                        loadContacts();
-                        break;
-                    case 'requests':
-                        loadChatRequests();
-                        break;
-                    case 'groups':
-                        loadGroups();
-                        break;
-                    case 'zynes':
-                        loadZynes();
-                        break;
-                }
-            });
-        });
-        
-        // Start Chat Flow
-        startChatBtn.addEventListener('click', () => {
-            chatPopup.style.display = 'flex';
-            recipientIdInput.focus();
-        });
-        
-        closeChatPopup.addEventListener('click', () => {
-            chatPopup.style.display = 'none';
-            resetChatPopup();
-        });
-        
-        // Look up user by ID
-        lookupUserBtn.addEventListener('click', async () => {
-            const recipientId = recipientIdInput.value.trim().toUpperCase();
-            
-            if (!recipientId.startsWith('ZYN-') || recipientId.length !== 8) {
-                showNotification('Invalid ID', 'Please enter a valid Zynapse ID (ZYN-XXXX)', 'error');
-                return;
-            }
-            
-            if (recipientId === userData.userId) {
-                showNotification('Invalid ID', 'You cannot chat with yourself', 'error');
-                return;
-            }
-            
-            try {
-                showNotification('Looking up user...', 'Please wait');
-                
-                // Check if user exists
-                const userIdRef = database.ref(`userIds/${recipientId}`);
-                const snapshot = await userIdRef.once('value');
-                
-                if (!snapshot.exists()) {
-                    showNotification('User Not Found', 'No user found with this Zynapse ID', 'error');
-                    return;
-                }
-                
-                const recipientUid = snapshot.val().uid;
-                
-                // Get user details
-                const userRef = database.ref(`users/${recipientUid}`);
-                const userSnapshot = await userRef.once('value');
-                const recipientData = userSnapshot.val();
-                
-                // Check if already in contacts
-                const isInContacts = userData.contacts && userData.contacts.includes(recipientUid);
-                
-                // Update UI with recipient info
-                document.getElementById('recipientName').textContent = recipientData.name;
-                document.getElementById('recipientAvatar').src = getOptimizedImageURL(recipientData.profilePicture, 36, 36);
-                
-                const statusDot = document.getElementById('recipientStatus');
-                const statusText = document.getElementById('recipientStatusText');
-                
-                if (recipientData.status && recipientData.status.online) {
-                    statusDot.className = 'status-dot';
-                    statusText.textContent = 'Online';
-                } else {
-                    statusDot.className = 'status-dot offline';
-                    const lastSeen = recipientData.status?.lastSeen ? 
-                        formatTimeAgo(recipientData.status.lastSeen) : 'Offline';
-                    statusText.textContent = lastSeen;
-                }
-                
-                recipientInfo.style.display = 'block';
-                
-                if (isInContacts) {
-                    // Already in contacts, start chat directly
-                    sendRequestBtn.innerHTML = '<i class="fas fa-comment"></i> Start Chat';
-                    sendRequestBtn.onclick = () => {
-                        startChat(recipientUid, recipientData);
-                    };
-                } else {
-                    // Not in contacts, send request
-                    sendRequestBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Chat Request';
-                    sendRequestBtn.onclick = () => {
-                        sendChatRequest(recipientUid, recipientData);
-                    };
-                }
-                
-                sendRequestBtn.style.display = 'block';
-                lookupUserBtn.style.display = 'none';
-                
-            } catch (error) {
-                console.error('Lookup error:', error);
-                showNotification('Error', 'Failed to look up user', 'error');
-            }
-        });
-        
-        // Send chat request
-        async function sendChatRequest(recipientUid, recipientData) {
-            try {
-                const requestId = database.ref().child('chatRequests').push().key;
-                
-                const requestData = {
-                    id: requestId,
-                    from: currentUser.uid,
-                    fromUserId: userData.userId,
-                    fromName: userData.name,
-                    fromAvatar: userData.profilePicture,
-                    to: recipientUid,
-                    status: 'pending',
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                };
-                
-                // Save request
-                await database.ref(`chatRequests/${requestId}`).set(requestData);
-                
-                // Add to sender's outgoing requests
-                await database.ref(`users/${currentUser.uid}/outgoingRequests/${requestId}`).set(true);
-                
-                // Add to recipient's incoming requests
-                await database.ref(`users/${recipientUid}/incomingRequests/${requestId}`).set(true);
-                
-                showNotification('Request Sent', `Chat request sent to ${recipientData.name}`, 'success');
-                
-                // Close popup
-                chatPopup.style.display = 'none';
-                resetChatPopup();
-                
-            } catch (error) {
-                console.error('Send request error:', error);
-                showNotification('Error', 'Failed to send request', 'error');
-            }
-        }
-        
-        // Start chat with existing contact
-        function startChat(contactUid, contactData) {
-            // Create or get chat ID
-            const chatId = generateChatId(currentUser.uid, contactUid);
-            
-            // Store chat data
-            const chatData = {
-                participants: [currentUser.uid, contactUid],
-                lastMessage: '',
-                lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
-                unreadCount: 0
-            };
-            
-            database.ref(`chats/${chatId}`).set(chatData).then(() => {
-                // Redirect to chat page
-                window.location.href = `chat.html?chatId=${chatId}&contactId=${contactUid}`;
-            });
-        }
-        
-        // Load contacts
-        async function loadContacts() {
-            const contactsGrid = document.getElementById('contactsGrid');
-            
-            if (!userData.contacts || userData.contacts.length === 0) {
-                contactsGrid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
-                        <i class="fas fa-user-friends"></i>
-                        <h3>No Contacts Yet</h3>
-                        <p>Add contacts by accepting chat requests or starting new chats</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            contactsGrid.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
-            
-            try {
-                // Fetch contact details
-                const contactsData = [];
-                
-                for (const contactUid of userData.contacts) {
-                    const contactRef = database.ref(`users/${contactUid}`);
-                    const snapshot = await contactRef.once('value');
-                    
-                    if (snapshot.exists()) {
-                        contactsData.push({
-                            uid: contactUid,
-                            ...snapshot.val()
-                        });
-                    }
-                }
-                
-                // Sort by online status
-                contactsData.sort((a, b) => {
-                    const aOnline = a.status?.online || false;
-                    const bOnline = b.status?.online || false;
-                    return bOnline - aOnline;
-                });
-                
-                // Render contacts
-                contactsGrid.innerHTML = '';
-                
-                contactsData.forEach(contact => {
-                    const contactCard = document.createElement('div');
-                    contactCard.className = 'contact-card';
-                    contactCard.innerHTML = `
-                        <div class="contact-header">
-                            <div class="contact-avatar">
-                                <img src="${getOptimizedImageURL(contact.profilePicture, 40, 40)}" alt="${contact.name}">
-                                ${contact.status?.online ? '<span class="online-badge"></span>' : ''}
-                            </div>
-                            <div class="contact-info">
-                                <div class="contact-name">${contact.name}</div>
-                                <div class="contact-status">
-                                    <span class="status-dot ${contact.status?.online ? '' : 'offline'}"></span>
-                                    <span>${contact.status?.online ? 'Online' : formatTimeAgo(contact.status?.lastSeen)}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="contact-actions" style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button class="btn btn-secondary" style="flex: 1; padding: 8px; font-size: 14px;" onclick="startChat('${contact.uid}', ${JSON.stringify(contact)})">
-                                <i class="fas fa-comment"></i> Chat
-                            </button>
-                            <button class="btn btn-secondary" style="width: 40px; padding: 8px;" onclick="removeContact('${contact.uid}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    contactsGrid.appendChild(contactCard);
-                });
-                
-            } catch (error) {
-                console.error('Load contacts error:', error);
-                contactsGrid.innerHTML = '<div class="empty-state">Error loading contacts</div>';
-            }
-        }
-        
-        // Load chat requests
-        async function loadChatRequests() {
-            const requestsList = document.getElementById('requestsList');
-            requestsList.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
-            
-            try {
-                // Get incoming requests
-                const requestsRef = database.ref(`users/${currentUser.uid}/incomingRequests`);
-                const snapshot = await requestsRef.once('value');
-                
-                if (!snapshot.exists() || Object.keys(snapshot.val()).length === 0) {
-                    requestsList.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <h3>No Pending Requests</h3>
-                            <p>When someone sends you a chat request, it will appear here</p>
-                        </div>
-                    `;
-                    
-                    // Update badge
-                    document.getElementById('requestsBadge').style.display = 'none';
-                    return;
-                }
-                
-                const requestIds = Object.keys(snapshot.val());
-                const requestsData = [];
-                
-                // Fetch each request details
-                for (const requestId of requestIds) {
-                    const requestRef = database.ref(`chatRequests/${requestId}`);
-                    const requestSnapshot = await requestRef.once('value');
-                    
-                    if (requestSnapshot.exists()) {
-                        const requestData = requestSnapshot.val();
-                        
-                        // Only show pending requests
-                        if (requestData.status === 'pending') {
-                            requestsData.push({
-                                id: requestId,
-                                ...requestData
-                            });
-                        }
-                    }
-                }
-                
-                // Update badge count
-                const badge = document.getElementById('requestsBadge');
-                if (requestsData.length > 0) {
-                    badge.textContent = requestsData.length;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
-                }
-                
-                // Render requests
-                requestsList.innerHTML = '';
-                
-                requestsData.forEach(request => {
-                    const requestCard = document.createElement('div');
-                    requestCard.className = 'contact-card';
-                    requestCard.innerHTML = `
-                        <div class="contact-header">
-                            <div class="contact-avatar">
-                                <img src="${getOptimizedImageURL(request.fromAvatar, 40, 40)}" alt="${request.fromName}">
-                            </div>
-                            <div class="contact-info">
-                                <div class="contact-name">${request.fromName}</div>
-                                <div class="contact-status">
-                                    <span>ID: ${request.fromUserId}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="font-size: 12px; color: var(--ios-gray-500); margin: 10px 0;">
-                            <i class="far fa-clock"></i> ${formatTimeAgo(request.timestamp)}
-                        </div>
-                        <div class="contact-actions" style="display: flex; gap: 10px;">
-                            <button class="btn" style="flex: 1;" onclick="acceptRequest('${request.id}', '${request.from}')">
-                                <i class="fas fa-check"></i> Accept
-                            </button>
-                            <button class="btn btn-secondary" style="flex: 1;" onclick="rejectRequest('${request.id}')">
-                                <i class="fas fa-times"></i> Reject
-                            </button>
-                        </div>
-                    `;
-                    requestsList.appendChild(requestCard);
-                });
-                
-            } catch (error) {
-                console.error('Load requests error:', error);
-                requestsList.innerHTML = '<div class="empty-state">Error loading requests</div>';
-            }
-        }
-        
-        // Accept chat request
-        async function acceptRequest(requestId, senderUid) {
-            try {
-                // Update request status
-                await database.ref(`chatRequests/${requestId}`).update({
-                    status: 'accepted',
-                    acceptedAt: firebase.database.ServerValue.TIMESTAMP
-                });
-                
-                // Add to each other's contacts
-                await database.ref(`users/${currentUser.uid}/contacts/${senderUid}`).set(true);
-                await database.ref(`users/${senderUid}/contacts/${currentUser.uid}`).set(true);
-                
-                // Remove from requests
-                await database.ref(`users/${currentUser.uid}/incomingRequests/${requestId}`).remove();
-                await database.ref(`users/${senderUid}/outgoingRequests/${requestId}`).remove();
-                
-                // Create chat
-                const chatId = generateChatId(currentUser.uid, senderUid);
-                const chatData = {
-                    participants: [currentUser.uid, senderUid],
-                    createdAt: firebase.database.ServerValue.TIMESTAMP,
-                    lastMessage: 'Chat request accepted',
-                    lastMessageTime: firebase.database.ServerValue.TIMESTAMP
-                };
-                
-                await database.ref(`chats/${chatId}`).set(chatData);
-                
-                showNotification('Request Accepted', 'Contact added successfully', 'success');
-                
-                // Reload requests and contacts
-                loadChatRequests();
-                loadContacts();
-                
-            } catch (error) {
-                console.error('Accept request error:', error);
-                showNotification('Error', 'Failed to accept request', 'error');
-            }
-        }
-        
-        // Reject chat request
-        async function rejectRequest(requestId) {
-            try {
-                // Get request data first
-                const requestRef = database.ref(`chatRequests/${requestId}`);
-                const snapshot = await requestRef.once('value');
-                const requestData = snapshot.val();
-                
-                // Update request status
-                await requestRef.update({
-                    status: 'rejected',
-                    rejectedAt: firebase.database.ServerValue.TIMESTAMP
-                });
-                
-                // Remove from requests
-                await database.ref(`users/${currentUser.uid}/incomingRequests/${requestId}`).remove();
-                
-                if (requestData && requestData.from) {
-                    await database.ref(`users/${requestData.from}/outgoingRequests/${requestId}`).remove();
-                }
-                
-                showNotification('Request Rejected', 'Chat request declined', 'info');
-                
-                // Reload requests
-                loadChatRequests();
-                
-            } catch (error) {
-                console.error('Reject request error:', error);
-                showNotification('Error', 'Failed to reject request', 'error');
-            }
-        }
-        
-        // Load groups
-        async function loadGroups() {
-            const groupsList = document.getElementById('groupsList');
-            
-            if (!userData.groups || userData.groups.length === 0) {
-                groupsList.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1;">
+
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Group</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <i class="fas fa-users"></i>
+                    <input type="text" id="groupName" placeholder="Group Name">
+                </div>
+                <div class="profile-upload">
+                    <div class="upload-preview" id="groupImagePreview">
                         <i class="fas fa-users"></i>
-                        <h3>No Groups Yet</h3>
-                        <p>Create a group or wait to be added to one</p>
+                        <span>Group Photo</span>
                     </div>
-                `;
-                return;
-            }
-            
-            groupsList.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
-            
-            try {
-                // Fetch group details
-                const groupsData = [];
-                
-                for (const groupId of userData.groups) {
-                    const groupRef = database.ref(`groups/${groupId}`);
-                    const snapshot = await groupRef.once('value');
-                    
-                    if (snapshot.exists()) {
-                        groupsData.push({
-                            id: groupId,
-                            ...snapshot.val()
-                        });
-                    }
-                }
-                
-                // Sort by last activity
-                groupsData.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
-                
-                // Render groups
-                groupsList.innerHTML = '';
-                
-                groupsData.forEach(group => {
-                    const groupItem = document.createElement('div');
-                    groupItem.className = 'group-item';
-                    groupItem.onclick = () => {
-                        window.location.href = `chat.html?chatId=${group.id}&isGroup=true`;
-                    };
-                    
-                    groupItem.innerHTML = `
-                        <div class="group-avatar">
-                            <img src="${group.groupPicture ? getOptimizedImageURL(group.groupPicture, 50, 50) : 'https://ik.imagekit.io/48l5ydkzy/zynapse/default-group.png?tr=w-50,h-50'}" alt="${group.name}">
-                        </div>
-                        <div class="group-info">
-                            <div class="group-name">${group.name}</div>
-                            <div class="group-last-message">${group.lastMessage || 'No messages yet'}</div>
-                        </div>
-                        <div style="font-size: 12px; color: var(--ios-gray-500);">
-                            ${group.lastMessageTime ? formatTimeAgo(group.lastMessageTime) : ''}
-                        </div>
-                    `;
-                    groupsList.appendChild(groupItem);
-                });
-                
-            } catch (error) {
-                console.error('Load groups error:', error);
-                groupsList.innerHTML = '<div class="empty-state">Error loading groups</div>';
-            }
-        }
-        
-        // Load Zynes
-        async function loadZynes() {
-            const zynesContainer = document.getElementById('zynesContainer');
-            zynesContainer.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
-            
-            try {
-                // Get zynes from contacts
-                const contacts = userData.contacts || [];
-                const zynesData = [];
-                
-                for (const contactUid of contacts) {
-                    const zynesRef = database.ref(`zynes/${contactUid}`);
-                    const snapshot = await zynesRef.once('value');
-                    
-                    if (snapshot.exists()) {
-                        const contactZynes = snapshot.val();
-                        
-                        // Get contact info
-                        const contactRef = database.ref(`users/${contactUid}`);
-                        const contactSnapshot = await contactRef.once('value');
-                        const contactData = contactSnapshot.val();
-                        
-                        // Add contact info to each zyne
-                        Object.values(contactZynes).forEach(zyne => {
-                            if (zyne.expiresAt > Date.now()) {
-                                zynesData.push({
-                                    ...zyne,
-                                    contactName: contactData.name,
-                                    contactAvatar: contactData.profilePicture
-                                });
-                            }
-                        });
-                    }
-                }
-                
-                // Sort by timestamp
-                zynesData.sort((a, b) => b.timestamp - a.timestamp);
-                
-                // Render zynes
-                zynesContainer.innerHTML = '';
-                
-                if (zynesData.length === 0) {
-                    zynesContainer.innerHTML = `
-                        <div class="empty-state" style="grid-column: 1/-1;">
-                            <i class="fas fa-circle"></i>
-                            <h3>No Zynes Available</h3>
-                            <p>When your contacts post Zynes, they will appear here</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                zynesData.forEach(zyne => {
-                    const zyneCard = document.createElement('div');
-                    zyneCard.className = 'zyne-card';
-                    zyneCard.innerHTML = `
-                        <img src="${zyne.type === 'text' ? 'https://ik.imagekit.io/48l5ydkzy/zynapse/text-bg.png?tr=w-120,h-213' : getOptimizedImageURL(zyne.content, 120, 213)}" alt="Zyne" class="zyne-media">
-                        <div class="zyne-overlay">
-                            <div class="zyne-user">
-                                <img src="${getOptimizedImageURL(zyne.contactAvatar, 30, 30)}" alt="${zyne.contactName}" class="zyne-avatar">
-                                <span>${zyne.contactName}</span>
-                            </div>
-                        </div>
-                    `;
-                    zynesContainer.appendChild(zyneCard);
-                });
-                
-                // Update badge
-                const badge = document.getElementById('zynesBadge');
-                if (zynesData.length > 0) {
-                    badge.textContent = zynesData.length;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
-                }
-                
-            } catch (error) {
-                console.error('Load zynes error:', error);
-                zynesContainer.innerHTML = '<div class="empty-state">Error loading Zynes</div>';
-            }
-        }
-        
-        // Remove contact
-        async function removeContact(contactUid) {
-            if (!confirm('Are you sure you want to remove this contact?')) {
-                return;
-            }
-            
-            try {
-                // Remove from both users' contacts
-                await database.ref(`users/${currentUser.uid}/contacts/${contactUid}`).remove();
-                await database.ref(`users/${contactUid}/contacts/${currentUser.uid}`).remove();
-                
-                showNotification('Contact Removed', 'Contact has been removed', 'info');
-                
-                // Reload contacts
-                loadContacts();
-                
-            } catch (error) {
-                console.error('Remove contact error:', error);
-                showNotification('Error', 'Failed to remove contact', 'error');
-            }
-        }
-        
-        // Setup realtime listeners
-        function setupRealtimeListeners() {
-            // Listen for new chat requests
-            const requestsRef = database.ref(`users/${currentUser.uid}/incomingRequests`);
-            requestsRef.on('child_added', (snapshot) => {
-                // Update badge
-                loadChatRequests();
-                
-                // Play notification sound
-                const notificationSound = new Audio('notification.mp3');
-                notificationSound.play().catch(e => console.log('Audio play failed:', e));
-                
-                // Show notification
-                showNotification('New Chat Request', 'You have a new chat request', 'info');
-            });
-            
-            // Listen for new messages
-            if (userData.groups) {
-                userData.groups.forEach(groupId => {
-                    const groupRef = database.ref(`groups/${groupId}`);
-                    groupRef.on('child_changed', (snapshot) => {
-                        if (snapshot.key === 'lastMessage') {
-                            loadGroups();
-                        }
-                    });
-                });
-            }
-        }
-        
-        // Copy User ID
-        copyUserIdBtn.addEventListener('click', () => {
-            const userId = document.getElementById('userId').textContent;
-            navigator.clipboard.writeText(userId).then(() => {
-                showNotification('Copied!', 'User ID copied to clipboard', 'success');
-            }).catch(err => {
-                console.error('Copy failed:', err);
-            });
-        });
-        
-        // Settings dropdown
-        settingsBtn.addEventListener('click', () => {
-            settingsMenu.classList.toggle('show');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!settingsBtn.contains(e.target) && !settingsMenu.contains(e.target)) {
-                settingsMenu.classList.remove('show');
-            }
-        });
-        
-        // Logout
-        logoutBtns.forEach(btn => {
-            btn.addEventListener('click', async () => {
-                try {
-                    // Update online status
-                    await database.ref(`users/${currentUser.uid}/status`).update({
-                        online: false,
-                        lastSeen: firebase.database.ServerValue.TIMESTAMP
-                    });
-                    
-                    // Sign out
-                    await auth.signOut();
-                    
-                    // Clear local storage
-                    localStorage.removeItem('zynapse_user');
-                    
-                    // Redirect to login
-                    window.location.href = 'index.html';
-                    
-                } catch (error) {
-                    console.error('Logout error:', error);
-                    showNotification('Error', 'Failed to logout', 'error');
-                }
-            });
-        });
-        
-        // Reset chat popup
-        function resetChatPopup() {
-            recipientIdInput.value = '';
-            recipientInfo.style.display = 'none';
-            sendRequestBtn.style.display = 'none';
-            lookupUserBtn.style.display = 'block';
-        }
-        
-        // Helper functions
-        function generateChatId(user1, user2) {
-            return [user1, user2].sort().join('_');
-        }
-        
-        function formatTimeAgo(timestamp) {
-            if (!timestamp) return 'Never';
-            
-            const seconds = Math.floor((Date.now() - timestamp) / 1000);
-            
-            if (seconds < 60) return 'Just now';
-            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
-            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
-            if (seconds < 604800) return Math.floor(seconds / 86400) + 'd ago';
-            return new Date(timestamp).toLocaleDateString();
-        }
-        
-        // Global helper function for notification
-        function showNotification(title, message, type = 'info') {
-            const notification = document.getElementById('notification');
-            const notifTitle = document.getElementById('notifTitle');
-            const notifMessage = document.getElementById('notifMessage');
-            const notificationSound = new Audio('notification.mp3');
-            
-            notifTitle.textContent = title;
-            notifMessage.textContent = message;
-            
-            const leftBorderColor = {
-                'success': 'var(--ios-green)',
-                'error': 'var(--ios-red)',
-                'info': 'var(--ios-blue)'
-            }[type] || 'var(--ios-blue)';
-            
-            notification.style.borderLeftColor = leftBorderColor;
-            
-            if (type !== 'info') {
-                notificationSound.play().catch(e => console.log('Audio play failed:', e));
-            }
-            
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-    </script>
+                    <input type="file" id="groupImageInput" accept="image/*" hidden>
+                    <button type="button" id="uploadGroupImageBtn" class="btn-upload">
+                        <i class="fas fa-cloud-upload-alt"></i> Upload Photo
+                    </button>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-id-card"></i>
+                    <input type="text" id="addMemberInput" placeholder="Add member by Zynapse ID">
+                    <button class="btn-secondary" id="addMemberBtn">Add</button>
+                </div>
+                <div id="membersList" class="members-container">
+                    <!-- Added members will appear here -->
+                </div>
+                <button id="createGroupSubmitBtn" class="btn-primary">
+                    <i class="fas fa-plus"></i> Create Group
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Sound -->
+    <audio id="notificationSound" preload="auto">
+        <source src="notification.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="imagekit-config.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
