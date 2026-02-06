@@ -4,11 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat - Zynapse</title>
+    <meta name="description" content="Zynapse - Secure messaging chat">
+    <meta name="theme-color" content="#4A6FFF">
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="zynaps.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="zynaps.png" type="image/png">
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- iOS Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="zynaps.png">
 </head>
 <body class="chat-page">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
+            <div class="spinner-large"></div>
+            <p>Loading chat...</p>
+        </div>
+    </div>
+
     <!-- Chat Header -->
     <header class="chat-header">
         <div class="header-left">
@@ -17,24 +42,41 @@
             </a>
             <div class="chat-user-info">
                 <img id="chatUserPic" src="zynaps.png" alt="Profile" class="profile-pic-small">
-                <div>
-                    <h3 id="chatUserName">Contact Name</h3>
-                    <span class="chat-status" id="chatUserStatus">Online</span>
+                <div class="chat-user-details">
+                    <h3 id="chatUserName">Loading...</h3>
+                    <span class="chat-status" id="chatUserStatus">
+                        <i class="fas fa-circle status-dot offline"></i>
+                        <span>Loading...</span>
+                    </span>
                 </div>
             </div>
         </div>
         
         <div class="header-right">
+            <!-- Voice Call Button -->
+            <button class="icon-btn" id="voiceCallBtn" title="Voice Call">
+                <i class="fas fa-phone"></i>
+            </button>
+            
+            <!-- Video Call Button -->
+            <button class="icon-btn" id="videoCallBtn" title="Video Call">
+                <i class="fas fa-video"></i>
+            </button>
+            
+            <!-- More Options Dropdown -->
             <div class="dropdown">
-                <button class="icon-btn">
+                <button class="icon-btn" id="moreOptionsBtn">
                     <i class="fas fa-ellipsis-v"></i>
                 </button>
                 <div class="dropdown-content">
-                    <a href="#" id="addNicknameBtn"><i class="fas fa-tag"></i> Add Nickname</a>
-                    <a href="#" id="blockUserBtn"><i class="fas fa-ban"></i> Block User</a>
-                    <a href="#" id="addToFavoritesBtn"><i class="fas fa-star"></i> Add to Favorites</a>
                     <a href="#" id="viewProfileBtn"><i class="fas fa-user"></i> View Profile</a>
+                    <a href="#" id="addNicknameBtn"><i class="fas fa-tag"></i> Add Nickname</a>
+                    <a href="#" id="addToFavoritesBtn"><i class="fas fa-star"></i> Add to Favorites</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" id="clearChatBtn"><i class="fas fa-broom"></i> Clear Chat</a>
                     <a href="#" id="deleteChatBtn"><i class="fas fa-trash"></i> Delete Chat</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" id="blockUserBtn"><i class="fas fa-ban"></i> Block User</a>
                     <a href="#" id="reportUserBtn"><i class="fas fa-flag"></i> Report User</a>
                 </div>
             </div>
@@ -44,63 +86,77 @@
     <!-- Chat Messages Area -->
     <div class="chat-messages" id="chatMessages">
         <!-- Messages will be loaded here -->
-        <div class="message-date">Today</div>
-        
-        <!-- Example messages (will be replaced with real data) -->
-        <div class="message received">
-            <div class="message-bubble">
-                <p>Hello! How are you?</p>
-                <span class="message-time">09:30 AM</span>
-            </div>
+        <div class="empty-chat">
+            <i class="fas fa-comment-slash"></i>
+            <h3>No messages yet</h3>
+            <p>Start the conversation by sending a message</p>
         </div>
-        
-        <div class="message sent">
-            <div class="message-bubble">
-                <p>I'm good, thanks! How about you?</p>
-                <span class="message-time">09:31 AM</span>
+    </div>
+
+    <!-- Typing Indicator -->
+    <div id="typingIndicator" class="typing-indicator" style="display: none;">
+        <div class="typing-bubble">
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
             </div>
+            <span class="typing-text">typing...</span>
         </div>
     </div>
 
     <!-- Message Input Area -->
     <div class="message-input-area">
-        <button class="icon-btn" id="attachBtn">
+        <!-- Attachment Button -->
+        <button class="icon-btn" id="attachBtn" title="Attach">
             <i class="fas fa-plus"></i>
         </button>
         
+        <!-- Message Input Container -->
         <div class="message-input-container">
-            <input type="text" id="messageInput" placeholder="iMessage">
-            <button class="icon-btn" id="emojiBtn">
+            <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
+            <button class="icon-btn" id="emojiBtn" title="Emoji">
                 <i class="far fa-smile"></i>
             </button>
         </div>
         
-        <button class="send-btn" id="sendBtn">
+        <!-- Send Button -->
+        <button class="send-btn" id="sendBtn" title="Send">
             <i class="fas fa-paper-plane"></i>
         </button>
     </div>
 
     <!-- Attachment Options -->
     <div class="attachment-options" id="attachmentOptions">
-        <button class="attachment-btn" id="attachPhotoBtn">
+        <button class="attachment-btn" id="attachPhotoBtn" title="Photo">
             <i class="fas fa-camera"></i>
             <span>Photo</span>
         </button>
-        <button class="attachment-btn" id="attachVideoBtn">
+        <button class="attachment-btn" id="attachVideoBtn" title="Video">
             <i class="fas fa-video"></i>
             <span>Video</span>
         </button>
-        <button class="attachment-btn" id="attachDocumentBtn">
+        <button class="attachment-btn" id="attachDocumentBtn" title="Document">
             <i class="fas fa-file"></i>
             <span>Document</span>
         </button>
+        <button class="attachment-btn" id="attachLocationBtn" title="Location">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Location</span>
+        </button>
+        <button class="attachment-btn" id="attachContactBtn" title="Contact">
+            <i class="fas fa-address-book"></i>
+            <span>Contact</span>
+        </button>
     </div>
 
-    <!-- File Inputs (Hidden) -->
+    <!-- Hidden File Inputs -->
     <input type="file" id="photoInput" accept="image/*" multiple hidden>
     <input type="file" id="videoInput" accept="video/*" hidden>
-    <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt" hidden>
+    <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt,.zip,.rar" hidden>
 
+    <!-- Modals -->
+    
     <!-- Media Preview Modal -->
     <div id="mediaPreviewModal" class="modal-overlay">
         <div class="modal-content">
@@ -109,8 +165,14 @@
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="mediaPreviewContent"></div>
+                <div id="mediaPreviewContent" class="media-preview-content">
+                    <div class="preview-placeholder">
+                        <i class="fas fa-image"></i>
+                        <p>No media to preview</p>
+                    </div>
+                </div>
                 <div class="modal-actions">
+                    <button id="cancelMediaBtn" class="btn-secondary">Cancel</button>
                     <button id="sendMediaBtn" class="btn-primary">
                         <i class="fas fa-paper-plane"></i> Send
                     </button>
@@ -128,23 +190,155 @@
             </div>
             <div class="modal-body">
                 <div class="input-group">
-                    <input type="text" id="nicknameInput" placeholder="Enter nickname">
+                    <i class="fas fa-tag"></i>
+                    <input type="text" id="nicknameInput" placeholder="Enter nickname" maxlength="30">
                 </div>
-                <button id="saveNicknameBtn" class="btn-primary">Save</button>
+                <p class="form-hint">This nickname will only be visible to you</p>
+                <div class="modal-actions">
+                    <button id="cancelNicknameBtn" class="btn-secondary">Cancel</button>
+                    <button id="saveNicknameBtn" class="btn-primary">Save</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Notification Sound -->
+    <!-- View Profile Modal -->
+    <div id="profileModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Profile</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="profileModalContent">
+                    <!-- Profile content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Chat Confirmation -->
+    <div id="deleteChatModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Chat</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-message">
+                    <i class="fas fa-exclamation-triangle warning-icon"></i>
+                    <h4>Are you sure?</h4>
+                    <p>This will delete all messages in this chat. This action cannot be undone.</p>
+                </div>
+                <div class="modal-actions">
+                    <button id="cancelDeleteBtn" class="btn-secondary">Cancel</button>
+                    <button id="confirmDeleteBtn" class="btn-danger">Delete Chat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Block User Confirmation -->
+    <div id="blockUserModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Block User</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-message">
+                    <i class="fas fa-ban warning-icon"></i>
+                    <h4>Block this user?</h4>
+                    <p>You will no longer receive messages from this user. You can unblock them later from settings.</p>
+                </div>
+                <div class="modal-actions">
+                    <button id="cancelBlockBtn" class="btn-secondary">Cancel</button>
+                    <button id="confirmBlockBtn" class="btn-danger">Block User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report User Modal -->
+    <div id="reportUserModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Report User</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="report-form">
+                    <div class="input-group">
+                        <label for="reportReason">Reason for reporting</label>
+                        <select id="reportReason">
+                            <option value="">Select a reason</option>
+                            <option value="spam">Spam</option>
+                            <option value="harassment">Harassment</option>
+                            <option value="inappropriate">Inappropriate content</option>
+                            <option value="impersonation">Impersonation</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="reportDetails">Additional details (optional)</label>
+                        <textarea id="reportDetails" placeholder="Please provide more details..." rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="cancelReportBtn" class="btn-secondary">Cancel</button>
+                    <button id="submitReportBtn" class="btn-danger">Submit Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Audio Elements -->
     <audio id="notificationSound" preload="auto">
         <source src="notification.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="sentSound" preload="auto">
+        <source src="sent.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
+    <audio id="messageTone" preload="auto">
+        <source src="message.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
     </audio>
 
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js"></script>
+    
+    <!-- ImageKit SDK -->
+    <script src="https://unpkg.com/imagekit-javascript/dist/imagekit.min.js"></script>
+    
+    <!-- Emoji Picker Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@emoji-mart/data"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emoji-mart/web-component"></script>
+    
+    <!-- App Scripts -->
     <script src="firebase-config.js"></script>
     <script src="imagekit-config.js"></script>
     <script src="app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('ServiceWorker registered:', registration.scope);
+                }).catch(error => {
+                    console.log('ServiceWorker registration failed:', error);
+                });
+            });
+        }
+    </script>
 </body>
 </html>
