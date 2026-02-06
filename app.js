@@ -1,196 +1,136 @@
-// Main application JavaScript
-import { 
-    auth, 
-    database, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signOut, 
-    onAuthStateChanged,
-    ref, 
-    set, 
-    get, 
-    push, 
-    child, 
-    update, 
-    onValue, 
-    remove, 
-    query, 
-    orderByChild, 
-    equalTo,
-    serverTimestamp 
-} from './firebase-config.js';
-
-import { initImageKit, uploadToImageKit, getImageKitUrl } from './imagekit-config.js';
-
-// Initialize ImageKit
-initImageKit();
-
-// DOM Elements
+// Global Variables
 let currentUser = null;
-let currentUserId = null;
-let currentUserData = null;
-let chatRequestsListener = null;
-let contactsListener = null;
-let activeChatId = null;
-let activeChatListener = null;
+let userData = null;
+let chatWithUser = null;
+let currentChatId = null;
+let listeners = [];
 
-// Notification sound
-const notificationSound = new Audio('./notification.mp3');
+// Toast Notification System
+class Toast {
+    static show(message, type = 'info', duration = 3000) {
+        const toastContainer = document.getElementById('toastContainer') || document.createElement('div');
+        if (!document.getElementById('toastContainer')) {
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'toast-container';
+            document.body.appendChild(toastContainer);
+        }
 
-// Toast notifications
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
-    const container = document.querySelector('.toast-container') || createToastContainer();
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        const icon = {
+            'success': 'check-circle',
+            'error': 'exclamation-circle',
+            'warning': 'exclamation-triangle',
+            'info': 'info-circle'
+        }[type] || 'info-circle';
+
+        toast.innerHTML = `
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Remove toast after duration
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, duration);
+
+        return toast;
+    }
 }
 
-function createToastContainer() {
-    const container = document.createElement('div');
-    container.className = 'toast-container';
-    document.body.appendChild(container);
-    return container;
+// Utility Functions
+function formatTimestamp(timestamp) {
+    if (!timestamp) return '';
+    
+    const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: diffDays >= 365 ? 'numeric' : undefined
+    });
 }
 
-// Generate ZYN user ID
-function generateZynId() {
+function generateZYNID() {
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     return `ZYN-${randomNum}`;
 }
 
-// Copy to clipboard
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showToast('Copied to clipboard!', 'success');
-    }).catch(err => {
-        showToast('Failed to copy', 'error');
+function playNotificationSound() {
+    try {
+        const audio = new Audio('notification.mp3');
+        audio.volume = 0.3;
+        audio.play().catch(e => console.log('Audio play failed:', e));
+    } catch (e) {
+        console.log('Notification sound error:', e);
+    }
+}
+
+// Cloudinary Upload Function
+async function uploadToCloudinary(file, type = 'image') {
+    return new Promise((resolve, reject) => {
+        if (!file) {
+            reject(new Error('No file provided'));
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', window.cloudinaryConfig.uploadPreset);
+        formData.append('folder', window.cloudinaryConfig.folder);
+
+        const endpoint = `https://api.cloudinary.com/v1_1/${window.cloudinaryConfig.cloudName}/${
+            type === 'video' ? 'video' : 'image'
+        }/upload`;
+
+        fetch(endpoint, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.secure_url) {
+                resolve({
+                    url: data.secure_url,
+                    publicId: data.public_id,
+                    format: data.format,
+                    bytes: data.bytes
+                });
+            } else {
+                reject(new Error('Upload failed'));
+            }
+        })
+        .catch(error => {
+            console.error('Cloudinary upload error:', error);
+            reject(error);
+        });
     });
 }
 
-// Format timestamp
-function formatTime(timestamp) {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDate(timestamp) {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-        return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-        return 'Yesterday';
-    } else {
-        return date.toLocaleDateString();
-    }
-}
-
-// Load profile image
-function loadProfileImage(imageUrl, elementId) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        if (imageUrl) {
-            element.src = imageUrl;
-            element.onerror = () => {
-                element.src = 'zynaps.png';
-            };
-        } else {
-            element.src = 'zynaps.png';
-        }
-    }
-}
-
-// Authentication functions
-async function registerUser(email, password, userData) {
+// Firebase Database Functions
+async function getUserData(userId) {
     try {
-        // Create user with email and password
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        
-        // Generate ZYN ID
-        const zynId = generateZynId();
-        
-        // Prepare user data for database
-        const userProfile = {
-            ...userData,
-            zynId: zynId,
-            email: email,
-            createdAt: serverTimestamp(),
-            lastSeen: serverTimestamp(),
-            status: 'online'
-        };
-        
-        // Save user data to database
-        await set(ref(database, `users/${user.uid}`), userProfile);
-        
-        // Also save reference by ZYN ID for quick lookup
-        await set(ref(database, `zynIds/${zynId}`), user.uid);
-        
-        showToast('Registration successful!', 'success');
-        return user;
-    } catch (error) {
-        console.error('Registration error:', error);
-        showToast(error.message, 'error');
-        throw error;
-    }
-}
-
-async function loginUser(email, password) {
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        
-        // Update user status
-        await update(ref(database, `users/${user.uid}`), {
-            lastSeen: serverTimestamp(),
-            status: 'online'
-        });
-        
-        showToast('Login successful!', 'success');
-        return user;
-    } catch (error) {
-        console.error('Login error:', error);
-        showToast(error.message, 'error');
-        throw error;
-    }
-}
-
-async function logoutUser() {
-    try {
-        if (currentUser) {
-            // Update status to offline
-            await update(ref(database, `users/${currentUser.uid}`), {
-                lastSeen: serverTimestamp(),
-                status: 'offline'
-            });
-        }
-        
-        await signOut(auth);
-        showToast('Logged out successfully', 'success');
-    } catch (error) {
-        console.error('Logout error:', error);
-        showToast(error.message, 'error');
-    }
-}
-
-// User data functions
-async function getUserData(uid) {
-    try {
-        const snapshot = await get(ref(database, `users/${uid}`));
+        const db = window.firebaseDatabase;
+        const userRef = ref(db, `users/${userId}`);
+        const snapshot = await get(userRef);
         return snapshot.val();
     } catch (error) {
         console.error('Error getting user data:', error);
@@ -198,1487 +138,1382 @@ async function getUserData(uid) {
     }
 }
 
-async function getUserByZynId(zynId) {
+async function updateUserData(userId, data) {
     try {
-        // First get the user UID from zynIds index
-        const zynIdSnapshot = await get(ref(database, `zynIds/${zynId}`));
-        const uid = zynIdSnapshot.val();
-        
-        if (!uid) {
-            return null;
-        }
-        
-        // Then get user data
-        const userSnapshot = await get(ref(database, `users/${uid}`));
-        return {
-            uid: uid,
-            ...userSnapshot.val()
-        };
-    } catch (error) {
-        console.error('Error getting user by ZYN ID:', error);
-        return null;
-    }
-}
-
-// Chat request functions
-async function sendChatRequest(recipientZynId, senderData) {
-    try {
-        const recipient = await getUserByZynId(recipientZynId);
-        
-        if (!recipient) {
-            throw new Error('User not found');
-        }
-        
-        // Check if already in contacts
-        const contactCheck = await get(ref(database, `users/${currentUser.uid}/contacts/${recipient.uid}`));
-        if (contactCheck.exists()) {
-            throw new Error('User is already in your contacts');
-        }
-        
-        // Check if request already exists
-        const existingRequest = await get(ref(database, `chatRequests/${recipient.uid}/${currentUser.uid}`));
-        if (existingRequest.exists()) {
-            throw new Error('Request already sent');
-        }
-        
-        // Create chat request
-        const requestData = {
-            senderId: currentUser.uid,
-            senderZynId: currentUserData.zynId,
-            senderName: currentUserData.name,
-            senderProfilePic: currentUserData.profilePic || '',
-            recipientId: recipient.uid,
-            status: 'pending',
-            timestamp: serverTimestamp()
-        };
-        
-        // Save to recipient's requests
-        await set(ref(database, `chatRequests/${recipient.uid}/${currentUser.uid}`), requestData);
-        
-        // Also save to sender's sent requests
-        await set(ref(database, `sentRequests/${currentUser.uid}/${recipient.uid}`), {
-            ...requestData,
-            status: 'sent'
-        });
-        
-        showToast('Chat request sent!', 'success');
+        const db = window.firebaseDatabase;
+        const userRef = ref(db, `users/${userId}`);
+        await update(userRef, data);
         return true;
     } catch (error) {
-        console.error('Error sending chat request:', error);
-        showToast(error.message, 'error');
+        console.error('Error updating user data:', error);
         return false;
     }
 }
 
-async function respondToChatRequest(requestId, accept = true) {
+async function checkZYNIDExists(zynId) {
     try {
-        const requestSnapshot = await get(ref(database, `chatRequests/${currentUser.uid}/${requestId}`));
-        const request = requestSnapshot.val();
+        const db = window.firebaseDatabase;
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
+        const users = snapshot.val();
         
-        if (!request) {
-            throw new Error('Request not found');
-        }
-        
-        if (accept) {
-            // Add each other to contacts
-            await update(ref(database, `users/${currentUser.uid}/contacts/${requestId}`), {
-                addedAt: serverTimestamp()
-            });
-            
-            await update(ref(database, `users/${requestId}/contacts/${currentUser.uid}`), {
-                addedAt: serverTimestamp()
-            });
-            
-            // Create chat room
-            const chatId = [currentUser.uid, requestId].sort().join('_');
-            await set(ref(database, `chats/${chatId}`), {
-                participants: {
-                    [currentUser.uid]: true,
-                    [requestId]: true
-                },
-                createdAt: serverTimestamp(),
-                type: 'private'
-            });
-            
-            // Add chat to users' chat list
-            await set(ref(database, `users/${currentUser.uid}/chats/${chatId}`), {
-                otherUserId: requestId,
-                lastMessage: 'Chat started',
-                lastMessageTime: serverTimestamp()
-            });
-            
-            await set(ref(database, `users/${requestId}/chats/${chatId}`), {
-                otherUserId: currentUser.uid,
-                lastMessage: 'Chat started',
-                lastMessageTime: serverTimestamp()
-            });
-            
-            showToast('Contact added!', 'success');
-        }
-        
-        // Remove the request
-        await remove(ref(database, `chatRequests/${currentUser.uid}/${requestId}`));
-        
-        // Update sent request status
-        await update(ref(database, `sentRequests/${requestId}/${currentUser.uid}`), {
-            status: accept ? 'accepted' : 'rejected',
-            respondedAt: serverTimestamp()
-        });
-        
-        return true;
-    } catch (error) {
-        console.error('Error responding to chat request:', error);
-        showToast(error.message, 'error');
-        return false;
-    }
-}
-
-// Message functions
-async function sendMessage(chatId, message, type = 'text', mediaUrl = '') {
-    try {
-        const messageId = push(child(ref(database), 'messages')).key;
-        const messageData = {
-            messageId: messageId,
-            chatId: chatId,
-            senderId: currentUser.uid,
-            content: message,
-            type: type,
-            mediaUrl: mediaUrl,
-            timestamp: serverTimestamp(),
-            status: 'sent'
-        };
-        
-        // Save message
-        await set(ref(database, `messages/${chatId}/${messageId}`), messageData);
-        
-        // Update chat last message
-        await update(ref(database, `chats/${chatId}`), {
-            lastMessage: type === 'text' ? message : `Sent a ${type}`,
-            lastMessageTime: serverTimestamp(),
-            lastMessageSender: currentUser.uid
-        });
-        
-        // Update users' chat list
-        const chatSnapshot = await get(ref(database, `chats/${chatId}`));
-        const chat = chatSnapshot.val();
-        const participants = Object.keys(chat.participants || {});
-        
-        for (const participantId of participants) {
-            if (participantId !== currentUser.uid) {
-                await update(ref(database, `users/${participantId}/chats/${chatId}`), {
-                    lastMessage: type === 'text' ? message : `Sent a ${type}`,
-                    lastMessageTime: serverTimestamp(),
-                    unreadCount: (await get(ref(database, `users/${participantId}/chats/${chatId}/unreadCount`))).val() || 0 + 1
-                });
-            }
-        }
-        
-        return true;
-    } catch (error) {
-        console.error('Error sending message:', error);
-        showToast(error.message, 'error');
-        return false;
-    }
-}
-
-// Group functions
-async function createGroup(groupName, members = []) {
-    try {
-        const groupId = push(child(ref(database), 'groups')).key;
-        const groupData = {
-            groupId: groupId,
-            name: groupName,
-            createdBy: currentUser.uid,
-            createdAt: serverTimestamp(),
-            members: {
-                [currentUser.uid]: {
-                    role: 'admin',
-                    addedAt: serverTimestamp()
+        if (users) {
+            for (const userId in users) {
+                if (users[userId].zynId === zynId) {
+                    return { exists: true, userId };
                 }
-            },
-            lastMessage: 'Group created',
-            lastMessageTime: serverTimestamp()
-        };
-        
-        // Add members
-        for (const memberZynId of members) {
-            const member = await getUserByZynId(memberZynId);
-            if (member) {
-                groupData.members[member.uid] = {
-                    role: 'member',
-                    addedAt: serverTimestamp()
-                };
-                
-                // Add group to member's groups
-                await set(ref(database, `users/${member.uid}/groups/${groupId}`), {
-                    groupName: groupName,
-                    joinedAt: serverTimestamp()
-                });
             }
         }
-        
-        // Save group
-        await set(ref(database, `groups/${groupId}`), groupData);
-        
-        // Add to creator's groups
-        await set(ref(database, `users/${currentUser.uid}/groups/${groupId}`), {
-            groupName: groupName,
-            joinedAt: serverTimestamp(),
-            role: 'admin'
-        });
-        
-        showToast('Group created successfully!', 'success');
-        return groupId;
+        return { exists: false, userId: null };
     } catch (error) {
-        console.error('Error creating group:', error);
-        showToast(error.message, 'error');
-        return null;
+        console.error('Error checking ZYN-ID:', error);
+        return { exists: false, userId: null };
     }
 }
 
-// Status (Zynes) functions
-async function postStatus(content, type = 'text', mediaUrl = '') {
-    try {
-        const statusId = push(child(ref(database), 'statuses')).key;
-        const statusData = {
-            statusId: statusId,
-            userId: currentUser.uid,
-            content: content,
-            type: type,
-            mediaUrl: mediaUrl,
-            postedAt: serverTimestamp(),
-            expiresAt: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-        };
-        
-        await set(ref(database, `statuses/${statusId}`), statusData);
-        await set(ref(database, `users/${currentUser.uid}/statuses/${statusId}`), statusData);
-        
-        showToast('Status posted!', 'success');
-        return true;
-    } catch (error) {
-        console.error('Error posting status:', error);
-        showToast(error.message, 'error');
-        return false;
-    }
-}
-
-// Initialize app based on current page
-document.addEventListener('DOMContentLoaded', async function() {
-    const path = window.location.pathname;
+// Auth State Management
+function setupAuthStateListener() {
+    const auth = window.firebaseAuth;
     
-    // Check auth state
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
-            currentUserData = await getUserData(user.uid);
             
-            if (path.includes('index.html') || path === '/') {
-                // Redirect to home if already logged in
-                window.location.href = 'home.html';
-            } else if (path.includes('home.html')) {
-                initializeHomePage();
-            } else if (path.includes('chat.html')) {
-                initializeChatPage();
+            // Get user data from database
+            const db = window.firebaseDatabase;
+            const userRef = ref(db, `users/${user.uid}`);
+            const snapshot = await get(userRef);
+            userData = snapshot.val();
+            
+            if (!userData) {
+                // User data doesn't exist, redirect to signup
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Update user status to online
+            await updateUserData(user.uid, {
+                status: 'online',
+                lastSeen: new Date().toISOString()
+            });
+            
+            // Show appropriate page
+            if (window.location.pathname.includes('home.html')) {
+                showHomePage();
+            } else if (window.location.pathname.includes('chat.html')) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const chatWith = urlParams.get('chatWith');
+                if (chatWith) {
+                    await loadChat(chatWith);
+                }
             }
         } else {
-            // Not logged in
-            if (!path.includes('index.html') && path !== '/') {
+            // User not logged in, redirect to index
+            if (!window.location.pathname.includes('index.html')) {
                 window.location.href = 'index.html';
-            } else if (path.includes('index.html') || path === '/') {
-                initializeAuthPage();
             }
         }
     });
+}
+
+// Page Navigation
+function navigateTo(page) {
+    if (page === 'home') {
+        window.location.href = 'home.html';
+    } else if (page === 'chat') {
+        window.location.href = 'chat.html';
+    }
+}
+
+function showHomePage() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const appHome = document.getElementById('appHome');
+    
+    if (loadingScreen) loadingScreen.classList.add('hidden');
+    if (appHome) appHome.style.display = 'flex';
+    
+    // Update user info
+    if (userData) {
+        document.getElementById('userName').textContent = userData.fullName || 'User';
+        document.getElementById('userID').textContent = userData.zynId || 'ZYN-0000';
+        document.getElementById('dropdownUserName').textContent = userData.fullName || 'User';
+        document.getElementById('dropdownUserID').textContent = userData.zynId || 'ZYN-0000';
+        
+        if (userData.profilePic) {
+            const profilePics = document.querySelectorAll('#headerProfilePic, #dropdownProfilePic');
+            profilePics.forEach(pic => {
+                pic.src = userData.profilePic;
+                pic.onerror = () => {
+                    pic.src = 'zynaps.png';
+                };
+            });
+        }
+    }
+    
+    setupHomeListeners();
+    loadRecentChats();
+}
+
+async function loadRecentChats() {
+    if (!currentUser || !userData) return;
+    
+    const db = window.firebaseDatabase;
+    const chatsRef = ref(db, `chats/${currentUser.uid}`);
+    
+    // Listen for chat updates
+    const unsubscribe = onValue(chatsRef, (snapshot) => {
+        const chats = snapshot.val();
+        const recentChatsList = document.getElementById('recentChats');
+        
+        if (!recentChatsList) return;
+        
+        if (!chats) {
+            recentChatsList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-comment-slash"></i>
+                    <h3>No Recent Chats</h3>
+                    <p>Start a conversation by clicking the chat button below</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Convert chats to array and sort by last message time
+        const chatArray = Object.entries(chats).map(([chatId, chat]) => {
+            return { chatId, ...chat };
+        }).sort((a, b) => {
+            return new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0);
+        }).slice(0, 5); // Show only 5 recent chats
+        
+        recentChatsList.innerHTML = '';
+        
+        chatArray.forEach(chat => {
+            const chatCard = document.createElement('div');
+            chatCard.className = 'contact-card';
+            chatCard.innerHTML = `
+                <img src="${chat.userPic || 'zynaps.png'}" alt="${chat.userName}" class="profile-pic">
+                <div class="contact-info">
+                    <h4>${chat.userName}</h4>
+                    <p class="last-message">${chat.lastMessage || 'Start chatting'}</p>
+                    <p class="time">${formatTimestamp(chat.lastMessageTime)}</p>
+                </div>
+            `;
+            
+            chatCard.addEventListener('click', () => {
+                navigateToChat(chat.userId);
+            });
+            
+            recentChatsList.appendChild(chatCard);
+        });
+        
+        // Store unsubscribe function
+        listeners.push(unsubscribe);
+    });
+}
+
+function navigateToChat(userId) {
+    window.location.href = `chat.html?chatWith=${userId}`;
+}
+
+async function loadChat(userId) {
+    if (!currentUser) return;
+    
+    chatWithUser = await getUserData(userId);
+    if (!chatWithUser) {
+        Toast.show('User not found', 'error');
+        setTimeout(() => {
+            window.location.href = 'home.html';
+        }, 1500);
+        return;
+    }
+    
+    // Generate chat ID (sorted to ensure consistency)
+    const participants = [currentUser.uid, userId].sort();
+    currentChatId = participants.join('_');
+    
+    // Update chat UI
+    const chatPage = document.getElementById('chatPage');
+    const loadingScreen = document.getElementById('loadingScreen');
+    
+    if (loadingScreen) loadingScreen.classList.add('hidden');
+    if (chatPage) chatPage.style.display = 'flex';
+    
+    document.getElementById('chatUserName').textContent = chatWithUser.fullName || 'User';
+    document.getElementById('chatUserStatusText').textContent = chatWithUser.status || 'Offline';
+    document.getElementById('blockUserName').textContent = chatWithUser.fullName || 'User';
+    
+    const statusDot = document.getElementById('chatUserStatus');
+    if (chatWithUser.status === 'online') {
+        statusDot.className = 'status-dot online';
+    } else {
+        statusDot.className = 'status-dot offline';
+    }
+    
+    if (chatWithUser.profilePic) {
+        const chatUserPic = document.getElementById('chatUserPic');
+        chatUserPic.src = chatWithUser.profilePic;
+        chatUserPic.onerror = () => {
+            chatUserPic.src = 'zynaps.png';
+        };
+    }
+    
+    // Set current date
+    const currentDate = new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    document.getElementById('currentDate').textContent = currentDate;
+    
+    // Load messages
+    loadMessages();
+    setupChatListeners();
+}
+
+async function loadMessages() {
+    if (!currentChatId) return;
+    
+    const db = window.firebaseDatabase;
+    const messagesRef = ref(db, `messages/${currentChatId}`);
+    
+    const unsubscribe = onValue(messagesRef, (snapshot) => {
+        const messages = snapshot.val();
+        const chatMessages = document.getElementById('chatMessages');
+        
+        if (!chatMessages) return;
+        
+        // Clear existing messages except date and typing indicator
+        const dateDiv = document.getElementById('currentDate');
+        const typingIndicator = document.getElementById('typingIndicator');
+        chatMessages.innerHTML = '';
+        if (dateDiv) chatMessages.appendChild(dateDiv);
+        
+        if (!messages) {
+            const emptyChat = document.createElement('div');
+            emptyChat.className = 'empty-chat';
+            emptyChat.innerHTML = `
+                <i class="fas fa-comment"></i>
+                <h3>No messages yet</h3>
+                <p>Say hello to start the conversation!</p>
+            `;
+            chatMessages.appendChild(emptyChat);
+            if (typingIndicator) chatMessages.appendChild(typingIndicator);
+            return;
+        }
+        
+        // Convert messages to array and sort by timestamp
+        const messageArray = Object.entries(messages).map(([messageId, message]) => {
+            return { messageId, ...message };
+        }).sort((a, b) => {
+            return new Date(a.timestamp) - new Date(b.timestamp);
+        });
+        
+        // Group messages by date
+        const groupedMessages = {};
+        messageArray.forEach(message => {
+            const date = new Date(message.timestamp).toDateString();
+            if (!groupedMessages[date]) {
+                groupedMessages[date] = [];
+            }
+            groupedMessages[date].push(message);
+        });
+        
+        // Display messages
+        Object.entries(groupedMessages).forEach(([date, dateMessages]) => {
+            // Add date separator
+            const dateElement = document.createElement('div');
+            dateElement.className = 'message-date';
+            dateElement.textContent = new Date(date).toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric'
+            });
+            chatMessages.appendChild(dateElement);
+            
+            // Add messages for this date
+            dateMessages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${message.senderId === currentUser.uid ? 'sent' : 'received'}`;
+                
+                let content = '';
+                if (message.type === 'text') {
+                    content = `<p>${message.content}</p>`;
+                } else if (message.type === 'image') {
+                    content = `
+                        <div class="media-message">
+                            <img src="${message.content}" alt="Image" class="chat-media" onclick="openMediaPreview('${message.content}', 'image')">
+                            ${message.caption ? `<p>${message.caption}</p>` : ''}
+                        </div>
+                    `;
+                } else if (message.type === 'video') {
+                    content = `
+                        <div class="media-message">
+                            <video src="${message.content}" controls class="chat-media" onclick="openMediaPreview('${message.content}', 'video')"></video>
+                            ${message.caption ? `<p>${message.caption}</p>` : ''}
+                        </div>
+                    `;
+                } else if (message.type === 'file') {
+                    const fileName = message.fileName || 'File';
+                    const fileSize = message.fileSize ? ` (${formatFileSize(message.fileSize)})` : '';
+                    content = `
+                        <div class="file-message">
+                            <i class="fas fa-file"></i>
+                            <div>
+                                <strong>${fileName}${fileSize}</strong>
+                                <a href="${message.content}" download="${fileName}" class="link">Download</a>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                messageElement.innerHTML = `
+                    <div class="message-bubble">
+                        ${content}
+                        <span class="message-time">
+                            ${formatTimestamp(message.timestamp)}
+                            ${message.senderId === currentUser.uid ? 
+                                `<span class="message-status">${message.status || 'sent'}</span>` : ''}
+                        </span>
+                    </div>
+                `;
+                
+                chatMessages.appendChild(messageElement);
+            });
+        });
+        
+        // Add typing indicator at the end
+        if (typingIndicator) chatMessages.appendChild(typingIndicator);
+        
+        // Scroll to bottom
+        setTimeout(() => {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 100);
+    });
+    
+    listeners.push(unsubscribe);
+}
+
+// Event Listeners Setup
+function setupHomeListeners() {
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const page = item.getAttribute('data-page');
+            
+            // Update active state
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Show page
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(`${page}Page`).classList.add('active');
+        });
+    });
+    
+    // Floating chat button
+    const floatingChatBtn = document.getElementById('floatingChatBtn');
+    if (floatingChatBtn) {
+        floatingChatBtn.addEventListener('click', () => {
+            document.getElementById('startChatModal').classList.add('active');
+        });
+    }
+    
+    // Quick actions
+    const quickChat = document.getElementById('quickChat');
+    if (quickChat) {
+        quickChat.addEventListener('click', () => {
+            document.getElementById('startChatModal').classList.add('active');
+        });
+    }
+    
+    const quickGroup = document.getElementById('quickGroup');
+    if (quickGroup) {
+        quickGroup.addEventListener('click', () => {
+            document.getElementById('createGroupModal').classList.add('active');
+        });
+    }
+    
+    const quickStatus = document.getElementById('quickStatus');
+    if (quickStatus) {
+        quickStatus.addEventListener('click', () => {
+            document.getElementById('createZyneModal').classList.add('active');
+        });
+    }
+    
+    // Profile dropdown
+    const profileDropdownBtn = document.getElementById('profileDropdownBtn');
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdownBtn && profileDropdown) {
+        profileDropdownBtn.addEventListener('click', () => {
+            profileDropdown.classList.toggle('show');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!profileDropdownBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove('show');
+            }
+        });
+    }
+    
+    // Edit profile
+    const editProfileBtn = document.getElementById('editProfileBtn');
+    if (editProfileBtn) {
+        editProfileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('editProfileModal').classList.add('active');
+            loadEditProfileData();
+        });
+    }
+    
+    // Logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const auth = window.firebaseAuth;
+            
+            // Update status to offline
+            if (currentUser) {
+                await updateUserData(currentUser.uid, {
+                    status: 'offline',
+                    lastSeen: new Date().toISOString()
+                });
+            }
+            
+            // Sign out
+            await signOut(auth);
+            window.location.href = 'index.html';
+        });
+    }
+    
+    // Start chat modal
+    const closeStartChatModal = document.getElementById('closeStartChatModal');
+    if (closeStartChatModal) {
+        closeStartChatModal.addEventListener('click', () => {
+            document.getElementById('startChatModal').classList.remove('active');
+        });
+    }
+    
+    // Search user for chat
+    const searchUserID = document.getElementById('searchUserID');
+    if (searchUserID) {
+        searchUserID.addEventListener('input', async (e) => {
+            const zynId = e.target.value.trim().toUpperCase();
+            const sendChatRequestBtn = document.getElementById('sendChatRequestBtn');
+            const userSearchResult = document.getElementById('userSearchResult');
+            
+            if (zynId.length === 8 && zynId.startsWith('ZYN-')) {
+                const { exists, userId } = await checkZYNIDExists(zynId);
+                
+                if (exists && userId !== currentUser.uid) {
+                    const user = await getUserData(userId);
+                    userSearchResult.innerHTML = `
+                        <div class="user-found">
+                            <img src="${user.profilePic || 'zynaps.png'}" alt="${user.fullName}" class="profile-pic">
+                            <div>
+                                <h4>${user.fullName}</h4>
+                                <p>${zynId}</p>
+                                <p class="status">${user.status || 'Offline'}</p>
+                            </div>
+                        </div>
+                    `;
+                    sendChatRequestBtn.style.display = 'block';
+                    sendChatRequestBtn.onclick = () => sendChatRequest(userId, zynId);
+                } else if (userId === currentUser.uid) {
+                    userSearchResult.innerHTML = `
+                        <div class="error">
+                            <p>You cannot send a chat request to yourself</p>
+                        </div>
+                    `;
+                    sendChatRequestBtn.style.display = 'none';
+                } else {
+                    userSearchResult.innerHTML = `
+                        <div class="error">
+                            <p>User with ZYN-ID ${zynId} not found</p>
+                        </div>
+                    `;
+                    sendChatRequestBtn.style.display = 'none';
+                }
+            } else if (zynId.length > 0) {
+                userSearchResult.innerHTML = `
+                    <div class="error">
+                        <p>Please enter a valid ZYN-ID (format: ZYN-1234)</p>
+                    </div>
+                `;
+                sendChatRequestBtn.style.display = 'none';
+            } else {
+                userSearchResult.innerHTML = `
+                    <div class="search-placeholder">
+                        <i class="fas fa-search"></i>
+                        <p>Enter a ZYN-ID to find a user</p>
+                    </div>
+                `;
+                sendChatRequestBtn.style.display = 'none';
+            }
+        });
+    }
+}
+
+function setupChatListeners() {
+    // Back button
+    const backToHome = document.getElementById('backToHome');
+    if (backToHome) {
+        backToHome.addEventListener('click', () => {
+            // Clean up listeners
+            listeners.forEach(unsubscribe => {
+                if (typeof unsubscribe === 'function') {
+                    unsubscribe();
+                }
+            });
+            listeners = [];
+            
+            window.location.href = 'home.html';
+        });
+    }
+    
+    // Message input
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    
+    if (messageInput && sendMessageBtn) {
+        messageInput.addEventListener('input', () => {
+            sendMessageBtn.disabled = messageInput.value.trim() === '';
+        });
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        sendMessageBtn.addEventListener('click', sendMessage);
+    }
+    
+    // Attachment button
+    const attachmentBtn = document.getElementById('attachmentBtn');
+    const attachmentOptions = document.getElementById('attachmentOptions');
+    
+    if (attachmentBtn && attachmentOptions) {
+        attachmentBtn.addEventListener('click', () => {
+            attachmentOptions.classList.toggle('show');
+        });
+        
+        // Close attachment options when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!attachmentBtn.contains(e.target) && !attachmentOptions.contains(e.target)) {
+                attachmentOptions.classList.remove('show');
+            }
+        });
+    }
+    
+    // Attachment options
+    const attachPhotoBtn = document.getElementById('attachPhotoBtn');
+    if (attachPhotoBtn) {
+        attachPhotoBtn.addEventListener('click', () => {
+            document.getElementById('photoInput').click();
+        });
+    }
+    
+    const attachVideoBtn = document.getElementById('attachVideoBtn');
+    if (attachVideoBtn) {
+        attachVideoBtn.addEventListener('click', () => {
+            document.getElementById('videoInput').click();
+        });
+    }
+    
+    const attachFileBtn = document.getElementById('attachFileBtn');
+    if (attachFileBtn) {
+        attachFileBtn.addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+    }
+    
+    // File inputs
+    const photoInput = document.getElementById('photoInput');
+    if (photoInput) {
+        photoInput.addEventListener('change', (e) => {
+            handleFileUpload(e.target.files[0], 'image');
+        });
+    }
+    
+    const videoInput = document.getElementById('videoInput');
+    if (videoInput) {
+        videoInput.addEventListener('change', (e) => {
+            handleFileUpload(e.target.files[0], 'video');
+        });
+    }
+    
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            handleFileUpload(e.target.files[0], 'file');
+        });
+    }
+    
+    // Chat menu
+    const chatMenuBtn = document.getElementById('chatMenuBtn');
+    const chatMenuDropdown = document.getElementById('chatMenuDropdown');
+    
+    if (chatMenuBtn && chatMenuDropdown) {
+        chatMenuBtn.addEventListener('click', () => {
+            chatMenuDropdown.classList.toggle('show');
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!chatMenuBtn.contains(e.target) && !chatMenuDropdown.contains(e.target)) {
+                chatMenuDropdown.classList.remove('show');
+            }
+        });
+    }
+    
+    // Block user
+    const blockUserBtn = document.getElementById('blockUserBtn');
+    if (blockUserBtn) {
+        blockUserBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('blockUserModal').classList.add('active');
+        });
+    }
+    
+    // Report user
+    const reportUserBtn = document.getElementById('reportUserBtn');
+    if (reportUserBtn) {
+        reportUserBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('reportUserModal').classList.add('active');
+        });
+    }
+    
+    // Clear chat
+    const clearChatBtn = document.getElementById('clearChatBtn');
+    if (clearChatBtn) {
+        clearChatBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('clearChatModal').classList.add('active');
+        });
+    }
+    
+    // Delete chat
+    const deleteChatBtn = document.getElementById('deleteChatBtn');
+    if (deleteChatBtn) {
+        deleteChatBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('deleteChatModal').classList.add('active');
+        });
+    }
+    
+    // Modal close buttons
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.closest('.modal-overlay').classList.remove('active');
+        });
+    });
+    
+    // Confirm block
+    const confirmBlockBtn = document.getElementById('confirmBlockBtn');
+    if (confirmBlockBtn) {
+        confirmBlockBtn.addEventListener('click', async () => {
+            if (!currentUser || !chatWithUser) return;
+            
+            const db = window.firebaseDatabase;
+            const blockRef = ref(db, `blocks/${currentUser.uid}/${chatWithUser.userId}`);
+            await set(blockRef, {
+                blockedAt: new Date().toISOString(),
+                blockedUserId: chatWithUser.userId,
+                blockedUserName: chatWithUser.fullName
+            });
+            
+            Toast.show(`${chatWithUser.fullName} has been blocked`, 'success');
+            document.getElementById('blockUserModal').classList.remove('active');
+            
+            // Go back to home
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 1500);
+        });
+    }
+    
+    // Cancel block
+    const cancelBlockBtn = document.getElementById('cancelBlockBtn');
+    if (cancelBlockBtn) {
+        cancelBlockBtn.addEventListener('click', () => {
+            document.getElementById('blockUserModal').classList.remove('active');
+        });
+    }
+    
+    // Submit report
+    const submitReportBtn = document.getElementById('submitReportBtn');
+    if (submitReportBtn) {
+        submitReportBtn.addEventListener('click', async () => {
+            const reason = document.getElementById('reportReason').value;
+            const details = document.getElementById('reportDetails').value;
+            
+            if (!reason) {
+                Toast.show('Please select a reason for reporting', 'error');
+                return;
+            }
+            
+            if (!currentUser || !chatWithUser) return;
+            
+            const db = window.firebaseDatabase;
+            const reportRef = ref(db, `reports/${chatWithUser.userId}/${Date.now()}`);
+            await set(reportRef, {
+                reporterId: currentUser.uid,
+                reportedUserId: chatWithUser.userId,
+                reason: reason,
+                details: details,
+                timestamp: new Date().toISOString()
+            });
+            
+            Toast.show('Report submitted successfully', 'success');
+            document.getElementById('reportUserModal').classList.remove('active');
+            
+            // Clear form
+            document.getElementById('reportReason').value = '';
+            document.getElementById('reportDetails').value = '';
+        });
+    }
+    
+    // Cancel report
+    const cancelReportBtn = document.getElementById('cancelReportBtn');
+    if (cancelReportBtn) {
+        cancelReportBtn.addEventListener('click', () => {
+            document.getElementById('reportUserModal').classList.remove('active');
+        });
+    }
+    
+    // Confirm clear chat
+    const confirmClearChatBtn = document.getElementById('confirmClearChatBtn');
+    if (confirmClearChatBtn) {
+        confirmClearChatBtn.addEventListener('click', async () => {
+            if (!currentChatId) return;
+            
+            const db = window.firebaseDatabase;
+            const messagesRef = ref(db, `messages/${currentChatId}`);
+            await remove(messagesRef);
+            
+            Toast.show('Chat cleared successfully', 'success');
+            document.getElementById('clearChatModal').classList.remove('active');
+        });
+    }
+    
+    // Cancel clear chat
+    const cancelClearChatBtn = document.getElementById('cancelClearChatBtn');
+    if (cancelClearChatBtn) {
+        cancelClearChatBtn.addEventListener('click', () => {
+            document.getElementById('clearChatModal').classList.remove('active');
+        });
+    }
+    
+    // Confirm delete chat
+    const confirmDeleteChatBtn = document.getElementById('confirmDeleteChatBtn');
+    if (confirmDeleteChatBtn) {
+        confirmDeleteChatBtn.addEventListener('click', async () => {
+            if (!currentUser || !currentChatId) return;
+            
+            const db = window.firebaseDatabase;
+            
+            // Remove chat from user's chat list
+            const chatRef = ref(db, `chats/${currentUser.uid}/${chatWithUser.userId}`);
+            await remove(chatRef);
+            
+            Toast.show('Chat deleted successfully', 'success');
+            document.getElementById('deleteChatModal').classList.remove('active');
+            
+            // Go back to home
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 1500);
+        });
+    }
+    
+    // Cancel delete chat
+    const cancelDeleteChatBtn = document.getElementById('cancelDeleteChatBtn');
+    if (cancelDeleteChatBtn) {
+        cancelDeleteChatBtn.addEventListener('click', () => {
+            document.getElementById('deleteChatModal').classList.remove('active');
+        });
+    }
+}
+
+// Message Functions
+async function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    
+    if (!message || !currentChatId || !currentUser || !chatWithUser) return;
+    
+    const db = window.firebaseDatabase;
+    const messageRef = ref(db, `messages/${currentChatId}/${Date.now()}`);
+    
+    const messageData = {
+        senderId: currentUser.uid,
+        content: message,
+        type: 'text',
+        timestamp: new Date().toISOString(),
+        status: 'sent'
+    };
+    
+    try {
+        await set(messageRef, messageData);
+        messageInput.value = '';
+        
+        // Update chat list for both users
+        await updateChatList(currentUser.uid, chatWithUser.userId, message, 'text');
+        await updateChatList(chatWithUser.userId, currentUser.uid, message, 'text');
+        
+        // Play sent sound
+        playNotificationSound();
+    } catch (error) {
+        console.error('Error sending message:', error);
+        Toast.show('Failed to send message', 'error');
+    }
+}
+
+async function updateChatList(userId, otherUserId, lastMessage, type) {
+    const db = window.firebaseDatabase;
+    const chatRef = ref(db, `chats/${userId}/${otherUserId}`);
+    
+    // Get other user's data
+    const otherUserData = await getUserData(otherUserId);
+    
+    const chatData = {
+        userId: otherUserId,
+        userName: otherUserData?.fullName || 'User',
+        userPic: otherUserData?.profilePic || null,
+        lastMessage: lastMessage,
+        lastMessageType: type,
+        lastMessageTime: new Date().toISOString(),
+        unreadCount: userId === currentUser.uid ? 0 : 1 // Increment if receiving
+    };
+    
+    await set(chatRef, chatData);
+}
+
+async function handleFileUpload(file, type) {
+    if (!file || !currentChatId || !currentUser || !chatWithUser) return;
+    
+    // Check file size (50MB limit)
+    if (file.size > 50 * 1024 * 1024) {
+        Toast.show('File size must be less than 50MB', 'error');
+        return;
+    }
+    
+    // Show loading
+    const sendMediaBtn = document.getElementById('sendMediaBtn');
+    const originalText = sendMediaBtn ? sendMediaBtn.innerHTML : '';
+    if (sendMediaBtn) {
+        sendMediaBtn.innerHTML = '<div class="spinner"></div>';
+        sendMediaBtn.disabled = true;
+    }
+    
+    try {
+        // Upload to Cloudinary
+        const uploadResult = await uploadToCloudinary(file, type);
+        
+        // Prepare message data
+        const db = window.firebaseDatabase;
+        const messageRef = ref(db, `messages/${currentChatId}/${Date.now()}`);
+        
+        const messageData = {
+            senderId: currentUser.uid,
+            content: uploadResult.url,
+            type: type,
+            timestamp: new Date().toISOString(),
+            status: 'sent',
+            fileName: file.name,
+            fileSize: file.size,
+            format: uploadResult.format
+        };
+        
+        // Send message
+        await set(messageRef, messageData);
+        
+        // Update chat lists
+        const caption = type === 'image' ? '📷 Photo' : type === 'video' ? '🎬 Video' : '📄 File';
+        await updateChatList(currentUser.uid, chatWithUser.userId, caption, type);
+        await updateChatList(chatWithUser.userId, currentUser.uid, caption, type);
+        
+        // Close modal and show success
+        document.getElementById('mediaPreviewModal').classList.remove('active');
+        Toast.show(`${type === 'image' ? 'Photo' : type === 'video' ? 'Video' : 'File'} sent successfully`, 'success');
+        playNotificationSound();
+        
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        Toast.show('Failed to upload file', 'error');
+    } finally {
+        // Reset button
+        if (sendMediaBtn) {
+            sendMediaBtn.innerHTML = originalText;
+            sendMediaBtn.disabled = false;
+        }
+    }
+}
+
+// Helper Functions
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function openMediaPreview(url, type) {
+    const mediaPreviewContent = document.getElementById('mediaPreviewContent');
+    const mediaPreviewTitle = document.getElementById('mediaPreviewTitle');
+    const mediaPreviewModal = document.getElementById('mediaPreviewModal');
+    
+    if (!mediaPreviewContent || !mediaPreviewTitle || !mediaPreviewModal) return;
+    
+    mediaPreviewContent.innerHTML = '';
+    
+    if (type === 'image') {
+        mediaPreviewTitle.textContent = 'Photo Preview';
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.maxWidth = '100%';
+        img.style.borderRadius = 'var(--border-radius-medium)';
+        mediaPreviewContent.appendChild(img);
+    } else if (type === 'video') {
+        mediaPreviewTitle.textContent = 'Video Preview';
+        const video = document.createElement('video');
+        video.src = url;
+        video.controls = true;
+        video.style.maxWidth = '100%';
+        video.style.borderRadius = 'var(--border-radius-medium)';
+        mediaPreviewContent.appendChild(video);
+    }
+    
+    mediaPreviewModal.classList.add('active');
+}
+
+// Load edit profile data
+function loadEditProfileData() {
+    if (!userData) return;
+    
+    document.getElementById('editFullName').value = userData.fullName || '';
+    document.getElementById('editPhoneNumber').value = userData.phoneNumber || '';
+    document.getElementById('editStatus').value = userData.status || 'Available';
+    
+    const editProfilePreview = document.getElementById('editProfilePreview');
+    if (userData.profilePic) {
+        editProfilePreview.innerHTML = `<img src="${userData.profilePic}" alt="Profile">`;
+    }
+}
+
+// Send chat request
+async function sendChatRequest(userId, zynId) {
+    if (!currentUser || !userData) return;
+    
+    const db = window.firebaseDatabase;
+    const requestRef = ref(db, `requests/${userId}/${currentUser.uid}`);
+    
+    const requestData = {
+        fromUserId: currentUser.uid,
+        fromUserName: userData.fullName,
+        fromUserPic: userData.profilePic,
+        fromUserZYN: userData.zynId,
+        toUserId: userId,
+        timestamp: new Date().toISOString(),
+        status: 'pending'
+    };
+    
+    try {
+        await set(requestRef, requestData);
+        Toast.show(`Chat request sent to ${zynId}`, 'success');
+        document.getElementById('startChatModal').classList.remove('active');
+        document.getElementById('searchUserID').value = '';
+    } catch (error) {
+        console.error('Error sending chat request:', error);
+        Toast.show('Failed to send chat request', 'error');
+    }
+}
+
+// Initialize App
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if user is logged in
+    const auth = window.firebaseAuth;
+    
+    // Setup auth state listener
+    setupAuthStateListener();
+    
+    // Index page specific listeners
+    if (window.location.pathname.includes('index.html')) {
+        setupIndexListeners();
+    }
+    
+    // Handle page visibility change (update online status)
+    document.addEventListener('visibilitychange', async () => {
+        if (currentUser) {
+            const status = document.hidden ? 'away' : 'online';
+            await updateUserData(currentUser.uid, {
+                status: status,
+                lastSeen: new Date().toISOString()
+            });
+        }
+    });
+    
+    // Handle beforeunload (update offline status)
+    window.addEventListener('beforeunload', async () => {
+        if (currentUser) {
+            await updateUserData(currentUser.uid, {
+                status: 'offline',
+                lastSeen: new Date().toISOString()
+            });
+        }
+        
+        // Clean up listeners
+        listeners.forEach(unsubscribe => {
+            if (typeof unsubscribe === 'function') {
+                unsubscribe();
+            }
+        });
+    });
 });
 
-// Initialize authentication page
-function initializeAuthPage() {
-    console.log('Initializing auth page');
+// Index Page Listeners
+function setupIndexListeners() {
+    // Show/hide password
+    document.getElementById('togglePassword')?.addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
     
-    // Show welcome screen initially
-    showWelcomeScreen();
+    document.getElementById('toggleLoginPassword')?.addEventListener('click', function() {
+        const passwordInput = document.getElementById('loginPassword');
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
     
-    // Handle welcome screen continue button
-    document.getElementById('continueBtn')?.addEventListener('click', () => {
-        document.querySelector('.welcome-screen').style.display = 'none';
-        document.querySelector('.auth-form').style.display = 'block';
-        document.getElementById('loginForm').style.display = 'none';
+    // Navigation between welcome, signup, and login
+    document.getElementById('getStartedBtn')?.addEventListener('click', () => {
+        document.getElementById('welcomeScreen').style.display = 'none';
         document.getElementById('signupForm').style.display = 'block';
     });
     
-    // Handle login link
-    document.getElementById('showLogin')?.addEventListener('click', (e) => {
+    document.getElementById('loginBtn')?.addEventListener('click', () => {
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'block';
+    });
+    
+    document.getElementById('backToWelcome')?.addEventListener('click', () => {
+        document.getElementById('signupForm').style.display = 'none';
+        document.getElementById('welcomeScreen').style.display = 'block';
+    });
+    
+    document.getElementById('backToWelcomeLogin')?.addEventListener('click', () => {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('welcomeScreen').style.display = 'block';
+    });
+    
+    document.getElementById('switchToLogin')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.getElementById('signupForm').style.display = 'none';
         document.getElementById('loginForm').style.display = 'block';
     });
     
-    // Handle signup link
-    document.getElementById('showSignup')?.addEventListener('click', (e) => {
+    document.getElementById('switchToSignup')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('signupForm').style.display = 'block';
     });
     
-    // Handle back buttons
-    document.querySelectorAll('.back-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelector('.welcome-screen').style.display = 'block';
-            document.querySelector('.auth-form').style.display = 'none';
-        });
+    // Profile image upload
+    document.getElementById('uploadBtn')?.addEventListener('click', () => {
+        document.getElementById('profileImage').click();
     });
     
-    // Handle profile picture upload
-    const profilePicInput = document.getElementById('profilePic');
-    const profilePreview = document.getElementById('profilePreview');
-    const removeProfileBtn = document.getElementById('removeProfile');
-    let profileFile = null;
-    
-    if (profilePicInput) {
-        profilePicInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                    showToast('File size should be less than 5MB', 'error');
-                    return;
-                }
-                
-                if (!file.type.match('image.*')) {
-                    showToast('Please select an image file', 'error');
-                    return;
-                }
-                
-                profileFile = file;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    profilePreview.src = e.target.result;
-                    profilePreview.style.display = 'block';
-                    document.querySelector('.preview-placeholder').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-    
-    if (removeProfileBtn) {
-        removeProfileBtn.addEventListener('click', function() {
-            profileFile = null;
-            profilePreview.src = '';
-            profilePreview.style.display = 'none';
-            document.querySelector('.preview-placeholder').style.display = 'flex';
-            profilePicInput.value = '';
-        });
-    }
-    
-    // Handle signup form submission
-    const signupForm = document.getElementById('signupForm');
-    if (signupForm) {
-        signupForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            // Validation
-            if (password !== confirmPassword) {
-                showToast('Passwords do not match', 'error');
+    document.getElementById('profileImage')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                Toast.show('Image must be less than 5MB', 'error');
                 return;
             }
             
-            if (password.length < 6) {
-                showToast('Password must be at least 6 characters', 'error');
-                return;
-            }
-            
-            // Show loading
-            const submitBtn = signupForm.querySelector('.btn-primary');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<div class="spinner"></div> Registering...';
-            submitBtn.disabled = true;
-            
-            try {
-                let profilePicUrl = '';
-                
-                // Upload profile picture if exists
-                if (profileFile) {
-                    try {
-                        const result = await uploadToImageKit(profileFile, `profile_${Date.now()}.jpg`, ['profile']);
-                        profilePicUrl = result.url;
-                    } catch (uploadError) {
-                        console.error('Profile upload error:', uploadError);
-                        showToast('Profile picture upload failed, continuing without it', 'warning');
-                    }
-                }
-                
-                // Create user data object
-                const userData = {
-                    name: name,
-                    phone: phone,
-                    profilePic: profilePicUrl,
-                    createdAt: serverTimestamp(),
-                    lastSeen: serverTimestamp(),
-                    status: 'online',
-                    contacts: {},
-                    chats: {},
-                    groups: {}
-                };
-                
-                // Register user
-                await registerUser(email, password, userData);
-                
-                // Auto login
-                await loginUser(email, password);
-                
-            } catch (error) {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        });
-    }
-    
-    // Handle login form submission
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            
-            // Show loading
-            const submitBtn = loginForm.querySelector('.btn-primary');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<div class="spinner"></div> Logging in...';
-            submitBtn.disabled = true;
-            
-            try {
-                await loginUser(email, password);
-            } catch (error) {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        });
-    }
-}
-
-// Show welcome screen
-function showWelcomeScreen() {
-    const welcomeScreen = document.querySelector('.welcome-screen');
-    const authForm = document.querySelector('.auth-form');
-    
-    if (welcomeScreen && authForm) {
-        welcomeScreen.style.display = 'block';
-        authForm.style.display = 'none';
-    }
-}
-
-// Initialize home page
-function initializeHomePage() {
-    console.log('Initializing home page');
-    
-    if (!currentUserData) {
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    // Update UI with user data
-    updateUserUI();
-    
-    // Set up navigation
-    setupNavigation();
-    
-    // Set up floating chat button
-    setupFloatingButton();
-    
-    // Set up modals
-    setupModals();
-    
-    // Load initial data
-    loadHomeData();
-    
-    // Set up event listeners
-    setupEventListeners();
-}
-
-// Update UI with user data
-function updateUserUI() {
-    // Update header
-    const userNameElement = document.querySelector('.user-info h2');
-    const userIdElement = document.querySelector('.user-id');
-    const profilePicElement = document.querySelector('.profile-pic-small');
-    
-    if (userNameElement) userNameElement.textContent = currentUserData.name || 'User';
-    if (userIdElement) userIdElement.textContent = currentUserData.zynId || '';
-    if (profilePicElement) loadProfileImage(currentUserData.profilePic, 'headerProfilePic');
-    
-    // Set up copy button
-    document.querySelector('.copy-btn')?.addEventListener('click', () => {
-        copyToClipboard(currentUserData.zynId || '');
-    });
-}
-
-// Set up navigation
-function setupNavigation() {
-    const navItems = document.querySelectorAll('.nav-item');
-    const pages = document.querySelectorAll('.page');
-    
-    navItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            const pageId = this.getAttribute('data-page');
-            
-            // Update active states
-            navItems.forEach(nav => nav.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Show corresponding page
-            pages.forEach(page => {
-                page.classList.remove('active');
-                if (page.id === `${pageId}Page`) {
-                    page.classList.add('active');
-                }
-            });
-            
-            // Load page data
-            loadPageData(pageId);
-        });
-    });
-    
-    // Set home as active by default
-    document.querySelector('.nav-item[data-page="home"]')?.classList.add('active');
-    document.getElementById('homePage')?.classList.add('active');
-}
-
-// Load page data
-function loadPageData(pageId) {
-    switch (pageId) {
-        case 'home':
-            loadHomeData();
-            break;
-        case 'zynes':
-            loadZynesData();
-            break;
-        case 'groups':
-            loadGroupsData();
-            break;
-        case 'requests':
-            loadChatRequests();
-            break;
-        case 'contacts':
-            loadContacts();
-            break;
-    }
-}
-
-// Set up floating button
-function setupFloatingButton() {
-    const floatingBtn = document.querySelector('.floating-btn');
-    if (floatingBtn) {
-        floatingBtn.addEventListener('click', () => {
-            showStartChatModal();
-        });
-    }
-}
-
-// Set up modals
-function setupModals() {
-    // Close modal buttons
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.modal-overlay').forEach(modal => {
-                modal.classList.remove('active');
-            });
-        });
-    });
-    
-    // Click outside to close
-    document.querySelectorAll('.modal-overlay').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-            }
-        });
-    });
-}
-
-// Show start chat modal
-function showStartChatModal() {
-    const modal = document.getElementById('startChatModal');
-    if (modal) {
-        modal.classList.add('active');
-        document.getElementById('searchUserId').focus();
-    }
-}
-
-// Set up event listeners
-function setupEventListeners() {
-    // Profile dropdown
-    const profileBtn = document.querySelector('.profile-btn');
-    const profileDropdown = document.getElementById('profileDropdown');
-    
-    if (profileBtn && profileDropdown) {
-        profileBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            profileDropdown.classList.toggle('show');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', () => {
-            profileDropdown.classList.remove('show');
-        });
-    }
-    
-    // Logout
-    document.getElementById('logoutBtn')?.addEventListener('click', logoutUser);
-}
-
-// Load home data
-async function loadHomeData() {
-    // Load recent chats
-    await loadRecentChats();
-    
-    // Load unread counts
-    await loadUnreadCounts();
-}
-
-// Load recent chats
-async function loadRecentChats() {
-    const chatsContainer = document.getElementById('recentChatsList');
-    if (!chatsContainer) return;
-    
-    try {
-        const chatsRef = ref(database, `users/${currentUser.uid}/chats`);
-        onValue(chatsRef, async (snapshot) => {
-            const chats = snapshot.val() || {};
-            const chatsArray = Object.entries(chats);
-            
-            // Sort by last message time
-            chatsArray.sort((a, b) => {
-                return (b[1].lastMessageTime || 0) - (a[1].lastMessageTime || 0);
-            });
-            
-            // Clear container
-            chatsContainer.innerHTML = '';
-            
-            if (chatsArray.length === 0) {
-                chatsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-comments"></i>
-                        <h3>No Chats Yet</h3>
-                        <p>Start a chat with someone to see it here</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Load each chat
-            for (const [chatId, chatData] of chatsArray.slice(0, 10)) {
-                const otherUserId = chatData.otherUserId;
-                const otherUserData = await getUserData(otherUserId);
-                
-                if (otherUserData) {
-                    const chatElement = document.createElement('div');
-                    chatElement.className = 'contact-card';
-                    chatElement.innerHTML = `
-                        <img src="${otherUserData.profilePic || 'zynaps.png'}" alt="${otherUserData.name}" class="profile-pic" onerror="this.src='zynaps.png'">
-                        <div class="contact-info">
-                            <h4>${otherUserData.name}</h4>
-                            <p>${chatData.lastMessage || 'No messages yet'}</p>
-                            <span class="time">${formatTime(chatData.lastMessageTime)}</span>
-                        </div>
-                        ${chatData.unreadCount ? `<div class="badge">${chatData.unreadCount}</div>` : ''}
-                    `;
-                    
-                    chatElement.addEventListener('click', () => {
-                        window.location.href = `chat.html?chatId=${chatId}`;
-                    });
-                    
-                    chatsContainer.appendChild(chatElement);
-                }
-            }
-        });
-    } catch (error) {
-        console.error('Error loading recent chats:', error);
-    }
-}
-
-// Load unread counts
-async function loadUnreadCounts() {
-    // Load chat requests count
-    const requestsRef = ref(database, `chatRequests/${currentUser.uid}`);
-    onValue(requestsRef, (snapshot) => {
-        const count = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
-        updateBadge('requests', count);
-    });
-}
-
-// Update badge count
-function updateBadge(page, count) {
-    const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
-    if (navItem) {
-        let badge = navItem.querySelector('.badge');
-        if (count > 0) {
-            if (!badge) {
-                badge = document.createElement('div');
-                badge.className = 'badge';
-                navItem.appendChild(badge);
-            }
-            badge.textContent = count > 99 ? '99+' : count;
-        } else if (badge) {
-            badge.remove();
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('profilePreview');
+                preview.innerHTML = `<img src="${e.target.result}" alt="Profile Preview">`;
+                document.getElementById('removeBtn').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
         }
-    }
-}
-
-// Load chat requests
-async function loadChatRequests() {
-    const container = document.getElementById('requestsContainer');
-    if (!container) return;
+    });
     
-    try {
-        const requestsRef = ref(database, `chatRequests/${currentUser.uid}`);
-        onValue(requestsRef, async (snapshot) => {
-            const requests = snapshot.val() || {};
-            container.innerHTML = '';
-            
-            if (Object.keys(requests).length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-user-plus"></i>
-                        <h3>No Requests</h3>
-                        <p>You don't have any pending chat requests</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            for (const [senderId, requestData] of Object.entries(requests)) {
-                if (requestData.status === 'pending') {
-                    const senderData = await getUserData(senderId);
-                    
-                    if (senderData) {
-                        const requestElement = document.createElement('div');
-                        requestElement.className = 'request-card';
-                        requestElement.innerHTML = `
-                            <img src="${senderData.profilePic || 'zynaps.png'}" alt="${senderData.name}" class="profile-pic" onerror="this.src='zynaps.png'">
-                            <div class="request-info">
-                                <h4>${senderData.name}</h4>
-                                <p>ZYN ID: ${requestData.senderZynId}</p>
-                                <span class="time">${formatTime(requestData.timestamp)}</span>
-                            </div>
-                            <div class="request-actions">
-                                <button class="action-btn accept-btn" data-request-id="${senderId}">
-                                    <i class="fas fa-check"></i> Accept
-                                </button>
-                                <button class="action-btn reject-btn" data-request-id="${senderId}">
-                                    <i class="fas fa-times"></i> Reject
-                                </button>
-                            </div>
-                        `;
-                        
-                        container.appendChild(requestElement);
-                    }
-                }
-            }
-            
-            // Add event listeners to buttons
-            container.querySelectorAll('.accept-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const requestId = btn.getAttribute('data-request-id');
-                    await respondToChatRequest(requestId, true);
-                });
-            });
-            
-            container.querySelectorAll('.reject-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const requestId = btn.getAttribute('data-request-id');
-                    await respondToChatRequest(requestId, false);
-                });
-            });
-        });
-    } catch (error) {
-        console.error('Error loading chat requests:', error);
-    }
-}
-
-// Load contacts
-async function loadContacts() {
-    const container = document.getElementById('contactsContainer');
-    if (!container) return;
+    document.getElementById('removeBtn')?.addEventListener('click', () => {
+        const preview = document.getElementById('profilePreview');
+        preview.innerHTML = `
+            <div class="preview-placeholder">
+                <i class="fas fa-user-circle"></i>
+                <span>No image selected</span>
+                <p>Max 5MB</p>
+            </div>
+        `;
+        document.getElementById('profileImage').value = '';
+        document.getElementById('removeBtn').style.display = 'none';
+    });
     
-    try {
-        const contactsRef = ref(database, `users/${currentUser.uid}/contacts`);
-        onValue(contactsRef, async (snapshot) => {
-            const contacts = snapshot.val() || {};
-            container.innerHTML = '';
-            
-            if (Object.keys(contacts).length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>No Contacts</h3>
-                        <p>Add people to start chatting</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            const contactsArray = await Promise.all(
-                Object.keys(contacts).map(async (contactId) => {
-                    const contactData = await getUserData(contactId);
-                    return { id: contactId, ...contactData };
-                })
-            );
-            
-            // Sort by name
-            contactsArray.sort((a, b) => a.name?.localeCompare(b.name));
-            
-            for (const contact of contactsArray) {
-                if (contact) {
-                    const contactElement = document.createElement('div');
-                    contactElement.className = 'contact-card';
-                    contactElement.innerHTML = `
-                        <img src="${contact.profilePic || 'zynaps.png'}" alt="${contact.name}" class="profile-pic" onerror="this.src='zynaps.png'">
-                        <div class="contact-info">
-                            <h4>${contact.name}</h4>
-                            <p>ZYN ID: ${contact.zynId}</p>
-                            <span class="status ${contact.status || 'offline'}">${contact.status === 'online' ? 'Online' : 'Offline'}</span>
-                        </div>
-                        <div class="contact-actions">
-                            <button class="action-btn chat-btn" data-user-id="${contact.id}">
-                                <i class="fas fa-comment"></i> Chat
-                            </button>
-                        </div>
-                    `;
-                    
-                    container.appendChild(contactElement);
-                }
-            }
-            
-            // Add event listeners to chat buttons
-            container.querySelectorAll('.chat-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    const userId = btn.getAttribute('data-user-id');
-                    await startChatWithUser(userId);
-                });
-            });
-        });
-    } catch (error) {
-        console.error('Error loading contacts:', error);
-    }
-}
-
-// Start chat with user
-async function startChatWithUser(userId) {
-    try {
-        // Check if chat already exists
-        const chatId = [currentUser.uid, userId].sort().join('_');
-        const chatSnapshot = await get(ref(database, `chats/${chatId}`));
+    // Sign up form submission
+    document.getElementById('signupFormElement')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        if (!chatSnapshot.exists()) {
-            // Create new chat
-            await set(ref(database, `chats/${chatId}`), {
-                participants: {
-                    [currentUser.uid]: true,
-                    [userId]: true
-                },
-                createdAt: serverTimestamp(),
-                type: 'private'
-            });
-            
-            // Add chat to users' chat list
-            await set(ref(database, `users/${currentUser.uid}/chats/${chatId}`), {
-                otherUserId: userId,
-                lastMessage: 'Chat started',
-                lastMessageTime: serverTimestamp()
-            });
-            
-            const otherUserData = await getUserData(userId);
-            await set(ref(database, `users/${userId}/chats/${chatId}`), {
-                otherUserId: currentUser.uid,
-                lastMessage: 'Chat started',
-                lastMessageTime: serverTimestamp()
-            });
-        }
+        const fullName = document.getElementById('fullName').value.trim();
+        const phoneNumber = document.getElementById('phoneNumber').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const termsAgreement = document.getElementById('termsAgreement').checked;
         
-        // Navigate to chat
-        window.location.href = `chat.html?chatId=${chatId}`;
-    } catch (error) {
-        console.error('Error starting chat:', error);
-        showToast(error.message, 'error');
-    }
-}
-
-// Load groups data
-async function loadGroupsData() {
-    const container = document.getElementById('groupsContainer');
-    if (!container) return;
-    
-    try {
-        const groupsRef = ref(database, `users/${currentUser.uid}/groups`);
-        onValue(groupsRef, async (snapshot) => {
-            const groups = snapshot.val() || {};
-            container.innerHTML = '';
-            
-            if (Object.keys(groups).length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>No Groups</h3>
-                        <p>Create or join a group to get started</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            for (const [groupId, groupData] of Object.entries(groups)) {
-                const groupSnapshot = await get(ref(database, `groups/${groupId}`));
-                const fullGroupData = groupSnapshot.val();
-                
-                if (fullGroupData) {
-                    const groupElement = document.createElement('div');
-                    groupElement.className = 'group-card';
-                    groupElement.innerHTML = `
-                        <img src="${fullGroupData.profilePic || 'zynaps.png'}" alt="${fullGroupData.name}" class="profile-pic" onerror="this.src='zynaps.png'">
-                        <div class="group-info">
-                            <h4>${fullGroupData.name}</h4>
-                            <p>${fullGroupData.lastMessage || 'Group created'}</p>
-                            <span class="time">${formatTime(fullGroupData.lastMessageTime)}</span>
-                        </div>
-                        <div class="group-actions">
-                            <button class="action-btn chat-btn" data-group-id="${groupId}">
-                                <i class="fas fa-comment"></i> Chat
-                            </button>
-                        </div>
-                    `;
-                    
-                    container.appendChild(groupElement);
-                }
-            }
-            
-            // Add event listeners to chat buttons
-            container.querySelectorAll('.chat-btn[data-group-id]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const groupId = btn.getAttribute('data-group-id');
-                    window.location.href = `chat.html?groupId=${groupId}`;
-                });
-            });
-        });
-    } catch (error) {
-        console.error('Error loading groups:', error);
-    }
-}
-
-// Load Zynes data
-async function loadZynesData() {
-    const container = document.getElementById('zynesContainer');
-    if (!container) return;
-    
-    try {
-        // First get all contacts
-        const contactsSnapshot = await get(ref(database, `users/${currentUser.uid}/contacts`));
-        const contacts = contactsSnapshot.val() || {};
-        
-        // Get statuses from contacts
-        const statusesPromises = Object.keys(contacts).map(async (contactId) => {
-            const statusSnapshot = await get(ref(database, `users/${contactId}/statuses`));
-            const statuses = statusSnapshot.val();
-            
-            if (statuses) {
-                const contactData = await getUserData(contactId);
-                return Object.entries(statuses).map(([statusId, statusData]) => ({
-                    ...statusData,
-                    user: contactData,
-                    statusId
-                }));
-            }
-            return [];
-        });
-        
-        const allStatuses = (await Promise.all(statusesPromises)).flat();
-        
-        // Filter expired statuses and sort by time
-        const currentTime = Date.now();
-        const activeStatuses = allStatuses
-            .filter(status => status.expiresAt > currentTime)
-            .sort((a, b) => b.postedAt - a.postedAt);
-        
-        container.innerHTML = '';
-        
-        if (activeStatuses.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-eye"></i>
-                    <h3>No Status Updates</h3>
-                    <p>Your contacts haven't posted any status updates</p>
-                </div>
-            `;
+        // Validation
+        if (password !== confirmPassword) {
+            Toast.show('Passwords do not match', 'error');
             return;
         }
         
-        for (const status of activeStatuses) {
-            const statusElement = document.createElement('div');
-            statusElement.className = 'request-card';
-            
-            let contentHTML = '';
-            if (status.type === 'image') {
-                contentHTML = `<img src="${status.mediaUrl}" alt="Status" class="chat-media">`;
-            } else if (status.type === 'video') {
-                contentHTML = `<video src="${status.mediaUrl}" controls class="chat-media"></video>`;
-            } else {
-                contentHTML = `<p>${status.content}</p>`;
-            }
-            
-            statusElement.innerHTML = `
-                <img src="${status.user.profilePic || 'zynaps.png'}" alt="${status.user.name}" class="profile-pic" onerror="this.src='zynaps.png'">
-                <div class="request-info">
-                    <h4>${status.user.name}</h4>
-                    ${contentHTML}
-                    <span class="time">${formatTime(status.postedAt)} • Expires in ${Math.ceil((status.expiresAt - currentTime) / (60 * 60 * 1000))}h</span>
-                </div>
-            `;
-            
-            container.appendChild(statusElement);
-        }
-    } catch (error) {
-        console.error('Error loading Zynes:', error);
-    }
-}
-
-// Initialize chat page
-function initializeChatPage() {
-    console.log('Initializing chat page');
-    
-    // Get chat ID from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const chatId = urlParams.get('chatId');
-    const groupId = urlParams.get('groupId');
-    
-    if (!chatId && !groupId) {
-        window.location.href = 'home.html';
-        return;
-    }
-    
-    activeChatId = chatId || groupId;
-    const isGroup = !!groupId;
-    
-    // Set up UI
-    setupChatUI(isGroup);
-    
-    // Load chat data
-    loadChatData(activeChatId, isGroup);
-    
-    // Set up message input
-    setupMessageInput(activeChatId, isGroup);
-    
-    // Set up event listeners
-    setupChatEventListeners(activeChatId, isGroup);
-    
-    // Mark as read
-    markChatAsRead(activeChatId);
-}
-
-// Set up chat UI
-async function setupChatUI(isGroup) {
-    const backBtn = document.querySelector('.back-btn');
-    const chatUserName = document.querySelector('.chat-user-details h3');
-    const chatUserPic = document.querySelector('.chat-user-info img');
-    
-    if (backBtn) {
-        backBtn.addEventListener('click', () => {
-            window.location.href = 'home.html';
-        });
-    }
-    
-    if (isGroup) {
-        // Load group info
-        const groupSnapshot = await get(ref(database, `groups/${activeChatId}`));
-        const groupData = groupSnapshot.val();
-        
-        if (groupData && chatUserName) {
-            chatUserName.textContent = groupData.name;
-            loadProfileImage(groupData.profilePic, 'chatUserPic');
-        }
-    } else {
-        // Load user info
-        const chatParticipants = activeChatId.split('_');
-        const otherUserId = chatParticipants.find(id => id !== currentUser.uid);
-        
-        if (otherUserId) {
-            const otherUserData = await getUserData(otherUserId);
-            if (otherUserData && chatUserName) {
-                chatUserName.textContent = otherUserData.name;
-                loadProfileImage(otherUserData.profilePic, 'chatUserPic');
-                
-                // Update status
-                const statusElement = document.querySelector('.chat-status');
-                if (statusElement) {
-                    statusElement.innerHTML = `
-                        <span class="status-dot ${otherUserData.status || 'offline'}"></span>
-                        <span>${otherUserData.status === 'online' ? 'Online' : 'Last seen ' + formatTime(otherUserData.lastSeen)}</span>
-                    `;
-                }
-            }
-        }
-    }
-}
-
-// Load chat data
-function loadChatData(chatId, isGroup) {
-    const messagesContainer = document.getElementById('chatMessages');
-    if (!messagesContainer) return;
-    
-    // Clear container
-    messagesContainer.innerHTML = '';
-    
-    // Listen for messages
-    const messagesRef = ref(database, `messages/${chatId}`);
-    let lastDate = null;
-    
-    activeChatListener = onValue(messagesRef, (snapshot) => {
-        const messages = snapshot.val() || {};
-        const messagesArray = Object.values(messages)
-            .filter(msg => msg !== null)
-            .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-        
-        messagesContainer.innerHTML = '';
-        lastDate = null;
-        
-        if (messagesArray.length === 0) {
-            messagesContainer.innerHTML = `
-                <div class="empty-chat">
-                    <i class="fas fa-comment-slash"></i>
-                    <h3>No Messages Yet</h3>
-                    <p>Send a message to start the conversation</p>
-                </div>
-            `;
+        if (!termsAgreement) {
+            Toast.show('You must agree to the terms and conditions', 'error');
             return;
         }
         
-        for (const message of messagesArray) {
-            // Add date separator if needed
-            const messageDate = formatDate(message.timestamp);
-            if (messageDate !== lastDate) {
-                const dateElement = document.createElement('div');
-                dateElement.className = 'message-date';
-                dateElement.textContent = messageDate;
-                messagesContainer.appendChild(dateElement);
-                lastDate = messageDate;
-            }
-            
-            const messageElement = document.createElement('div');
-            messageElement.className = `message ${message.senderId === currentUser.uid ? 'sent' : 'received'}`;
-            
-            let messageContent = '';
-            if (message.type === 'image') {
-                messageContent = `<img src="${message.mediaUrl}" alt="Image" class="chat-media">`;
-            } else if (message.type === 'video') {
-                messageContent = `<video src="${message.mediaUrl}" controls class="chat-media"></video>`;
-            } else {
-                messageContent = `<p>${message.content}</p>`;
-            }
-            
-            messageElement.innerHTML = `
-                <div class="message-bubble">
-                    ${messageContent}
-                    <span class="message-time">${formatTime(message.timestamp)}</span>
-                </div>
-            `;
-            
-            messagesContainer.appendChild(messageElement);
+        // Show loading
+        const signupBtnText = document.getElementById('signupBtnText');
+        const signupSpinner = document.getElementById('signupSpinner');
+        if (signupBtnText && signupSpinner) {
+            signupBtnText.style.display = 'none';
+            signupSpinner.style.display = 'block';
         }
         
-        // Scroll to bottom
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        // Play notification for new messages
-        if (messagesArray.length > 0) {
-            const lastMessage = messagesArray[messagesArray.length - 1];
-            if (lastMessage.senderId !== currentUser.uid) {
-                notificationSound.play().catch(e => console.log('Audio play failed:', e));
+        try {
+            const auth = window.firebaseAuth;
+            
+            // Create user in Firebase Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            // Generate ZYN-ID
+            const zynId = generateZYNID();
+            
+            // Upload profile picture if exists
+            let profilePicUrl = null;
+            const profileImage = document.getElementById('profileImage').files[0];
+            if (profileImage) {
+                const uploadResult = await uploadToCloudinary(profileImage, 'image');
+                profilePicUrl = uploadResult.url;
+            }
+            
+            // Save user data to Firebase Database
+            const db = window.firebaseDatabase;
+            const userRef = ref(db, `users/${user.uid}`);
+            
+            const userData = {
+                uid: user.uid,
+                fullName: fullName,
+                phoneNumber: phoneNumber,
+                email: email,
+                zynId: zynId,
+                profilePic: profilePicUrl,
+                status: 'online',
+                createdAt: new Date().toISOString(),
+                lastSeen: new Date().toISOString()
+            };
+            
+            await set(userRef, userData);
+            
+            // Update auth profile
+            await updateProfile(user, {
+                displayName: fullName,
+                photoURL: profilePicUrl
+            });
+            
+            Toast.show('Account created successfully!', 'success');
+            
+            // Redirect to home page
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Sign up error:', error);
+            let message = 'Sign up failed';
+            
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    message = 'Email already in use';
+                    break;
+                case 'auth/invalid-email':
+                    message = 'Invalid email address';
+                    break;
+                case 'auth/weak-password':
+                    message = 'Password should be at least 6 characters';
+                    break;
+            }
+            
+            Toast.show(message, 'error');
+        } finally {
+            // Hide loading
+            if (signupBtnText && signupSpinner) {
+                signupBtnText.style.display = 'block';
+                signupSpinner.style.display = 'none';
             }
         }
     });
-}
-
-// Set up message input
-function setupMessageInput(chatId, isGroup) {
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendMessage');
-    const attachBtn = document.getElementById('attachBtn');
-    const attachmentOptions = document.querySelector('.attachment-options');
     
-    if (messageInput && sendBtn) {
-        // Send message on Enter (but allow Shift+Enter for new line)
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessageHandler(chatId, isGroup);
-            }
-        });
+    // Login form submission
+    document.getElementById('loginFormElement')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        // Send button click
-        sendBtn.addEventListener('click', () => {
-            sendMessageHandler(chatId, isGroup);
-        });
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
         
-        // Typing indicator
-        let typingTimeout;
-        messageInput.addEventListener('input', () => {
-            // Show typing indicator
-            // (In a real app, you would send a typing indicator to the server)
+        // Show loading
+        const loginBtnText = document.getElementById('loginBtnText');
+        const loginSpinner = document.getElementById('loginSpinner');
+        if (loginBtnText && loginSpinner) {
+            loginBtnText.style.display = 'none';
+            loginSpinner.style.display = 'block';
+        }
+        
+        try {
+            const auth = window.firebaseAuth;
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
             
-            clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                // Hide typing indicator
+            // Get user data
+            const db = window.firebaseDatabase;
+            const userRef = ref(db, `users/${user.uid}`);
+            const snapshot = await get(userRef);
+            
+            if (!snapshot.exists()) {
+                Toast.show('User data not found', 'error');
+                await signOut(auth);
+                return;
+            }
+            
+            // Update status to online
+            await update(ref(db, `users/${user.uid}`), {
+                status: 'online',
+                lastSeen: new Date().toISOString()
+            });
+            
+            Toast.show('Login successful!', 'success');
+            
+            // Redirect to home page
+            setTimeout(() => {
+                window.location.href = 'home.html';
             }, 1000);
-        });
-    }
-    
-    if (attachBtn && attachmentOptions) {
-        attachBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            attachmentOptions.classList.toggle('show');
-        });
-        
-        // Close attachment options when clicking outside
-        document.addEventListener('click', () => {
-            attachmentOptions.classList.remove('show');
-        });
-        
-        // Set up attachment buttons
-        setupAttachmentHandlers(chatId, isGroup);
-    }
-}
-
-// Send message handler
-async function sendMessageHandler(chatId, isGroup) {
-    const messageInput = document.getElementById('messageInput');
-    const message = messageInput.value.trim();
-    
-    if (!message) return;
-    
-    try {
-        await sendMessage(chatId, message, 'text');
-        messageInput.value = '';
-        messageInput.focus();
-    } catch (error) {
-        console.error('Error sending message:', error);
-    }
-}
-
-// Set up attachment handlers
-function setupAttachmentHandlers(chatId, isGroup) {
-    // Image attachment
-    const imageInput = document.getElementById('imageInput');
-    const imageBtn = document.querySelector('[data-attach="image"]');
-    
-    if (imageBtn && imageInput) {
-        imageBtn.addEventListener('click', () => {
-            imageInput.click();
-        });
-        
-        imageInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                await uploadAndSendMedia(chatId, file, 'image');
-                imageInput.value = '';
-            }
-        });
-    }
-    
-    // Video attachment
-    const videoInput = document.getElementById('videoInput');
-    const videoBtn = document.querySelector('[data-attach="video"]');
-    
-    if (videoBtn && videoInput) {
-        videoBtn.addEventListener('click', () => {
-            videoInput.click();
-        });
-        
-        videoInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                await uploadAndSendMedia(chatId, file, 'video');
-                videoInput.value = '';
-            }
-        });
-    }
-}
-
-// Upload and send media
-async function uploadAndSendMedia(chatId, file, type) {
-    try {
-        const result = await uploadToImageKit(file, `${type}_${Date.now()}.${file.name.split('.').pop()}`, [type]);
-        await sendMessage(chatId, '', type, result.url);
-        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} sent!`, 'success');
-    } catch (error) {
-        console.error(`Error sending ${type}:`, error);
-        showToast(`Failed to send ${type}`, 'error');
-    }
-}
-
-// Set up chat event listeners
-function setupChatEventListeners(chatId, isGroup) {
-    // Chat menu
-    const chatMenuBtn = document.querySelector('.icon-btn[data-menu="chat"]');
-    const chatDropdown = document.getElementById('chatDropdown');
-    
-    if (chatMenuBtn && chatDropdown) {
-        chatMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            chatDropdown.classList.toggle('show');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', () => {
-            chatDropdown.classList.remove('show');
-        });
-    }
-}
-
-// Mark chat as read
-async function markChatAsRead(chatId) {
-    try {
-        await update(ref(database, `users/${currentUser.uid}/chats/${chatId}`), {
-            unreadCount: 0
-        });
-    } catch (error) {
-        console.error('Error marking chat as read:', error);
-    }
-}
-
-// Clean up when leaving page
-window.addEventListener('beforeunload', () => {
-    if (activeChatListener) {
-        // Detach Firebase listeners (pseudo-code - actual implementation depends on Firebase version)
-        // In real Firebase, you would store the unsubscribe function and call it
-    }
-});
-
-// Make functions available globally for inline event handlers
-window.copyToClipboard = copyToClipboard;
-window.showStartChatModal = showStartChatModal;
-
-// Handle search user for chat
-document.addEventListener('click', async function(e) {
-    if (e.target && e.target.id === 'searchUserBtn') {
-        const userIdInput = document.getElementById('searchUserId');
-        const searchResult = document.getElementById('searchResult');
-        const userFound = document.getElementById('userFound');
-        
-        const zynId = userIdInput.value.trim().toUpperCase();
-        
-        if (!zynId.startsWith('ZYN-')) {
-            showToast('Please enter a valid ZYN ID (format: ZYN-XXXX)', 'error');
-            return;
-        }
-        
-        try {
-            const user = await getUserByZynId(zynId);
             
-            if (user) {
-                // Check if already in contacts
-                const contactCheck = await get(ref(database, `users/${currentUser.uid}/contacts/${user.uid}`));
-                const isContact = contactCheck.exists();
-                
-                userFound.innerHTML = `
-                    <img src="${user.profilePic || 'zynaps.png'}" alt="${user.name}" class="profile-pic" onerror="this.src='zynaps.png'">
-                    <div>
-                        <h4>${user.name}</h4>
-                        <p>ZYN ID: ${user.zynId}</p>
-                        ${isContact ? '<p class="already-contact"><i class="fas fa-check-circle"></i> Already in contacts</p>' : ''}
-                    </div>
-                `;
-                
-                searchResult.classList.add('active');
-                
-                // Set up send request button
-                const sendRequestBtn = document.getElementById('sendRequestBtn');
-                if (sendRequestBtn) {
-                    sendRequestBtn.onclick = async () => {
-                        if (isContact) {
-                            showToast('User is already in your contacts', 'warning');
-                            return;
-                        }
-                        
-                        await sendChatRequest(zynId, currentUserData);
-                        document.getElementById('startChatModal').classList.remove('active');
-                    };
-                }
-            } else {
-                showToast('User not found', 'error');
-            }
         } catch (error) {
-            console.error('Error searching user:', error);
-            showToast('Error searching user', 'error');
-        }
-    }
-});
-
-// Handle create group
-document.addEventListener('click', async function(e) {
-    if (e.target && e.target.id === 'createGroupBtn') {
-        const groupName = document.getElementById('groupName').value.trim();
-        const membersInput = document.getElementById('groupMembers').value.trim();
-        
-        if (!groupName) {
-            showToast('Please enter a group name', 'error');
-            return;
-        }
-        
-        const memberZynIds = membersInput.split(',').map(id => id.trim().toUpperCase()).filter(id => id);
-        
-        try {
-            await createGroup(groupName, memberZynIds);
-            document.getElementById('createGroupModal').classList.remove('active');
-        } catch (error) {
-            console.error('Error creating group:', error);
-        }
-    }
-});
-
-// Handle post status
-document.addEventListener('click', async function(e) {
-    if (e.target && e.target.id === 'postStatusBtn') {
-        const statusContent = document.getElementById('statusContent').value.trim();
-        const statusType = document.getElementById('statusType').value;
-        const statusFileInput = document.getElementById('statusFile');
-        
-        if (!statusContent && statusType === 'text') {
-            showToast('Please enter status content', 'error');
-            return;
-        }
-        
-        if ((statusType === 'image' || statusType === 'video') && !statusFileInput.files[0]) {
-            showToast(`Please select a ${statusType} file`, 'error');
-            return;
-        }
-        
-        try {
-            let mediaUrl = '';
+            console.error('Login error:', error);
+            let message = 'Login failed';
             
-            if (statusFileInput.files[0]) {
-                const file = statusFileInput.files[0];
-                const result = await uploadToImageKit(
-                    file, 
-                    `status_${Date.now()}.${file.name.split('.').pop()}`, 
-                    ['status', statusType]
-                );
-                mediaUrl = result.url;
+            switch (error.code) {
+                case 'auth/user-not-found':
+                    message = 'User not found';
+                    break;
+                case 'auth/wrong-password':
+                    message = 'Incorrect password';
+                    break;
+                case 'auth/invalid-email':
+                    message = 'Invalid email address';
+                    break;
+                case 'auth/user-disabled':
+                    message = 'Account disabled';
+                    break;
             }
             
-            await postStatus(statusContent, statusType, mediaUrl);
-            document.getElementById('postStatusModal').classList.remove('active');
-        } catch (error) {
-            console.error('Error posting status:', error);
+            Toast.show(message, 'error');
+        } finally {
+            // Hide loading
+            if (loginBtnText && loginSpinner) {
+                loginBtnText.style.display = 'block';
+                loginSpinner.style.display = 'none';
+            }
         }
+    });
+    
+    // Google sign in
+    document.getElementById('googleSignupBtn')?.addEventListener('click', handleGoogleSignIn);
+    document.getElementById('googleLoginBtn')?.addEventListener('click', handleGoogleSignIn);
+    
+    // Forgot password
+    document.getElementById('forgotPassword')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        Toast.show('Password reset feature coming soon', 'info');
+    });
+    
+    // Hide loading screen after 2 seconds
+    setTimeout(() => {
+        const loadingScreen = document.getElementById('loadingScreen');
+        const authPage = document.getElementById('authPage');
+        
+        if (loadingScreen) loadingScreen.classList.add('hidden');
+        if (authPage) authPage.style.display = 'flex';
+    }, 2000);
+}
+
+async function handleGoogleSignIn() {
+    try {
+        const auth = window.firebaseAuth;
+        const provider = window.firebaseGoogleProvider;
+        
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        
+        // Check if user exists in database
+        const db = window.firebaseDatabase;
+        const userRef = ref(db, `users/${user.uid}`);
+        const snapshot = await get(userRef);
+        
+        if (!snapshot.exists()) {
+            // New user - create record
+            const zynId = generateZYNID();
+            const userData = {
+                uid: user.uid,
+                fullName: user.displayName || 'Google User',
+                email: user.email,
+                zynId: zynId,
+                profilePic: user.photoURL,
+                status: 'online',
+                createdAt: new Date().toISOString(),
+                lastSeen: new Date().toISOString(),
+                isGoogleUser: true
+            };
+            
+            await set(userRef, userData);
+            Toast.show('Account created successfully!', 'success');
+        } else {
+            // Existing user - update status
+            await update(userRef, {
+                status: 'online',
+                lastSeen: new Date().toISOString()
+            });
+            Toast.show('Login successful!', 'success');
+        }
+        
+        // Redirect to home page
+        setTimeout(() => {
+            window.location.href = 'home.html';
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Google sign in error:', error);
+        Toast.show('Google sign in failed', 'error');
     }
-});
+}
+
+// Make functions available globally for HTML event handlers
+window.openMediaPreview = openMediaPreview;
+window.navigateToChat = navigateToChat;
