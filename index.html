@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zynapse - Secure Chat</title>
+    <title>Zynapse - iOS Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
     <style>
-        /* CSS from your provided code */
+        /* Your provided CSS code here - it's already included */
         /* Reset & Base Styles */
         * {
             margin: 0;
@@ -702,6 +706,1580 @@
             to { transform: rotate(360deg); }
         }
 
+        /* App Home Page */
+        .app-home {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--white);
+            position: relative;
+        }
+
+        .app-header {
+            background: var(--white);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-small);
+            object-fit: cover;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-info h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 2px;
+            line-height: 1.2;
+        }
+
+        .user-id-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-id {
+            font-size: 14px;
+            color: var(--gray-600);
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: var(--border-radius-small);
+            transition: all var(--transition-normal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+        }
+
+        .copy-btn:hover {
+            color: var(--blue);
+            background: var(--gray-100);
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            position: relative;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: var(--border-radius-circle);
+            background: var(--green);
+            border: 2px solid var(--white);
+            box-shadow: 0 0 0 2px var(--green);
+        }
+
+        .status-indicator.online .status-dot {
+            background: var(--green);
+            box-shadow: 0 0 0 2px var(--green);
+        }
+
+        .status-indicator.offline .status-dot {
+            background: var(--gray-400);
+            box-shadow: 0 0 0 2px var(--gray-400);
+        }
+
+        .status-indicator.away .status-dot {
+            background: var(--orange);
+            box-shadow: 0 0 0 2px var(--orange);
+        }
+
+        .profile-pic-small {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--border-radius-circle);
+            object-fit: cover;
+            border: 2px solid var(--gray-200);
+            transition: border-color var(--transition-normal);
+        }
+
+        .profile-pic-small:hover {
+            border-color: var(--blue);
+        }
+
+        .profile-btn {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: var(--border-radius-medium);
+            transition: background var(--transition-normal);
+        }
+
+        .profile-btn:hover {
+            background: var(--gray-100);
+        }
+
+        /* Navigation */
+        .app-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 20px;
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 64px;
+            z-index: 99;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            color: var(--gray-500);
+            padding: 8px 16px;
+            border-radius: var(--border-radius-medium);
+            transition: all var(--transition-normal);
+            position: relative;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        .nav-item span {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: color var(--transition-normal);
+        }
+
+        .nav-item.active {
+            color: var(--blue);
+        }
+
+        .nav-item.active span {
+            color: var(--blue);
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--blue);
+            border-radius: var(--border-radius-circle);
+        }
+
+        .nav-item:hover:not(.active) {
+            color: var(--gray-700);
+            background: var(--gray-100);
+        }
+
+        .badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: var(--red);
+            color: var(--white);
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: var(--border-radius-circle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            animation: badgePulse 2s infinite;
+        }
+
+        @keyframes badgePulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Main Content */
+        .app-main {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--white);
+            padding: 20px;
+            position: relative;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .home-content {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .welcome-message h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 12px;
+        }
+
+        .welcome-message p {
+            font-size: 18px;
+            color: var(--gray-600);
+            margin-bottom: 40px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .quick-action-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius-medium);
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--blue);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .quick-action-card i {
+            font-size: 32px;
+            color: var(--blue);
+            margin-bottom: 12px;
+        }
+
+        .quick-action-card h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 4px;
+        }
+
+        .quick-action-card p {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        /* Recent Chats Section */
+        .recent-chats-section {
+            background: var(--white);
+            border-radius: var(--border-radius-medium);
+            padding: 20px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--black);
+        }
+
+        .view-all {
+            color: var(--blue);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: color var(--transition-normal);
+        }
+
+        .view-all:hover {
+            color: var(--blue-dark);
+            text-decoration: underline;
+        }
+
+        .recent-chats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Page Headers */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .page-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--black);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--gray-100);
+            border-radius: var(--border-radius-medium);
+            padding: 4px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius-small);
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .tab-btn.active {
+            background: var(--white);
+            color: var(--blue);
+            box-shadow: var(--shadow-light);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--gray-100);
+            border-radius: var(--border-radius-medium);
+            padding: 10px 16px;
+            width: 250px;
+        }
+
+        .search-box i {
+            color: var(--gray-500);
+            margin-right: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: var(--black);
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: var(--gray-400);
+        }
+
+        /* Floating Button */
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--blue);
+            color: var(--white);
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: var(--border-radius-circle);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            box-shadow: var(--shadow-heavy);
+            transition: all var(--transition-normal);
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-heavy), 0 0 30px rgba(0, 122, 255, 0.4);
+        }
+
+        .floating-btn:active {
+            transform: scale(0.95);
+        }
+
+        .floating-btn i {
+            font-size: 20px;
+        }
+
+        .floating-btn span {
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: var(--shadow-heavy); }
+            50% { box-shadow: var(--shadow-heavy), 0 0 20px rgba(0, 122, 255, 0.3); }
+            100% { box-shadow: var(--shadow-heavy); }
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--border-radius-large);
+            padding: 0;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: var(--shadow-heavy);
+            animation: modalSlideUp 0.4s ease;
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--white);
+            border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+            z-index: 1;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--black);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius-circle);
+            transition: all var(--transition-normal);
+        }
+
+        .close-modal:hover {
+            background: var(--gray-100);
+            color: var(--black);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .search-result {
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--gray-50);
+            border-radius: var(--border-radius-medium);
+            display: none;
+        }
+
+        .search-result.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .search-placeholder {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray-500);
+        }
+
+        .search-placeholder i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .search-placeholder p {
+            font-size: 15px;
+        }
+
+        .user-found {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--white);
+            border-radius: var(--border-radius-medium);
+            border: 1px solid var(--gray-200);
+            animation: slideUp 0.3s ease;
+        }
+
+        .user-found .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--border-radius-circle);
+            object-fit: cover;
+        }
+
+        .user-found h4 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 4px;
+        }
+
+        .user-found p {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .already-contact {
+            color: var(--green) !important;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .error {
+            color: var(--red) !important;
+            text-align: center;
+            padding: 10px;
+        }
+
+        /* Character Counter */
+        .character-counter {
+            text-align: right;
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-top: 8px;
+        }
+
+        /* Media Preview */
+        .media-preview {
+            margin: 16px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 100px;
+        }
+
+        .media-preview-content {
+            width: 100%;
+            text-align: center;
+        }
+
+        .preview-item {
+            width: 100px;
+            height: 100px;
+            border-radius: var(--border-radius-small);
+            overflow: hidden;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .preview-item img,
+        .preview-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .remove-preview {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--white);
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: var(--border-radius-circle);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-normal);
+        }
+
+        .remove-preview:hover {
+            background: var(--red);
+            transform: scale(1.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            justify-content: flex-end;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .media-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Members Container */
+        .members-container {
+            margin: 20px 0;
+            background: var(--gray-50);
+            border-radius: var(--border-radius-medium);
+            padding: 20px;
+        }
+
+        .members-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .members-header h4 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--black);
+        }
+
+        .members-count {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .members-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 60px;
+        }
+
+        .empty-members {
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+            color: var(--gray-500);
+        }
+
+        .empty-members i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .empty-members p {
+            font-size: 15px;
+        }
+
+        .member-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius-large);
+            padding: 8px 12px;
+            font-size: 14px;
+            color: var(--gray-700);
+            animation: slideUp 0.3s ease;
+        }
+
+        .remove-member {
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 2px;
+            border-radius: var(--border-radius-circle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            transition: all var(--transition-normal);
+        }
+
+        .remove-member:hover {
+            color: var(--red);
+            background: var(--gray-100);
+        }
+
+        /* Lists Containers */
+        .requests-container,
+        .contacts-container,
+        .groups-container,
+        .zynes-container,
+        .chats-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Request Card */
+        .request-card,
+        .contact-card,
+        .group-card {
+            background: var(--white);
+            border-radius: var(--border-radius-medium);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid var(--gray-200);
+            transition: all var(--transition-normal);
+            cursor: pointer;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .request-card:hover,
+        .contact-card:hover,
+        .group-card:hover {
+            border-color: var(--blue);
+            box-shadow: var(--shadow-light);
+            transform: translateY(-1px);
+        }
+
+        .request-card .profile-pic,
+        .contact-card .profile-pic,
+        .group-card .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--border-radius-circle);
+            object-fit: cover;
+        }
+
+        .request-info,
+        .contact-info,
+        .group-info {
+            flex: 1;
+        }
+
+        .request-info h4,
+        .contact-info h4,
+        .group-info h4 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 4px;
+        }
+
+        .request-info p,
+        .contact-info p,
+        .group-info p {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 2px;
+        }
+
+        .request-info .time,
+        .contact-info .time,
+        .group-info .time {
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        .contact-info .status {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .contact-info .status.online {
+            color: var(--green);
+        }
+
+        .contact-info .status.offline {
+            color: var(--gray-500);
+        }
+
+        .request-actions,
+        .contact-actions,
+        .group-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border-radius: var(--border-radius-medium);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .accept-btn {
+            background: var(--green);
+            color: var(--white);
+        }
+
+        .accept-btn:hover {
+            background: #2db34a;
+            transform: translateY(-1px);
+        }
+
+        .reject-btn {
+            background: var(--red);
+            color: var(--white);
+        }
+
+        .reject-btn:hover {
+            background: #e53935;
+            transform: translateY(-1px);
+        }
+
+        .chat-btn {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        .chat-btn:hover {
+            background: var(--blue-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Dropdowns */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: var(--white);
+            min-width: 220px;
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-heavy);
+            z-index: 1000;
+            border: 1px solid var(--gray-200);
+            animation: dropdownFade 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .dropdown-profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-circle);
+            object-fit: cover;
+        }
+
+        .dropdown-profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dropdown-profile-info strong {
+            font-size: 15px;
+            color: var(--black);
+            margin-bottom: 2px;
+        }
+
+        .dropdown-profile-info span {
+            font-size: 13px;
+            color: var(--gray-600);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--gray-200);
+            margin: 8px 0;
+        }
+
+        .dropdown-content a {
+            color: var(--black);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            transition: all var(--transition-normal);
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content a:hover {
+            background: var(--gray-100);
+            color: var(--blue);
+        }
+
+        .logout-link {
+            color: var(--red) !important;
+        }
+
+        .logout-link:hover {
+            color: var(--white) !important;
+            background: var(--red) !important;
+        }
+
+        /* Chat Page */
+        .chat-page {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--white);
+            position: relative;
+        }
+
+        .chat-header {
+            background: var(--white);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--blue);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--border-radius-circle);
+            transition: background var(--transition-normal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .back-btn:hover {
+            background: var(--gray-100);
+        }
+
+        .chat-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-user-details {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .chat-user-details h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .chat-status .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: var(--border-radius-circle);
+        }
+
+        .chat-status .status-dot.online {
+            background: var(--green);
+        }
+
+        .chat-status .status-dot.offline {
+            background: var(--gray-400);
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--gray-600);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--border-radius-circle);
+            transition: all var(--transition-normal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+
+        .icon-btn:hover {
+            background: var(--gray-100);
+            color: var(--black);
+        }
+
+        /* Chat Messages Area */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        /* Custom Scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
+        }
+
+        /* Empty Chat */
+        .empty-chat {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-500);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .empty-chat i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-chat h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--gray-600);
+        }
+
+        .empty-chat p {
+            font-size: 16px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        /* Message Date */
+        .message-date {
+            text-align: center;
+            color: var(--gray-500);
+            font-size: 13px;
+            font-weight: 600;
+            margin: 20px 0;
+            padding: 8px 16px;
+            background: var(--gray-100);
+            border-radius: var(--border-radius-large);
+            align-self: center;
+            letter-spacing: 0.3px;
+        }
+
+        /* Message Bubbles */
+        .message {
+            display: flex;
+            margin-bottom: 8px;
+            animation: messageSlide 0.3s ease;
+        }
+
+        .message.sent {
+            justify-content: flex-end;
+        }
+
+        .message.received {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: var(--border-radius-large);
+            position: relative;
+            word-wrap: break-word;
+            line-height: 1.4;
+            box-shadow: var(--shadow-light);
+        }
+
+        .message.sent .message-bubble {
+            background: var(--blue);
+            color: var(--white);
+            border-bottom-right-radius: var(--border-radius-small);
+            margin-left: auto;
+        }
+
+        .message.received .message-bubble {
+            background: var(--gray-100);
+            color: var(--black);
+            border-bottom-left-radius: var(--border-radius-small);
+            margin-right: auto;
+        }
+
+        .message-bubble p {
+            font-size: 17px;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            display: block;
+            text-align: right;
+            margin-top: 4px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        .message.sent .message-time {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .message.received .message-time {
+            color: var(--gray-600);
+        }
+
+        .message-status {
+            font-size: 11px;
+            margin-left: 4px;
+        }
+
+        /* Media Messages */
+        .media-message {
+            max-width: 250px;
+        }
+
+        .chat-media {
+            width: 100%;
+            border-radius: var(--border-radius-medium);
+            margin-bottom: 8px;
+            box-shadow: var(--shadow-light);
+            cursor: pointer;
+            transition: transform var(--transition-normal);
+        }
+
+        .chat-media:hover {
+            transform: scale(1.02);
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-left: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .typing-bubble {
+            background: var(--gray-100);
+            border-radius: var(--border-radius-large);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--gray-500);
+            border-radius: var(--border-radius-circle);
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .typing-text {
+            font-size: 13px;
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+
+        /* Message Input Area */
+        .message-input-area {
+            background: var(--white);
+            padding: 12px 20px;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+
+        .message-input-container {
+            flex: 1;
+            background: var(--gray-100);
+            border-radius: var(--border-radius-large);
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            transition: all var(--transition-normal);
+        }
+
+        .message-input-container:focus-within {
+            background: var(--white);
+            box-shadow: 0 0 0 2px var(--blue-light);
+        }
+
+        .message-input-container input {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 14px 0;
+            font-size: 17px;
+            color: var(--black);
+            font-family: var(--font-sf-pro);
+        }
+
+        .message-input-container input:focus {
+            outline: none;
+        }
+
+        .message-input-container input::placeholder {
+            color: var(--gray-500);
+        }
+
+        .send-btn {
+            background: var(--blue);
+            color: var(--white);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-circle);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-normal);
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: var(--blue-dark);
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Attachment Options */
+        .attachment-options {
+            position: absolute;
+            bottom: 70px;
+            left: 20px;
+            background: var(--white);
+            border-radius: var(--border-radius-medium);
+            box-shadow: var(--shadow-heavy);
+            padding: 12px;
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            z-index: 1000;
+            border: 1px solid var(--gray-200);
+            animation: slideUp 0.3s ease;
+        }
+
+        .attachment-options.show {
+            display: grid;
+        }
+
+        .attachment-btn {
+            background: none;
+            border: none;
+            padding: 12px 8px;
+            border-radius: var(--border-radius-medium);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            color: var(--black);
+            font-size: 13px;
+            min-width: 80px;
+        }
+
+        .attachment-btn:hover {
+            background: var(--gray-100);
+            color: var(--blue);
+            transform: translateY(-2px);
+        }
+
+        .attachment-btn i {
+            font-size: 20px;
+        }
+
+        /* Confirmation Messages */
+        .confirmation-message {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .confirmation-message .warning-icon {
+            font-size: 48px;
+            color: var(--orange);
+            margin-bottom: 16px;
+        }
+
+        .confirmation-message h4 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: 8px;
+        }
+
+        .confirmation-message p {
+            font-size: 16px;
+            color: var(--gray-600);
+            line-height: 1.4;
+        }
+
+        /* Report Form */
+        .report-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .report-form .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .report-form label {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .report-form select,
+        .report-form textarea {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius-medium);
+            background: var(--white);
+            color: var(--black);
+            font-family: var(--font-sf-pro);
+            transition: border-color var(--transition-normal);
+        }
+
+        .report-form select:focus,
+        .report-form textarea:focus {
+            outline: none;
+            border-color: var(--blue);
+        }
+
+        .report-form textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-hint {
+            font-size: 14px;
+            color: var(--gray-500);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes dropdownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Toast Notifications Container */
         .toast-container {
             position: fixed;
@@ -790,18 +2368,98 @@
             to { width: 0%; }
         }
 
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-500);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--gray-600);
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            max-width: 300px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .auth-form {
                 padding: 24px;
             }
             
-            .welcome-screen h1 {
-                font-size: 36px;
+            .app-nav span {
+                display: none;
             }
             
-            .auth-header h2 {
-                font-size: 24px;
+            .app-nav {
+                justify-content: space-between;
+                padding: 12px 16px;
+            }
+            
+            .nav-item {
+                padding: 12px;
+            }
+            
+            .nav-item.active::after {
+                bottom: -8px;
+            }
+            
+            .message-bubble {
+                max-width: 85%;
+            }
+            
+            .floating-btn span {
+                display: none;
+            }
+            
+            .floating-btn {
+                width: 56px;
+                height: 56px;
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+            
+            .search-box {
+                width: 200px;
+            }
+            
+            .attachment-options {
+                grid-template-columns: repeat(2, 1fr);
+                left: 10px;
+                right: 10px;
+                justify-content: center;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-height: 85vh;
+            }
+            
+            .toast-container {
+                left: 20px;
+                right: 20px;
+                max-width: none;
+            }
+            
+            .toast {
+                max-width: 100%;
             }
         }
 
@@ -812,6 +2470,55 @@
             
             .auth-header h2 {
                 font-size: 24px;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            
+            .page-header h2 {
+                font-size: 24px;
+            }
+            
+            .header-actions {
+                width: 100%;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .chat-messages {
+                padding: 16px;
+            }
+            
+            .message-input-area {
+                padding: 12px 16px;
+            }
+            
+            .chat-header {
+                padding: 12px 16px;
+            }
+            
+            .modal-content {
+                width: 100%;
+                height: 100%;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .modal-header {
+                padding: 20px;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
             }
             
             .profile-upload-container {
@@ -825,169 +2532,309 @@
             }
         }
 
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            border-radius: inherit;
+        }
+
+        /* Touch Device Optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .nav-item:hover:not(.active) {
+                background: transparent;
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            
+            .copy-btn:hover,
+            .icon-btn:hover,
+            .profile-btn:hover {
+                background: transparent;
+            }
+            
+            .btn-primary:hover:not(:disabled),
+            .btn-secondary:hover:not(:disabled),
+            .btn-danger:hover:not(:disabled) {
+                transform: none;
+            }
+            
+            .floating-btn:hover {
+                transform: none;
+            }
+            
+            .request-card:hover,
+            .contact-card:hover,
+            .group-card:hover {
+                transform: none;
+            }
+            
+            .attachment-btn:hover {
+                transform: none;
+            }
+            
+            .chat-media:hover {
+                transform: none;
+            }
+            
+            .action-btn:hover {
+                transform: none;
+            }
+            
+            .remove-preview:hover {
+                transform: none;
+            }
+            
+            input,
+            textarea,
+            select,
+            button {
+                font-size: 16px !important; /* Prevents zoom on iOS */
             }
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        /* Print Styles */
+        @media print {
+            .floating-btn,
+            .message-input-area,
+            .app-nav,
+            .profile-btn,
+            .copy-btn,
+            .back-btn,
+            .icon-btn,
+            .close-modal,
+            .toast-container,
+            .attachment-options {
+                display: none !important;
+            }
+            
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            
+            .app-main {
+                padding: 0 !important;
+            }
+            
+            .chat-messages {
+                height: auto !important;
+                overflow: visible !important;
+            }
+        }
+
+        /* High Contrast Mode Support */
+        @media (prefers-contrast: high) {
+            :root {
+                --blue: #0040ff;
+                --green: #008000;
+                --red: #c00000;
+                --gray-500: #000000;
+            }
+            
+            .input-group input {
+                border-width: 3px;
+            }
+        }
+
+        /* Reduced Motion Support */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Additional styles for iOS Messages theme */
+        .message-bubble.sent {
+            background: var(--blue);
+            border-bottom-right-radius: 4px;
+            border-top-right-radius: 18px;
+            border-top-left-radius: 18px;
+            border-bottom-left-radius: 18px;
+        }
+
+        .message-bubble.received {
+            background: var(--gray-100);
+            border-bottom-left-radius: 4px;
+            border-top-right-radius: 18px;
+            border-top-left-radius: 18px;
+            border-bottom-right-radius: 18px;
+        }
+
+        .chat-user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .ios-input {
+            font-size: 17px;
+            padding: 12px 16px;
+            border-radius: 21px;
+            background: var(--gray-100);
+            border: 1px solid var(--gray-300);
+            width: 100%;
+            font-family: var(--font-sf-pro);
+        }
+
+        .ios-input:focus {
+            outline: none;
+            background: var(--white);
+            border-color: var(--blue);
         }
     </style>
 </head>
 <body>
     <!-- Loading Screen -->
-    <div class="loading-screen" id="loadingScreen">
+    <div id="loadingScreen" class="loading-screen">
         <div class="loading-content">
             <div class="spinner-large"></div>
             <p>Loading Zynapse...</p>
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Main Auth Page -->
-    <div class="auth-page">
-        <div class="auth-container" id="authContainer">
-            <!-- Welcome Screen (Initial View) -->
-            <div class="welcome-screen" id="welcomeScreen">
-                <img src="zynaps.png" alt="Zynapse Logo" class="logo-large">
+    <!-- Authentication Page -->
+    <div id="authPage" class="auth-page">
+        <div class="auth-container">
+            <!-- Welcome Screen -->
+            <div id="welcomeScreen" class="welcome-screen">
+                <img src="https://via.placeholder.com/120x120/007AFF/FFFFFF?text=Z" alt="Zynapse Logo" class="logo-large" id="welcomeLogo">
                 <h1>Zynapse</h1>
-                <p class="tagline">Secure, private messaging built for Zambia</p>
-                <p class="tagline">End-to-end encrypted chats with status updates</p>
+                <p class="tagline">Secure, private messaging with iOS elegance</p>
+                <p class="tagline">Connect instantly with anyone using unique Zynapse IDs</p>
                 <p class="powered-by">Powered by Buffer Zone</p>
                 
                 <div class="welcome-actions">
-                    <button class="btn-primary full-width" onclick="showSignUp()">
+                    <button id="signUpBtn" class="btn-primary full-width">
                         <i class="fas fa-user-plus"></i> Create Account
                     </button>
-                    <button class="btn-secondary full-width" onclick="showLogin()">
+                    <button id="loginBtn" class="btn-secondary full-width">
                         <i class="fas fa-sign-in-alt"></i> Sign In
                     </button>
                 </div>
                 
                 <div class="welcome-footer">
-                    <p>By continuing, you agree to our <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a></p>
+                    By continuing, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a>
                 </div>
             </div>
 
             <!-- Sign Up Form -->
-            <div class="auth-form" id="signUpForm" style="display: none;">
+            <div id="signUpForm" class="auth-form" style="display: none;">
                 <div class="auth-header">
-                    <button class="back-btn" onclick="showWelcome()">
+                    <button class="back-btn" id="backToWelcomeFromSignUp">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                    <img src="https://via.placeholder.com/64x64/007AFF/FFFFFF?text=Z" alt="Zynapse Logo" class="logo-small">
                     <h2>Create Account</h2>
-                    <p>Join Zynapse secure messaging</p>
+                    <p>Join Zynapse today</p>
                 </div>
                 
-                <form id="signupForm" class="auth-form-content">
+                <div class="auth-form-content">
                     <div class="input-group">
                         <i class="fas fa-user"></i>
-                        <input type="text" id="fullName" placeholder="Full Name" required>
+                        <input type="text" id="signupName" placeholder="Full Name" required>
                     </div>
                     
                     <div class="input-group">
                         <i class="fas fa-phone"></i>
-                        <input type="tel" id="phoneNumber" placeholder="Phone Number (260XXXXXXXXX)" required pattern="260[0-9]{9}">
+                        <input type="tel" id="signupPhone" placeholder="Phone Number" required>
                     </div>
                     
                     <div class="input-group">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" placeholder="Email Address" required>
+                        <input type="email" id="signupEmail" placeholder="Email Address" required>
                     </div>
                     
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="password" placeholder="Password (min. 8 characters)" required minlength="8">
-                        <i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i>
+                        <input type="password" id="signupPassword" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password"></i>
                     </div>
                     
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
-                        <i class="fas fa-eye toggle-password" onclick="togglePassword('confirmPassword')"></i>
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
+                        <i class="fas fa-eye toggle-password"></i>
                     </div>
                     
+                    <!-- Profile Upload -->
                     <div class="profile-upload-section">
-                        <label class="upload-label">Profile Picture (Optional)</label>
+                        <label class="upload-label">Profile Picture</label>
                         <div class="profile-upload-container">
                             <div class="upload-preview" id="profilePreview">
-                                <div class="preview-placeholder" id="previewPlaceholder">
+                                <div class="preview-placeholder">
                                     <i class="fas fa-user-circle"></i>
                                     <span>No image selected</span>
                                 </div>
-                                <img id="previewImage" style="display: none;">
                             </div>
                             <div class="upload-buttons">
-                                <button type="button" class="btn-upload" onclick="document.getElementById('profileImage').click()">
+                                <button class="btn-upload" id="uploadProfileBtn">
                                     <i class="fas fa-upload"></i> Upload Photo
                                 </button>
-                                <button type="button" class="btn-remove" onclick="removeProfileImage()" style="display: none;" id="removeBtn">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
+                                <input type="file" id="profileImage" accept="image/*" style="display: none;">
                             </div>
                         </div>
-                        <input type="file" id="profileImage" accept="image/*" style="display: none;" onchange="previewProfileImage(event)">
-                        <p class="upload-hint">Max size: 5MB. Supported: JPG, PNG, GIF</p>
+                        <p class="upload-hint">Recommended: Square image, max 5MB</p>
                     </div>
                     
-                    <div class="form-options">
+                    <div class="terms-agreement">
                         <label class="checkbox-container">
-                            <input type="checkbox" id="terms" required>
+                            <input type="checkbox" id="agreeTerms" required>
                             <span class="checkmark"></span>
-                            I agree to the <a href="#" class="link">Terms & Conditions</a>
+                            I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>
                         </label>
                     </div>
                     
-                    <button type="submit" class="btn-primary full-width" id="signupBtn">
-                        <span>Create Account</span>
-                        <div class="spinner" style="display: none;" id="signupSpinner"></div>
+                    <button id="registerBtn" class="btn-primary full-width">
+                        <i class="fas fa-user-plus"></i> Create Account
                     </button>
-                </form>
-                
-                <div class="auth-switch">
-                    <p>Already have an account? <a href="#" class="link" onclick="showLogin()">Sign In</a></p>
+                    
+                    <div class="auth-divider">
+                        <span>Already have an account?</span>
+                    </div>
+                    
+                    <button id="switchToLoginBtn" class="btn-secondary full-width">
+                        <i class="fas fa-sign-in-alt"></i> Sign In Instead
+                    </button>
                 </div>
             </div>
 
             <!-- Login Form -->
-            <div class="auth-form" id="loginForm" style="display: none;">
+            <div id="loginForm" class="auth-form" style="display: none;">
                 <div class="auth-header">
-                    <button class="back-btn" onclick="showWelcome()">
+                    <button class="back-btn" id="backToWelcomeFromLogin">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                    <img src="https://via.placeholder.com/64x64/007AFF/FFFFFF?text=Z" alt="Zynapse Logo" class="logo-small">
                     <h2>Welcome Back</h2>
                     <p>Sign in to your Zynapse account</p>
                 </div>
                 
-                <form id="loginFormElement" class="auth-form-content">
+                <div class="auth-form-content">
                     <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="loginEmail" placeholder="Email Address" required>
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="loginEmail" placeholder="Email or User ID" required>
                     </div>
                     
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
                         <input type="password" id="loginPassword" placeholder="Password" required>
-                        <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPassword')"></i>
+                        <i class="fas fa-eye toggle-password"></i>
                     </div>
                     
                     <div class="form-options">
@@ -996,55 +2843,559 @@
                             <span class="checkmark"></span>
                             Remember me
                         </label>
-                        <a href="#" class="link" onclick="showForgotPassword()">Forgot Password?</a>
+                        <a href="#" class="link" id="forgotPassword">Forgot Password?</a>
                     </div>
                     
-                    <button type="submit" class="btn-primary full-width" id="loginBtn">
-                        <span>Sign In</span>
-                        <div class="spinner" style="display: none;" id="loginSpinner"></div>
+                    <button id="signInBtn" class="btn-primary full-width">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
                     </button>
-                </form>
-                
-                <div class="auth-switch">
-                    <p>Don't have an account? <a href="#" class="link" onclick="showSignUp()">Sign Up</a></p>
-                </div>
-            </div>
-
-            <!-- Forgot Password Form -->
-            <div class="auth-form" id="forgotPasswordForm" style="display: none;">
-                <div class="auth-header">
-                    <button class="back-btn" onclick="showLogin()">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                    <h2>Reset Password</h2>
-                    <p>Enter your email to reset password</p>
-                </div>
-                
-                <form id="forgotPasswordFormElement" class="auth-form-content">
-                    <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="resetEmail" placeholder="Email Address" required>
+                    
+                    <div class="auth-divider">
+                        <span>Don't have an account?</span>
                     </div>
                     
-                    <p class="upload-hint">We'll send you a link to reset your password</p>
-                    
-                    <button type="submit" class="btn-primary full-width" id="resetBtn">
-                        <span>Send Reset Link</span>
-                        <div class="spinner" style="display: none;" id="resetSpinner"></div>
+                    <button id="switchToSignUpBtn" class="btn-secondary full-width">
+                        <i class="fas fa-user-plus"></i> Create Account
                     </button>
-                </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    
+    <!-- Home Page (Hidden by default) -->
+    <div id="homePage" class="app-home" style="display: none;">
+        <!-- App Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <img src="https://via.placeholder.com/40x40/007AFF/FFFFFF?text=Z" alt="Zynapse Logo" class="header-logo">
+                <div class="user-info">
+                    <h2 id="headerUserName">Loading...</h2>
+                    <div class="user-id-container">
+                        <span class="user-id" id="headerUserId">ZYN-0000</span>
+                        <button class="copy-btn" id="copyUserIdBtn" title="Copy ID">
+                            <i class="far fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="status-indicator online" id="statusIndicator">
+                    <div class="status-dot"></div>
+                </div>
+                <div class="dropdown" id="profileDropdown">
+                    <button class="profile-btn">
+                        <img src="https://via.placeholder.com/36x36/007AFF/FFFFFF?text=U" alt="Profile" class="profile-pic-small" id="headerProfilePic">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-content" id="profileDropdownContent">
+                        <div class="dropdown-profile">
+                            <img src="https://via.placeholder.com/40x40/007AFF/FFFFFF?text=U" alt="Profile" class="dropdown-profile-pic" id="dropdownProfilePic">
+                            <div class="dropdown-profile-info">
+                                <strong id="dropdownUserName">Loading...</strong>
+                                <span id="dropdownUserId">ZYN-0000</span>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" id="profileSettingsBtn"><i class="fas fa-user-cog"></i> Profile Settings</a>
+                        <a href="#" id="appSettingsBtn"><i class="fas fa-cog"></i> App Settings</a>
+                        <a href="#" id="notificationsBtn"><i class="fas fa-bell"></i> Notifications</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="app-nav">
+            <a href="#" class="nav-item active" data-page="home">
+                <i class="fas fa-home"></i>
+                <span>HOME</span>
+            </a>
+            <a href="#" class="nav-item" data-page="zynes">
+                <i class="fas fa-circle"></i>
+                <span>ZYNES</span>
+                <span class="badge" id="zynesBadge" style="display: none;">0</span>
+            </a>
+            <a href="#" class="nav-item" data-page="groups">
+                <i class="fas fa-users"></i>
+                <span>GROUPS</span>
+                <span class="badge" id="groupsBadge" style="display: none;">0</span>
+            </a>
+            <a href="#" class="nav-item" data-page="requests">
+                <i class="fas fa-user-plus"></i>
+                <span>REQUESTS</span>
+                <span class="badge" id="requestsBadge" style="display: none;">0</span>
+            </a>
+            <a href="#" class="nav-item" data-page="contacts">
+                <i class="fas fa-address-book"></i>
+                <span>CONTACTS</span>
+                <span class="badge" id="contactsBadge" style="display: none;">0</span>
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Home Page -->
+            <div id="homePageContent" class="page active">
+                <div class="home-content">
+                    <div class="welcome-message">
+                        <h1>Welcome to Zynapse</h1>
+                        <p>Your secure messaging hub</p>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <div class="quick-action-card" id="startQuickChat">
+                            <i class="fas fa-comment-medical"></i>
+                            <h3>Start Chat</h3>
+                            <p>Begin a new conversation</p>
+                        </div>
+                        <div class="quick-action-card" id="createGroup">
+                            <i class="fas fa-users"></i>
+                            <h3>Create Group</h3>
+                            <p>Start a group chat</p>
+                        </div>
+                        <div class="quick-action-card" id="addContact">
+                            <i class="fas fa-user-plus"></i>
+                            <h3>Add Contact</h3>
+                            <p>Find and add friends</p>
+                        </div>
+                        <div class="quick-action-card" id="viewZynes">
+                            <i class="fas fa-circle"></i>
+                            <h3>View Zynes</h3>
+                            <p>See status updates</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-chats-section">
+                        <div class="section-header">
+                            <h3>Recent Conversations</h3>
+                            <a href="#" class="view-all" id="viewAllChats">View All</a>
+                        </div>
+                        <div class="recent-chats-list" id="recentChatsList">
+                            <div class="empty-state">
+                                <i class="fas fa-comments"></i>
+                                <h3>No conversations yet</h3>
+                                <p>Start a chat to see your conversations here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zynes Page -->
+            <div id="zynesPage" class="page">
+                <div class="page-header">
+                    <h2>Zynes</h2>
+                    <div class="header-actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search Zynes..." id="searchZynes">
+                        </div>
+                        <button class="btn-primary" id="createZyneBtn">
+                            <i class="fas fa-plus"></i> New Zyne
+                        </button>
+                    </div>
+                </div>
+                <div class="zynes-container" id="zynesContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-circle"></i>
+                        <h3>No Zynes yet</h3>
+                        <p>Post a Zyne to share with your contacts</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Groups Page -->
+            <div id="groupsPage" class="page">
+                <div class="page-header">
+                    <h2>Groups</h2>
+                    <div class="header-actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search groups..." id="searchGroups">
+                        </div>
+                        <button class="btn-primary" id="createGroupBtn">
+                            <i class="fas fa-plus"></i> New Group
+                        </button>
+                    </div>
+                </div>
+                <div class="groups-container" id="groupsContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No groups yet</h3>
+                        <p>Create or join a group to start chatting</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requests Page -->
+            <div id="requestsPage" class="page">
+                <div class="page-header">
+                    <h2>Chat Requests</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="received">Received</button>
+                        <button class="tab-btn" data-tab="sent">Sent</button>
+                    </div>
+                </div>
+                <div class="requests-container" id="receivedRequests">
+                    <div class="empty-state">
+                        <i class="fas fa-user-plus"></i>
+                        <h3>No pending requests</h3>
+                        <p>When someone sends you a chat request, it will appear here</p>
+                    </div>
+                </div>
+                <div class="requests-container" id="sentRequests" style="display: none;">
+                    <div class="empty-state">
+                        <i class="fas fa-paper-plane"></i>
+                        <h3>No sent requests</h3>
+                        <p>Your sent chat requests will appear here</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contacts Page -->
+            <div id="contactsPage" class="page">
+                <div class="page-header">
+                    <h2>Contacts</h2>
+                    <div class="header-actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search contacts..." id="searchContacts">
+                        </div>
+                        <button class="btn-primary" id="addContactBtn">
+                            <i class="fas fa-user-plus"></i> Add Contact
+                        </button>
+                    </div>
+                </div>
+                <div class="contacts-container" id="contactsContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-address-book"></i>
+                        <h3>No contacts yet</h3>
+                        <p>Add contacts to start chatting</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Floating Action Button -->
+        <button class="floating-btn" id="floatingChatBtn">
+            <i class="fas fa-comment"></i>
+            <span>Chat</span>
+        </button>
+
+        <!-- Start Chat Modal -->
+        <div class="modal-overlay" id="startChatModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Start New Chat</h3>
+                    <button class="close-modal" id="closeStartChatModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="searchUserId" placeholder="Enter Zynapse User ID (ZYN-XXXX)" maxlength="8">
+                    </div>
+                    
+                    <div class="search-placeholder" id="searchPlaceholder">
+                        <i class="fas fa-search"></i>
+                        <p>Enter a User ID to search</p>
+                    </div>
+                    
+                    <div class="search-result" id="userFoundResult">
+                        <div class="user-found">
+                            <img src="https://via.placeholder.com/50x50/007AFF/FFFFFF?text=U" alt="User" class="profile-pic" id="foundUserPic">
+                            <div class="user-found-info">
+                                <h4 id="foundUserName">John Doe</h4>
+                                <p id="foundUserId">ZYN-1234</p>
+                                <p id="foundUserStatus" class="already-contact">Already in your contacts</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="btn-secondary" id="cancelStartChat">Cancel</button>
+                        <button class="btn-primary" id="sendChatRequestBtn" disabled>
+                            <i class="fas fa-paper-plane"></i> Send Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Group Modal -->
+        <div class="modal-overlay" id="createGroupModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create New Group</h3>
+                    <button class="close-modal" id="closeCreateGroupModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <i class="fas fa-users"></i>
+                        <input type="text" id="groupName" placeholder="Group Name">
+                    </div>
+                    
+                    <div class="profile-upload-section">
+                        <label class="upload-label">Group Photo (Optional)</label>
+                        <div class="profile-upload-container">
+                            <div class="upload-preview" id="groupProfilePreview">
+                                <div class="preview-placeholder">
+                                    <i class="fas fa-users"></i>
+                                    <span>No image selected</span>
+                                </div>
+                            </div>
+                            <div class="upload-buttons">
+                                <button class="btn-upload" id="uploadGroupPhotoBtn">
+                                    <i class="fas fa-upload"></i> Upload Photo
+                                </button>
+                                <input type="file" id="groupImage" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="members-container">
+                        <div class="members-header">
+                            <h4>Add Members</h4>
+                            <span class="members-count"><span id="membersCount">0</span> members</span>
+                        </div>
+                        <div class="input-group">
+                            <i class="fas fa-id-card"></i>
+                            <input type="text" id="addMemberInput" placeholder="Enter User ID to add member">
+                            <button class="btn-media" id="addMemberBtn">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="members-list" id="groupMembersList">
+                            <div class="empty-members">
+                                <i class="fas fa-user-plus"></i>
+                                <p>Add members to your group</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="btn-secondary" id="cancelCreateGroup">Cancel</button>
+                        <button class="btn-primary" id="createGroupFinalBtn">
+                            <i class="fas fa-plus"></i> Create Group
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Zyne Modal -->
+        <div class="modal-overlay" id="createZyneModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create New Zyne</h3>
+                    <button class="close-modal" id="closeCreateZyneModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <textarea id="zyneText" placeholder="What's on your mind?" rows="4" maxlength="500"></textarea>
+                        <div class="character-counter">
+                            <span id="zyneCharCount">0</span>/500
+                        </div>
+                    </div>
+                    
+                    <div class="profile-upload-section">
+                        <label class="upload-label">Add Media (Optional)</label>
+                        <div class="profile-upload-container">
+                            <div class="upload-preview" id="zyneMediaPreview">
+                                <div class="preview-placeholder">
+                                    <i class="fas fa-image"></i>
+                                    <span>No media selected</span>
+                                </div>
+                            </div>
+                            <div class="upload-buttons">
+                                <button class="btn-upload" id="uploadZynePhotoBtn">
+                                    <i class="fas fa-image"></i> Add Photo
+                                </button>
+                                <button class="btn-upload" id="uploadZyneVideoBtn">
+                                    <i class="fas fa-video"></i> Add Video
+                                </button>
+                                <input type="file" id="zyneImage" accept="image/*" style="display: none;">
+                                <input type="file" id="zyneVideo" accept="video/*" style="display: none;">
+                            </div>
+                        </div>
+                        <p class="upload-hint">Photos and videos will disappear after 24 hours</p>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="btn-secondary" id="cancelCreateZyne">Cancel</button>
+                        <button class="btn-primary" id="createZyneFinalBtn">
+                            <i class="fas fa-share"></i> Post Zyne
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <!-- Chat Page (Hidden by default) -->
+    <div id="chatPage" class="chat-page" style="display: none;">
+        <!-- Chat Header -->
+        <header class="chat-header">
+            <button class="back-btn" id="backToHomeBtn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            
+            <div class="chat-user-info">
+                <img src="https://via.placeholder.com/40x40/007AFF/FFFFFF?text=U" alt="User" class="chat-user-avatar" id="chatUserAvatar">
+                <div class="chat-user-details">
+                    <h3 id="chatUserName">Loading...</h3>
+                    <div class="chat-status">
+                        <span class="status-dot online" id="chatStatusDot"></span>
+                        <span id="chatStatusText">Online</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-actions">
+                <button class="icon-btn" id="chatInfoBtn">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+                <button class="icon-btn" id="chatMenuBtn">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Chat Messages Area -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="empty-chat">
+                <i class="fas fa-comment"></i>
+                <h3>No messages yet</h3>
+                <p>Send a message to start the conversation</p>
+            </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-bubble">
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+                <span class="typing-text" id="typingUserName">is typing...</span>
+            </div>
+        </div>
+
+        <!-- Message Input Area -->
+        <div class="message-input-area">
+            <button class="btn-media" id="attachmentBtn">
+                <i class="fas fa-plus"></i>
+            </button>
+            
+            <div class="message-input-container">
+                <input type="text" id="messageInput" placeholder="iMessage" autocomplete="off">
+            </div>
+            
+            <button class="send-btn" id="sendMessageBtn" disabled>
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+
+        <!-- Attachment Options -->
+        <div class="attachment-options" id="attachmentOptions">
+            <button class="attachment-btn" id="attachPhotoBtn">
+                <i class="fas fa-image"></i>
+                <span>Photo</span>
+            </button>
+            <button class="attachment-btn" id="attachVideoBtn">
+                <i class="fas fa-video"></i>
+                <span>Video</span>
+            </button>
+            <button class="attachment-btn" id="attachFileBtn">
+                <i class="fas fa-file"></i>
+                <span>File</span>
+            </button>
+            <button class="attachment-btn" id="attachCameraBtn">
+                <i class="fas fa-camera"></i>
+                <span>Camera</span>
+            </button>
+            <button class="attachment-btn" id="attachLocationBtn">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Location</span>
+            </button>
+            <button class="attachment-btn" id="attachContactBtn">
+                <i class="fas fa-user"></i>
+                <span>Contact</span>
+            </button>
+        </div>
+
+        <!-- Chat Menu Dropdown -->
+        <div class="dropdown-content" id="chatMenuDropdown">
+            <a href="#" id="addNicknameBtn"><i class="fas fa-tag"></i> Add Nickname</a>
+            <a href="#" id="blockUserBtn"><i class="fas fa-ban"></i> Block User</a>
+            <a href="#" id="addToFavoritesBtn"><i class="fas fa-star"></i> Add to Favorites</a>
+            <div class="dropdown-divider"></div>
+            <a href="#" id="reportChatBtn"><i class="fas fa-flag"></i> Report Chat</a>
+            <a href="#" id="deleteChatBtn" class="logout-link"><i class="fas fa-trash"></i> Delete Chat</a>
+        </div>
+
+        <!-- Report Modal -->
+        <div class="modal-overlay" id="reportModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Report Chat</h3>
+                    <button class="close-modal" id="closeReportModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="confirmation-message">
+                        <div class="warning-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h4>Report This Chat</h4>
+                        <p>Please select a reason for reporting this chat. Our team will review your report within 24 hours.</p>
+                    </div>
+                    
+                    <form class="report-form">
+                        <div class="input-group">
+                            <label>Reason for reporting</label>
+                            <select id="reportReason">
+                                <option value="spam">Spam or harassment</option>
+                                <option value="inappropriate">Inappropriate content</option>
+                                <option value="impersonation">Impersonation</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Additional details (optional)</label>
+                            <textarea id="reportDetails" placeholder="Please provide any additional information..."></textarea>
+                        </div>
+                        
+                        <p class="form-hint">Your report is anonymous. The reported user won't know who reported them.</p>
+                    </form>
+                    
+                    <div class="modal-actions">
+                        <button class="btn-secondary" id="cancelReport">Cancel</button>
+                        <button class="btn-danger" id="submitReportBtn">
+                            <i class="fas fa-flag"></i> Submit Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Firebase Configuration
+        // ===== FIREBASE CONFIGURATION =====
         const firebaseConfig = {
             apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
             authDomain: "zynapse-68181.firebaseapp.com",
@@ -1056,351 +3407,1849 @@
             measurementId: "G-4764XLL6WS"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
-        const storage = firebase.storage();
-
-        // Cloudinary Configuration
-        const CLOUDINARY_CONFIG = {
+        // ===== CLOUDINARY ACCOUNT DETAILS =====
+        const CLOUDINARY_ACCOUNT = {
             cloudName: 'dd3lcymrk',
             apiKey: '489857926297197',
+            apiSecret: 'RHDQG1YP6jqvn4UADq3nJWHIeHQ',
             uploadPreset: 'h3eyhc2o',
-            folder: 'zynapse/profiles'
+            folder: 'zynapse',
+            environmentVariable: 'CLOUDINARY_URL=cloudinary://489857926297197:RHDQG1YP6jqvn4UADq3nJWHIeHQ@dd3lcymrk',
+            accountType: 'cloudinary'
         };
 
-        let profileImageFile = null;
+        // ===== GLOBAL VARIABLES =====
+        let currentUser = null;
+        let currentChat = null;
+        let currentGroup = null;
+        let db = null;
+        let auth = null;
+        let userData = null;
+        let contacts = [];
+        let chatRequests = [];
+        let groups = [];
+        let zynes = [];
+        let recentChats = [];
+        let typingTimeout = null;
+        let notificationSound = null;
 
-        // DOM Elements
-        const loadingScreen = document.getElementById('loadingScreen');
-        const welcomeScreen = document.getElementById('welcomeScreen');
-        const signUpForm = document.getElementById('signUpForm');
-        const loginForm = document.getElementById('loginForm');
-        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
 
-        // Show Toast Notification
-        function showToast(message, type = 'info') {
-            const toastContainer = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-                <span>${message}</span>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-
-        // Toggle Password Visibility
-        function togglePassword(fieldId) {
-            const field = document.getElementById(fieldId);
-            const icon = field.parentNode.querySelector('.toggle-password');
-            
-            if (field.type === 'password') {
-                field.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                field.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
-
-        // Preview Profile Image
-        function previewProfileImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            // Check file size (5MB max)
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Image size must be less than 5MB', 'error');
-                return;
-            }
-            
-            // Check file type
-            if (!file.type.match('image.*')) {
-                showToast('Please select an image file', 'error');
-                return;
-            }
-            
-            profileImageFile = file;
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                const previewImage = document.getElementById('previewImage');
-                const previewPlaceholder = document.getElementById('previewPlaceholder');
-                const removeBtn = document.getElementById('removeBtn');
+        function initializeApp() {
+            // Initialize Firebase
+            try {
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.database();
                 
-                previewImage.src = e.target.result;
-                previewImage.style.display = 'block';
-                previewPlaceholder.style.display = 'none';
-                removeBtn.style.display = 'block';
-            };
-            
-            reader.readAsDataURL(file);
+                // Create notification sound
+                notificationSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3');
+                
+                // Check auth state
+                auth.onAuthStateChanged(handleAuthStateChange);
+                
+                // Initialize UI components
+                initializeUI();
+                
+                // Hide loading screen after 1.5 seconds
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Firebase initialization error:', error);
+                showToast('Failed to initialize app. Please refresh.', 'error');
+            }
         }
 
-        // Remove Profile Image
-        function removeProfileImage() {
-            profileImageFile = null;
-            const previewImage = document.getElementById('previewImage');
-            const previewPlaceholder = document.getElementById('previewPlaceholder');
-            const removeBtn = document.getElementById('removeBtn');
-            const fileInput = document.getElementById('profileImage');
-            
-            previewImage.style.display = 'none';
-            previewPlaceholder.style.display = 'block';
-            removeBtn.style.display = 'none';
-            fileInput.value = '';
+        function handleAuthStateChange(user) {
+            if (user) {
+                // User is signed in
+                currentUser = user;
+                loadUserData(user.uid);
+            } else {
+                // User is signed out
+                showAuthPage();
+            }
         }
 
-        // Generate User ID
+        function loadUserData(uid) {
+            db.ref('users/' + uid).once('value').then(snapshot => {
+                userData = snapshot.val();
+                if (userData) {
+                    showHomePage();
+                    updateUIWithUserData();
+                    loadUserContacts();
+                    loadChatRequests();
+                    loadGroups();
+                    loadZynes();
+                    loadRecentChats();
+                    setupRealtimeListeners();
+                } else {
+                    // User data doesn't exist, sign out
+                    auth.signOut();
+                }
+            }).catch(error => {
+                console.error('Error loading user data:', error);
+                showToast('Error loading user data', 'error');
+            });
+        }
+
+        function updateUIWithUserData() {
+            // Update header
+            document.getElementById('headerUserName').textContent = userData.name || 'User';
+            document.getElementById('headerUserId').textContent = userData.userId || 'ZYN-0000';
+            document.getElementById('dropdownUserName').textContent = userData.name || 'User';
+            document.getElementById('dropdownUserId').textContent = userData.userId || 'ZYN-0000';
+            
+            // Update profile pictures
+            const profilePic = userData.profilePicUrl || 'https://via.placeholder.com/36x36/007AFF/FFFFFF?text=U';
+            document.getElementById('headerProfilePic').src = profilePic;
+            document.getElementById('dropdownProfilePic').src = profilePic;
+        }
+
+        // ===== AUTHENTICATION FUNCTIONS =====
+        function showAuthPage() {
+            document.getElementById('authPage').style.display = 'flex';
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('chatPage').style.display = 'none';
+            showWelcomeScreen();
+        }
+
+        function showHomePage() {
+            document.getElementById('authPage').style.display = 'none';
+            document.getElementById('homePage').style.display = 'flex';
+            document.getElementById('chatPage').style.display = 'none';
+        }
+
+        function showChatPage() {
+            document.getElementById('authPage').style.display = 'none';
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('chatPage').style.display = 'flex';
+        }
+
+        function showWelcomeScreen() {
+            document.getElementById('welcomeScreen').style.display = 'block';
+            document.getElementById('signUpForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'none';
+        }
+
+        function showSignUpForm() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('signUpForm').style.display = 'block';
+            document.getElementById('loginForm').style.display = 'none';
+        }
+
+        function showLoginForm() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('signUpForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+        }
+
+        // ===== USER REGISTRATION =====
         function generateUserId() {
             const randomNum = Math.floor(1000 + Math.random() * 9000);
             return `ZYN-${randomNum}`;
         }
 
-        // Upload to Cloudinary
-        async function uploadToCloudinary(file) {
-            if (!file) return null;
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-            formData.append('folder', CLOUDINARY_CONFIG.folder);
-            formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
-            
+        async function registerUser(email, password, userData) {
             try {
-                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
+                // Create auth user
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const userId = userCredential.user.uid;
                 
-                const data = await response.json();
-                return data.secure_url;
+                // Generate Zynapse User ID
+                const zynapseId = generateUserId();
+                userData.userId = zynapseId;
+                userData.createdAt = Date.now();
+                userData.contacts = {};
+                userData.chatRequests = {};
+                userData.groups = {};
+                userData.zynes = {};
+                
+                // Save user data to database
+                await db.ref('users/' + userId).set(userData);
+                
+                // Create user ID mapping for easy lookup
+                await db.ref('userIds/' + zynapseId).set(userId);
+                
+                showToast('Account created successfully!', 'success');
+                return userCredential.user;
+                
             } catch (error) {
-                console.error('Cloudinary upload error:', error);
+                console.error('Registration error:', error);
                 throw error;
             }
         }
 
-        // Show/Hide Forms
-        function showWelcome() {
-            welcomeScreen.style.display = 'block';
-            signUpForm.style.display = 'none';
-            loginForm.style.display = 'none';
-            forgotPasswordForm.style.display = 'none';
-        }
-
-        function showSignUp() {
-            welcomeScreen.style.display = 'none';
-            signUpForm.style.display = 'block';
-            loginForm.style.display = 'none';
-            forgotPasswordForm.style.display = 'none';
-        }
-
-        function showLogin() {
-            welcomeScreen.style.display = 'none';
-            signUpForm.style.display = 'none';
-            loginForm.style.display = 'block';
-            forgotPasswordForm.style.display = 'none';
-        }
-
-        function showForgotPassword() {
-            welcomeScreen.style.display = 'none';
-            signUpForm.style.display = 'none';
-            loginForm.style.display = 'none';
-            forgotPasswordForm.style.display = 'block';
-        }
-
-        // Handle Sign Up
-        document.getElementById('signupForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // ===== UI INITIALIZATION =====
+        function initializeUI() {
+            // Welcome screen buttons
+            document.getElementById('signUpBtn').addEventListener('click', showSignUpForm);
+            document.getElementById('loginBtn').addEventListener('click', showLoginForm);
             
-            const fullName = document.getElementById('fullName').value.trim();
-            const phoneNumber = document.getElementById('phoneNumber').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+            // Back buttons
+            document.getElementById('backToWelcomeFromSignUp').addEventListener('click', showWelcomeScreen);
+            document.getElementById('backToWelcomeFromLogin').addEventListener('click', showWelcomeScreen);
+            
+            // Switch between forms
+            document.getElementById('switchToLoginBtn').addEventListener('click', showLoginForm);
+            document.getElementById('switchToSignUpBtn').addEventListener('click', showSignUpForm);
+            
+            // Registration form
+            document.getElementById('registerBtn').addEventListener('click', handleRegistration);
+            
+            // Login form
+            document.getElementById('signInBtn').addEventListener('click', handleLogin);
+            
+            // Profile picture upload
+            document.getElementById('uploadProfileBtn').addEventListener('click', () => {
+                document.getElementById('profileImage').click();
+            });
+            
+            document.getElementById('profileImage').addEventListener('change', handleProfileImageUpload);
+            
+            // Toggle password visibility
+            document.querySelectorAll('.toggle-password').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('input');
+                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                    input.setAttribute('type', type);
+                    this.classList.toggle('fa-eye');
+                    this.classList.toggle('fa-eye-slash');
+                });
+            });
+            
+            // Home page navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    switchPage(page);
+                });
+            });
+            
+            // Floating chat button
+            document.getElementById('floatingChatBtn').addEventListener('click', showStartChatModal);
+            
+            // Quick action buttons
+            document.getElementById('startQuickChat').addEventListener('click', showStartChatModal);
+            document.getElementById('createGroup').addEventListener('click', showCreateGroupModal);
+            document.getElementById('addContact').addEventListener('click', showStartChatModal);
+            document.getElementById('viewZynes').addEventListener('click', () => switchPage('zynes'));
+            
+            // Copy user ID button
+            document.getElementById('copyUserIdBtn').addEventListener('click', copyUserId);
+            
+            // Profile dropdown
+            document.getElementById('profileDropdown').addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.getElementById('profileDropdownContent').classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                document.getElementById('profileDropdownContent').classList.remove('show');
+            });
+            
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            
+            // Start chat modal
+            document.getElementById('closeStartChatModal').addEventListener('click', closeStartChatModal);
+            document.getElementById('cancelStartChat').addEventListener('click', closeStartChatModal);
+            document.getElementById('searchUserId').addEventListener('input', searchUserById);
+            document.getElementById('sendChatRequestBtn').addEventListener('click', sendChatRequest);
+            
+            // Create group modal
+            document.getElementById('createGroupBtn').addEventListener('click', showCreateGroupModal);
+            document.getElementById('closeCreateGroupModal').addEventListener('click', closeCreateGroupModal);
+            document.getElementById('cancelCreateGroup').addEventListener('click', closeCreateGroupModal);
+            document.getElementById('addMemberBtn').addEventListener('click', addGroupMember);
+            document.getElementById('createGroupFinalBtn').addEventListener('click', createGroup);
+            
+            // Create zyne modal
+            document.getElementById('createZyneBtn').addEventListener('click', showCreateZyneModal);
+            document.getElementById('closeCreateZyneModal').addEventListener('click', closeCreateZyneModal);
+            document.getElementById('cancelCreateZyne').addEventListener('click', closeCreateZyneModal);
+            document.getElementById('zyneText').addEventListener('input', updateZyneCharCount);
+            document.getElementById('createZyneFinalBtn').addEventListener('click', createZyne);
+            
+            // Chat page
+            document.getElementById('backToHomeBtn').addEventListener('click', () => {
+                showHomePage();
+                currentChat = null;
+            });
+            
+            // Message sending
+            document.getElementById('messageInput').addEventListener('input', handleMessageInput);
+            document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Attachment button
+            document.getElementById('attachmentBtn').addEventListener('click', toggleAttachmentOptions);
+            
+            // Initialize character counter
+            updateZyneCharCount();
+        }
+
+        // ===== PAGE NAVIGATION =====
+        function switchPage(page) {
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-page') === page) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Show selected page
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('active');
+            });
+            document.getElementById(page + 'PageContent' || page + 'Page').classList.add('active');
+        }
+
+        // ===== REGISTRATION HANDLER =====
+        async function handleRegistration() {
+            const name = document.getElementById('signupName').value.trim();
+            const phone = document.getElementById('signupPhone').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
             
             // Validation
+            if (!name || !phone || !email || !password) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+            
             if (password !== confirmPassword) {
                 showToast('Passwords do not match', 'error');
                 return;
             }
             
-            if (!phoneNumber.match(/^260[0-9]{9}$/)) {
-                showToast('Please enter a valid Zambian phone number (260XXXXXXXXX)', 'error');
+            if (!agreeTerms) {
+                showToast('Please agree to the terms and conditions', 'error');
                 return;
             }
             
-            const signupBtn = document.getElementById('signupBtn');
-            const signupSpinner = document.getElementById('signupSpinner');
-            const btnText = signupBtn.querySelector('span');
+            // Get profile picture
+            const profilePicInput = document.getElementById('profileImage');
+            let profilePicUrl = 'https://via.placeholder.com/150x150/007AFF/FFFFFF?text=U';
             
-            btnText.style.display = 'none';
-            signupSpinner.style.display = 'block';
-            signupBtn.disabled = true;
+            if (profilePicInput.files[0]) {
+                try {
+                    profilePicUrl = await uploadToCloudinary(profilePicInput.files[0]);
+                } catch (error) {
+                    console.error('Profile picture upload failed:', error);
+                    showToast('Profile picture upload failed, using default', 'warning');
+                }
+            }
+            
+            // Prepare user data
+            const userData = {
+                name,
+                phone,
+                email,
+                profilePicUrl,
+                lastSeen: Date.now(),
+                status: 'online'
+            };
+            
+            // Show loading state
+            const registerBtn = document.getElementById('registerBtn');
+            const originalText = registerBtn.innerHTML;
+            registerBtn.innerHTML = '<div class="spinner"></div> Creating account...';
+            registerBtn.disabled = true;
             
             try {
-                // Check if email already exists
-                const emailCheck = await database.ref('users').orderByChild('email').equalTo(email).once('value');
-                if (emailCheck.exists()) {
-                    showToast('Email already registered', 'error');
-                    return;
-                }
-                
-                // Check if phone already exists
-                const phoneCheck = await database.ref('users').orderByChild('phoneNumber').equalTo(phoneNumber).once('value');
-                if (phoneCheck.exists()) {
-                    showToast('Phone number already registered', 'error');
-                    return;
-                }
-                
-                // Create user in Firebase Auth
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Generate User ID
-                const userId = generateUserId();
-                
-                // Upload profile image to Cloudinary if exists
-                let profileImageUrl = null;
-                if (profileImageFile) {
-                    profileImageUrl = await uploadToCloudinary(profileImageFile);
-                }
-                
-                // Save user data to Firebase Realtime Database
-                const userData = {
-                    userId: userId,
-                    fullName: fullName,
-                    phoneNumber: phoneNumber,
-                    email: email,
-                    profileImage: profileImageUrl || '',
-                    createdAt: Date.now(),
-                    lastSeen: Date.now(),
-                    status: 'online',
-                    contacts: {},
-                    chatRequests: {},
-                    blockedUsers: {},
-                    favorites: {}
-                };
-                
-                await database.ref('users/' + user.uid).set(userData);
-                
+                await registerUser(email, password, userData);
                 showToast('Account created successfully!', 'success');
-                
-                // Auto login and redirect
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1500);
-                
             } catch (error) {
-                console.error('Signup error:', error);
-                showToast(error.message || 'Failed to create account', 'error');
-            } finally {
-                btnText.style.display = 'block';
-                signupSpinner.style.display = 'none';
-                signupBtn.disabled = false;
+                console.error('Registration error:', error);
+                let errorMessage = 'Registration failed';
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'Email already in use';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password is too weak';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid email address';
+                }
+                
+                showToast(errorMessage, 'error');
+                registerBtn.innerHTML = originalText;
+                registerBtn.disabled = false;
             }
-        });
+        }
 
-        // Handle Login
-        document.getElementById('loginFormElement').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
+        // ===== LOGIN HANDLER =====
+        async function handleLogin() {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             
-            const loginBtn = document.getElementById('loginBtn');
-            const loginSpinner = document.getElementById('loginSpinner');
-            const btnText = loginBtn.querySelector('span');
+            if (!email || !password) {
+                showToast('Please enter email and password', 'error');
+                return;
+            }
             
-            btnText.style.display = 'none';
-            loginSpinner.style.display = 'block';
+            // Show loading state
+            const loginBtn = document.getElementById('signInBtn');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<div class="spinner"></div> Signing in...';
             loginBtn.disabled = true;
             
             try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Update last seen
-                await database.ref('users/' + user.uid).update({
-                    lastSeen: Date.now(),
-                    status: 'online'
-                });
-                
-                showToast('Login successful!', 'success');
-                
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1000);
-                
+                await auth.signInWithEmailAndPassword(email, password);
+                showToast('Signed in successfully!', 'success');
             } catch (error) {
                 console.error('Login error:', error);
-                showToast('Invalid email or password', 'error');
-            } finally {
-                btnText.style.display = 'block';
-                loginSpinner.style.display = 'none';
+                let errorMessage = 'Login failed';
+                
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    errorMessage = 'Invalid email or password';
+                } else if (error.code === 'auth/user-disabled') {
+                    errorMessage = 'Account disabled';
+                }
+                
+                showToast(errorMessage, 'error');
+                loginBtn.innerHTML = originalText;
                 loginBtn.disabled = false;
             }
-        });
+        }
 
-        // Handle Forgot Password
-        document.getElementById('forgotPasswordFormElement').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // ===== LOGOUT HANDLER =====
+        function handleLogout() {
+            auth.signOut().then(() => {
+                showToast('Signed out successfully', 'success');
+            }).catch(error => {
+                console.error('Logout error:', error);
+                showToast('Logout failed', 'error');
+            });
+        }
+
+        // ===== CLOUDINARY UPLOAD =====
+        async function uploadToCloudinary(file) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_ACCOUNT.uploadPreset);
+                formData.append('folder', CLOUDINARY_ACCOUNT.folder);
+                
+                fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_ACCOUNT.cloudName}/upload`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.secure_url) {
+                        resolve(data.secure_url);
+                    } else {
+                        reject(new Error('Upload failed'));
+                    }
+                })
+                .catch(error => {
+                    reject(error);
+                });
+            });
+        }
+
+        // ===== PROFILE IMAGE UPLOAD =====
+        function handleProfileImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
             
-            const email = document.getElementById('resetEmail').value.trim();
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select an image file', 'error');
+                return;
+            }
             
-            const resetBtn = document.getElementById('resetBtn');
-            const resetSpinner = document.getElementById('resetSpinner');
-            const btnText = resetBtn.querySelector('span');
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Image size should be less than 5MB', 'error');
+                return;
+            }
             
-            btnText.style.display = 'none';
-            resetSpinner.style.display = 'block';
-            resetBtn.disabled = true;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('profilePreview');
+                preview.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Profile Preview';
+                preview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ===== START CHAT MODAL =====
+        function showStartChatModal() {
+            document.getElementById('startChatModal').classList.add('active');
+            document.getElementById('searchUserId').value = '';
+            document.getElementById('searchPlaceholder').style.display = 'block';
+            document.getElementById('userFoundResult').classList.remove('active');
+            document.getElementById('sendChatRequestBtn').disabled = true;
+        }
+
+        function closeStartChatModal() {
+            document.getElementById('startChatModal').classList.remove('active');
+        }
+
+        async function searchUserById() {
+            const userId = document.getElementById('searchUserId').value.trim().toUpperCase();
+            const placeholder = document.getElementById('searchPlaceholder');
+            const result = document.getElementById('userFoundResult');
+            
+            if (userId.length < 8 || !userId.startsWith('ZYN-')) {
+                placeholder.style.display = 'block';
+                result.classList.remove('active');
+                document.getElementById('sendChatRequestBtn').disabled = true;
+                return;
+            }
             
             try {
-                await auth.sendPasswordResetEmail(email);
-                showToast('Password reset link sent to your email', 'success');
+                // Look up user by Zynapse ID
+                const snapshot = await db.ref('userIds/' + userId).once('value');
+                const firebaseUserId = snapshot.val();
                 
-                setTimeout(() => {
-                    showLogin();
-                }, 2000);
+                if (!firebaseUserId) {
+                    placeholder.style.display = 'none';
+                    result.classList.remove('active');
+                    document.getElementById('sendChatRequestBtn').disabled = true;
+                    showToast('User not found', 'error');
+                    return;
+                }
+                
+                // Get user data
+                const userSnapshot = await db.ref('users/' + firebaseUserId).once('value');
+                const user = userSnapshot.val();
+                
+                if (!user) {
+                    placeholder.style.display = 'none';
+                    result.classList.remove('active');
+                    document.getElementById('sendChatRequestBtn').disabled = true;
+                    showToast('User not found', 'error');
+                    return;
+                }
+                
+                // Check if already in contacts
+                const isContact = userData.contacts && userData.contacts[firebaseUserId];
+                
+                // Update UI
+                document.getElementById('foundUserName').textContent = user.name;
+                document.getElementById('foundUserId').textContent = userId;
+                document.getElementById('foundUserPic').src = user.profilePicUrl || 'https://via.placeholder.com/50x50/007AFF/FFFFFF?text=U';
+                
+                const statusElement = document.getElementById('foundUserStatus');
+                if (isContact) {
+                    statusElement.textContent = 'Already in your contacts';
+                    statusElement.className = 'already-contact';
+                } else {
+                    statusElement.textContent = 'Tap to send chat request';
+                    statusElement.className = '';
+                }
+                
+                placeholder.style.display = 'none';
+                result.classList.add('active');
+                document.getElementById('sendChatRequestBtn').disabled = false;
+                document.getElementById('sendChatRequestBtn').setAttribute('data-target-id', firebaseUserId);
+                document.getElementById('sendChatRequestBtn').setAttribute('data-target-zid', userId);
                 
             } catch (error) {
-                console.error('Reset password error:', error);
-                showToast('Failed to send reset link', 'error');
-            } finally {
-                btnText.style.display = 'block';
-                resetSpinner.style.display = 'none';
-                resetBtn.disabled = false;
+                console.error('Search error:', error);
+                showToast('Error searching for user', 'error');
             }
-        });
+        }
 
-        // Check if user is already logged in
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // User is signed in, redirect to home
-                window.location.href = 'home.html';
+        async function sendChatRequest() {
+            const targetUserId = document.getElementById('sendChatRequestBtn').getAttribute('data-target-id');
+            const targetZId = document.getElementById('sendChatRequestBtn').getAttribute('data-target-zid');
+            
+            if (!targetUserId) {
+                showToast('Please search for a user first', 'error');
+                return;
+            }
+            
+            // Check if already in contacts
+            if (userData.contacts && userData.contacts[targetUserId]) {
+                showToast('User is already in your contacts', 'warning');
+                closeStartChatModal();
+                return;
+            }
+            
+            // Create chat request
+            const requestId = db.ref().child('chatRequests').push().key;
+            const requestData = {
+                id: requestId,
+                fromUserId: currentUser.uid,
+                fromUserName: userData.name,
+                fromUserPic: userData.profilePicUrl,
+                fromUserZId: userData.userId,
+                toUserId: targetUserId,
+                toUserZId: targetZId,
+                status: 'pending',
+                timestamp: Date.now()
+            };
+            
+            try {
+                // Save to both users' chat requests
+                await db.ref('chatRequests/' + requestId).set(requestData);
+                await db.ref('users/' + targetUserId + '/chatRequests/' + requestId).set({
+                    from: currentUser.uid,
+                    status: 'pending',
+                    timestamp: Date.now()
+                });
+                await db.ref('users/' + currentUser.uid + '/sentRequests/' + requestId).set({
+                    to: targetUserId,
+                    status: 'pending',
+                    timestamp: Date.now()
+                });
+                
+                showToast('Chat request sent successfully!', 'success');
+                closeStartChatModal();
+                
+                // Play notification sound
+                notificationSound.play().catch(e => console.log('Audio play failed:', e));
+                
+            } catch (error) {
+                console.error('Error sending chat request:', error);
+                showToast('Failed to send chat request', 'error');
+            }
+        }
+
+        // ===== CHAT REQUESTS MANAGEMENT =====
+        async function loadChatRequests() {
+            try {
+                const requestsRef = db.ref('chatRequests');
+                requestsRef.orderByChild('toUserId').equalTo(currentUser.uid).on('value', snapshot => {
+                    chatRequests = [];
+                    const receivedContainer = document.getElementById('receivedRequests');
+                    receivedContainer.innerHTML = '';
+                    
+                    snapshot.forEach(childSnapshot => {
+                        const request = childSnapshot.val();
+                        if (request.status === 'pending') {
+                            chatRequests.push(request);
+                            renderChatRequest(request, receivedContainer);
+                        }
+                    });
+                    
+                    if (chatRequests.length === 0) {
+                        receivedContainer.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-user-plus"></i>
+                                <h3>No pending requests</h3>
+                                <p>When someone sends you a chat request, it will appear here</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // Update badge
+                    const badge = document.getElementById('requestsBadge');
+                    badge.textContent = chatRequests.length;
+                    badge.style.display = chatRequests.length > 0 ? 'block' : 'none';
+                });
+                
+            } catch (error) {
+                console.error('Error loading chat requests:', error);
+            }
+        }
+
+        function renderChatRequest(request, container) {
+            const requestElement = document.createElement('div');
+            requestElement.className = 'request-card';
+            requestElement.innerHTML = `
+                <img src="${request.fromUserPic || 'https://via.placeholder.com/50x50/007AFF/FFFFFF?text=U'}" 
+                     alt="${request.fromUserName}" class="profile-pic">
+                <div class="request-info">
+                    <h4>${request.fromUserName}</h4>
+                    <p>${request.fromUserZId}</p>
+                    <p class="time">${formatTime(request.timestamp)}</p>
+                </div>
+                <div class="request-actions">
+                    <button class="action-btn accept-btn" data-request-id="${request.id}">
+                        <i class="fas fa-check"></i> Accept
+                    </button>
+                    <button class="action-btn reject-btn" data-request-id="${request.id}">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(requestElement);
+            
+            // Add event listeners
+            requestElement.querySelector('.accept-btn').addEventListener('click', () => handleChatRequest(request.id, 'accepted'));
+            requestElement.querySelector('.reject-btn').addEventListener('click', () => handleChatRequest(request.id, 'rejected'));
+        }
+
+        async function handleChatRequest(requestId, action) {
+            try {
+                const requestRef = db.ref('chatRequests/' + requestId);
+                const requestSnapshot = await requestRef.once('value');
+                const request = requestSnapshot.val();
+                
+                if (!request) {
+                    showToast('Chat request not found', 'error');
+                    return;
+                }
+                
+                // Update request status
+                await requestRef.update({ status: action });
+                
+                if (action === 'accepted') {
+                    // Add each other to contacts
+                    await db.ref('users/' + currentUser.uid + '/contacts/' + request.fromUserId).set(true);
+                    await db.ref('users/' + request.fromUserId + '/contacts/' + currentUser.uid).set(true);
+                    
+                    // Create chat between users
+                    const chatId = [currentUser.uid, request.fromUserId].sort().join('_');
+                    await db.ref('chats/' + chatId).set({
+                        participants: {
+                            [currentUser.uid]: true,
+                            [request.fromUserId]: true
+                        },
+                        type: 'private',
+                        createdAt: Date.now(),
+                        lastMessage: {
+                            text: 'Chat started',
+                            timestamp: Date.now(),
+                            senderId: 'system'
+                        }
+                    });
+                    
+                    showToast('Chat request accepted!', 'success');
+                    
+                    // Open chat with the user
+                    openChat(request.fromUserId, request.fromUserName, request.fromUserPic);
+                    
+                } else {
+                    showToast('Chat request rejected', 'info');
+                }
+                
+                // Remove request from user's list
+                await db.ref('users/' + currentUser.uid + '/chatRequests/' + requestId).remove();
+                
+                // Play notification sound
+                notificationSound.play().catch(e => console.log('Audio play failed:', e));
+                
+            } catch (error) {
+                console.error('Error handling chat request:', error);
+                showToast('Failed to process request', 'error');
+            }
+        }
+
+        // ===== CONTACTS MANAGEMENT =====
+        async function loadUserContacts() {
+            try {
+                const contactsRef = db.ref('users/' + currentUser.uid + '/contacts');
+                contactsRef.on('value', async snapshot => {
+                    contacts = [];
+                    const contactsContainer = document.getElementById('contactsContainer');
+                    contactsContainer.innerHTML = '';
+                    
+                    if (!snapshot.exists()) {
+                        contactsContainer.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-address-book"></i>
+                                <h3>No contacts yet</h3>
+                                <p>Add contacts to start chatting</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    const contactPromises = [];
+                    snapshot.forEach(contactSnapshot => {
+                        const userId = contactSnapshot.key;
+                        contactPromises.push(
+                            db.ref('users/' + userId).once('value').then(userSnapshot => {
+                                const user = userSnapshot.val();
+                                if (user) {
+                                    contacts.push({
+                                        id: userId,
+                                        ...user
+                                    });
+                                }
+                            })
+                        );
+                    });
+                    
+                    await Promise.all(contactPromises);
+                    
+                    // Sort by last seen (most recent first)
+                    contacts.sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+                    
+                    // Render contacts
+                    contacts.forEach(contact => {
+                        renderContact(contact, contactsContainer);
+                    });
+                    
+                    // Update badge
+                    const badge = document.getElementById('contactsBadge');
+                    badge.textContent = contacts.length;
+                    badge.style.display = contacts.length > 0 ? 'block' : 'none';
+                });
+                
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+            }
+        }
+
+        function renderContact(contact, container) {
+            const contactElement = document.createElement('div');
+            contactElement.className = 'contact-card';
+            contactElement.setAttribute('data-user-id', contact.id);
+            
+            const lastSeen = contact.lastSeen ? formatTime(contact.lastSeen) : 'Never';
+            const status = contact.status === 'online' ? 'online' : 'offline';
+            
+            contactElement.innerHTML = `
+                <img src="${contact.profilePicUrl || 'https://via.placeholder.com/50x50/007AFF/FFFFFF?text=U'}" 
+                     alt="${contact.name}" class="profile-pic">
+                <div class="contact-info">
+                    <h4>${contact.name}</h4>
+                    <p>${contact.userId || 'ZYN-0000'}</p>
+                    <p class="status ${status}">${status === 'online' ? 'Online' : `Last seen ${lastSeen}`}</p>
+                </div>
+                <div class="contact-actions">
+                    <button class="action-btn chat-btn" data-action="chat">
+                        <i class="fas fa-comment"></i> Chat
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(contactElement);
+            
+            // Add event listeners
+            contactElement.querySelector('.chat-btn').addEventListener('click', () => {
+                openChat(contact.id, contact.name, contact.profilePicUrl);
+            });
+        }
+
+        // ===== GROUPS MANAGEMENT =====
+        function showCreateGroupModal() {
+            document.getElementById('createGroupModal').classList.add('active');
+            document.getElementById('groupName').value = '';
+            document.getElementById('groupProfilePreview').innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-users"></i>
+                    <span>No image selected</span>
+                </div>
+            `;
+            document.getElementById('groupMembersList').innerHTML = `
+                <div class="empty-members">
+                    <i class="fas fa-user-plus"></i>
+                    <p>Add members to your group</p>
+                </div>
+            `;
+            document.getElementById('membersCount').textContent = '0';
+        }
+
+        function closeCreateGroupModal() {
+            document.getElementById('createGroupModal').classList.remove('active');
+        }
+
+        function addGroupMember() {
+            const userIdInput = document.getElementById('addMemberInput');
+            const userId = userIdInput.value.trim().toUpperCase();
+            
+            if (!userId.startsWith('ZYN-') || userId.length !== 8) {
+                showToast('Please enter a valid User ID (ZYN-XXXX)', 'error');
+                return;
+            }
+            
+            // Check if user exists
+            db.ref('userIds/' + userId).once('value').then(snapshot => {
+                const firebaseUserId = snapshot.val();
+                
+                if (!firebaseUserId) {
+                    showToast('User not found', 'error');
+                    return;
+                }
+                
+                // Check if already added
+                const membersList = document.getElementById('groupMembersList');
+                const existingMember = membersList.querySelector(`[data-user-id="${firebaseUserId}"]`);
+                
+                if (existingMember) {
+                    showToast('User already added to group', 'warning');
+                    return;
+                }
+                
+                // Get user info
+                db.ref('users/' + firebaseUserId).once('value').then(userSnapshot => {
+                    const user = userSnapshot.val();
+                    
+                    // Add to members list
+                    const memberElement = document.createElement('div');
+                    memberElement.className = 'member-tag';
+                    memberElement.setAttribute('data-user-id', firebaseUserId);
+                    memberElement.innerHTML = `
+                        <span>${user.name}</span>
+                        <button class="remove-member" data-user-id="${firebaseUserId}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    
+                    // Replace empty state if this is the first member
+                    if (membersList.querySelector('.empty-members')) {
+                        membersList.innerHTML = '';
+                    }
+                    
+                    membersList.appendChild(memberElement);
+                    
+                    // Update count
+                    const count = membersList.children.length;
+                    document.getElementById('membersCount').textContent = count;
+                    
+                    // Clear input
+                    userIdInput.value = '';
+                    
+                    // Add remove event listener
+                    memberElement.querySelector('.remove-member').addEventListener('click', function() {
+                        const userId = this.getAttribute('data-user-id');
+                        this.parentElement.remove();
+                        
+                        // Update count
+                        const newCount = membersList.children.length;
+                        document.getElementById('membersCount').textContent = newCount;
+                        
+                        // Show empty state if no members
+                        if (newCount === 0) {
+                            membersList.innerHTML = `
+                                <div class="empty-members">
+                                    <i class="fas fa-user-plus"></i>
+                                    <p>Add members to your group</p>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                });
+                
+            }).catch(error => {
+                console.error('Error adding member:', error);
+                showToast('Error adding member', 'error');
+            });
+        }
+
+        async function createGroup() {
+            const groupName = document.getElementById('groupName').value.trim();
+            const membersList = document.getElementById('groupMembersList');
+            
+            if (!groupName) {
+                showToast('Please enter a group name', 'error');
+                return;
+            }
+            
+            // Get all member user IDs
+            const memberIds = Array.from(membersList.children)
+                .map(child => child.getAttribute('data-user-id'))
+                .filter(id => id);
+            
+            if (memberIds.length === 0) {
+                showToast('Please add at least one member to the group', 'error');
+                return;
+            }
+            
+            // Include current user as member and admin
+            const allMembers = [...memberIds, currentUser.uid];
+            const membersObj = {};
+            allMembers.forEach(memberId => {
+                membersObj[memberId] = true;
+            });
+            
+            // Get group photo if uploaded
+            const groupImageInput = document.getElementById('groupImage');
+            let groupPhotoUrl = 'https://via.placeholder.com/150x150/007AFF/FFFFFF?text=G';
+            
+            if (groupImageInput.files[0]) {
+                try {
+                    groupPhotoUrl = await uploadToCloudinary(groupImageInput.files[0]);
+                } catch (error) {
+                    console.error('Group photo upload failed:', error);
+                    showToast('Group photo upload failed, using default', 'warning');
+                }
+            }
+            
+            // Create group
+            const groupId = db.ref().child('groups').push().key;
+            const groupData = {
+                id: groupId,
+                name: groupName,
+                photoUrl: groupPhotoUrl,
+                admin: currentUser.uid,
+                members: membersObj,
+                createdAt: Date.now()
+            };
+            
+            try {
+                // Save group
+                await db.ref('groups/' + groupId).set(groupData);
+                
+                // Add group to each member's groups list
+                const updatePromises = allMembers.map(memberId => 
+                    db.ref('users/' + memberId + '/groups/' + groupId).set(true)
+                );
+                
+                await Promise.all(updatePromises);
+                
+                // Create group chat
+                await db.ref('chats/' + groupId).set({
+                    participants: membersObj,
+                    type: 'group',
+                    groupId: groupId,
+                    groupName: groupName,
+                    groupPhoto: groupPhotoUrl,
+                    createdAt: Date.now(),
+                    lastMessage: {
+                        text: 'Group created',
+                        timestamp: Date.now(),
+                        senderId: 'system'
+                    }
+                });
+                
+                showToast('Group created successfully!', 'success');
+                closeCreateGroupModal();
+                
+                // Play notification sound
+                notificationSound.play().catch(e => console.log('Audio play failed:', e));
+                
+            } catch (error) {
+                console.error('Error creating group:', error);
+                showToast('Failed to create group', 'error');
+            }
+        }
+
+        async function loadGroups() {
+            try {
+                const groupsRef = db.ref('users/' + currentUser.uid + '/groups');
+                groupsRef.on('value', async snapshot => {
+                    groups = [];
+                    const groupsContainer = document.getElementById('groupsContainer');
+                    groupsContainer.innerHTML = '';
+                    
+                    if (!snapshot.exists()) {
+                        groupsContainer.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <h3>No groups yet</h3>
+                                <p>Create or join a group to start chatting</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    const groupPromises = [];
+                    snapshot.forEach(groupSnapshot => {
+                        const groupId = groupSnapshot.key;
+                        groupPromises.push(
+                            db.ref('groups/' + groupId).once('value').then(groupSnap => {
+                                const group = groupSnap.val();
+                                if (group) {
+                                    groups.push({
+                                        id: groupId,
+                                        ...group
+                                    });
+                                }
+                            })
+                        );
+                    });
+                    
+                    await Promise.all(groupPromises);
+                    
+                    // Sort by creation date (most recent first)
+                    groups.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    
+                    // Render groups
+                    groups.forEach(group => {
+                        renderGroup(group, groupsContainer);
+                    });
+                    
+                    // Update badge
+                    const badge = document.getElementById('groupsBadge');
+                    badge.textContent = groups.length;
+                    badge.style.display = groups.length > 0 ? 'block' : 'none';
+                });
+                
+            } catch (error) {
+                console.error('Error loading groups:', error);
+            }
+        }
+
+        function renderGroup(group, container) {
+            const groupElement = document.createElement('div');
+            groupElement.className = 'group-card';
+            groupElement.setAttribute('data-group-id', group.id);
+            
+            // Count members
+            const memberCount = group.members ? Object.keys(group.members).length : 0;
+            
+            groupElement.innerHTML = `
+                <img src="${group.photoUrl || 'https://via.placeholder.com/50x50/007AFF/FFFFFF?text=G'}" 
+                     alt="${group.name}" class="profile-pic">
+                <div class="group-info">
+                    <h4>${group.name}</h4>
+                    <p>${memberCount} members</p>
+                    <p class="time">Created ${formatTime(group.createdAt)}</p>
+                </div>
+                <div class="group-actions">
+                    <button class="action-btn chat-btn" data-action="chat">
+                        <i class="fas fa-comment"></i> Chat
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(groupElement);
+            
+            // Add event listeners
+            groupElement.querySelector('.chat-btn').addEventListener('click', () => {
+                openGroupChat(group.id, group.name, group.photoUrl);
+            });
+        }
+
+        // ===== ZYNES MANAGEMENT =====
+        function showCreateZyneModal() {
+            document.getElementById('createZyneModal').classList.add('active');
+            document.getElementById('zyneText').value = '';
+            document.getElementById('zyneMediaPreview').innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-image"></i>
+                    <span>No media selected</span>
+                </div>
+            `;
+            updateZyneCharCount();
+        }
+
+        function closeCreateZyneModal() {
+            document.getElementById('createZyneModal').classList.remove('active');
+        }
+
+        function updateZyneCharCount() {
+            const text = document.getElementById('zyneText').value;
+            const count = text.length;
+            document.getElementById('zyneCharCount').textContent = count;
+        }
+
+        async function createZyne() {
+            const text = document.getElementById('zyneText').value.trim();
+            const zyneImageInput = document.getElementById('zyneImage');
+            const zyneVideoInput = document.getElementById('zyneVideo');
+            
+            if (!text && !zyneImageInput.files[0] && !zyneVideoInput.files[0]) {
+                showToast('Please add text or media to your Zyne', 'error');
+                return;
+            }
+            
+            let mediaUrl = null;
+            let mediaType = null;
+            
+            // Upload media if present
+            if (zyneImageInput.files[0]) {
+                try {
+                    mediaUrl = await uploadToCloudinary(zyneImageInput.files[0]);
+                    mediaType = 'image';
+                } catch (error) {
+                    console.error('Zyne image upload failed:', error);
+                    showToast('Failed to upload image', 'error');
+                    return;
+                }
+            } else if (zyneVideoInput.files[0]) {
+                try {
+                    mediaUrl = await uploadToCloudinary(zyneVideoInput.files[0]);
+                    mediaType = 'video';
+                } catch (error) {
+                    console.error('Zyne video upload failed:', error);
+                    showToast('Failed to upload video', 'error');
+                    return;
+                }
+            }
+            
+            // Create zyne
+            const zyneId = db.ref().child('zynes').push().key;
+            const zyneData = {
+                id: zyneId,
+                userId: currentUser.uid,
+                userName: userData.name,
+                userPic: userData.profilePicUrl,
+                userZId: userData.userId,
+                text: text || '',
+                mediaUrl: mediaUrl,
+                mediaType: mediaType,
+                timestamp: Date.now(),
+                expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+            };
+            
+            try {
+                // Save zyne
+                await db.ref('zynes/' + zyneId).set(zyneData);
+                
+                // Add to user's zynes
+                await db.ref('users/' + currentUser.uid + '/zynes/' + zyneId).set(true);
+                
+                showToast('Zyne posted successfully!', 'success');
+                closeCreateZyneModal();
+                
+            } catch (error) {
+                console.error('Error creating zyne:', error);
+                showToast('Failed to post Zyne', 'error');
+            }
+        }
+
+        async function loadZynes() {
+            try {
+                // Load zynes from contacts
+                const contactIds = Object.keys(userData.contacts || {});
+                
+                if (contactIds.length === 0) {
+                    document.getElementById('zynesContainer').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-circle"></i>
+                            <h3>No Zynes yet</h3>
+                            <p>Add contacts to see their Zynes</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Query zynes from contacts
+                const zynesRef = db.ref('zynes');
+                zynesRef.orderByChild('timestamp').on('value', snapshot => {
+                    zynes = [];
+                    const zynesContainer = document.getElementById('zynesContainer');
+                    zynesContainer.innerHTML = '';
+                    
+                    const now = Date.now();
+                    
+                    snapshot.forEach(childSnapshot => {
+                        const zyne = childSnapshot.val();
+                        
+                        // Check if zyne is from a contact and not expired
+                        if (contactIds.includes(zyne.userId) && zyne.expiresAt > now) {
+                            zynes.push(zyne);
+                        }
+                    });
+                    
+                    // Sort by timestamp (most recent first)
+                    zynes.sort((a, b) => b.timestamp - a.timestamp);
+                    
+                    // Render zynes
+                    if (zynes.length === 0) {
+                        zynesContainer.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-circle"></i>
+                                <h3>No Zynes yet</h3>
+                                <p>Your contacts haven't posted any Zynes yet</p>
+                            </div>
+                        `;
+                    } else {
+                        zynes.forEach(zyne => {
+                            renderZyne(zyne, zynesContainer);
+                        });
+                    }
+                    
+                    // Update badge
+                    const badge = document.getElementById('zynesBadge');
+                    badge.textContent = zynes.length;
+                    badge.style.display = zynes.length > 0 ? 'block' : 'none';
+                });
+                
+            } catch (error) {
+                console.error('Error loading zynes:', error);
+            }
+        }
+
+        function renderZyne(zyne, container) {
+            const zyneElement = document.createElement('div');
+            zyneElement.className = 'contact-card';
+            
+            // Calculate time remaining
+            const timeRemaining = zyne.expiresAt - Date.now();
+            const hoursRemaining = Math.floor(timeRemaining / (60 * 60 * 1000));
+            
+            let contentHtml = '';
+            if (zyne.mediaType === 'image') {
+                contentHtml = `
+                    <div class="preview-item">
+                        <img src="${zyne.mediaUrl}" alt="Zyne Image" class="chat-media">
+                    </div>
+                `;
+            } else if (zyne.mediaType === 'video') {
+                contentHtml = `
+                    <div class="preview-item">
+                        <video src="${zyne.mediaUrl}" controls class="chat-media"></video>
+                    </div>
+                `;
+            }
+            
+            zyneElement.innerHTML = `
+                <img src="${zyne.userPic || 'https://via.placeholder.com/50x50/007AFF/FFFFFF?text=U'}" 
+                     alt="${zyne.userName}" class="profile-pic">
+                <div class="contact-info">
+                    <h4>${zyne.userName}</h4>
+                    <p>${zyne.userZId || 'ZYN-0000'}</p>
+                    <p class="time">${formatTime(zyne.timestamp)} • Expires in ${hoursRemaining}h</p>
+                </div>
+                <div class="contact-actions">
+                    <button class="action-btn chat-btn" data-user-id="${zyne.userId}">
+                        <i class="fas fa-comment"></i> Reply
+                    </button>
+                </div>
+                ${zyne.text ? `<div class="message-bubble received" style="margin: 10px 0; width: 100%;">
+                    <p>${zyne.text}</p>
+                </div>` : ''}
+                ${contentHtml}
+            `;
+            
+            container.appendChild(zyneElement);
+            
+            // Add event listener for reply button
+            zyneElement.querySelector('.chat-btn').addEventListener('click', () => {
+                openChat(zyne.userId, zyne.userName, zyne.userPic);
+            });
+        }
+
+        // ===== CHAT FUNCTIONS =====
+        function openChat(userId, userName, userPic) {
+            currentChat = {
+                userId: userId,
+                userName: userName,
+                userPic: userPic,
+                type: 'private'
+            };
+            
+            // Update chat header
+            document.getElementById('chatUserName').textContent = userName;
+            document.getElementById('chatUserAvatar').src = userPic || 'https://via.placeholder.com/40x40/007AFF/FFFFFF?text=U';
+            
+            showChatPage();
+            loadChatMessages();
+            
+            // Mark as read
+            markChatAsRead();
+        }
+
+        function openGroupChat(groupId, groupName, groupPhoto) {
+            currentChat = {
+                groupId: groupId,
+                groupName: groupName,
+                groupPhoto: groupPhoto,
+                type: 'group'
+            };
+            
+            // Update chat header
+            document.getElementById('chatUserName').textContent = groupName;
+            document.getElementById('chatUserAvatar').src = groupPhoto || 'https://via.placeholder.com/40x40/007AFF/FFFFFF?text=G';
+            
+            showChatPage();
+            loadChatMessages();
+        }
+
+        function loadChatMessages() {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+            
+            let chatRef;
+            if (currentChat.type === 'private') {
+                const chatId = [currentUser.uid, currentChat.userId].sort().join('_');
+                chatRef = db.ref('chats/' + chatId + '/messages');
             } else {
-                // User is signed out, show loading screen for a moment
-                setTimeout(() => {
-                    loadingScreen.classList.add('hidden');
-                }, 1000);
+                chatRef = db.ref('chats/' + currentChat.groupId + '/messages');
+            }
+            
+            // Load existing messages
+            chatRef.orderByChild('timestamp').on('value', snapshot => {
+                messagesContainer.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    messagesContainer.innerHTML = `
+                        <div class="empty-chat">
+                            <i class="fas fa-comment"></i>
+                            <h3>No messages yet</h3>
+                            <p>Send a message to start the conversation</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let lastDate = null;
+                const messages = [];
+                
+                snapshot.forEach(childSnapshot => {
+                    messages.push(childSnapshot.val());
+                });
+                
+                // Sort by timestamp (oldest first)
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                
+                // Render messages
+                messages.forEach(message => {
+                    renderMessage(message, messagesContainer);
+                });
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+            
+            // Listen for typing indicator
+            if (currentChat.type === 'private') {
+                const typingRef = db.ref('typing/' + currentChat.userId + '/' + currentUser.uid);
+                typingRef.on('value', snapshot => {
+                    const typingIndicator = document.getElementById('typingIndicator');
+                    if (snapshot.exists() && snapshot.val()) {
+                        typingIndicator.style.display = 'flex';
+                    } else {
+                        typingIndicator.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        function renderMessage(message, container) {
+            // Check if we need to show date separator
+            const messageDate = new Date(message.timestamp).toDateString();
+            const lastMessage = container.lastElementChild;
+            
+            if (!lastMessage || !lastMessage.classList.contains('message-date')) {
+                const dateElement = document.createElement('div');
+                dateElement.className = 'message-date';
+                dateElement.textContent = formatDate(message.timestamp);
+                container.appendChild(dateElement);
+            }
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${message.senderId === currentUser.uid ? 'sent' : 'received'}`;
+            
+            let messageContent = '';
+            if (message.type === 'text') {
+                messageContent = `<p>${message.text}</p>`;
+            } else if (message.type === 'image') {
+                messageContent = `
+                    <div class="media-message">
+                        <img src="${message.mediaUrl}" alt="Image" class="chat-media" onclick="openMedia('${message.mediaUrl}')">
+                        ${message.text ? `<p>${message.text}</p>` : ''}
+                    </div>
+                `;
+            } else if (message.type === 'video') {
+                messageContent = `
+                    <div class="media-message">
+                        <video src="${message.mediaUrl}" controls class="chat-media"></video>
+                        ${message.text ? `<p>${message.text}</p>` : ''}
+                    </div>
+                `;
+            } else if (message.type === 'file') {
+                messageContent = `
+                    <div class="file-message">
+                        <a href="${message.mediaUrl}" target="_blank" class="link">
+                            <i class="fas fa-file"></i> ${message.fileName || 'Download file'}
+                        </a>
+                        ${message.text ? `<p>${message.text}</p>` : ''}
+                    </div>
+                `;
+            }
+            
+            const time = formatTime(message.timestamp);
+            const status = message.senderId === currentUser.uid ? 
+                `<span class="message-status">${message.status || 'sent'}</span>` : '';
+            
+            messageElement.innerHTML = `
+                <div class="message-bubble ${message.senderId === currentUser.uid ? 'sent' : 'received'}">
+                    ${messageContent}
+                    <span class="message-time">${time}${status}</span>
+                </div>
+            `;
+            
+            container.appendChild(messageElement);
+        }
+
+        function handleMessageInput() {
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendMessageBtn');
+            
+            sendBtn.disabled = input.value.trim() === '';
+            
+            // Send typing indicator
+            if (currentChat && currentChat.type === 'private') {
+                const typingRef = db.ref('typing/' + currentUser.uid + '/' + currentChat.userId);
+                typingRef.set(true);
+                
+                // Clear previous timeout
+                if (typingTimeout) clearTimeout(typingTimeout);
+                
+                // Set timeout to remove typing indicator
+                typingTimeout = setTimeout(() => {
+                    typingRef.set(false);
+                }, 3000);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const messageText = input.value.trim();
+            
+            if (!messageText || !currentChat) return;
+            
+            // Create message
+            const messageId = db.ref().child('messages').push().key;
+            const messageData = {
+                id: messageId,
+                senderId: currentUser.uid,
+                senderName: userData.name,
+                text: messageText,
+                type: 'text',
+                timestamp: Date.now(),
+                status: 'sent'
+            };
+            
+            // Determine chat reference
+            let chatRef;
+            let participants = {};
+            
+            if (currentChat.type === 'private') {
+                const chatId = [currentUser.uid, currentChat.userId].sort().join('_');
+                chatRef = db.ref('chats/' + chatId);
+                participants = {
+                    [currentUser.uid]: true,
+                    [currentChat.userId]: true
+                };
+            } else {
+                chatRef = db.ref('chats/' + currentChat.groupId);
+                participants = currentChat.groupId;
+            }
+            
+            try {
+                // Update chat last message
+                await chatRef.child('lastMessage').set({
+                    text: messageText,
+                    timestamp: Date.now(),
+                    senderId: currentUser.uid,
+                    senderName: userData.name
+                });
+                
+                // Add message to chat
+                await chatRef.child('messages/' + messageId).set(messageData);
+                
+                // Clear input
+                input.value = '';
+                document.getElementById('sendMessageBtn').disabled = true;
+                
+                // Clear typing indicator
+                if (currentChat.type === 'private') {
+                    const typingRef = db.ref('typing/' + currentUser.uid + '/' + currentChat.userId);
+                    typingRef.set(false);
+                }
+                
+                // Play notification sound
+                notificationSound.play().catch(e => console.log('Audio play failed:', e));
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showToast('Failed to send message', 'error');
+            }
+        }
+
+        function markChatAsRead() {
+            if (!currentChat || currentChat.type !== 'private') return;
+            
+            const chatId = [currentUser.uid, currentChat.userId].sort().join('_');
+            const messagesRef = db.ref('chats/' + chatId + '/messages');
+            
+            // Mark all messages from other user as read
+            messagesRef.orderByChild('senderId').equalTo(currentChat.userId).once('value', snapshot => {
+                const updates = {};
+                snapshot.forEach(childSnapshot => {
+                    if (childSnapshot.val().status !== 'read') {
+                        updates[childSnapshot.key + '/status'] = 'read';
+                    }
+                });
+                
+                if (Object.keys(updates).length > 0) {
+                    messagesRef.update(updates);
+                }
+            });
+        }
+
+        function toggleAttachmentOptions() {
+            const options = document.getElementById('attachmentOptions');
+            options.classList.toggle('show');
+        }
+
+        // ===== RECENT CHATS =====
+        async function loadRecentChats() {
+            try {
+                const chatsRef = db.ref('chats');
+                chatsRef.orderByChild('lastMessage/timestamp').on('value', async snapshot => {
+                    recentChats = [];
+                    const chatsList = document.getElementById('recentChatsList');
+                    chatsList.innerHTML = '';
+                    
+                    if (!snapshot.exists()) {
+                        return;
+                    }
+                    
+                    const chatPromises = [];
+                    snapshot.forEach(childSnapshot => {
+                        const chat = childSnapshot.val();
+                        const chatId = childSnapshot.key;
+                        
+                        // Check if current user is a participant
+                        if (chat.participants && chat.participants[currentUser.uid]) {
+                            chatPromises.push(processChat(chatId, chat));
+                        }
+                    });
+                    
+                    const chats = await Promise.all(chatPromises);
+                    
+                    // Filter out null chats and sort by last message timestamp
+                    recentChats = chats.filter(chat => chat !== null)
+                        .sort((a, b) => (b.lastMessage?.timestamp || 0) - (a.lastMessage?.timestamp || 0))
+                        .slice(0, 5); // Show only 5 most recent
+                    
+                    // Render recent chats
+                    if (recentChats.length === 0) {
+                        chatsList.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-comments"></i>
+                                <h3>No conversations yet</h3>
+                                <p>Start a chat to see your conversations here</p>
+                            </div>
+                        `;
+                    } else {
+                        recentChats.forEach(chat => {
+                            renderRecentChat(chat, chatsList);
+                        });
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error loading recent chats:', error);
+            }
+        }
+
+        async function processChat(chatId, chatData) {
+            try {
+                let chatName = 'Unknown';
+                let chatPhoto = 'https://via.placeholder.com/50x50/007AFF/FFFFFF?text=U';
+                let isGroup = chatData.type === 'group';
+                
+                if (isGroup) {
+                    chatName = chatData.groupName || 'Group Chat';
+                    chatPhoto = chatData.groupPhoto || 'https://via.placeholder.com/50x50/007AFF/FFFFFF?text=G';
+                } else {
+                    // Find the other participant
+                    const otherUserId = Object.keys(chatData.participants || {}).find(id => id !== currentUser.uid);
+                    if (otherUserId) {
+                        const userSnapshot = await db.ref('users/' + otherUserId).once('value');
+                        const user = userSnapshot.val();
+                        if (user) {
+                            chatName = user.name;
+                            chatPhoto = user.profilePicUrl || 'https://via.placeholder.com/50x50/007AFF/FFFFFF?text=U';
+                        }
+                    }
+                }
+                
+                return {
+                    id: chatId,
+                    name: chatName,
+                    photo: chatPhoto,
+                    isGroup: isGroup,
+                    lastMessage: chatData.lastMessage,
+                    participants: chatData.participants
+                };
+                
+            } catch (error) {
+                console.error('Error processing chat:', error);
+                return null;
+            }
+        }
+
+        function renderRecentChat(chat, container) {
+            const chatElement = document.createElement('div');
+            chatElement.className = 'contact-card';
+            chatElement.setAttribute('data-chat-id', chat.id);
+            
+            const lastMessage = chat.lastMessage?.text || 'No messages yet';
+            const time = chat.lastMessage?.timestamp ? formatTime(chat.lastMessage.timestamp) : '';
+            
+            chatElement.innerHTML = `
+                <img src="${chat.photo}" alt="${chat.name}" class="profile-pic">
+                <div class="contact-info">
+                    <h4>${chat.name}</h4>
+                    <p>${lastMessage}</p>
+                    <p class="time">${time}</p>
+                </div>
+                <div class="contact-actions">
+                    <button class="action-btn chat-btn" data-action="open-chat">
+                        <i class="fas fa-comment"></i> Open
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(chatElement);
+            
+            // Add event listener
+            chatElement.querySelector('.chat-btn').addEventListener('click', () => {
+                if (chat.isGroup) {
+                    openGroupChat(chat.id, chat.name, chat.photo);
+                } else {
+                    // Find the other participant
+                    const otherUserId = Object.keys(chat.participants || {}).find(id => id !== currentUser.uid);
+                    if (otherUserId) {
+                        db.ref('users/' + otherUserId).once('value').then(snapshot => {
+                            const user = snapshot.val();
+                            if (user) {
+                                openChat(otherUserId, user.name, user.profilePicUrl);
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        // ===== REALTIME LISTENERS =====
+        function setupRealtimeListeners() {
+            // Update user status
+            updateUserStatus('online');
+            
+            // Listen for user status changes
+            window.addEventListener('beforeunload', () => {
+                updateUserStatus('offline');
+            });
+            
+            // Listen for new chat requests
+            db.ref('users/' + currentUser.uid + '/chatRequests').on('child_added', () => {
+                // Play notification sound for new requests
+                notificationSound.play().catch(e => console.log('Audio play failed:', e));
+            });
+        }
+
+        function updateUserStatus(status) {
+            if (!userData) return;
+            
+            db.ref('users/' + currentUser.uid).update({
+                status: status,
+                lastSeen: Date.now()
+            });
+        }
+
+        // ===== UTILITY FUNCTIONS =====
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            // If less than 1 minute ago
+            if (diff < 60000) {
+                return 'Just now';
+            }
+            
+            // If less than 1 hour ago
+            if (diff < 3600000) {
+                const minutes = Math.floor(diff / 60000);
+                return `${minutes}m ago`;
+            }
+            
+            // If today
+            if (date.toDateString() === now.toDateString()) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            // If yesterday
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            }
+            
+            // If this week
+            if (diff < 604800000) {
+                return date.toLocaleDateString([], { weekday: 'short' });
+            }
+            
+            // Otherwise
+            return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'fas fa-info-circle';
+            if (type === 'success') icon = 'fas fa-check-circle';
+            if (type === 'error') icon = 'fas fa-exclamation-circle';
+            if (type === 'warning') icon = 'fas fa-exclamation-triangle';
+            
+            toast.innerHTML = `
+                <i class="${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function copyUserId() {
+            const userId = document.getElementById('headerUserId').textContent;
+            navigator.clipboard.writeText(userId).then(() => {
+                showToast('User ID copied to clipboard!', 'success');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast('Failed to copy User ID', 'error');
+            });
+        }
+
+        // ===== MEDIA VIEWER =====
+        function openMedia(url) {
+            window.open(url, '_blank');
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.remove('active');
             }
         });
 
-        // Initialize
-        setTimeout(() => {
-            loadingScreen.classList.add('hidden');
-        }, 2000);
+        // Handle escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            }
+        });
     </script>
 </body>
 </html>
