@@ -1,2987 +1,420 @@
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
-  authDomain: "zynapse-68181.firebaseapp.com",
-  databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
-  projectId: "zynapse-68181",
-  storageBucket: "zynapse-68181.firebasestorage.app",
-  messagingSenderId: "841353050519",
-  appId: "1:841353050519:web:271e2709246067bc506cd2",
-  measurementId: "G-J38CL5MRPF"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const database = firebase.database();
-
-// Global variables
+// User Management
 let currentUser = null;
-let currentChat = null;
-let currentChatUser = null;
-let users = {};
-let chats = {};
-let contacts = {};
-let requests = {};
-let onlineUsers = {};
-let userStatus = 'online';
-let notificationCount = 0;
-let userTypingTimeout = null;
-let messageListeners = {};
-let chatListeners = {};
-let typingListeners = {};
-let shouldAutoScroll = true;
-let notificationSound = null;
-let ringtoneSound = null;
+const notificationSound = document.getElementById('notification-sound');
 
-// DOM Elements
-document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
+// Generate ZYN-ID
+function generateZynId() {
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    return `ZYN-${randomNum}`;
+}
+
+// Sign Up Step Navigation
+function nextStep() {
+    document.getElementById('welcome-step').classList.remove('active');
+    document.getElementById('register-step').classList.add('active');
+}
+
+function prevStep() {
+    document.getElementById('register-step').classList.remove('active');
+    document.getElementById('welcome-step').classList.add('active');
+}
+
+// Profile Picture Preview
+document.getElementById('profile-pic')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('profile-preview');
+            const previewContainer = document.querySelector('.preview-container');
+            const uploadLabel = document.querySelector('.upload-label');
+            
+            preview.src = e.target.result;
+            previewContainer.style.display = 'block';
+            uploadLabel.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
 });
 
-// Initialize the application
-function initializeApp() {
-    // Create night sky background
-    createNightSky();
+// User Registration
+async function registerUser(event) {
+    event.preventDefault();
     
-    // Initialize notification sound
-    notificationSound = new Audio('notification.mp3');
-    ringtoneSound = new Audio('ringtone.mp3');
-    ringtoneSound.loop = true;
+    const name = document.getElementById('name').value;
+    const phone = document.getElementById('phone').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    const profilePic = document.getElementById('profile-pic').files[0];
     
-    // Check if user is logged in
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            currentUser = user;
-            if (window.location.pathname.endsWith('index.html') || 
-                window.location.pathname === '/' || 
-                window.location.pathname.endsWith('/')) {
-                window.location.href = 'home.html';
-            } else {
-                loadApp();
-            }
-        } else {
-            if (window.location.pathname.endsWith('home.html')) {
-                window.location.href = 'index.html';
-            } else {
-                setupAuthScreens();
-            }
-        }
-    });
-}
-
-// Create night sky with stars
-function createNightSky() {
-    const body = document.querySelector('body');
-    const nightSky = document.createElement('div');
-    nightSky.className = 'night-sky';
-    
-    const stars = document.createElement('div');
-    stars.className = 'stars';
-    
-    // Create stars
-    for (let i = 0; i < 150; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        
-        // Random size
-        const sizes = ['small', 'medium', 'large'];
-        const size = sizes[Math.floor(Math.random() * sizes.length)];
-        star.classList.add(size);
-        
-        // Random position
-        star.style.left = `${Math.random() * 100}%`;
-        star.style.top = `${Math.random() * 100}%`;
-        
-        // Random animation delay
-        star.style.animationDelay = `${Math.random() * 5}s`;
-        
-        stars.appendChild(star);
-    }
-    
-    nightSky.appendChild(stars);
-    body.appendChild(nightSky);
-}
-
-// Setup authentication screens
-function setupAuthScreens() {
-    // Navigation elements
-    const splashScreen = document.getElementById('splash-screen');
-    const loginScreen = document.getElementById('login-screen');
-    const registerScreen = document.getElementById('register-screen');
-    const loadingScreen = document.getElementById('loading-screen');
-    
-    // Buttons
-    const goToLoginBtn = document.getElementById('go-to-login-btn');
-    const goToRegisterBtn = document.getElementById('go-to-register-btn');
-    const backToSplashBtn = document.getElementById('back-to-splash');
-    const backToSplash2Btn = document.getElementById('back-to-splash-2');
-    const goToRegisterLink = document.getElementById('go-to-register');
-    const goToLoginLink = document.getElementById('go-to-login');
-    
-    // Forms
-    const loginForm = document.getElementById('login-form');
-    const registerForm = document.getElementById('register-form');
-    
-    // Navigation event listeners
-    if (goToLoginBtn) goToLoginBtn.addEventListener('click', () => showScreen('login'));
-    if (goToRegisterBtn) goToRegisterBtn.addEventListener('click', () => showScreen('register'));
-    if (backToSplashBtn) backToSplashBtn.addEventListener('click', () => showScreen('splash'));
-    if (backToSplash2Btn) backToSplash2Btn.addEventListener('click', () => showScreen('splash'));
-    if (goToRegisterLink) goToRegisterLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        showScreen('register');
-    });
-    if (goToLoginLink) goToLoginLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        showScreen('login');
-    });
-    
-    // Form submissions
-    if (loginForm) loginForm.addEventListener('submit', handleLogin);
-    if (registerForm) registerForm.addEventListener('submit', handleRegister);
-    
-    // Password strength indicator
-    const registerPassword = document.getElementById('register-password');
-    const passwordStrengthFill = document.getElementById('password-strength-fill');
-    const passwordStrengthText = document.getElementById('password-strength-text');
-    
-    if (registerPassword) {
-        registerPassword.addEventListener('input', checkPasswordStrength);
-    }
-    
-    // Password confirmation check
-    const confirmPassword = document.getElementById('register-confirm-password');
-    const passwordMatchMessage = document.getElementById('password-match-message');
-    
-    if (confirmPassword) {
-        confirmPassword.addEventListener('input', checkPasswordMatch);
-    }
-    
-    // Password visibility toggles
-    const passwordToggles = document.querySelectorAll('.password-toggle');
-    passwordToggles.forEach(toggle => {
-        toggle.addEventListener('click', function() {
-            const input = this.parentElement.querySelector('input');
-            const icon = this.querySelector('i');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
-    });
-    
-    // Forgot password functionality
-    const forgotPasswordLink = document.getElementById('forgot-password');
-    const forgotPasswordModal = document.getElementById('forgot-password-modal');
-    const closeForgotPassword = document.getElementById('close-forgot-password');
-    const cancelReset = document.getElementById('cancel-reset');
-    const sendResetLink = document.getElementById('send-reset-link');
-    
-    if (forgotPasswordLink) {
-        forgotPasswordLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            showModal('forgot-password-modal');
-        });
-    }
-    
-    if (closeForgotPassword) {
-        closeForgotPassword.addEventListener('click', () => hideModal('forgot-password-modal'));
-    }
-    
-    if (cancelReset) {
-        cancelReset.addEventListener('click', () => hideModal('forgot-password-modal'));
-    }
-    
-    if (sendResetLink) {
-        sendResetLink.addEventListener('click', handlePasswordReset);
-    }
-    
-    showScreen('splash');
-}
-
-// Show specific screen
-function showScreen(screenName) {
-    // Hide all screens
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-    });
-    
-    // Show the requested screen
-    const screenElement = document.getElementById(`${screenName}-screen`);
-    if (screenElement) {
-        screenElement.classList.add('active');
-    }
-}
-
-// Show modal
-function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('active');
-    }
-}
-
-// Hide modal
-function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('active');
-    }
-}
-
-// Handle user login
-function handleLogin(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    
-    // Show loading state
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const btnText = submitBtn.querySelector('.btn-text');
-    const btnLoading = submitBtn.querySelector('.btn-loading');
-    
-    if (btnText) btnText.style.opacity = '0';
-    if (btnLoading) btnLoading.style.display = 'block';
-    submitBtn.disabled = true;
-    
-    auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            // Login successful
-            currentUser = userCredential.user;
-            showScreen('loading');
-            
-            // Update user status to online
-            updateUserStatus('online');
-            
-            // Show success notification
-            showNotification('success', 'Login Successful', 'Welcome back to Zynapse!', 3000);
-        })
-        .catch((error) => {
-            // Handle errors
-            console.error('Login error:', error);
-            
-            // Show error notification
-            showNotification('error', 'Login Failed', error.message, 5000);
-            
-            // Reset button
-            if (btnText) btnText.style.opacity = '1';
-            if (btnLoading) btnLoading.style.display = 'none';
-            submitBtn.disabled = false;
-        });
-}
-
-// Handle user registration
-function handleRegister(e) {
-    e.preventDefault();
-    
-    const name = document.getElementById('register-name').value;
-    const username = document.getElementById('register-username').value;
-    const phone = document.getElementById('register-phone').value;
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
-    
-    // Validate passwords match
-    const confirmPassword = document.getElementById('register-confirm-password').value;
+    // Validate passwords
     if (password !== confirmPassword) {
-        showNotification('error', 'Registration Failed', 'Passwords do not match', 4000);
-        return;
-    }
-    
-    // Validate username format
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-        showNotification('error', 'Invalid Username', 'Username can only contain letters, numbers, and underscores', 4000);
+        alert('Passwords do not match!');
         return;
     }
     
     // Show loading state
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const btnText = submitBtn.querySelector('.btn-text');
-    const btnLoading = submitBtn.querySelector('.btn-loading');
+    const submitBtn = event.target.querySelector('.btn-primary');
+    const btnText = document.getElementById('register-text');
+    const spinner = document.getElementById('register-spinner');
     
-    if (btnText) btnText.style.opacity = '0';
-    if (btnLoading) btnLoading.style.display = 'block';
-    submitBtn.disabled = true;
+    btnText.style.display = 'none';
+    spinner.style.display = 'block';
     
-    // First check if username is available
-    database.ref('usernames/' + username).once('value')
-        .then(usernameSnapshot => {
-            if (usernameSnapshot.exists()) {
-                throw new Error('Username already taken');
-            }
-            
-            // Create user with email and password
-            return auth.createUserWithEmailAndPassword(email, password);
-        })
-        .then((userCredential) => {
-            // User created successfully
-            currentUser = userCredential.user;
-            
-            // Save username to prevent duplicates
-            database.ref('usernames/' + username).set(currentUser.uid);
-            
-            // Save user data to database
-            return database.ref('users/' + currentUser.uid).set({
-                name: name,
-                username: username,
-                phone: phone,
-                email: email,
-                status: 'online',
-                lastSeen: Date.now(),
-                createdAt: Date.now(),
-                profileComplete: true,
-                uid: currentUser.uid
-            });
-        })
-        .then(() => {
-            // Registration complete
-            showScreen('loading');
-            
-            // Show success notification
-            showNotification('success', 'Welcome to Zynapse!', 'Your account has been created successfully', 4000);
-        })
-        .catch((error) => {
-            // Handle errors
-            console.error('Registration error:', error);
-            
-            // Show error notification
-            let errorMessage = error.message;
-            if (error.code === 'auth/email-already-in-use') {
-                errorMessage = 'This email is already registered';
-            } else if (error.code === 'auth/weak-password') {
-                errorMessage = 'Password is too weak';
-            } else if (error.message === 'Username already taken') {
-                errorMessage = 'Username is already taken';
-            }
-            
-            showNotification('error', 'Registration Failed', errorMessage, 5000);
-            
-            // Reset button
-            if (btnText) btnText.style.opacity = '1';
-            if (btnLoading) btnLoading.style.display = 'none';
-            submitBtn.disabled = false;
-        });
-}
-
-// Load the main application
-function loadApp() {
-    setupAppEventListeners();
-    loadUserData();
-    setupRealtimeListeners();
-    initializeEmojiPicker();
-    
-    // Update user status to online
-    updateUserStatus('online');
-    
-    // Show welcome notification
-    showNotification('success', 'Welcome Back!', 'You are now connected to Zynapse', 3000);
-    
-    // Setup enhanced new chat modal
-    setupNewChatModal();
-    
-    // Setup chat request listeners
-    setupChatRequestListeners();
-    
-    // Enhance requests panel
-    enhanceRequestsPanel();
-}
-
-// Setup app event listeners
-function setupAppEventListeners() {
-    // Navigation buttons
-    const chatsBtn = document.getElementById('chats-btn');
-    const contactsBtn = document.getElementById('contacts-btn');
-    const requestsBtn = document.getElementById('requests-btn');
-    const newChatBtn = document.getElementById('new-chat-btn');
-    const settingsBtn = document.getElementById('settings-btn');
-    const userMenuBtn = document.getElementById('user-menu-btn');
-    
-    // Modal buttons
-    const closeNewChat = document.getElementById('close-new-chat');
-    const closeAddContact = document.getElementById('close-add-contact');
-    const closeSettings = document.getElementById('close-settings');
-    const cancelAddContact = document.getElementById('cancel-add-contact');
-    
-    // Form buttons
-    const sendContactRequest = document.getElementById('send-contact-request');
-    const addContactBtn = document.getElementById('add-contact-btn');
-    const addFirstContact = document.getElementById('add-first-contact');
-    const startFirstChat = document.getElementById('start-first-chat');
-    
-    // Chat buttons
-    const backToChats = document.getElementById('back-to-chats');
-    const sendBtn = document.getElementById('send-btn');
-    const messageInput = document.getElementById('message-input');
-    const emojiBtn = document.getElementById('emoji-btn');
-    
-    // Settings buttons
-    const logoutBtn = document.getElementById('logout-btn');
-    const editProfileBtn = document.getElementById('edit-profile-btn');
-    const darkModeToggle = document.getElementById('dark-mode-toggle');
-    const copyIdBtn = document.querySelector('.copy-id-btn');
-
-    // Copy User ID functionality
-    if (copyIdBtn) {
-        copyIdBtn.addEventListener('click', copyUserIdToClipboard);
-    }
-
-    // Add contact search functionality
-    const contactSearch = document.getElementById('contact-search');
-    if (contactSearch) {
-        let searchTimeout;
-        contactSearch.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                searchUsers(this.value);
-            }, 500);
-        });
-    }
-    
-    // Navigation
-    if (chatsBtn) chatsBtn.addEventListener('click', () => switchPanel('chats'));
-    if (contactsBtn) contactsBtn.addEventListener('click', () => switchPanel('contacts'));
-    if (requestsBtn) requestsBtn.addEventListener('click', () => switchPanel('requests'));
-    if (newChatBtn) newChatBtn.addEventListener('click', () => showModal('new-chat-modal'));
-    if (settingsBtn) settingsBtn.addEventListener('click', () => showModal('settings-modal'));
-    
-    // User menu
-    if (userMenuBtn) {
-        userMenuBtn.addEventListener('click', toggleUserMenu);
-    }
-    
-    // Modal controls
-    if (closeNewChat) closeNewChat.addEventListener('click', () => hideModal('new-chat-modal'));
-    if (closeAddContact) closeAddContact.addEventListener('click', () => hideModal('add-contact-modal'));
-    if (closeSettings) closeSettings.addEventListener('click', () => hideModal('settings-modal'));
-    if (cancelAddContact) cancelAddContact.addEventListener('click', () => hideModal('add-contact-modal'));
-    
-    // Contact management
-    if (addContactBtn) addContactBtn.addEventListener('click', () => showModal('add-contact-modal'));
-    if (addFirstContact) addFirstContact.addEventListener('click', () => showModal('add-contact-modal'));
-    if (sendContactRequest) sendContactRequest.addEventListener('click', handleSendContactRequest);
-    
-    // Chat management
-    if (startFirstChat) startFirstChat.addEventListener('click', () => showModal('new-chat-modal'));
-    if (backToChats) backToChats.addEventListener('click', showChatList);
-    
-    // Message sending
-    if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-    if (messageInput) {
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
+    try {
+        // 1. Create Firebase user
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
         
-        messageInput.addEventListener('input', () => {
-            // Handle typing indicator
-            if (currentChat && messageInput.value.trim()) {
-                updateTypingStatus(true);
-                
-                // Clear previous timeout
-                if (userTypingTimeout) {
-                    clearTimeout(userTypingTimeout);
-                }
-                
-                // Set timeout to stop typing indicator
-                userTypingTimeout = setTimeout(() => {
-                    updateTypingStatus(false);
-                }, 2000);
-            } else {
-                updateTypingStatus(false);
-            }
-            
-            // Toggle send button state
-            sendBtn.disabled = !messageInput.value.trim();
-            
-            // Auto-resize textarea
-            autoResizeTextarea(messageInput);
-            
-            // Format message for 9 words per line
-            formatMessageForDisplay(messageInput);
-        });
+        // 2. Generate ZYN-ID
+        const zynId = generateZynId();
         
-        // Handle focus and blur for typing indicator
-        messageInput.addEventListener('focus', () => {
-            if (currentChat && messageInput.value.trim()) {
-                updateTypingStatus(true);
-            }
-        });
-        
-        messageInput.addEventListener('blur', () => {
-            updateTypingStatus(false);
-        });
-    }
-    
-    // Emoji picker
-    if (emojiBtn) emojiBtn.addEventListener('click', toggleEmojiPicker);
-    
-    // Settings
-    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-    if (editProfileBtn) editProfileBtn.addEventListener('click', handleEditProfile);
-    if (darkModeToggle) {
-        darkModeToggle.addEventListener('change', toggleDarkMode);
-    }
-    
-    // Status options
-    const statusOptions = document.querySelectorAll('.status-option');
-    statusOptions.forEach(option => {
-        option.addEventListener('click', function() {
-            const status = this.getAttribute('data-status');
-            updateUserStatus(status);
-            
-            // Update UI
-            statusOptions.forEach(opt => opt.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Update global status
-            const globalStatus = document.getElementById('global-status');
-            if (globalStatus) {
-                globalStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-                globalStatus.className = `status ${status}`;
-            }
-            
-            // Update user status in chat if active
-            if (currentChat) {
-                const activeChatStatus = document.getElementById('active-chat-status');
-                const activeChatStatusText = document.getElementById('active-chat-status-text');
-                
-                if (activeChatStatus) {
-                    activeChatStatus.className = `presence-indicator ${status}`;
-                }
-                if (activeChatStatusText) {
-                    activeChatStatusText.textContent = status;
-                    activeChatStatusText.className = `status ${status}`;
-                }
-            }
-            
-            // Show notification
-            showNotification('info', 'Status Updated', `Your status is now set to ${status}`, 2000);
-        });
-    });
-    
-    // Settings tabs
-    const settingsTabs = document.querySelectorAll('.settings-tab');
-    settingsTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const tabName = this.getAttribute('data-tab');
-            
-            // Update active tab
-            settingsTabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Show corresponding content
-            document.querySelectorAll('.settings-tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            const tabContent = document.getElementById(`${tabName}-tab`);
-            if (tabContent) {
-                tabContent.classList.add('active');
-            }
-        });
-    });
-    
-    // Close modals when clicking outside
-    document.addEventListener('click', function(e) {
-        // User menu dropdown
-        const userMenu = document.getElementById('user-menu-dropdown');
-        if (userMenu && !userMenu.contains(e.target) && !e.target.closest('#user-menu-btn')) {
-            userMenu.classList.add('hidden');
+        // 3. Upload profile picture to ImageKit
+        let profilePicUrl = '';
+        if (profilePic) {
+            const uploadResult = await uploadToImageKit(profilePic, `profile_${user.uid}`);
+            profilePicUrl = uploadResult.url;
         }
         
-        // Emoji picker
-        const emojiPicker = document.getElementById('emoji-picker');
-        if (emojiPicker && !emojiPicker.contains(e.target) && !e.target.closest('#emoji-btn')) {
-            emojiPicker.classList.add('hidden');
-        }
-        
-        // Modals
-        if (e.target.classList.contains('modal-backdrop')) {
-            hideAllModals();
-        }
-    });
-    
-    // Search functionality
-    const chatsSearch = document.getElementById('chats-search');
-    const contactsSearch = document.getElementById('contacts-search');
-    const newChatSearch = document.getElementById('new-chat-search');
-    
-    if (chatsSearch) {
-        chatsSearch.addEventListener('input', () => filterChats(chatsSearch.value));
-    }
-    
-    if (contactsSearch) {
-        contactsSearch.addEventListener('input', () => filterContacts(contactsSearch.value));
-    }
-    
-    if (newChatSearch) {
-        newChatSearch.addEventListener('input', () => filterUsers(newChatSearch.value));
-    }
-    
-    // User menu dropdown items
-    const dropdownItems = document.querySelectorAll('.dropdown-item');
-    dropdownItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const action = this.getAttribute('data-action');
-            handleUserMenuAction(action);
+        // 4. Save user data to Firebase
+        await database.ref('users/' + user.uid).set({
+            name: name,
+            phone: phone,
+            email: email,
+            zynId: zynId,
+            profilePic: profilePicUrl,
+            createdAt: Date.now(),
+            contacts: {},
+            chatRequests: {},
+            chats: {}
         });
-    });
-
-    // Auto-scroll functionality for messages
-    const messagesScrollArea = document.getElementById('messages-scroll-area');
-    if (messagesScrollArea) {
-        messagesScrollArea.addEventListener('scroll', handleMessagesScroll);
-    }
-}
-
-// Format message for display (9 words per line)
-function formatMessageForDisplay(textarea) {
-    const message = textarea.value;
-    const words = message.split(' ');
-    let formattedMessage = '';
-    let lineWordCount = 0;
-    
-    for (let i = 0; i < words.length; i++) {
-        formattedMessage += words[i] + ' ';
-        lineWordCount++;
         
-        if (lineWordCount >= 9 && i < words.length - 1) {
-            formattedMessage += '\n';
-            lineWordCount = 0;
-        }
-    }
-    
-    // Only update if there's a change to prevent cursor jumping
-    if (formattedMessage.trim() !== message.trim()) {
-        const cursorPosition = textarea.selectionStart;
-        textarea.value = formattedMessage.trim();
-        textarea.setSelectionRange(cursorPosition, cursorPosition);
+        // 5. Save ZYN-ID mapping for quick lookup
+        await database.ref('zynIds/' + zynId).set(user.uid);
+        
+        // 6. Redirect to home page
+        window.location.href = 'home.html';
+        
+    } catch (error) {
+        console.error('Registration error:', error);
+        alert(error.message);
+    } finally {
+        // Reset button state
+        btnText.style.display = 'block';
+        spinner.style.display = 'none';
     }
 }
 
-// Handle messages scroll to detect when user scrolls up
-function handleMessagesScroll() {
-    const messagesScrollArea = document.getElementById('messages-scroll-area');
-    if (!messagesScrollArea) return;
-    
-    const scrollTop = messagesScrollArea.scrollTop;
-    const scrollHeight = messagesScrollArea.scrollHeight;
-    const clientHeight = messagesScrollArea.clientHeight;
-    
-    // If user scrolls up more than 100px from bottom, disable auto-scroll
-    shouldAutoScroll = (scrollHeight - scrollTop - clientHeight) < 100;
-}
-
-// Auto-scroll to bottom of messages
-function scrollToBottom() {
-    if (!shouldAutoScroll) return;
-    
-    const messagesScrollArea = document.getElementById('messages-scroll-area');
-    if (messagesScrollArea) {
+// Copy User ID
+function copyUserId() {
+    const userId = document.getElementById('user-id').textContent;
+    navigator.clipboard.writeText(userId).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
         setTimeout(() => {
-            messagesScrollArea.scrollTop = messagesScrollArea.scrollHeight;
-        }, 100);
-    }
+            btn.innerHTML = originalHTML;
+        }, 2000);
+    });
 }
 
-// Handle user menu actions
-function handleUserMenuAction(action) {
-    switch(action) {
-        case 'profile':
-            showModal('settings-modal');
-            break;
-        case 'status':
-            // Focus on status options in settings
-            showModal('settings-modal');
-            setTimeout(() => {
-                const profileTab = document.querySelector('.settings-tab[data-tab="profile"]');
-                if (profileTab) profileTab.click();
-            }, 100);
-            break;
-        case 'settings':
-            showModal('settings-modal');
-            break;
-        case 'logout':
-            handleLogout();
-            break;
-    }
+// Toggle Dropdown Menu
+function toggleMenu() {
+    const menu = document.getElementById('user-menu');
+    menu.classList.toggle('show');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const menu = document.getElementById('user-menu');
+    const iconBtn = document.querySelector('.icon-btn');
     
-    // Hide dropdown
-    const dropdown = document.getElementById('user-menu-dropdown');
-    if (dropdown) dropdown.classList.add('hidden');
-}
+    if (menu && menu.classList.contains('show') && 
+        !menu.contains(event.target) && 
+        !iconBtn.contains(event.target)) {
+        menu.classList.remove('show');
+    }
+});
 
-// Switch between panels
-function switchPanel(panelName) {
-    // Update nav buttons
-    document.querySelectorAll('.nav-tab').forEach(btn => {
+// Switch Views
+function switchView(view) {
+    // Hide all views
+    document.querySelectorAll('.view').forEach(v => {
+        v.classList.remove('active');
+    });
+    
+    // Remove active class from all nav buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    const panelBtn = document.getElementById(`${panelName}-btn`);
-    if (panelBtn) panelBtn.classList.add('active');
     
-    // Update panels
-    document.querySelectorAll('.content-panel').forEach(panel => {
-        panel.classList.remove('active');
-    });
-    const panel = document.getElementById(`${panelName}-panel`);
-    if (panel) panel.classList.add('active');
+    // Show selected view
+    document.getElementById(`${view}-view`).classList.add('active');
     
-    // Hide active chat
-    const activeChat = document.getElementById('active-chat');
-    if (activeChat) activeChat.classList.add('hidden');
-}
-
-// Toggle user menu
-function toggleUserMenu() {
-    const dropdown = document.getElementById('user-menu-dropdown');
-    if (dropdown) {
-        dropdown.classList.toggle('hidden');
-        
-        // Position dropdown below user avatar
-        const userMenuBtn = document.getElementById('user-menu-btn');
-        if (userMenuBtn) {
-            const rect = userMenuBtn.getBoundingClientRect();
-            dropdown.style.top = `${rect.bottom + 5}px`;
-            dropdown.style.right = `${window.innerWidth - rect.right}px`;
-        }
+    // Activate corresponding nav button
+    const navBtn = document.querySelector(`.nav-btn[onclick*="${view}"]`);
+    if (navBtn) {
+        navBtn.classList.add('active');
     }
 }
 
-// Load current user data
-function loadUserData() {
-    if (!currentUser) return;
-    
-    // First, get user data from Firebase Authentication
-    const user = auth.currentUser;
-    
-    if (user) {
-        // Update basic info from Firebase Auth
-        const userEmail = user.email;
-        const userId = user.uid;
-        
-        // Now get additional user data from Realtime Database
-        database.ref('users/' + currentUser.uid).once('value')
-            .then(snapshot => {
-                const userData = snapshot.val();
-                if (userData) {
-                    // Update UI with user data
-                    updateUserProfileUI(userData, userEmail, userId);
-                } else {
-                    // If no user data in database, create basic profile from auth data
-                    const basicUserData = {
-                        name: userEmail.split('@')[0], // Use email prefix as name
-                        username: userEmail.split('@')[0],
-                        email: userEmail,
-                        phone: 'Not provided',
-                        status: 'online'
-                    };
-                    updateUserProfileUI(basicUserData, userEmail, userId);
-                }
-            })
-            .catch(error => {
-                console.error('Error loading user data:', error);
-                // Fallback to auth data only
-                const userEmail = user.email;
-                const userId = user.uid;
-                const basicUserData = {
-                    name: userEmail.split('@')[0],
-                    username: userEmail.split('@')[0],
-                    email: userEmail,
-                    phone: 'Not provided',
-                    status: 'online'
-                };
-                updateUserProfileUI(basicUserData, userEmail, userId);
-                showNotification('error', 'Profile Error', 'Failed to load user data', 4000);
-            });
-    }
+// Modal Functions
+function openModal(modalId) {
+    document.getElementById(modalId).classList.add('show');
 }
 
-// Update user profile UI with data
-function updateUserProfileUI(userData, userEmail, userId) {
-    // Update avatar with first letter of name
-    const userAvatar = document.getElementById('user-avatar');
-    const settingsAvatar = document.getElementById('settings-avatar');
-    
-    if (userAvatar) {
-        userAvatar.textContent = userData.name ? userData.name.charAt(0).toUpperCase() : 'U';
-    }
-    if (settingsAvatar) {
-        settingsAvatar.textContent = userData.name ? userData.name.charAt(0).toUpperCase() : 'U';
-    }
-    
-    // Update profile information in settings
-    const settingsName = document.getElementById('settings-name');
-    const settingsUsername = document.getElementById('settings-username');
-    const settingsPhone = document.getElementById('settings-phone');
-    const settingsEmail = document.getElementById('settings-email');
-    const settingsUserId = document.getElementById('settings-user-id');
-    
-    if (settingsName) settingsName.textContent = userData.name || 'User';
-    if (settingsUsername) settingsUsername.textContent = `@${userData.username || userEmail.split('@')[0]}`;
-    if (settingsPhone) settingsPhone.textContent = userData.phone || 'Not provided';
-    if (settingsEmail) settingsEmail.textContent = userData.email || userEmail;
-    if (settingsUserId) settingsUserId.textContent = userId;
-    
-    // Update status
-    userStatus = userData.status || 'online';
-    const globalStatus = document.getElementById('global-status');
-    if (globalStatus) {
-        globalStatus.textContent = userStatus.charAt(0).toUpperCase() + userStatus.slice(1);
-        globalStatus.className = `status ${userStatus}`;
-    }
-    
-    // Update status options
-    const statusOption = document.querySelector(`.status-option[data-status="${userStatus}"]`);
-    if (statusOption) {
-        document.querySelectorAll('.status-option').forEach(opt => opt.classList.remove('active'));
-        statusOption.classList.add('active');
-    }
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('show');
 }
 
-// Copy User ID to clipboard
-function copyUserIdToClipboard() {
-    const userId = document.getElementById('settings-user-id');
-    if (userId) {
-        const userIdText = userId.textContent;
-        
-        navigator.clipboard.writeText(userIdText).then(() => {
-            showNotification('success', 'Copied!', 'User ID copied to clipboard', 2000);
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-            showNotification('error', 'Copy Failed', 'Failed to copy User ID', 3000);
-        });
-    }
-}
-
-// Search for users by email, username, or ID
-function searchUsers(searchTerm) {
-    if (!searchTerm.trim()) {
-        const searchResults = document.getElementById('search-results');
-        if (searchResults) searchResults.classList.add('hidden');
-        return;
-    }
-
-    const searchResults = document.getElementById('search-results');
-    if (!searchResults) return;
-    
-    searchResults.innerHTML = '<div class="loading-text"><i class="fas fa-spinner fa-spin"></i> Searching users...</div>';
-    searchResults.classList.remove('hidden');
-
-    // Search by email
-    database.ref('users').orderByChild('email').equalTo(searchTerm).once('value')
-        .then(snapshot => {
-            const usersData = snapshot.val();
-            
-            if (usersData) {
-                displaySearchResults(usersData);
-                return;
-            }
-            
-            // If not found by email, search by username
-            database.ref('users').orderByChild('username').equalTo(searchTerm.replace('@', '')).once('value')
-                .then(usernameSnapshot => {
-                    const usernameUsers = usernameSnapshot.val();
-                    if (usernameUsers) {
-                        displaySearchResults(usernameUsers);
-                        return;
-                    }
-                    
-                    // If still not found, search by user ID
-                    database.ref('users/' + searchTerm).once('value')
-                        .then(userSnapshot => {
-                            if (userSnapshot.exists()) {
-                                const userData = {};
-                                userData[searchTerm] = userSnapshot.val();
-                                displaySearchResults(userData);
-                            } else {
-                                // If still not found, search by name (partial match)
-                                database.ref('users').orderByChild('name').startAt(searchTerm).endAt(searchTerm + '\uf8ff').once('value')
-                                    .then(nameSnapshot => {
-                                        const nameUsers = nameSnapshot.val();
-                                        if (nameUsers) {
-                                            displaySearchResults(nameUsers);
-                                        } else {
-                                            searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No user found with that information</p></div>';
-                                        }
-                                    });
-                            }
-                        });
-                });
-        })
-        .catch(error => {
-            console.error('Search error:', error);
-            searchResults.innerHTML = '<div class="error-text"><i class="fas fa-exclamation-triangle"></i><p>Search failed. Please try again.</p></div>';
-        });
-}
-
-// Display search results
-function displaySearchResults(usersData) {
-    const searchResults = document.getElementById('search-results');
-    if (!searchResults) return;
-    
-    searchResults.innerHTML = '';
-    
-    Object.keys(usersData).forEach(userId => {
-        const userData = usersData[userId];
-        
-        // Don't show current user in search results
-        if (userId === currentUser.uid) return;
-        
-        const userItem = document.createElement('div');
-        userItem.className = 'search-result-item';
-        userItem.innerHTML = `
-            <div class="search-result-avatar">
-                <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
-            </div>
-            <div class="search-result-details">
-                <div class="search-result-name">${userData.name || 'Unknown User'}</div>
-                <div class="search-result-info">
-                    <span class="search-result-username">@${userData.username || 'user'}</span>
-                    <span class="search-result-email">${userData.email || 'No email'}</span>
-                </div>
-                <div class="search-result-id">ID: ${userId}</div>
-            </div>
-            <button class="btn btn-primary btn-small select-user" data-user-id="${userId}">Select</button>
-        `;
-        
-        searchResults.appendChild(userItem);
-    });
-    
-    // Add event listeners to select buttons
-    document.querySelectorAll('.select-user').forEach(button => {
-        button.addEventListener('click', function() {
-            const userId = this.getAttribute('data-user-id');
-            const searchInput = document.getElementById('contact-search');
-            
-            // Get user data and populate search field
-            database.ref('users/' + userId).once('value')
-                .then(snapshot => {
-                    const userData = snapshot.val();
-                    if (searchInput) {
-                        searchInput.value = userData.email || userData.username || userId;
-                    }
-                    searchResults.classList.add('hidden');
-                    
-                    // Show confirmation
-                    showNotification('success', 'User Selected', `${userData.name || 'User'} has been selected`, 2000);
-                });
-        });
-    });
-    
-    if (searchResults.innerHTML === '') {
-        searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No user found with that information</p></div>';
-    }
-}
-
-// Setup real-time listeners
-function setupRealtimeListeners() {
-    if (!currentUser) return;
-    
-    // Listen for user chats
-    database.ref('userChats/' + currentUser.uid).on('value', snapshot => {
-        const userChats = snapshot.val();
-        const chatList = document.getElementById('chat-list');
-        const chatsCount = document.getElementById('chats-count');
-        
-        if (chatList) {
-            // Clear existing chats (except empty state)
-            const existingChats = chatList.querySelectorAll('.chat-item:not(.empty-state)');
-            existingChats.forEach(chat => chat.remove());
-        }
-        
-        if (!userChats) {
-            // Show empty state if no chats
-            if (chatList && !chatList.querySelector('.empty-state')) {
-                chatList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                        <h4>No conversations yet</h4>
-                        <p>Start a new chat to connect with friends and colleagues</p>
-                        <button class="btn btn-primary btn-glow" id="start-first-chat">
-                            <i class="fas fa-plus"></i>
-                            Start Your First Chat
-                        </button>
-                    </div>
-                `;
-                const startFirstChatBtn = document.getElementById('start-first-chat');
-                if (startFirstChatBtn) {
-                    startFirstChatBtn.addEventListener('click', () => showModal('new-chat-modal'));
-                }
-            }
-            if (chatsCount) chatsCount.textContent = '0 chats';
-            return;
-        }
-        
-        // Hide empty state if it exists
-        if (chatList) {
-            const emptyState = chatList.querySelector('.empty-state');
-            if (emptyState) emptyState.remove();
-        }
-        
-        const chatIds = Object.keys(userChats);
-        if (chatsCount) chatsCount.textContent = `${chatIds.length} ${chatIds.length === 1 ? 'chat' : 'chats'}`;
-        
-        // Add chats to the list
-        chatIds.forEach(chatId => {
-            database.ref('chats/' + chatId).once('value')
-                .then(chatSnapshot => {
-                    const chatData = chatSnapshot.val();
-                    if (chatData) {
-                        addChatToList(chatId, chatData);
-                    }
-                });
-        });
-    });
-    
-    // Listen for contacts
-    database.ref('userContacts/' + currentUser.uid).on('value', snapshot => {
-        const userContacts = snapshot.val();
-        const contactList = document.getElementById('contact-list');
-        const contactsCount = document.getElementById('contacts-count');
-        
-        if (contactList) {
-            // Clear existing contacts (except empty state)
-            const existingContacts = contactList.querySelectorAll('.contact-item:not(.empty-state)');
-            existingContacts.forEach(contact => contact.remove());
-        }
-        
-        if (!userContacts) {
-            // Show empty state if no contacts
-            if (contactList && !contactList.querySelector('.empty-state')) {
-                contactList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">
-                            <i class="fas fa-user-friends"></i>
-                        </div>
-                        <h4>No contacts yet</h4>
-                        <p>Add contacts to start chatting and sharing</p>
-                        <button class="btn btn-primary btn-glow" id="add-first-contact">
-                            <i class="fas fa-user-plus"></i>
-                            Add Your First Contact
-                        </button>
-                    </div>
-                `;
-                const addFirstContactBtn = document.getElementById('add-first-contact');
-                if (addFirstContactBtn) {
-                    addFirstContactBtn.addEventListener('click', () => showModal('add-contact-modal'));
-                }
-            }
-            if (contactsCount) contactsCount.textContent = '0 contacts';
-            return;
-        }
-        
-        // Hide empty state if it exists
-        if (contactList) {
-            const emptyState = contactList.querySelector('.empty-state');
-            if (emptyState) emptyState.remove();
-        }
-        
-        const contactIds = Object.keys(userContacts);
-        if (contactsCount) contactsCount.textContent = `${contactIds.length} ${contactIds.length === 1 ? 'contact' : 'contacts'}`;
-        
-        // Add contacts to the list
-        contactIds.forEach(contactId => {
-            database.ref('users/' + contactId).once('value')
-                .then(userSnapshot => {
-                    const userData = userSnapshot.val();
-                    if (userData) {
-                        addContactToList(contactId, userData);
-                    }
-                });
-        });
-    });
-    
-    // Listen for contact requests
-    database.ref('contactRequests/' + currentUser.uid).on('value', snapshot => {
-        const userRequests = snapshot.val();
-        const requestList = document.getElementById('request-list');
-        const requestsBadge = document.getElementById('requests-badge');
-        const requestsCount = document.getElementById('requests-count');
-        
-        if (requestList) {
-            // Clear existing requests (except empty state)
-            const existingRequests = requestList.querySelectorAll('.request-item:not(.empty-state)');
-            existingRequests.forEach(request => request.remove());
-        }
-        
-        let pendingCount = 0;
-        
-        if (!userRequests) {
-            // Show empty state if no requests
-            if (requestList && !requestList.querySelector('.empty-state')) {
-                requestList.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <h4>No pending requests</h4>
-                        <p>When someone sends you a contact request, it will appear here</p>
-                    </div>
-                `;
-            }
-            // Update badge and count
-            if (requestsBadge) requestsBadge.classList.add('hidden');
-            if (requestsCount) requestsCount.textContent = '0 pending';
-            return;
-        }
-        
-        // Hide empty state if it exists
-        if (requestList) {
-            const emptyState = requestList.querySelector('.empty-state');
-            if (emptyState) emptyState.remove();
-        }
-        
-        // Add requests to the list and count pending ones
-        Object.keys(userRequests).forEach(requestId => {
-            if (userRequests[requestId].status === 'pending') {
-                pendingCount++;
-                database.ref('users/' + requestId).once('value')
-                    .then(userSnapshot => {
-                        const userData = userSnapshot.val();
-                        if (userData) {
-                            addRequestToList(requestId, userData, userRequests[requestId]);
-                        }
-                    });
-            }
-        });
-        
-        // Update badge and count
-        if (pendingCount > 0) {
-            if (requestsBadge) {
-                requestsBadge.textContent = pendingCount;
-                requestsBadge.classList.remove('hidden');
-            }
-            if (requestsCount) requestsCount.textContent = `${pendingCount} pending`;
-            
-            // Show notification for new requests
-            if (pendingCount > Object.keys(requests).length) {
-                showNotification('info', 'New Contact Request', `You have ${pendingCount} pending contact requests`, 4000);
-            }
-        } else {
-            if (requestsBadge) requestsBadge.classList.add('hidden');
-            if (requestsCount) requestsCount.textContent = '0 pending';
-        }
-        
-        requests = userRequests;
-    });
-    
-    // Listen for online users
-    database.ref('users').orderByChild('status').equalTo('online').on('value', snapshot => {
-        const onlineUsersData = snapshot.val();
-        const onlineUsersList = document.getElementById('online-users-list');
-        const onlineCount = document.getElementById('online-count');
-        const onlineUsersPanel = document.getElementById('online-users');
-        
-        if (onlineUsersList) onlineUsersList.innerHTML = '';
-        
-        if (onlineUsersData) {
-            let count = 0;
-            Object.keys(onlineUsersData).forEach(userId => {
-                if (userId !== currentUser.uid) {
-                    count++;
-                    const userData = onlineUsersData[userId];
-                    const onlineUser = document.createElement('div');
-                    onlineUser.className = 'online-user';
-                    onlineUser.innerHTML = `
-                        <div class="online-user-avatar">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
-                        <span class="online-user-name">${userData.name || 'Unknown User'}</span>
-                    `;
-                    onlineUser.addEventListener('click', () => startChatWithUser(userId, userData));
-                    if (onlineUsersList) onlineUsersList.appendChild(onlineUser);
-                }
-            });
-            
-            if (onlineCount) onlineCount.textContent = count;
-            if (onlineUsersPanel) {
-                if (count > 0) {
-                    onlineUsersPanel.classList.remove('hidden');
-                } else {
-                    onlineUsersPanel.classList.add('hidden');
-                }
-            }
-        } else {
-            if (onlineUsersPanel) onlineUsersPanel.classList.add('hidden');
-        }
-    });
-    
-    // Listen for new messages to show notifications
-    database.ref('userChats/' + currentUser.uid).on('child_added', snapshot => {
-        const chatId = snapshot.key;
-        
-        // Set up listener for new messages in this chat
-        messageListeners[chatId] = database.ref('chats/' + chatId + '/messages').limitToLast(1).on('child_added', messageSnapshot => {
-            const message = messageSnapshot.val();
-            
-            // Don't show notification for own messages or if chat is active
-            if (message.senderId !== currentUser.uid && chatId !== currentChat) {
-                showMessageNotification(chatId, message);
-            }
-        });
-    });
-    
-    // Remove listeners for chats that are removed
-    database.ref('userChats/' + currentUser.uid).on('child_removed', snapshot => {
-        const chatId = snapshot.key;
-        if (messageListeners[chatId]) {
-            database.ref('chats/' + chatId + '/messages').off('child_added', messageListeners[chatId]);
-            delete messageListeners[chatId];
-        }
-    });
-}
-
-// Add a chat to the chat list
-function addChatToList(chatId, chatData) {
-    const chatList = document.getElementById('chat-list');
-    if (!chatList) return;
-    
-    // Determine the other user in the chat
-    const participants = Object.keys(chatData.participants || {});
-    const otherUserId = participants.find(id => id !== currentUser.uid);
-    
-    if (!otherUserId) return;
-    
-    // Get user data
-    database.ref('users/' + otherUserId).once('value')
-        .then(userSnapshot => {
-            const userData = userSnapshot.val();
-            if (!userData) return;
-            
-            // Get last message
-            const messages = chatData.messages ? Object.values(chatData.messages) : [];
-            const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
-            
-            // Create chat item
-            const chatItem = document.createElement('div');
-            chatItem.className = 'chat-item';
-            chatItem.setAttribute('data-chat-id', chatId);
-            chatItem.setAttribute('data-user-id', otherUserId);
-            
-            const lastMessageTime = lastMessage ? formatTime(lastMessage.timestamp) : '';
-            const lastMessageText = lastMessage ? 
-                (lastMessage.type === 'text' ? lastMessage.content : 
-                 lastMessage.type === 'image' ? '📷 Image' : 
-                 lastMessage.type === 'file' ? '📎 File' : 'Message') : 
-                'No messages yet';
-            
-            const unreadCount = chatData.unreadCount && chatData.unreadCount[currentUser.uid] ? 
-                chatData.unreadCount[currentUser.uid] : 0;
-            
-            chatItem.innerHTML = `
-                <div class="chat-avatar">
-                    <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
-                    <span class="presence-indicator ${userData.status || 'offline'}"></span>
-                </div>
-                <div class="chat-details">
-                    <div class="chat-name">${userData.name || 'Unknown User'}</div>
-                    <div class="chat-preview">${lastMessageText}</div>
-                </div>
-                <div class="chat-meta">
-                    <div class="chat-time">${lastMessageTime}</div>
-                    ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ''}
-                </div>
-            `;
-            
-            // Add click event to open chat
-            chatItem.addEventListener('click', () => openChat(chatId, userData));
-            
-            chatList.appendChild(chatItem);
-        });
-}
-
-// Add a contact to the contact list
-function addContactToList(contactId, userData) {
-    const contactList = document.getElementById('contact-list');
-    if (!contactList) return;
-    
-    const contactItem = document.createElement('div');
-    contactItem.className = 'contact-item';
-    contactItem.setAttribute('data-user-id', contactId);
-    
-    contactItem.innerHTML = `
-        <div class="chat-avatar">
-            <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
-            <span class="presence-indicator ${userData.status || 'offline'}"></span>
-        </div>
-        <div class="contact-details">
-            <div class="contact-name">${userData.name || 'Unknown User'}</div>
-            <div class="contact-status">${userData.status || 'offline'}</div>
-        </div>
-    `;
-    
-    // Add click event to start chat with contact
-    contactItem.addEventListener('click', () => startChatWithUser(contactId, userData));
-    
-    contactList.appendChild(contactItem);
-}
-
-// Add a request to the request list
-function addRequestToList(requestId, userData, requestData) {
-    const requestList = document.getElementById('request-list');
-    if (!requestList) return;
-    
-    const requestItem = document.createElement('div');
-    requestItem.className = 'request-item';
-    requestItem.setAttribute('data-user-id', requestId);
-    
-    requestItem.innerHTML = `
-        <div class="chat-avatar">
-            <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
-        </div>
-        <div class="request-details">
-            <div class="request-name">${userData.name || 'Unknown User'}</div>
-            <div class="request-info">${requestData.message || 'Wants to connect with you'}</div>
-            <div class="request-actions">
-                <button class="request-btn accept">Accept</button>
-                <button class="request-btn decline">Decline</button>
-            </div>
-        </div>
-    `;
-    
-    // Add event listeners for accept/decline buttons
-    const acceptBtn = requestItem.querySelector('.request-btn.accept');
-    const declineBtn = requestItem.querySelector('.request-btn.decline');
-    
-    if (acceptBtn) acceptBtn.addEventListener('click', () => handleContactRequest(requestId, 'accepted'));
-    if (declineBtn) declineBtn.addEventListener('click', () => handleContactRequest(requestId, 'declined'));
-    
-    requestList.appendChild(requestItem);
-}
-
-// Filter chats based on search input
-function filterChats(searchTerm) {
-    const chatItems = document.querySelectorAll('.chat-item');
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    
-    chatItems.forEach(item => {
-        const chatName = item.querySelector('.chat-name').textContent.toLowerCase();
-        const chatPreview = item.querySelector('.chat-preview').textContent.toLowerCase();
-        
-        if (chatName.includes(lowerSearchTerm) || chatPreview.includes(lowerSearchTerm)) {
-            item.style.display = 'flex';
-        } else {
-            item.style.display = 'none';
-        }
-    });
-}
-
-// Filter contacts based on search input
-function filterContacts(searchTerm) {
-    const contactItems = document.querySelectorAll('.contact-item');
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    
-    contactItems.forEach(item => {
-        const contactName = item.querySelector('.contact-name').textContent.toLowerCase();
-        const contactStatus = item.querySelector('.contact-status').textContent.toLowerCase();
-        
-        if (contactName.includes(lowerSearchTerm) || contactStatus.includes(lowerSearchTerm)) {
-            item.style.display = 'flex';
-        } else {
-            item.style.display = 'none';
-        }
-    });
-}
-
-// Filter users based on search input
-function filterUsers(searchTerm) {
-    const userItems = document.querySelectorAll('#user-list-modal .contact-item');
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    
-    userItems.forEach(item => {
-        const userName = item.querySelector('.contact-name').textContent.toLowerCase();
-        const userStatus = item.querySelector('.contact-status').textContent.toLowerCase();
-        
-        if (userName.includes(lowerSearchTerm) || userStatus.includes(lowerSearchTerm)) {
-            item.style.display = 'flex';
-        } else {
-            item.style.display = 'none';
-        }
-    });
-}
-
-// Open a chat
-function openChat(chatId, userData) {
-    currentChat = chatId;
-    currentChatUser = userData;
-    
-    // Enable auto-scroll when opening a chat
-    shouldAutoScroll = true;
-    
-    // Update UI
-    document.querySelectorAll('.content-panel').forEach(panel => {
-        panel.classList.remove('active');
-    });
-    const activeChat = document.getElementById('active-chat');
-    if (activeChat) {
-        activeChat.classList.remove('hidden');
-        activeChat.classList.add('active');
-    }
-    
-    // Update chat header
-    const activeChatName = document.getElementById('active-chat-name');
-    const activeChatStatusText = document.getElementById('active-chat-status-text');
-    const activeChatStatus = document.getElementById('active-chat-status');
-    const activeChatAvatar = document.getElementById('active-chat-avatar');
-    
-    if (activeChatName) activeChatName.textContent = userData.name || 'Unknown User';
-    if (activeChatStatusText) {
-        activeChatStatusText.textContent = userData.status || 'offline';
-        activeChatStatusText.className = `status ${userData.status || 'offline'}`;
-    }
-    if (activeChatStatus) activeChatStatus.className = `presence-indicator ${userData.status || 'offline'}`;
-    if (activeChatAvatar) activeChatAvatar.textContent = userData.name ? userData.name.charAt(0).toUpperCase() : 'U';
-    
-    // Load messages
-    loadMessages(chatId);
-    
-    // Mark messages as read
-    markMessagesAsRead(chatId);
-    
-    // Update last seen
-    updateLastSeen(userData.uid);
-    
-    // Focus on message input and ensure it's visible
-    const messageInput = document.getElementById('message-input');
-    if (messageInput) {
-        setTimeout(() => {
-            messageInput.focus();
-            // Ensure message input container is visible
-            const messageInputContainer = document.querySelector('.message-input-container');
-            if (messageInputContainer) {
-                messageInputContainer.style.display = 'flex';
-            }
-        }, 300);
-    }
-    
-    // Scroll to bottom immediately
-    setTimeout(() => {
-        scrollToBottom();
-    }, 100);
-}
-
-// Show chat list
-function showChatList() {
-    const activeChat = document.getElementById('active-chat');
-    if (activeChat) {
-        activeChat.classList.remove('active');
-        activeChat.classList.add('hidden');
-    }
-    switchPanel('chats');
-    currentChat = null;
-    currentChatUser = null;
-    
-    // Stop typing indicator
-    updateTypingStatus(false);
-    
-    // Clear any existing typing listeners
-    if (typingListeners[currentChat]) {
-        database.ref('chats/' + currentChat + '/typing').off('value', typingListeners[currentChat]);
-        delete typingListeners[currentChat];
-    }
-}
-
-// Load messages for a chat - FIXED VERSION
-function loadMessages(chatId) {
-    const messagesContainer = document.getElementById('messages');
-    if (!messagesContainer) return;
-    
-    messagesContainer.innerHTML = '';
-    
-    // Remove any existing listener for this chat
-    if (chatListeners[chatId]) {
-        database.ref('chats/' + chatId + '/messages').off('value', chatListeners[chatId]);
-    }
-    
-    // Set up new listener
-    chatListeners[chatId] = database.ref('chats/' + chatId + '/messages').on('value', snapshot => {
-        const messagesData = snapshot.val();
-        
-        if (!messagesData) {
-            messagesContainer.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="fas fa-comment-slash"></i>
-                    </div>
-                    <h4>No messages yet</h4>
-                    <p>Start the conversation!</p>
-                </div>
-            `;
-            // Ensure message input is visible even when no messages
-            ensureMessageInputVisible();
-            return;
-        }
-        
-        // Convert to array and sort by timestamp
-        const messages = Object.values(messagesData).sort((a, b) => a.timestamp - b.timestamp);
-        
-        // Clear messages (except empty state)
-        const existingMessages = messagesContainer.querySelectorAll('.message-group, .date-divider');
-        existingMessages.forEach(msg => msg.remove());
-        
-        // Hide empty state if it exists
-        const emptyState = messagesContainer.querySelector('.empty-state');
-        if (emptyState) emptyState.remove();
-        
-        // Group messages by date and sender
-        let currentDate = null;
-        let currentSender = null;
-        let messageGroup = null;
-        
-        messages.forEach(message => {
-            const messageDate = new Date(message.timestamp).toDateString();
-            
-            // Add date divider if date changed
-            if (messageDate !== currentDate) {
-                currentDate = messageDate;
-                const dateDivider = document.createElement('div');
-                dateDivider.className = 'date-divider';
-                dateDivider.innerHTML = `<span>${formatDate(message.timestamp)}</span>`;
-                messagesContainer.appendChild(dateDivider);
-            }
-            
-            // Check if we need a new message group
-            if (message.senderId !== currentSender) {
-                currentSender = message.senderId;
-                messageGroup = document.createElement('div');
-                messageGroup.className = `message-group ${message.senderId === currentUser.uid ? 'own' : 'other'}`;
-                messagesContainer.appendChild(messageGroup);
-                
-                // Add sender name for group messages (if not own)
-                if (message.senderId !== currentUser.uid) {
-                    const senderName = document.createElement('div');
-                    senderName.className = 'message-sender';
-                    senderName.textContent = getSenderName(message.senderId);
-                    messageGroup.appendChild(senderName);
-                }
-            }
-            
-            // Add message to group
-            const messageElement = document.createElement('div');
-            messageElement.className = `message ${message.senderId === currentUser.uid ? 'sent' : 'received'}`;
-            
-            let messageContent = '';
-            if (message.type === 'text') {
-                // Format message with 9 words per line
-                messageContent = formatMessageContent(message.content);
-            } else if (message.type === 'image') {
-                messageContent = `<div class="message-image">📷 Image</div>`;
-            } else if (message.type === 'file') {
-                messageContent = `<div class="message-file">📎 File</div>`;
-            } else if (message.type === 'system') {
-                messageElement.className = 'message system';
-                messageContent = `<div class="system-message">${message.content}</div>`;
-            }
-            
-            messageElement.innerHTML = `
-                <div class="message-content">${messageContent}</div>
-                <div class="message-time">${formatTime(message.timestamp)}</div>
-            `;
-            
-            if (messageGroup) messageGroup.appendChild(messageElement);
-        });
-        
-        // Ensure message input is visible
-        ensureMessageInputVisible();
-        
-        // Auto-scroll to bottom
-        scrollToBottom();
-    });
-    
-    // Listen for typing indicators
-    if (typingListeners[chatId]) {
-        database.ref('chats/' + chatId + '/typing').off('value', typingListeners[chatId]);
-    }
-    
-    typingListeners[chatId] = database.ref('chats/' + chatId + '/typing').on('value', snapshot => {
-        const typingData = snapshot.val();
-        const typingIndicator = document.getElementById('typing-indicator');
-        
-        if (typingData && typingIndicator) {
-            const typingUsers = Object.keys(typingData).filter(id => id !== currentUser.uid);
-            if (typingUsers.length > 0) {
-                // Get typing user names
-                Promise.all(typingUsers.map(userId => 
-                    database.ref('users/' + userId).once('value')
-                )).then(userSnapshots => {
-                    const names = userSnapshots.map(snapshot => {
-                        const userData = snapshot.val();
-                        return userData ? userData.name : 'Unknown User';
-                    });
-                    const typingUser = document.getElementById('typing-user');
-                    if (typingUser) {
-                        typingUser.textContent = 
-                            `${names.join(', ')} ${names.length > 1 ? 'are' : 'is'} typing...`;
-                    }
-                    typingIndicator.classList.remove('hidden');
-                    
-                    // Auto-scroll when someone is typing
-                    scrollToBottom();
-                });
-            } else {
-                typingIndicator.classList.add('hidden');
-            }
-        } else if (typingIndicator) {
-            typingIndicator.classList.add('hidden');
-        }
-    });
-}
-
-// Format message content with 9 words per line
-function formatMessageContent(content) {
-    const words = content.split(' ');
-    let formattedContent = '';
-    let lineWordCount = 0;
-    
-    for (let i = 0; i < words.length; i++) {
-        formattedContent += words[i] + ' ';
-        lineWordCount++;
-        
-        if (lineWordCount >= 9 && i < words.length - 1) {
-            formattedContent += '<br>';
-            lineWordCount = 0;
-        }
-    }
-    
-    return formattedContent.trim();
-}
-
-// Ensure message input is always visible
-function ensureMessageInputVisible() {
-    const messageInputContainer = document.querySelector('.message-input-container');
-    if (messageInputContainer) {
-        messageInputContainer.style.display = 'flex';
-        messageInputContainer.style.visibility = 'visible';
-        messageInputContainer.style.opacity = '1';
-    }
-}
-
-// Send a message
-function sendMessage() {
-    const messageInput = document.getElementById('message-input');
-    const sendBtn = document.getElementById('send-btn');
-    
-    if (!currentChat || !messageInput || !messageInput.value.trim()) return;
-    
-    const messageContent = messageInput.value.trim();
-    const timestamp = Date.now();
-    
-    // Create message object
-    const message = {
-        senderId: currentUser.uid,
-        content: messageContent,
-        type: 'text',
-        timestamp: timestamp,
-        status: 'sent'
-    };
-    
-    // Add message to database
-    const messageRef = database.ref('chats/' + currentChat + '/messages').push();
-    messageRef.set(message)
-        .then(() => {
-            // Clear input
-            messageInput.value = '';
-            if (sendBtn) sendBtn.disabled = true;
-            
-            // Reset textarea height
-            messageInput.style.height = 'auto';
-            
-            // Update last message in chat
-            database.ref('chats/' + currentChat).update({
-                lastMessage: messageContent,
-                lastMessageTime: timestamp,
-                lastMessageSender: currentUser.uid
-            });
-            
-            // Update unread count for other participants
-            updateUnreadCount(currentChat, currentUser.uid);
-            
-            // Stop typing indicator
-            updateTypingStatus(false);
-            
-            // Force auto-scroll after sending message
-            shouldAutoScroll = true;
-            scrollToBottom();
-        })
-        .catch(error => {
-            console.error('Error sending message:', error);
-            showNotification('error', 'Message Failed', 'Failed to send message. Please try again.', 4000);
-        });
-}
-
-// Start a new chat with a user - ENHANCED WITH CHAT REQUESTS
-function startChatWithUser(userId, userData) {
-    // Check if user is in contacts OR if we're sending a chat request
-    database.ref('userContacts/' + currentUser.uid + '/' + userId).once('value')
-        .then(contactSnapshot => {
-            if (contactSnapshot.exists()) {
-                // User is in contacts, proceed with chat
-                checkAndOpenChat(userId, userData);
-            } else {
-                // User is not in contacts, send chat request
-                sendChatRequest(userId, userData);
-            }
-        })
-        .catch(error => {
-            console.error('Error checking contact:', error);
-            showNotification('error', 'Error', 'Failed to verify contact status', 4000);
-        });
-}
-
-// Check if chat exists and open it, otherwise create new chat
-function checkAndOpenChat(userId, userData) {
-    database.ref('userChats/' + currentUser.uid).once('value')
-        .then(snapshot => {
-            const userChats = snapshot.val();
-            let existingChatId = null;
-            
-            if (userChats) {
-                // Check each chat to see if it includes the target user
-                const chatPromises = Object.keys(userChats).map(chatId => {
-                    return database.ref('chats/' + chatId + '/participants').once('value')
-                        .then(participantsSnapshot => {
-                            const participants = participantsSnapshot.val();
-                            if (participants && participants[userId]) {
-                                existingChatId = chatId;
-                            }
-                        });
-                });
-                
-                return Promise.all(chatPromises).then(() => existingChatId);
-            }
-            return null;
-        })
-        .then(existingChatId => {
-            if (existingChatId) {
-                // Open existing chat
-                openChat(existingChatId, userData);
-            } else {
-                // Create new chat
-                createNewChat(userId, userData);
-            }
-        });
-}
-
-// Send chat request to user
-function sendChatRequest(userId, userData) {
-    // Get current user data
-    database.ref('users/' + currentUser.uid).once('value')
-        .then(currentUserSnapshot => {
-            const currentUserData = currentUserSnapshot.val();
-            
-            // Create chat request
-            const requestId = database.ref('chatRequests').push().key;
-            const requestData = {
-                id: requestId,
-                fromUserId: currentUser.uid,
-                fromUserName: currentUserData.name,
-                fromUserEmail: currentUserData.email,
-                fromUserPhone: currentUserData.phone,
-                toUserId: userId,
-                toUserName: userData.name,
-                status: 'pending',
-                timestamp: Date.now(),
-                type: 'chat'
-            };
-            
-            // Save request to database
-            database.ref('chatRequests/' + userId + '/' + requestId).set(requestData)
-                .then(() => {
-                    showNotification('success', 'Chat Request Sent', 
-                        `Chat request sent to ${userData.name}. They will be notified.`, 4000);
-                    hideModal('new-chat-modal');
-                    
-                    // Start ringtone for the recipient
-                    startRingtone(userId, requestId);
-                })
-                .catch(error => {
-                    console.error('Error sending chat request:', error);
-                    showNotification('error', 'Request Failed', 'Failed to send chat request', 4000);
-                });
-        });
-}
-
-// Start ringtone for chat request
-function startRingtone(userId, requestId) {
-    // Set up listener for request status changes
-    database.ref('chatRequests/' + userId + '/' + requestId).on('value', snapshot => {
-        const requestData = snapshot.val();
-        if (!requestData) return;
-        
-        if (requestData.status === 'accepted') {
-            // Stop ringtone when request is accepted
-            stopRingtone();
-            // Remove the listener
-            database.ref('chatRequests/' + userId + '/' + requestId).off('value');
-            
-            // Create chat and add to contacts
-            createNewChat(userId, requestData);
-            addToContacts(userId);
-            
-        } else if (requestData.status === 'declined') {
-            // Stop ringtone when request is declined
-            stopRingtone();
-            // Remove the listener
-            database.ref('chatRequests/' + userId + '/' + requestId).off('value');
-        }
-    });
-}
-
-// Stop ringtone
-function stopRingtone() {
-    if (ringtoneSound) {
-        ringtoneSound.pause();
-        ringtoneSound.currentTime = 0;
-    }
-}
-
-// Add user to contacts
-function addToContacts(userId) {
-    database.ref('userContacts/' + currentUser.uid + '/' + userId).set(true);
-    database.ref('userContacts/' + userId + '/' + currentUser.uid).set(true);
-}
-
-// Create a new chat
-function createNewChat(userId, userData) {
-    const chatId = database.ref('chats').push().key;
-    
-    // Create chat object
-    const chatData = {
-        id: chatId,
-        participants: {
-            [currentUser.uid]: true,
-            [userId]: true
-        },
-        createdAt: Date.now(),
-        lastMessage: '',
-        lastMessageTime: Date.now(),
-        lastMessageSender: ''
-    };
-    
-    // Save chat to database
-    database.ref('chats/' + chatId).set(chatData)
-        .then(() => {
-            // Add chat to user's chat list
-            database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
-            database.ref('userChats/' + userId + '/' + chatId).set(true);
-            
-            // Open the new chat
-            openChat(chatId, userData);
-            
-            // Show success notification
-            showNotification('success', 'Chat Started', `You started a chat with ${userData.name || 'User'}`, 3000);
-        })
-        .catch(error => {
-            console.error('Error creating chat:', error);
-            showNotification('error', 'Chat Failed', 'Failed to create chat. Please try again.', 4000);
-        });
-}
-
-// Handle contact request
-function handleSendContactRequest() {
-    const searchInput = document.getElementById('contact-search');
-    const message = document.getElementById('contact-message');
-    
-    if (!searchInput || !searchInput.value) {
-        showNotification('error', 'Missing Information', 'Please enter an email address or User ID', 4000);
-        return;
-    }
-    
-    // Find user by email or ID
-    let searchPromise;
-    
-    if (searchInput.value.includes('@')) {
-        // Search by email
-        searchPromise = database.ref('users').orderByChild('email').equalTo(searchInput.value).once('value');
-    } else {
-        // Search by user ID
-        searchPromise = database.ref('users/' + searchInput.value).once('value')
-            .then(snapshot => {
-                const result = {};
-                if (snapshot.exists()) {
-                    result[searchInput.value] = snapshot.val();
-                }
-                return { val: () => result };
-            });
-    }
-    
-    searchPromise.then(snapshot => {
-        const usersData = snapshot.val();
-        if (!usersData || Object.keys(usersData).length === 0) {
-            showNotification('error', 'User Not Found', 'No user found with that email address or User ID', 4000);
-            return;
-        }
-        
-        const userId = Object.keys(usersData)[0];
-        const userData = usersData[userId];
-        
-        if (userId === currentUser.uid) {
-            showNotification('error', 'Invalid Request', 'You cannot send a contact request to yourself', 4000);
-            return;
-        }
-        
-        // Check if contact already exists
-        database.ref('userContacts/' + currentUser.uid + '/' + userId).once('value')
-            .then(contactSnapshot => {
-                if (contactSnapshot.exists()) {
-                    showNotification('info', 'Already Connected', 'This user is already in your contacts', 4000);
-                    return;
-                }
-                
-                // Check if request already exists
-                database.ref('contactRequests/' + userId + '/' + currentUser.uid).once('value')
-                    .then(requestSnapshot => {
-                        if (requestSnapshot.exists()) {
-                            const requestData = requestSnapshot.val();
-                            if (requestData.status === 'pending') {
-                                showNotification('info', 'Request Pending', 'You have already sent a pending request to this user', 4000);
-                                return;
-                            }
-                        }
-                        
-                        // Create contact request
-                        const requestData = {
-                            from: currentUser.uid,
-                            fromName: currentUser.displayName || 'Unknown User',
-                            to: userId,
-                            message: message ? message.value : '',
-                            status: 'pending',
-                            timestamp: Date.now()
-                        };
-                        
-                        database.ref('contactRequests/' + userId + '/' + currentUser.uid).set(requestData)
-                            .then(() => {
-                                showNotification('success', 'Request Sent', `Contact request sent to ${userData.name || 'User'}`, 3000);
-                                hideModal('add-contact-modal');
-                                searchInput.value = '';
-                                if (message) message.value = '';
-                                const searchResults = document.getElementById('search-results');
-                                if (searchResults) searchResults.classList.add('hidden');
-                            })
-                            .catch(error => {
-                                console.error('Error sending contact request:', error);
-                                showNotification('error', 'Request Failed', 'Failed to send contact request', 4000);
-                            });
-                    });
-            });
-    })
-    .catch(error => {
-        console.error('Error finding user:', error);
-        showNotification('error', 'Search Error', 'Error finding user', 4000);
-    });
-}
-
-// Handle contact request response
-function handleContactRequest(requestId, response) {
-    if (!currentUser) return;
-    
-    // Update request status
-    database.ref('contactRequests/' + currentUser.uid + '/' + requestId).update({
-        status: response
-    });
-    
-    // If accepted, add to contacts
-    if (response === 'accepted') {
-        database.ref('userContacts/' + currentUser.uid + '/' + requestId).set(true);
-        database.ref('userContacts/' + requestId + '/' + currentUser.uid).set(true);
-        
-        // Remove from requests list
-        const requestItem = document.querySelector(`.request-item[data-user-id="${requestId}"]`);
-        if (requestItem) requestItem.remove();
-        
-        // Show success message
-        showNotification('success', 'Contact Added', 'Contact added successfully', 3000);
-        
-        // Get user data for notification
-        database.ref('users/' + requestId).once('value')
-            .then(snapshot => {
-                const userData = snapshot.val();
-                if (userData) {
-                    showNotification('success', 'Contact Added', `${userData.name || 'User'} has been added to your contacts`, 3000);
-                }
-            });
-    } else {
-        // Show declined message
-        showNotification('info', 'Request Declined', 'Contact request declined', 3000);
-    }
-}
-
-// Update typing status
-function updateTypingStatus(isTyping) {
-    if (!currentChat) return;
-    
-    if (isTyping) {
-        database.ref('chats/' + currentChat + '/typing/' + currentUser.uid).set(true);
-    } else {
-        database.ref('chats/' + currentChat + '/typing/' + currentUser.uid).remove();
-        
-        // Clear timeout if it exists
-        if (userTypingTimeout) {
-            clearTimeout(userTypingTimeout);
-            userTypingTimeout = null;
-        }
-    }
-}
-
-// Mark messages as read
-function markMessagesAsRead(chatId) {
-    if (!currentUser || !chatId) return;
-    
-    // Reset unread count for this user in this chat
-    database.ref('chats/' + chatId + '/unreadCount/' + currentUser.uid).set(0);
-}
-
-// Update unread count for other participants
-function updateUnreadCount(chatId, senderId) {
-    database.ref('chats/' + chatId + '/participants').once('value')
-        .then(snapshot => {
-            const participants = snapshot.val();
-            if (participants) {
-                Object.keys(participants).forEach(userId => {
-                    if (userId !== senderId) {
-                        // Increment unread count for this user
-                        database.ref('chats/' + chatId + '/unreadCount/' + userId).transaction(current => {
-                            return (current || 0) + 1;
-                        });
-                    }
-                });
-            }
-        });
-}
-
-// Update user status
-function updateUserStatus(status) {
-    if (!currentUser) return;
-    
-    userStatus = status;
-    
-    database.ref('users/' + currentUser.uid).update({
-        status: status,
-        lastSeen: Date.now()
-    });
-}
-
-// Update last seen
-function updateLastSeen(userId) {
-    if (!userId) return;
-    
-    database.ref('users/' + userId).update({
-        lastSeen: Date.now()
-    });
-}
-
-// Initialize emoji picker
-function initializeEmojiPicker() {
-    const emojiPicker = document.getElementById('emoji-picker');
-    if (!emojiPicker) return;
-    
-    // Simple emoji list
-    const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈', '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾', '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'];
-    
-    emojiPicker.innerHTML = '';
-    
-    emojis.forEach(emoji => {
-        const emojiElement = document.createElement('span');
-        emojiElement.textContent = emoji;
-        emojiElement.addEventListener('click', () => {
-            insertEmoji(emoji);
-        });
-        emojiPicker.appendChild(emojiElement);
-    });
-}
-
-// Toggle emoji picker visibility
-function toggleEmojiPicker() {
-    const emojiPicker = document.getElementById('emoji-picker');
-    if (emojiPicker) {
-        emojiPicker.classList.toggle('hidden');
-        
-        // Position emoji picker above the input
-        const emojiBtn = document.getElementById('emoji-btn');
-        if (emojiBtn) {
-            const rect = emojiBtn.getBoundingClientRect();
-            emojiPicker.style.bottom = `${window.innerHeight - rect.top + 10}px`;
-            emojiPicker.style.left = `${rect.left}px`;
-        }
-    }
-}
-
-// Insert emoji into message input
-function insertEmoji(emoji) {
-    const messageInput = document.getElementById('message-input');
-    if (!messageInput) return;
-    
-    const cursorPos = messageInput.selectionStart;
-    const textBefore = messageInput.value.substring(0, cursorPos);
-    const textAfter = messageInput.value.substring(cursorPos);
-    
-    messageInput.value = textBefore + emoji + textAfter;
-    messageInput.focus();
-    messageInput.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
-    
-    // Update send button state
-    const sendBtn = document.getElementById('send-btn');
-    if (sendBtn) {
-        sendBtn.disabled = !messageInput.value.trim();
-    }
-    
-    // Close emoji picker
-    const emojiPicker = document.getElementById('emoji-picker');
-    if (emojiPicker) emojiPicker.classList.add('hidden');
-}
-
-// Enhanced Notification System with Sound
-function showNotification(type, title, message, duration = 5000) {
-    const notificationContainer = document.getElementById('notification-container');
-    if (!notificationContainer) return null;
-    
-    const notificationId = 'notification-' + Date.now();
-    
-    const icons = {
-        success: 'fas fa-check-circle',
-        error: 'fas fa-exclamation-circle',
-        warning: 'fas fa-exclamation-triangle',
-        info: 'fas fa-info-circle'
-    };
-    
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.id = notificationId;
-    
-    notification.innerHTML = `
-        <div class="notification-content">
-            <div class="notification-details">
-                <div class="notification-header">
-                    <div class="notification-title">
-                        <i class="${icons[type]}"></i>
-                        ${title}
-                    </div>
-                    <div class="notification-time">${formatTime(new Date())}</div>
-                </div>
-                <div class="notification-message">${message}</div>
-            </div>
-            <button class="notification-close">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `;
-    
-    notificationContainer.appendChild(notification);
-    
-    // Play notification sound for new messages
-    if (type === 'info' && notificationSound) {
+// Start Chat - Search User
+document.getElementById('search-user-id')?.addEventListener('input', async function(e) {
+    const zynId = e.target.value.trim();
+    const resultDiv = document.getElementById('user-search-result');
+    
+    if (zynId.length === 8 && zynId.startsWith('ZYN-')) {
         try {
-            notificationSound.currentTime = 0;
-            notificationSound.play().catch(e => console.log('Audio play failed:', e));
-        } catch (error) {
-            console.log('Notification sound error:', error);
-        }
-    }
-    
-    // Add close event
-    const closeBtn = notification.querySelector('.notification-close');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            removeNotification(notificationId);
-        });
-    }
-    
-    // Auto remove after duration
-    if (duration > 0) {
-        setTimeout(() => {
-            removeNotification(notificationId);
-        }, duration);
-    }
-    
-    // Add click to dismiss
-    notification.addEventListener('click', (e) => {
-        if (!e.target.closest('.notification-close')) {
-            removeNotification(notificationId);
-        }
-    });
-    
-    return notificationId;
-}
-
-function removeNotification(notificationId) {
-    const notification = document.getElementById(notificationId);
-    if (notification) {
-        notification.classList.add('fade-out');
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }
-}
-
-// Show message notification
-function showMessageNotification(chatId, message) {
-    // Get sender info
-    database.ref('users/' + message.senderId).once('value')
-        .then(snapshot => {
-            const userData = snapshot.val();
-            if (!userData) return;
-            
-            let messageText = '';
-            if (message.type === 'text') {
-                messageText = message.content.length > 50 ? 
-                    message.content.substring(0, 50) + '...' : message.content;
-            } else if (message.type === 'image') {
-                messageText = 'Sent an image';
-            } else if (message.type === 'file') {
-                messageText = 'Sent a file';
-            }
-            
-            const notificationId = showNotification('info', userData.name || 'User', messageText, 5000);
-            
-            // Add click event to open the chat
-            const notification = document.getElementById(notificationId);
-            if (notification) {
-                notification.addEventListener('click', () => {
-                    openChat(chatId, userData);
-                    removeNotification(notificationId);
-                });
-            }
-        });
-}
-
-// Handle logout
-function handleLogout() {
-    // Update status to offline
-    updateUserStatus('offline');
-    
-    // Show loading state
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        const originalHTML = logoutBtn.innerHTML;
-        logoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging out...';
-        logoutBtn.disabled = true;
-        
-        // Remove all real-time listeners
-        Object.keys(messageListeners).forEach(chatId => {
-            database.ref('chats/' + chatId + '/messages').off('value', messageListeners[chatId]);
-        });
-        
-        Object.keys(chatListeners).forEach(chatId => {
-            database.ref('chats/' + chatId + '/messages').off('value', chatListeners[chatId]);
-        });
-        
-        Object.keys(typingListeners).forEach(chatId => {
-            database.ref('chats/' + chatId + '/typing').off('value', typingListeners[chatId]);
-        });
-        
-        // Sign out
-        auth.signOut()
-            .then(() => {
-                currentUser = null;
-                showNotification('success', 'Logged Out', 'You have been successfully logged out', 2000);
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
-            })
-            .catch(error => {
-                console.error('Logout error:', error);
-                showNotification('error', 'Logout Failed', 'Failed to logout. Please try again.', 4000);
+            // Look up user by ZYN-ID
+            const snapshot = await database.ref('zynIds/' + zynId).once('value');
+            if (snapshot.exists()) {
+                const userId = snapshot.val();
+                const userSnap = await database.ref('users/' + userId).once('value');
+                const userData = userSnap.val();
                 
-                // Reset button
-                logoutBtn.innerHTML = originalHTML;
-                logoutBtn.disabled = false;
-            });
-    }
-}
-
-// Handle edit profile
-function handleEditProfile() {
-    showNotification('info', 'Coming Soon', 'Edit profile feature will be available in the next update', 4000);
-}
-
-// Toggle dark mode
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-theme');
-    const isDarkMode = document.body.classList.contains('dark-theme');
-    localStorage.setItem('darkMode', isDarkMode);
-    
-    showNotification('success', 'Theme Updated', 
-        isDarkMode ? 'Dark mode activated' : 'Light mode activated', 2000);
-}
-
-// Handle password reset
-function handlePasswordReset() {
-    const emailInput = document.getElementById('reset-email');
-    if (!emailInput) return;
-    
-    const email = emailInput.value;
-    
-    if (!email) {
-        showNotification('error', 'Missing Email', 'Please enter your email address', 4000);
-        return;
-    }
-    
-    // Show loading state
-    const sendBtn = document.getElementById('send-reset-link');
-    if (sendBtn) {
-        const btnText = sendBtn.querySelector('.btn-text');
-        const btnLoading = sendBtn.querySelector('.btn-loading');
-        
-        if (btnText) btnText.style.opacity = '0';
-        if (btnLoading) btnLoading.style.display = 'block';
-        sendBtn.disabled = true;
-        
-        auth.sendPasswordResetEmail(email)
-            .then(() => {
-                showNotification('success', 'Reset Email Sent', 'Password reset email sent! Check your inbox.', 5000);
-                hideModal('forgot-password-modal');
-                emailInput.value = '';
-            })
-            .catch(error => {
-                console.error('Password reset error:', error);
-                showNotification('error', 'Reset Failed', `Failed to send reset email: ${error.message}`, 5000);
-            })
-            .finally(() => {
-                if (btnText) btnText.style.opacity = '1';
-                if (btnLoading) btnLoading.style.display = 'none';
-                sendBtn.disabled = false;
-            });
-    }
-}
-
-// Check password strength
-function checkPasswordStrength() {
-    const passwordInput = document.getElementById('register-password');
-    if (!passwordInput) return;
-    
-    const password = passwordInput.value;
-    const strengthFill = document.getElementById('password-strength-fill');
-    const strengthText = document.getElementById('password-strength-text');
-    const requirements = document.querySelectorAll('.requirement');
-    
-    // Reset requirements
-    requirements.forEach(req => req.classList.remove('met'));
-    
-    if (!password) {
-        if (strengthFill) strengthFill.style.width = '0%';
-        if (strengthText) {
-            strengthText.textContent = 'Weak';
-            strengthText.style.color = 'var(--primary-red)';
+                resultDiv.innerHTML = `
+                    <div class="user-found">
+                        <img src="${userData.profilePic || 'default-profile.png'}" class="request-profile">
+                        <div class="request-info">
+                            <div class="request-name">${userData.name}</div>
+                            <div class="request-phone">${userData.phone}</div>
+                        </div>
+                    </div>
+                `;
+                resultDiv.classList.add('show');
+            } else {
+                resultDiv.innerHTML = '<p>User not found</p>';
+                resultDiv.classList.add('show');
+            }
+        } catch (error) {
+            console.error('Search error:', error);
         }
-        return;
-    }
-    
-    // Check requirements
-    let strength = 0;
-    const requirementsMet = {};
-    
-    // Length requirement
-    if (password.length >= 8) {
-        strength += 20;
-        requirementsMet.length = true;
-        const lengthReq = document.querySelector('.requirement[data-requirement="length"]');
-        if (lengthReq) lengthReq.classList.add('met');
-    }
-    
-    // Uppercase requirement
-    if (/[A-Z]/.test(password)) {
-        strength += 20;
-        requirementsMet.uppercase = true;
-        const uppercaseReq = document.querySelector('.requirement[data-requirement="uppercase"]');
-        if (uppercaseReq) uppercaseReq.classList.add('met');
-    }
-    
-    // Lowercase requirement
-    if (/[a-z]/.test(password)) {
-        strength += 20;
-        requirementsMet.lowercase = true;
-        const lowercaseReq = document.querySelector('.requirement[data-requirement="lowercase"]');
-        if (lowercaseReq) lowercaseReq.classList.add('met');
-    }
-    
-    // Number requirement
-    if (/[0-9]/.test(password)) {
-        strength += 20;
-        requirementsMet.number = true;
-        const numberReq = document.querySelector('.requirement[data-requirement="number"]');
-        if (numberReq) numberReq.classList.add('met');
-    }
-    
-    // Special character requirement
-    if (/[^a-zA-Z0-9]/.test(password)) {
-        strength += 20;
-        requirementsMet.special = true;
-        const specialReq = document.querySelector('.requirement[data-requirement="special"]');
-        if (specialReq) specialReq.classList.add('met');
-    }
-    
-    // Update UI
-    if (strengthFill) strengthFill.style.width = strength + '%';
-    
-    if (strengthText) {
-        if (strength <= 40) {
-            strengthText.textContent = 'Weak';
-            strengthText.style.color = 'var(--primary-red)';
-        } else if (strength <= 80) {
-            strengthText.textContent = 'Medium';
-            strengthText.style.color = 'var(--warning)';
-        } else {
-            strengthText.textContent = 'Strong';
-            strengthText.style.color = 'var(--success)';
-        }
-    }
-}
-
-// Check if passwords match
-function checkPasswordMatch() {
-    const passwordInput = document.getElementById('register-password');
-    const confirmPasswordInput = document.getElementById('register-confirm-password');
-    if (!passwordInput || !confirmPasswordInput) return;
-    
-    const password = passwordInput.value;
-    const confirmPassword = confirmPasswordInput.value;
-    const messageElement = document.getElementById('password-match-message');
-    
-    if (!messageElement) return;
-    
-    if (!confirmPassword) {
-        messageElement.textContent = '';
-        messageElement.className = 'validation-message';
-        return;
-    }
-    
-    if (password === confirmPassword) {
-        messageElement.textContent = '✓ Passwords match';
-        messageElement.className = 'validation-message success';
     } else {
-        messageElement.textContent = '✗ Passwords do not match';
-        messageElement.className = 'validation-message error';
+        resultDiv.classList.remove('show');
     }
-}
+});
 
-// Auto-resize textarea
-function autoResizeTextarea(textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
-}
-
-// Hide all modals
-function hideAllModals() {
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.classList.remove('active');
-    });
-}
-
-// Utility functions
-function formatTime(timestamp) {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDate(timestamp) {
-    const date = new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+// Send Chat Request
+async function sendChatRequest() {
+    const zynId = document.getElementById('search-user-id').value.trim();
     
-    if (date.toDateString() === today.toDateString()) {
-        return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-        return 'Yesterday';
-    } else {
-        return date.toLocaleDateString();
-    }
-}
-
-function getSenderName(senderId) {
-    // This would typically fetch from a users cache
-    // For now, return a placeholder
-    return 'User';
-}
-
-// Handle page visibility change (to update status)
-document.addEventListener('visibilitychange', function() {
-    if (currentUser) {
-        if (document.hidden) {
-            updateUserStatus('away');
-        } else {
-            updateUserStatus(userStatus);
-        }
-    }
-});
-
-// Handle beforeunload to set status to offline
-window.addEventListener('beforeunload', function() {
-    if (currentUser) {
-        // Use sendBeacon or similar for reliable status update
-        navigator.sendBeacon = navigator.sendBeacon || function() { return true; };
-        updateUserStatus('offline');
-    }
-});
-
-// Load dark mode preference
-window.addEventListener('DOMContentLoaded', function() {
-    const darkMode = localStorage.getItem('darkMode');
-    if (darkMode === 'false') {
-        document.body.classList.remove('dark-theme');
-        const darkModeToggle = document.getElementById('dark-mode-toggle');
-        if (darkModeToggle) {
-            darkModeToggle.checked = false;
-        }
-    }
-});
-
-// NEW FUNCTIONALITY: Enhanced Chat Request System
-
-// Enhanced New Chat Modal with User Search Form
-function setupNewChatModal() {
-    const newChatModal = document.getElementById('new-chat-modal');
-    if (!newChatModal) return;
-    
-    // Clear existing content and add search form
-    const modalBody = newChatModal.querySelector('.modal-body');
-    if (modalBody) {
-        modalBody.innerHTML = `
-            <div class="search-container">
-                <div class="form-group">
-                    <label for="user-search-input">
-                        <i class="fas fa-search"></i>
-                        Find User by Email or UID
-                    </label>
-                    <input type="text" id="user-search-input" placeholder="Enter user's email address or User ID">
-                    <div class="input-focus-line"></div>
-                    <p class="input-hint">
-                        <i class="fas fa-info-circle"></i>
-                        You can chat with any user by sending them a chat request
-                    </p>
-                </div>
-                <div id="user-search-results" class="search-results hidden">
-                    <!-- Search results will appear here -->
-                </div>
-            </div>
-        `;
-        
-        // Add event listener for user search
-        const userSearchInput = document.getElementById('user-search-input');
-        if (userSearchInput) {
-            let searchTimeout;
-            userSearchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    searchUsersForChat(this.value);
-                }, 500);
-            });
-        }
-    }
-}
-
-// Search users for chat initiation
-function searchUsersForChat(searchTerm) {
-    if (!searchTerm.trim()) {
-        const searchResults = document.getElementById('user-search-results');
-        if (searchResults) searchResults.classList.add('hidden');
+    if (!zynId) {
+        alert('Please enter a ZYN-ID');
         return;
     }
-
-    const searchResults = document.getElementById('user-search-results');
-    if (!searchResults) return;
     
-    searchResults.innerHTML = '<div class="loading-text"><i class="fas fa-spinner fa-spin"></i> Searching users...</div>';
-    searchResults.classList.remove('hidden');
+    try {
+        // Get current user
+        const currentUser = auth.currentUser;
+        const currentUserSnap = await database.ref('users/' + currentUser.uid).once('value');
+        const currentUserData = currentUserSnap.val();
+        
+        // Find recipient user
+        const recipientSnap = await database.ref('zynIds/' + zynId).once('value');
+        if (!recipientSnap.exists()) {
+            alert('User not found');
+            return;
+        }
+        
+        const recipientId = recipientSnap.val();
+        
+        // Create chat request
+        const requestId = `req_${Date.now()}`;
+        await database.ref(`users/${recipientId}/chatRequests/${requestId}`).set({
+            fromUserId: currentUser.uid,
+            fromZynId: currentUserData.zynId,
+            fromName: currentUserData.name,
+            fromPhone: currentUserData.phone,
+            fromProfilePic: currentUserData.profilePic || '',
+            timestamp: Date.now(),
+            status: 'pending'
+        });
+        
+        alert('Chat request sent!');
+        closeModal('start-chat-modal');
+        
+    } catch (error) {
+        console.error('Send request error:', error);
+        alert('Failed to send request');
+    }
+}
 
-    // Search by email
-    database.ref('users').orderByChild('email').equalTo(searchTerm).once('value')
-        .then(snapshot => {
-            const usersData = snapshot.val();
+// Play Notification Sound
+function playNotification() {
+    if (notificationSound) {
+        notificationSound.currentTime = 0;
+        notificationSound.play().catch(e => console.log('Audio play failed:', e));
+    }
+}
+
+// Load Chat Requests
+async function loadChatRequests() {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+    
+    try {
+        const requestsRef = database.ref(`users/${currentUser.uid}/chatRequests`);
+        requestsRef.on('value', (snapshot) => {
+            const requests = snapshot.val() || {};
+            const requestsList = document.getElementById('chat-requests-list');
             
-            if (usersData) {
-                displayChatSearchResults(usersData);
+            if (Object.keys(requests).length === 0) {
+                requestsList.innerHTML = '<p>No pending requests</p>';
                 return;
             }
             
-            // If not found by email, search by username
-            database.ref('users').orderByChild('username').equalTo(searchTerm.replace('@', '')).once('value')
-                .then(usernameSnapshot => {
-                    const usernameUsers = usernameSnapshot.val();
-                    if (usernameUsers) {
-                        displayChatSearchResults(usernameUsers);
-                        return;
-                    }
-                    
-                    // If still not found, search by user ID
-                    database.ref('users/' + searchTerm).once('value')
-                        .then(userSnapshot => {
-                            if (userSnapshot.exists()) {
-                                const userData = {};
-                                userData[searchTerm] = userSnapshot.val();
-                                displayChatSearchResults(userData);
-                            } else {
-                                // If still not found, search by name (partial match)
-                                database.ref('users').orderByChild('name').startAt(searchTerm).endAt(searchTerm + '\uf8ff').once('value')
-                                    .then(nameSnapshot => {
-                                        const nameUsers = nameSnapshot.val();
-                                        if (nameUsers) {
-                                            displayChatSearchResults(nameUsers);
-                                        } else {
-                                            searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No user found with that information</p></div>';
-                                        }
-                                    });
-                            }
-                        });
-                });
-        })
-        .catch(error => {
-            console.error('Search error:', error);
-            searchResults.innerHTML = '<div class="error-text"><i class="fas fa-exclamation-triangle"></i><p>Search failed. Please try again.</p></div>';
-        });
-}
-
-// Display chat search results
-function displayChatSearchResults(usersData) {
-    const searchResults = document.getElementById('user-search-results');
-    if (!searchResults) return;
-    
-    searchResults.innerHTML = '';
-    
-    Object.keys(usersData).forEach(userId => {
-        const userData = usersData[userId];
-        
-        // Don't show current user in search results
-        if (userId === currentUser.uid) return;
-        
-        const userItem = document.createElement('div');
-        userItem.className = 'search-result-item';
-        userItem.innerHTML = `
-            <div class="search-result-avatar">
-                <div class="avatar-small">${userData.name ? userData.name.charAt(0).toUpperCase() : 'U'}</div>
-            </div>
-            <div class="search-result-details">
-                <div class="search-result-name">${userData.name || 'Unknown User'}</div>
-                <div class="search-result-info">
-                    <span class="search-result-username">@${userData.username || 'user'}</span>
-                    <span class="search-result-email">${userData.email || 'No email'}</span>
-                </div>
-                <div class="search-result-phone">
-                    <i class="fas fa-phone"></i>
-                    ${userData.phone || 'No phone'}
-                </div>
-            </div>
-            <button class="btn btn-primary btn-small send-chat-request" data-user-id="${userId}">
-                <i class="fas fa-comment"></i>
-                Send Chat Request
-            </button>
-        `;
-        
-        searchResults.appendChild(userItem);
-    });
-    
-    // Add event listeners to send chat request buttons
-    document.querySelectorAll('.send-chat-request').forEach(button => {
-        button.addEventListener('click', function() {
-            const userId = this.getAttribute('data-user-id');
-            const userData = usersData[userId];
-            sendChatRequest(userId, userData);
-        });
-    });
-    
-    if (searchResults.innerHTML === '') {
-        searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No user found with that information</p></div>';
-    }
-}
-
-// Enhanced setup to include chat request listeners
-function setupChatRequestListeners() {
-    if (!currentUser) return;
-    
-    // Listen for incoming chat requests
-    database.ref('chatRequests/' + currentUser.uid).on('value', snapshot => {
-        const chatRequests = snapshot.val();
-        
-        if (chatRequests) {
-            Object.keys(chatRequests).forEach(requestId => {
-                const request = chatRequests[requestId];
+            requestsList.innerHTML = '';
+            for (const [requestId, request] of Object.entries(requests)) {
                 if (request.status === 'pending') {
-                    // Show notification and play ringtone for new chat requests
-                    showChatRequestNotification(request);
-                    playRingtone();
+                    const requestElement = document.createElement('div');
+                    requestElement.className = 'chat-request-item';
+                    requestElement.innerHTML = `
+                        <img src="${request.fromProfilePic || 'default-profile.png'}" 
+                             class="request-profile" 
+                             onerror="this.src='default-profile.png'">
+                        <div class="request-info">
+                            <div class="request-name">${request.fromName}</div>
+                            <div class="request-phone">${request.fromPhone}</div>
+                        </div>
+                        <div class="request-actions">
+                            <button class="accept-btn" onclick="acceptChatRequest('${requestId}', '${request.fromUserId}')">
+                                Accept
+                            </button>
+                            <button class="reject-btn" onclick="rejectChatRequest('${requestId}')">
+                                Reject
+                            </button>
+                        </div>
+                    `;
+                    requestsList.appendChild(requestElement);
+                    
+                    // Play notification sound for new requests
+                    if (request.timestamp > Date.now() - 5000) {
+                        playNotification();
+                    }
                 }
-            });
-        }
-    });
-}
-
-// Play ringtone for incoming chat requests
-function playRingtone() {
-    if (ringtoneSound) {
-        ringtoneSound.currentTime = 0;
-        ringtoneSound.play().catch(e => console.log('Ringtone play failed:', e));
+            }
+        });
+    } catch (error) {
+        console.error('Load requests error:', error);
     }
 }
 
-// Show chat request notification
-function showChatRequestNotification(chatRequest) {
-    const notificationId = showNotification('info', 
-        'New Chat Request', 
-        `${chatRequest.fromUserName} wants to chat with you`, 
-        0); // 0 duration = persistent until action
-    
-    // Add action buttons to notification
-    const notification = document.getElementById(notificationId);
-    if (notification) {
-        const notificationDetails = notification.querySelector('.notification-details');
-        if (notificationDetails) {
-            const requestInfo = document.createElement('div');
-            requestInfo.className = 'request-info';
-            requestInfo.innerHTML = `
-                <div class="request-details-small">
-                    <div><i class="fas fa-envelope"></i> ${chatRequest.fromUserEmail}</div>
-                    <div><i class="fas fa-phone"></i> ${chatRequest.fromUserPhone}</div>
-                </div>
-                <div class="notification-actions">
-                    <button class="notification-action accept-chat" data-request-id="${chatRequest.id}">
-                        <i class="fas fa-check"></i> Accept
-                    </button>
-                    <button class="notification-action decline-chat" data-request-id="${chatRequest.id}">
-                        <i class="fas fa-times"></i> Decline
-                    </button>
-                </div>
-            `;
-            notificationDetails.appendChild(requestInfo);
-            
-            // Add event listeners
-            const acceptBtn = notification.querySelector('.accept-chat');
-            const declineBtn = notification.querySelector('.decline-chat');
-            
-            if (acceptBtn) {
-                acceptBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    handleChatRequestResponse(chatRequest.id, 'accepted', chatRequest);
-                    removeNotification(notificationId);
-                    stopRingtone();
-                });
-            }
-            
-            if (declineBtn) {
-                declineBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    handleChatRequestResponse(chatRequest.id, 'declined', chatRequest);
-                    removeNotification(notificationId);
-                    stopRingtone();
-                });
-            }
-        }
-    }
-}
-
-// Handle chat request response
-function handleChatRequestResponse(requestId, response, chatRequest) {
-    if (!currentUser) return;
-    
-    // Update request status
-    database.ref('chatRequests/' + currentUser.uid + '/' + requestId).update({
-        status: response
-    });
-    
-    if (response === 'accepted') {
+// Accept Chat Request
+async function acceptChatRequest(requestId, fromUserId) {
+    try {
+        const currentUser = auth.currentUser;
+        
+        // Update request status
+        await database.ref(`users/${currentUser.uid}/chatRequests/${requestId}`).update({
+            status: 'accepted'
+        });
+        
         // Create chat room
-        createChatFromRequest(chatRequest);
+        const chatId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
-        // Add to contacts automatically
-        database.ref('userContacts/' + currentUser.uid + '/' + chatRequest.fromUserId).set(true);
-        database.ref('userContacts/' + chatRequest.fromUserId + '/' + currentUser.uid).set(true);
+        // Add to current user's chats
+        await database.ref(`users/${currentUser.uid}/chats/${chatId}`).set({
+            withUserId: fromUserId,
+            createdAt: Date.now(),
+            lastMessage: ''
+        });
         
-        showNotification('success', 'Chat Request Accepted', 
-            `You are now connected with ${chatRequest.fromUserName}`, 3000);
-    } else {
-        showNotification('info', 'Chat Request Declined', 
-            `You declined chat request from ${chatRequest.fromUserName}`, 3000);
+        // Add to sender's chats
+        await database.ref(`users/${fromUserId}/chats/${chatId}`).set({
+            withUserId: currentUser.uid,
+            createdAt: Date.now(),
+            lastMessage: ''
+        });
+        
+        // Create chat room data
+        await database.ref(`chats/${chatId}`).set({
+            participants: {
+                [currentUser.uid]: true,
+                [fromUserId]: true
+            },
+            createdAt: Date.now(),
+            messages: {}
+        });
+        
+        alert('Chat request accepted!');
+        
+    } catch (error) {
+        console.error('Accept request error:', error);
+        alert('Failed to accept request');
     }
 }
 
-// Create chat room from accepted request
-function createChatFromRequest(chatRequest) {
-    const chatId = database.ref('chats').push().key;
-    
-    // Create chat object
-    const chatData = {
-        id: chatId,
-        participants: {
-            [currentUser.uid]: true,
-            [chatRequest.fromUserId]: true
-        },
-        createdAt: Date.now(),
-        lastMessage: 'Chat started',
-        lastMessageTime: Date.now(),
-        createdFromRequest: true,
-        requestId: chatRequest.id
-    };
-    
-    // Save chat to database
-    database.ref('chats/' + chatId).set(chatData)
-        .then(() => {
-            // Add chat to both users' chat lists
-            database.ref('userChats/' + currentUser.uid + '/' + chatId).set(true);
-            database.ref('userChats/' + chatRequest.fromUserId + '/' + chatId).set(true);
-            
-            // Add welcome message
-            const welcomeMessage = {
-                senderId: 'system',
-                content: `Chat started between ${chatRequest.fromUserName} and ${chatRequest.toUserName}`,
-                type: 'system',
-                timestamp: Date.now(),
-                status: 'sent'
-            };
-            
-            database.ref('chats/' + chatId + '/messages').push().set(welcomeMessage);
-            
-            // Show success notification
-            showNotification('success', 'Chat Started', 
-                `You can now chat with ${chatRequest.fromUserName}`, 3000);
-                
-            // Open the chat automatically
-            openChat(chatId, {
-                name: chatRequest.fromUserName,
-                email: chatRequest.fromUserEmail,
-                phone: chatRequest.fromUserPhone,
-                uid: chatRequest.fromUserId
-            });
-        })
-        .catch(error => {
-            console.error('Error creating chat:', error);
-            showNotification('error', 'Chat Creation Failed', 
-                'Failed to create chat room. Please try again.', 4000);
+// Reject Chat Request
+async function rejectChatRequest(requestId) {
+    try {
+        const currentUser = auth.currentUser;
+        await database.ref(`users/${currentUser.uid}/chatRequests/${requestId}`).update({
+            status: 'rejected'
         });
+    } catch (error) {
+        console.error('Reject request error:', error);
+        alert('Failed to reject request');
+    }
 }
 
-// Enhanced requests panel to show both contact and chat requests
-function enhanceRequestsPanel() {
-    const requestsPanel = document.getElementById('requests-panel');
-    if (!requestsPanel) return;
-    
-    const panelContent = requestsPanel.querySelector('.panel-content');
-    if (panelContent) {
-        const requestList = panelContent.querySelector('#request-list');
-        if (requestList) {
-            // Listen for both contact and chat requests
-            database.ref('contactRequests/' + currentUser.uid).on('value', contactSnapshot => {
-                database.ref('chatRequests/' + currentUser.uid).on('value', chatSnapshot => {
-                    updateCombinedRequestsList(contactSnapshot.val(), chatSnapshot.val());
+// Logout
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        auth.signOut().then(() => {
+            window.location.href = 'index.html';
+        }).catch((error) => {
+            console.error('Logout error:', error);
+        });
+    }
+}
+
+// Initialize App
+document.addEventListener('DOMContentLoaded', function() {
+    // Check authentication state
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            currentUser = user;
+            
+            // Load user data on home page
+            if (window.location.pathname.includes('home.html')) {
+                const userSnap = await database.ref('users/' + user.uid).once('value');
+                const userData = userSnap.val();
+                
+                if (userData) {
+                    document.getElementById('user-name').textContent = userData.name;
+                    document.getElementById('user-id').textContent = userData.zynId;
+                    
+                    // Load chat requests
+                    loadChatRequests();
+                }
+                
+                // Setup floating button
+                document.getElementById('floating-chat-btn').addEventListener('click', function() {
+                    openModal('start-chat-modal');
                 });
+            }
+        } else if (!window.location.pathname.includes('index.html')) {
+            // Redirect to sign up page if not authenticated
+            window.location.href = 'index.html';
+        }
+    });
+    
+    // Close modals on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal.show').forEach(modal => {
+                modal.classList.remove('show');
             });
         }
-    }
-}
-
-// Update combined requests list
-function updateCombinedRequestsList(contactRequests, chatRequests) {
-    const requestList = document.getElementById('request-list');
-    if (!requestList) return;
-    
-    requestList.innerHTML = '';
-    
-    let hasRequests = false;
-    
-    // Add chat requests
-    if (chatRequests) {
-        Object.keys(chatRequests).forEach(requestId => {
-            const request = chatRequests[requestId];
-            if (request.status === 'pending') {
-                hasRequests = true;
-                addChatRequestToList(request);
-            }
-        });
-    }
-    
-    // Add contact requests
-    if (contactRequests) {
-        Object.keys(contactRequests).forEach(userId => {
-            const request = contactRequests[userId];
-            if (request.status === 'pending') {
-                hasRequests = true;
-                // This will be handled by the existing contact request system
-            }
-        });
-    }
-    
-    if (!hasRequests) {
-        requestList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-                <h4>No pending requests</h4>
-                <p>When someone sends you a chat or contact request, it will appear here</p>
-            </div>
-        `;
-    }
-}
-
-// Add chat request to requests list
-function addChatRequestToList(chatRequest) {
-    const requestList = document.getElementById('request-list');
-    if (!requestList) return;
-    
-    const requestItem = document.createElement('div');
-    requestItem.className = 'request-item chat-request-item';
-    requestItem.setAttribute('data-request-id', chatRequest.id);
-    
-    requestItem.innerHTML = `
-        <div class="chat-avatar">
-            <div class="avatar-small">${chatRequest.fromUserName ? chatRequest.fromUserName.charAt(0).toUpperCase() : 'U'}</div>
-        </div>
-        <div class="request-details">
-            <div class="request-name">${chatRequest.fromUserName || 'Unknown User'}</div>
-            <div class="request-type">Chat Request</div>
-            <div class="request-info">
-                <div class="request-contact-info">
-                    <span><i class="fas fa-envelope"></i> ${chatRequest.fromUserEmail}</span>
-                    <span><i class="fas fa-phone"></i> ${chatRequest.fromUserPhone}</span>
-                </div>
-            </div>
-            <div class="request-actions">
-                <button class="request-btn accept-chat-request" data-request-id="${chatRequest.id}">
-                    <i class="fas fa-check"></i> Accept
-                </button>
-                <button class="request-btn decline-chat-request" data-request-id="${chatRequest.id}">
-                    <i class="fas fa-times"></i> Decline
-                </button>
-            </div>
-        </div>
-    `;
-    
-    // Add event listeners
-    const acceptBtn = requestItem.querySelector('.accept-chat-request');
-    const declineBtn = requestItem.querySelector('.decline-chat-request');
-    
-    if (acceptBtn) {
-        acceptBtn.addEventListener('click', () => {
-            handleChatRequestResponse(chatRequest.id, 'accepted', chatRequest);
-            stopRingtone();
-        });
-    }
-    
-    if (declineBtn) {
-        declineBtn.addEventListener('click', () => {
-            handleChatRequestResponse(chatRequest.id, 'declined', chatRequest);
-            stopRingtone();
-        });
-    }
-    
-    requestList.appendChild(requestItem);
-}
-
-// Initialize enhanced functionality when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Override the original initializeApp to include our enhancements
-    const originalInitializeApp = initializeApp;
-    initializeApp = function() {
-        originalInitializeApp();
-        enhanceRequestsPanel();
-    };
+    });
 });
