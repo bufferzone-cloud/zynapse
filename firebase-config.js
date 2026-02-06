@@ -1,10 +1,4 @@
-// Import Firebase modules
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getDatabase, ref, set, get, push, child, update, onValue, remove, query, orderByChild, equalTo, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
-
-// Firebase configuration
+// ===== FIREBASE CONFIGURATION =====
 const firebaseConfig = {
     apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
     authDomain: "zynapse-68181.firebaseapp.com",
@@ -16,29 +10,22 @@ const firebaseConfig = {
     measurementId: "G-4764XLL6WS"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const database = getDatabase(app);
-const analytics = getAnalytics(app);
+// ===== CLOUDINARY ACCOUNT DETAILS =====
+const CLOUDINARY_ACCOUNT = {
+    cloudName: 'dd3lcymrk',
+    apiKey: '489857926297197',
+    apiSecret: 'RHDQG1YP6jqvn4UADq3nJWHIeHQ',
+    uploadPreset: 'h3eyhc2o',
+    folder: 'zynapse/users',
+    environmentVariable: 'cloudinary://489857926297197:RHDQG1YP6jqvn4UADq3nJWHIeHQ@dd3lcymrk',
+    uploadUrl: 'https://api.cloudinary.com/v1_1/dd3lcymrk/upload'
+};
 
-export { 
-    auth, 
-    database, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signOut, 
-    onAuthStateChanged,
-    ref, 
-    set, 
-    get, 
-    push, 
-    child, 
-    update, 
-    onValue, 
-    remove, 
-    query, 
-    orderByChild, 
-    equalTo,
-    serverTimestamp
+// ===== APP CONSTANTS =====
+const APP_CONFIG = {
+    MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB
+    MESSAGE_LIMIT: 50,
+    STATUS_DURATION: 24 * 60 * 60 * 1000, // 24 hours
+    TYPING_TIMEOUT: 3000,
+    ONLINE_TIMEOUT: 30000
 };
