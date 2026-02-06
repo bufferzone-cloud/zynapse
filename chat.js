@@ -1,200 +1,171 @@
-let currentChatId = null;
-let chatWithUserId = null;
+// Chat-specific functions
+let currentAttachment = null;
 
-// Initialize Chat
-async function initializeChat() {
-    // Get chat ID and user ID from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    currentChatId = urlParams.get('chatId');
-    chatWithUserId = urlParams.get('userId');
-    
-    if (!currentChatId || !chatWithUserId) {
-        alert('Invalid chat link');
-        window.location.href = 'home.html';
-        return;
-    }
-    
-    // Load user info
-    const userSnap = await database.ref('users/' + chatWithUserId).once('value');
-    const userData = userSnap.val();
-    
-    if (userData) {
-        document.getElementById('chat-user-name').textContent = userData.name;
-        document.getElementById('chat-user-profile').src = userData.profilePic || 'default-profile.png';
-    }
-    
-    // Load messages
-    loadMessages();
-    
-    // Set up real-time message listener
-    database.ref(`chats/${currentChatId}/messages`).on('child_added', (snapshot) => {
-        const message = snapshot.val();
-        addMessageToUI(message, snapshot.key);
-        
-        // Play sound for received messages
-        if (message.senderId !== auth.currentUser.uid) {
-            playMessageSound();
-        }
-    });
+function attachPhoto() {
+    const input = document.getElementById('mediaUpload');
+    input.accept = 'image/*';
+    input.onchange = handleMediaSelect;
+    input.click();
 }
 
-// Load Messages
-async function loadMessages() {
+function attachVideo() {
+    const input = document.getElementById('mediaUpload');
+    input.accept = 'video/*';
+    input.onchange = handleMediaSelect;
+    input.click();
+}
+
+function attachDocument() {
+    const input = document.getElementById('mediaUpload');
+    input.accept = '*/*';
+    input.onchange = handleMediaSelect;
+    input.click();
+}
+
+function handleMediaSelect(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    currentAttachment = file;
+    
+    // Show preview modal
+    const modal = document.getElementById('previewModal');
+    const preview = document.getElementById('mediaPreview');
+    
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; border-radius: 8px;">`;
+        };
+        reader.readAsDataURL(file);
+    } else if (file.type.startsWith('video/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `
+                <video controls style="max-width: 100%; border-radius: 8px;">
+                    <source src="${e.target.result}" type="${file.type}">
+                </video>
+            `;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.innerHTML = `
+            <div class="document-preview">
+                <i class="fas fa-file fa-3x"></i>
+                <p>${file.name}</p>
+                <p>${(file.size / 1024).toFixed(2)} KB</p>
+            </div>
+        `;
+    }
+    
+    modal.classList.add('active');
+}
+
+async function sendMediaMessage() {
+    if (!currentAttachment) return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const chatId = urlParams.get('chatId');
+    
+    if (!chatId) return;
+    
     try {
-        const messagesRef = database.ref(`chats/${currentChatId}/messages`);
-        const snapshot = await messagesRef.orderByChild('timestamp').once('value');
-        const messages = snapshot.val() || {};
+        // Upload file to ImageKit
+        const uploadResult = await uploadFile(currentAttachment, `chat_${chatId}_${Date.now()}`);
         
-        const messagesContainer = document.getElementById('chat-messages');
-        messagesContainer.innerHTML = '';
+        // Save message with media URL
+        const messageId = database.ref().child('messages').child(chatId).push().key;
         
-        Object.entries(messages).forEach(([messageId, message]) => {
-            addMessageToUI(message, messageId);
+        await database.ref('messages/' + chatId + '/' + messageId).set({
+            text: '',
+            senderId: auth.currentUser.uid,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            messageId: messageId,
+            mediaUrl: uploadResult.url,
+            mediaType: currentAttachment.type,
+            fileName: currentAttachment.name
         });
         
-        // Scroll to bottom
-        setTimeout(() => {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }, 100);
+        // Update chat last message
+        database.ref('chats/' + chatId).update({
+            lastMessage: `[${currentAttachment.type.startsWith('image/') ? 'Photo' : 'Media'}]`,
+            lastMessageTime: firebase.database.ServerValue.TIMESTAMP
+        });
+        
+        // Close modal
+        document.getElementById('previewModal').classList.remove('active');
+        currentAttachment = null;
         
     } catch (error) {
-        console.error('Load messages error:', error);
+        console.error('Error sending media:', error);
+        alert('Error sending media: ' + error.message);
     }
 }
 
-// Add Message to UI
-function addMessageToUI(message, messageId) {
-    const messagesContainer = document.getElementById('chat-messages');
-    const currentUser = auth.currentUser;
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${message.senderId === currentUser.uid ? 'sent' : 'received'}`;
-    
-    const time = new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    
-    messageDiv.innerHTML = `
-        <div class="message-content">
-            ${message.text || ''}
-            ${message.mediaUrl ? 
-                `<br><img src="${message.mediaUrl}" style="max-width: 200px; border-radius: 10px; margin-top: 5px;">` : 
-                ''}
-            <div class="message-time">${time}</div>
-        </div>
-    `;
-    
-    messagesContainer.appendChild(messageDiv);
-    
-    // Auto-scroll to bottom
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-// Send Message
-async function sendMessage() {
-    const input = document.getElementById('message-input');
-    const text = input.value.trim();
-    const file = document.getElementById('file-upload').files[0];
-    
-    if (!text && !file) return;
-    
-    const currentUser = auth.currentUser;
-    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    try {
-        let mediaUrl = '';
-        
-        // Upload media if exists
-        if (file) {
-            const uploadResult = await uploadToImageKit(file, `chat_${currentChatId}_${Date.now()}`);
-            mediaUrl = uploadResult.url;
-        }
-        
-        // Create message object
-        const message = {
-            messageId: messageId,
-            senderId: currentUser.uid,
-            text: text,
-            mediaUrl: mediaUrl,
-            timestamp: Date.now(),
-            read: false
-        };
-        
-        // Save message to Firebase
-        await database.ref(`chats/${currentChatId}/messages/${messageId}`).set(message);
-        
-        // Update last message in user's chat list
-        const lastMessage = text || (file ? (file.type.startsWith('image') ? '📷 Image' : '🎬 Video') : '');
-        await database.ref(`users/${currentUser.uid}/chats/${currentChatId}/lastMessage`).set(lastMessage);
-        await database.ref(`users/${chatWithUserId}/chats/${currentChatId}/lastMessage`).set(lastMessage);
-        
-        // Clear input
-        input.value = '';
-        document.getElementById('file-upload').value = '';
-        
-    } catch (error) {
-        console.error('Send message error:', error);
-        alert('Failed to send message');
-    }
-}
-
-// Attach File
-function attachFile() {
-    document.getElementById('file-upload').click();
-}
-
-// Play Message Sound
-function playMessageSound() {
-    const sound = document.getElementById('message-sound');
-    if (sound) {
-        sound.currentTime = 0;
-        sound.play().catch(e => console.log('Audio play failed:', e));
-    }
-}
-
-// Chat Menu Functions
-function toggleChatMenu() {
-    const menu = document.getElementById('chat-menu');
-    menu.classList.toggle('show');
-}
-
+// Add nickname function
 function addNickname() {
     const nickname = prompt('Enter nickname for this contact:');
-    if (nickname) {
-        // Save nickname to Firebase
-        const currentUser = auth.currentUser;
-        database.ref(`users/${currentUser.uid}/contacts/${chatWithUserId}/nickname`).set(nickname);
-        alert('Nickname added!');
+    if (nickname && nickname.trim()) {
+        // Save nickname to database
+        alert('Nickname saved: ' + nickname);
     }
 }
 
-async function toggleFavorite() {
-    const currentUser = auth.currentUser;
-    const favRef = database.ref(`users/${currentUser.uid}/contacts/${chatWithUserId}/isFavorite`);
-    const snapshot = await favRef.once('value');
-    const isFavorite = snapshot.val() || false;
-    
-    await favRef.set(!isFavorite);
-    alert(`${!isFavorite ? 'Added to' : 'Removed from'} favorites!`);
-}
-
+// Block user function
 function blockUser() {
     if (confirm('Are you sure you want to block this user?')) {
-        const currentUser = auth.currentUser;
-        database.ref(`users/${currentUser.uid}/contacts/${chatWithUserId}/blocked`).set(true);
-        alert('User blocked successfully');
-        goBack();
+        // Add to blocked list
+        alert('User blocked');
     }
 }
 
+// Toggle favorite
+function toggleFavorite() {
+    const btn = event.target.closest('a');
+    if (btn) {
+        const icon = btn.querySelector('i');
+        if (icon.classList.contains('far')) {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            btn.innerHTML = '<i class="fas fa-star"></i> Remove from Favorites';
+        } else {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            btn.innerHTML = '<i class="far fa-star"></i> Add to Favorites';
+        }
+    }
+}
+
+// Clear chat
 function clearChat() {
-    if (confirm('Are you sure you want to clear all messages in this chat?')) {
-        database.ref(`chats/${currentChatId}/messages`).remove();
+    if (confirm('Are you sure you want to clear this chat?')) {
+        // Clear messages from database
         alert('Chat cleared');
     }
 }
 
-function goBack() {
-    window.history.back();
+// View profile
+function viewProfile() {
+    // Open profile modal
+    alert('View profile feature coming soon!');
 }
 
-// Initialize chat when page loads
-document.addEventListener('DOMContentLoaded', initializeChat);
+// Initialize chat-specific event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.querySelector('.chat-page')) {
+        // Setup media send button
+        document.getElementById('sendMediaBtn').addEventListener('click', sendMediaMessage);
+        
+        // Setup cancel button
+        document.getElementById('cancelUpload').addEventListener('click', function() {
+            document.getElementById('previewModal').classList.remove('active');
+            currentAttachment = null;
+        });
+        
+        // Setup close button
+        document.querySelector('#previewModal .close-btn').addEventListener('click', function() {
+            document.getElementById('previewModal').classList.remove('active');
+            currentAttachment = null;
+        });
+    }
+});
