@@ -3,145 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zynapse - Home</title>
+    <title>Zynapse</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="home-page">
-    <!-- Top Navigation -->
-    <header class="app-header">
-        <div class="header-left">
-            <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
+<body class="app-page">
+    <!-- Navigation Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="zynaps.png" alt="Zynapse" class="sidebar-logo">
+            <h2>Zynapse</h2>
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="#home" class="nav-item active" data-view="home">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#zynes" class="nav-item" data-view="zynes">
+                <i class="fas fa-circle"></i>
+                <span>Zynes</span>
+            </a>
+            <a href="#groups" class="nav-item" data-view="groups">
+                <i class="fas fa-users"></i>
+                <span>Groups</span>
+            </a>
+            <a href="#requests" class="nav-item" data-view="requests">
+                <i class="fas fa-user-plus"></i>
+                <span>Chat Requests</span>
+                <span class="badge" id="requestBadge">0</span>
+            </a>
+            <a href="#contacts" class="nav-item" data-view="contacts">
+                <i class="fas fa-address-book"></i>
+                <span>Contacts</span>
+            </a>
+        </nav>
+
+        <div class="user-profile">
+            <img id="userProfilePic" src="" alt="Profile">
             <div class="user-info">
-                <span id="user-name" class="user-name">John Doe</span>
-                <div class="user-id-container">
-                    <span id="user-id" class="user-id">ZYN-0000</span>
+                <h4 id="userName">Loading...</h4>
+                <div class="user-id">
+                    <code id="userIdDisplay">ZYN-0000</code>
                     <button class="copy-btn" onclick="copyUserId()">
                         <i class="far fa-copy"></i>
                     </button>
                 </div>
             </div>
         </div>
-        
-        <div class="header-right">
-            <button class="icon-btn" onclick="toggleMenu()">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
-            <div class="dropdown-menu" id="user-menu">
-                <a href="#"><i class="fas fa-user"></i> Profile</a>
-                <a href="#"><i class="fas fa-cog"></i> Settings</a>
-                <a href="#"><i class="fas fa-moon"></i> Theme</a>
-                <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
-            </div>
-        </div>
-    </header>
+    </div>
 
     <!-- Main Content Area -->
-    <main class="main-content" id="main-content">
+    <div class="main-content">
         <!-- Home View -->
-        <div id="home-view" class="view active">
-            <div class="welcome-card">
-                <h2>Welcome to Zynapse</h2>
-                <p>Start connecting with friends and colleagues</p>
+        <div id="homeView" class="view active">
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    <img src="zynaps.png" alt="Zynapse" class="top-bar-logo">
+                    <div>
+                        <h3 id="mainUserName">User Name</h3>
+                        <div class="user-id-main">
+                            <code id="mainUserId">ZYN-0000</code>
+                            <button class="copy-btn small" onclick="copyUserId()">
+                                <i class="far fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="top-bar-right">
+                    <div class="dropdown">
+                        <button class="icon-btn" id="settingsBtn">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                            <a href="#"><i class="fas fa-user"></i> Profile</a>
+                            <a href="#"><i class="fas fa-bell"></i> Notifications</a>
+                            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <!-- Chat Requests Section -->
-            <div class="section" id="chat-requests-section">
-                <h3>Chat Requests</h3>
-                <div id="chat-requests-list">
-                    <!-- Dynamic content -->
+
+            <div class="content-area">
+                <div class="floating-chat-btn" id="floatingChatBtn">
+                    <i class="fas fa-comment-alt"></i>
+                    <span>Start Chat</span>
+                </div>
+
+                <div class="chat-requests-container" id="pendingRequests">
+                    <h3>Pending Chat Requests</h3>
+                    <div class="requests-list" id="requestsList">
+                        <!-- Requests will be loaded here -->
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Zynes View -->
-        <div id="zynes-view" class="view">
-            <div class="zynes-header">
-                <h2>Zynes</h2>
-                <button class="btn-primary" onclick="createZyne()">
-                    <i class="fas fa-plus"></i> Add Zyne
+        <div id="zynesView" class="view">
+            <div class="view-header">
+                <h2><i class="fas fa-circle"></i> Zynes</h2>
+                <button class="btn-primary" id="createZyneBtn">
+                    <i class="fas fa-plus"></i> Create Zyne
                 </button>
             </div>
-            <div id="zynes-container">
-                <!-- Dynamic content -->
+            <div class="zynes-container" id="zynesContainer">
+                <!-- Zynes will be loaded here -->
             </div>
         </div>
 
         <!-- Groups View -->
-        <div id="groups-view" class="view">
-            <div class="groups-header">
-                <h2>Groups</h2>
-                <button class="btn-primary" onclick="createGroup()">
+        <div id="groupsView" class="view">
+            <div class="view-header">
+                <h2><i class="fas fa-users"></i> Groups</h2>
+                <button class="btn-primary" id="createGroupBtn">
                     <i class="fas fa-plus"></i> Create Group
                 </button>
             </div>
-            <div id="groups-container">
-                <!-- Dynamic content -->
+            <div class="groups-container" id="groupsContainer">
+                <!-- Groups will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Chat Requests View -->
+        <div id="requestsView" class="view">
+            <div class="view-header">
+                <h2><i class="fas fa-user-plus"></i> Chat Requests</h2>
+            </div>
+            <div class="requests-container" id="allRequestsContainer">
+                <!-- All requests will be loaded here -->
             </div>
         </div>
 
         <!-- Contacts View -->
-        <div id="contacts-view" class="view">
-            <div class="contacts-header">
-                <h2>Contacts</h2>
-                <button class="btn-primary" onclick="addContact()">
+        <div id="contactsView" class="view">
+            <div class="view-header">
+                <h2><i class="fas fa-address-book"></i> Contacts</h2>
+                <button class="btn-primary" id="addContactBtn">
                     <i class="fas fa-plus"></i> Add Contact
                 </button>
             </div>
-            <div id="contacts-list">
-                <!-- Dynamic content -->
-            </div>
-        </div>
-    </main>
-
-    <!-- Floating Chat Button -->
-    <button class="floating-btn" id="floating-chat-btn">
-        <i class="fas fa-comment"></i>
-    </button>
-
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <button class="nav-btn active" onclick="switchView('home')">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-        </button>
-        <button class="nav-btn" onclick="switchView('zynes')">
-            <i class="fas fa-circle"></i>
-            <span>Zynes</span>
-        </button>
-        <button class="nav-btn" onclick="switchView('groups')">
-            <i class="fas fa-users"></i>
-            <span>Groups</span>
-        </button>
-        <button class="nav-btn" onclick="switchView('contacts')">
-            <i class="fas fa-address-book"></i>
-            <span>Contacts</span>
-        </button>
-        <button class="nav-btn" onclick="showChatRequests()">
-            <i class="fas fa-user-plus"></i>
-            <span>Requests</span>
-        </button>
-    </nav>
-
-    <!-- Start Chat Modal -->
-    <div class="modal" id="start-chat-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Start New Chat</h3>
-                <button class="close-btn" onclick="closeModal('start-chat-modal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="text" id="search-user-id" placeholder="Enter ZYN-ID (e.g., ZYN-1234)">
-                <div id="user-search-result" class="search-result"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="closeModal('start-chat-modal')">Cancel</button>
-                <button class="btn-primary" onclick="sendChatRequest()">Send Request</button>
+            <div class="contacts-container" id="contactsContainer">
+                <!-- Contacts will be loaded here -->
             </div>
         </div>
     </div>
 
-    <audio id="notification-sound" src="notification.mp3" preload="auto"></audio>
+    <!-- Modals -->
+    <div class="modal" id="startChatModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Start New Chat</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="searchUserId" placeholder="Enter User ID (ZYN-XXXX)">
+                <div id="userSearchResult" class="search-result"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelSearch">Cancel</button>
+                <button class="btn-primary" id="sendRequestBtn">Send Request</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <!-- Profile modal content -->
+        </div>
+    </div>
+
+    <audio id="notificationSound" preload="auto">
+        <source src="notification.mp3" type="audio/mpeg">
+    </audio>
 
     <script src="firebase-config.js"></script>
     <script src="imagekit-config.js"></script>
