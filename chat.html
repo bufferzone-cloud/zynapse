@@ -4,15 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynapse - Chat</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="zynaps.png">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <!-- ImageKit SDK -->
-    <script src="https://unpkg.com/imagekit-javascript/dist/imagekit.min.js"></script>
 </head>
 <body class="chat-page">
     <!-- Loading Screen -->
@@ -26,86 +20,42 @@
 
     <!-- Chat Header -->
     <header class="chat-header">
-        <button class="back-btn" id="backBtn">
+        <button class="back-btn">
             <i class="fas fa-arrow-left"></i>
         </button>
         
         <div class="chat-user-info">
-            <img src="" alt="" class="profile-pic-small" id="chatUserPic">
+            <img src="zynaps.png" alt="Profile" class="profile-pic-small" id="chatUserPic">
             <div class="chat-user-details">
                 <h3 id="chatUserName">Loading...</h3>
                 <div class="chat-status">
-                    <span class="status-dot" id="statusDot"></span>
-                    <span id="statusText">Loading...</span>
+                    <span class="status-dot offline"></span>
+                    <span id="chatUserStatus">Loading...</span>
                 </div>
             </div>
         </div>
         
         <div class="chat-actions">
-            <div class="dropdown">
-                <button class="icon-btn" id="chatMenuBtn">
-                    <i class="fas fa-ellipsis-v"></i>
-                </button>
-                <div class="dropdown-content" id="chatMenuDropdown">
-                    <a href="#" id="addNicknameBtn">
-                        <i class="fas fa-tag"></i>
-                        Add Nickname
-                    </a>
-                    <a href="#" id="blockUserBtn">
-                        <i class="fas fa-ban"></i>
-                        Block User
-                    </a>
-                    <a href="#" id="addToFavoritesBtn">
-                        <i class="fas fa-star"></i>
-                        Add to Favorites
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" id="viewProfileBtn">
-                        <i class="fas fa-user"></i>
-                        View Profile
-                    </a>
-                    <a href="#" id="reportUserBtn">
-                        <i class="fas fa-flag"></i>
-                        Report User
-                    </a>
-                    <a href="#" id="deleteChatBtn" class="logout-link">
-                        <i class="fas fa-trash"></i>
-                        Delete Chat
-                    </a>
-                </div>
-            </div>
-            
-            <div class="dropdown">
-                <button class="icon-btn" id="appMenuBtn">
-                    <i class="fas fa-cog"></i>
-                </button>
-                <div class="dropdown-content" id="appMenuDropdown">
-                    <a href="home.html">
-                        <i class="fas fa-home"></i>
-                        Home
-                    </a>
-                    <a href="#" id="chatSettingsBtn">
-                        <i class="fas fa-cog"></i>
-                        Chat Settings
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="logout-link" id="chatLogoutBtn">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Log Out
-                    </a>
-                </div>
-            </div>
+            <button class="icon-btn" data-menu="chat">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
         </div>
     </header>
 
+    <!-- Chat Dropdown -->
+    <div class="dropdown">
+        <div class="dropdown-content" id="chatDropdown">
+            <a href="#"><i class="fas fa-user-edit"></i> Add Nickname</a>
+            <a href="#"><i class="fas fa-star"></i> Add to Favorites</a>
+            <a href="#"><i class="fas fa-ban"></i> Block User</a>
+            <a href="#"><i class="fas fa-flag"></i> Report</a>
+            <div class="dropdown-divider"></div>
+            <a href="#" class="logout-link"><i class="fas fa-trash"></i> Delete Chat</a>
+        </div>
+    </div>
+
     <!-- Chat Messages Area -->
     <div class="chat-messages" id="chatMessages">
-        <div class="empty-chat" id="emptyChat">
-            <i class="fas fa-comments"></i>
-            <h3>No messages yet</h3>
-            <p>Send a message to start the conversation</p>
-        </div>
-        
         <!-- Messages will be loaded here -->
     </div>
 
@@ -117,13 +67,13 @@
                 <div class="typing-dot"></div>
                 <div class="typing-dot"></div>
             </div>
-            <span class="typing-text" id="typingText">typing...</span>
+            <span class="typing-text">typing...</span>
         </div>
     </div>
 
     <!-- Message Input Area -->
     <div class="message-input-area">
-        <button class="icon-btn" id="attachBtn">
+        <button class="btn-media" id="attachBtn">
             <i class="fas fa-plus"></i>
         </button>
         
@@ -131,1090 +81,61 @@
             <input type="text" id="messageInput" placeholder="iMessage" autocomplete="off">
         </div>
         
-        <button class="send-btn" id="sendBtn">
+        <button class="send-btn" id="sendMessage">
             <i class="fas fa-paper-plane"></i>
         </button>
     </div>
 
     <!-- Attachment Options -->
-    <div class="attachment-options" id="attachmentOptions">
-        <button class="attachment-btn" id="attachPhotoBtn">
+    <div class="attachment-options">
+        <button class="attachment-btn" data-attach="image">
             <i class="fas fa-image"></i>
             <span>Photo</span>
         </button>
-        <button class="attachment-btn" id="attachVideoBtn">
+        <button class="attachment-btn" data-attach="video">
             <i class="fas fa-video"></i>
             <span>Video</span>
         </button>
-        <button class="attachment-btn" id="attachDocumentBtn">
+        <button class="attachment-btn" data-attach="document">
             <i class="fas fa-file"></i>
             <span>Document</span>
         </button>
-        <input type="file" id="photoInput" accept="image/*" style="display: none;">
-        <input type="file" id="videoInput" accept="video/*" style="display: none;">
-        <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+        <button class="attachment-btn" data-attach="camera">
+            <i class="fas fa-camera"></i>
+            <span>Camera</span>
+        </button>
+        <button class="attachment-btn" data-attach="audio">
+            <i class="fas fa-microphone"></i>
+            <span>Audio</span>
+        </button>
+        <button class="attachment-btn" data-attach="location">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Location</span>
+        </button>
     </div>
 
-    <!-- Add Nickname Modal -->
-    <div class="modal-overlay" id="nicknameModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add Nickname</h3>
-                <button type="button" class="close-modal" id="closeNicknameModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group">
-                    <i class="fas fa-tag"></i>
-                    <input type="text" id="nicknameInput" placeholder="Enter nickname">
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-secondary" id="cancelNicknameBtn">Cancel</button>
-                    <button class="btn-primary" id="saveNicknameBtn">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Block User Confirmation -->
-    <div class="modal-overlay" id="blockUserModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Block User</h3>
-                <button type="button" class="close-modal" id="closeBlockModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="confirmation-message">
-                    <i class="fas fa-exclamation-triangle warning-icon"></i>
-                    <h4>Are you sure?</h4>
-                    <p>Blocking this user will prevent them from sending you messages and seeing your status. You can unblock them later from settings.</p>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-secondary" id="cancelBlockBtn">Cancel</button>
-                    <button class="btn-danger" id="confirmBlockBtn">Block User</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Report User Modal -->
-    <div class="modal-overlay" id="reportUserModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Report User</h3>
-                <button type="button" class="close-modal" id="closeReportModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="report-form">
-                    <div class="input-group">
-                        <label for="reportReason">Reason for report</label>
-                        <select id="reportReason">
-                            <option value="">Select a reason</option>
-                            <option value="spam">Spam or harassment</option>
-                            <option value="inappropriate">Inappropriate content</option>
-                            <option value="impersonation">Impersonation</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="reportDetails">Additional details (optional)</label>
-                        <textarea id="reportDetails" placeholder="Please provide any additional information..."></textarea>
-                    </div>
-                    
-                    <p class="form-hint">Your report will be reviewed by our moderation team. We'll notify you of any actions taken.</p>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-secondary" id="cancelReportBtn">Cancel</button>
-                    <button class="btn-danger" id="submitReportBtn">Submit Report</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Chat Confirmation -->
-    <div class="modal-overlay" id="deleteChatModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Delete Chat</h3>
-                <button type="button" class="close-modal" id="closeDeleteModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="confirmation-message">
-                    <i class="fas fa-exclamation-triangle warning-icon"></i>
-                    <h4>Delete this chat?</h4>
-                    <p>This action cannot be undone. All messages will be permanently deleted from your device. The other person will still have their copy of the chat.</p>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-secondary" id="cancelDeleteBtn">Cancel</button>
-                    <button class="btn-danger" id="confirmDeleteBtn">Delete Chat</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Hidden file inputs -->
+    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+    <input type="file" id="videoInput" accept="video/*" style="display: none;">
 
     <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-container"></div>
 
-    <script type="module" src="firebase-config.js"></script>
-    <script type="module" src="imagekit-config.js"></script>
     <script type="module" src="app.js"></script>
     <script>
-        // Chat variables
-        let currentChatId = null;
-        let chatWithUserId = null;
-        let chatWithUserData = null;
-        let isGroupChat = false;
-        let groupData = null;
-        let messages = [];
-        let currentUserData = null;
-
-        // Initialize chat page
-        async function initChatPage() {
-            try {
-                // Check authentication
-                const { auth } = await import('./firebase-config.js');
-                const user = auth.currentUser;
-                
-                if (!user) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-                
-                // Load current user data
-                await loadCurrentUser();
-                
-                // Get chat ID from URL
-                const urlParams = new URLSearchParams(window.location.search);
-                currentChatId = urlParams.get('chatId');
-                const groupId = urlParams.get('groupId');
-                
-                if (groupId) {
-                    isGroupChat = true;
-                    currentChatId = groupId;
-                    await loadGroupData(groupId);
-                } else if (currentChatId) {
-                    await loadChatData(currentChatId);
-                } else {
-                    // No chat specified, go back to home
-                    window.location.href = 'home.html';
-                    return;
-                }
-                
-                // Set up event listeners
-                setupChatEventListeners();
-                
-                // Hide loading screen
-                document.getElementById('loadingScreen').classList.add('hidden');
-                setTimeout(() => {
-                    document.getElementById('loadingScreen').style.display = 'none';
-                }, 400);
-                
-                // Set up real-time message listener
-                if (currentChatId) {
-                    setupMessageListener();
-                }
-                
-            } catch (error) {
-                console.error('Error initializing chat page:', error);
-                showToast('Error loading chat', 'error');
-            }
-        }
-
-        // Load current user data
-        async function loadCurrentUser() {
-            try {
-                const { auth, database } = await import('./firebase-config.js');
-                const user = auth.currentUser;
-                
-                // Find user by Firebase UID
-                const usersSnapshot = await database.ref('users').orderByChild('firebaseUid').equalTo(user.uid).once('value');
-                
-                if (usersSnapshot.exists()) {
-                    const users = usersSnapshot.val();
-                    const userId = Object.keys(users)[0];
-                    currentUserData = users[userId];
-                    currentUserData.userId = userId;
-                }
-                
-            } catch (error) {
-                console.error('Error loading user data:', error);
-                throw error;
-            }
-        }
-
-        // Load chat data
-        async function loadChatData(chatId) {
-            try {
-                const { database } = await import('./firebase-config.js');
-                
-                // Get chat data
-                const chatSnapshot = await database.ref(`chats/${chatId}`).once('value');
-                if (!chatSnapshot.exists()) {
-                    showToast('Chat not found', 'error');
-                    setTimeout(() => window.location.href = 'home.html', 1000);
-                    return;
-                }
-                
-                const chatData = chatSnapshot.val();
-                const participants = chatData.participants || [];
-                
-                // Find the other participant
-                chatWithUserId = participants.find(id => id !== currentUserData.userId);
-                
-                if (!chatWithUserId) {
-                    showToast('Invalid chat', 'error');
-                    setTimeout(() => window.location.href = 'home.html', 1000);
-                    return;
-                }
-                
-                // Get user data
-                const userSnapshot = await database.ref(`users/${chatWithUserId}`).once('value');
-                if (userSnapshot.exists()) {
-                    chatWithUserData = userSnapshot.val();
-                    updateChatHeader();
-                }
-                
-                // Load messages
-                await loadMessages();
-                
-            } catch (error) {
-                console.error('Error loading chat data:', error);
-                showToast('Error loading chat', 'error');
-            }
-        }
-
-        // Load group data
-        async function loadGroupData(groupId) {
-            try {
-                const { database } = await import('./firebase-config.js');
-                
-                // Get group data
-                const groupSnapshot = await database.ref(`groups/${groupId}`).once('value');
-                if (!groupSnapshot.exists()) {
-                    showToast('Group not found', 'error');
-                    setTimeout(() => window.location.href = 'home.html', 1000);
-                    return;
-                }
-                
-                groupData = groupSnapshot.val();
-                updateGroupHeader();
-                
-                // Load group messages
-                await loadMessages();
-                
-            } catch (error) {
-                console.error('Error loading group data:', error);
-                showToast('Error loading group chat', 'error');
-            }
-        }
-
-        // Update chat header for 1-on-1 chat
-        function updateChatHeader() {
-            if (!chatWithUserData) return;
-            
-            document.getElementById('chatUserName').textContent = chatWithUserData.name;
-            
-            if (chatWithUserData.profilePicUrl) {
-                document.getElementById('chatUserPic').src = chatWithUserData.profilePicUrl;
-            }
-            
-            // Update status
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
-            
-            if (chatWithUserData.status === 'online') {
-                statusDot.className = 'status-dot online';
-                statusText.textContent = 'Online';
-            } else {
-                statusDot.className = 'status-dot offline';
-                const lastSeen = chatWithUserData.lastSeen ? formatTime(chatWithUserData.lastSeen) : 'Recently';
-                statusText.textContent = `Last seen ${lastSeen}`;
-            }
-        }
-
-        // Update chat header for group chat
-        function updateGroupHeader() {
-            if (!groupData) return;
-            
-            document.getElementById('chatUserName').textContent = groupData.name;
-            
-            if (groupData.profilePicUrl) {
-                document.getElementById('chatUserPic').src = groupData.profilePicUrl;
-            }
-            
-            // Update status for group
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
-            
-            const memberCount = Object.keys(groupData.members || {}).length;
-            statusDot.className = 'status-dot';
-            statusDot.style.backgroundColor = '#AF52DE'; // Purple for groups
-            statusText.textContent = `${memberCount} members`;
-            
-            // Update menu items for group
-            const chatMenu = document.getElementById('chatMenuDropdown');
-            chatMenu.innerHTML = `
-                <a href="#" id="groupInfoBtn">
-                    <i class="fas fa-info-circle"></i>
-                    Group Info
-                </a>
-                <a href="#" id="addMembersBtn">
-                    <i class="fas fa-user-plus"></i>
-                    Add Members
-                </a>
-                <a href="#" id="groupSettingsBtn">
-                    <i class="fas fa-cog"></i>
-                    Group Settings
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" id="exitGroupBtn" class="logout-link">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Exit Group
-                </a>
-            `;
-        }
-
-        // Load messages
-        async function loadMessages() {
-            try {
-                const { database } = await import('./firebase-config.js');
-                const messagesRef = database.ref(`${isGroupChat ? 'groups' : 'chats'}/${currentChatId}/messages`);
-                
-                const snapshot = await messagesRef.orderByChild('timestamp').once('value');
-                
-                messages = [];
-                snapshot.forEach((childSnapshot) => {
-                    messages.push({
-                        id: childSnapshot.key,
-                        ...childSnapshot.val()
-                    });
-                });
-                
-                // Sort by timestamp
-                messages.sort((a, b) => a.timestamp - b.timestamp);
-                
-                // Render messages
-                renderMessages();
-                
-                // Scroll to bottom
-                setTimeout(() => {
-                    const chatMessages = document.getElementById('chatMessages');
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }, 100);
-                
-            } catch (error) {
-                console.error('Error loading messages:', error);
-            }
-        }
-
-        // Render messages
-        function renderMessages() {
-            const chatMessages = document.getElementById('chatMessages');
-            const emptyChat = document.getElementById('emptyChat');
-            
-            if (messages.length === 0) {
-                emptyChat.style.display = 'flex';
-                return;
-            }
-            
-            emptyChat.style.display = 'none';
-            
-            // Clear existing messages (except empty chat)
-            Array.from(chatMessages.children).forEach(child => {
-                if (child.id !== 'emptyChat' && child.id !== 'typingIndicator') {
-                    child.remove();
-                }
-            });
-            
-            let lastDate = null;
-            
-            messages.forEach((message, index) => {
-                // Add date separator if needed
-                const messageDate = new Date(message.timestamp).toDateString();
-                if (messageDate !== lastDate) {
-                    const dateElement = document.createElement('div');
-                    dateElement.className = 'message-date';
-                    dateElement.textContent = formatDate(message.timestamp);
-                    chatMessages.appendChild(dateElement);
-                    lastDate = messageDate;
-                }
-                
-                // Create message element
-                const messageElement = document.createElement('div');
-                messageElement.className = `message ${message.sender === currentUserData.userId ? 'sent' : 'received'}`;
-                
-                // Format message time
-                const messageTime = formatMessageTime(message.timestamp);
-                
-                // Create message content
-                let messageContent = '';
-                
-                if (message.mediaUrl) {
-                    if (message.mediaType === 'image') {
-                        messageContent = `
-                            <div class="media-message">
-                                <img src="${message.mediaUrl}" alt="Image" class="chat-media" onclick="viewMedia('${message.mediaUrl}', 'image')">
-                                ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
-                                <span class="message-time">${messageTime}</span>
-                            </div>
-                        `;
-                    } else if (message.mediaType === 'video') {
-                        messageContent = `
-                            <div class="media-message">
-                                <video src="${message.mediaUrl}" controls class="chat-media" onclick="viewMedia('${message.mediaUrl}', 'video')"></video>
-                                ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
-                                <span class="message-time">${messageTime}</span>
-                            </div>
-                        `;
-                    }
-                } else {
-                    messageContent = `
-                        <div class="message-bubble">
-                            <p>${escapeHtml(message.text)}</p>
-                            <span class="message-time">${messageTime}</span>
-                        </div>
-                    `;
-                }
-                
-                messageElement.innerHTML = messageContent;
-                chatMessages.appendChild(messageElement);
-                
-                // Mark as read if it's not our message
-                if (message.sender !== currentUserData.userId && !message.read) {
-                    markMessageAsRead(message.id);
-                }
-            });
-            
-            // Scroll to bottom
+        // Handle attachment options
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-focus message input
             setTimeout(() => {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 100);
-        }
-
-        // Format date for separator
-        function formatDate(timestamp) {
-            const date = new Date(timestamp);
-            const today = new Date();
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1);
-            
-            if (date.toDateString() === today.toDateString()) {
-                return 'Today';
-            } else if (date.toDateString() === yesterday.toDateString()) {
-                return 'Yesterday';
-            } else {
-                return date.toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                });
-            }
-        }
-
-        // Escape HTML to prevent XSS
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Set up chat event listeners
-        function setupChatEventListeners() {
-            // Back button
-            document.getElementById('backBtn').addEventListener('click', () => {
-                window.location.href = 'home.html';
-            });
-
-            // Chat menu dropdown
-            document.getElementById('chatMenuBtn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('chatMenuDropdown').classList.toggle('show');
-            });
-
-            // App menu dropdown
-            document.getElementById('appMenuBtn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('appMenuDropdown').classList.toggle('show');
-            });
-
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', () => {
-                document.getElementById('chatMenuDropdown').classList.remove('show');
-                document.getElementById('appMenuDropdown').classList.remove('show');
-                document.getElementById('attachmentOptions').classList.remove('show');
-            });
-
-            // Message input
-            const messageInput = document.getElementById('messageInput');
-            const sendBtn = document.getElementById('sendBtn');
-
-            messageInput.addEventListener('input', () => {
-                sendBtn.disabled = messageInput.value.trim() === '';
-            });
-
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-
-            // Send button
-            sendBtn.addEventListener('click', sendMessage);
-
-            // Attachment button
-            document.getElementById('attachBtn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.getElementById('attachmentOptions').classList.toggle('show');
-            });
-
-            // Attachment options
-            document.getElementById('attachPhotoBtn').addEventListener('click', () => {
-                document.getElementById('photoInput').click();
-                document.getElementById('attachmentOptions').classList.remove('show');
-            });
-
-            document.getElementById('attachVideoBtn').addEventListener('click', () => {
-                document.getElementById('videoInput').click();
-                document.getElementById('attachmentOptions').classList.remove('show');
-            });
-
-            document.getElementById('attachDocumentBtn').addEventListener('click', () => {
-                document.getElementById('documentInput').click();
-                document.getElementById('attachmentOptions').classList.remove('show');
-            });
-
-            // Media input handlers
-            document.getElementById('photoInput').addEventListener('change', handleMediaUpload);
-            document.getElementById('videoInput').addEventListener('change', handleMediaUpload);
-            document.getElementById('documentInput').addEventListener('change', handleMediaUpload);
-
-            // Chat menu actions
-            setupChatMenuActions();
-
-            // Logout
-            document.getElementById('chatLogoutBtn').addEventListener('click', async (e) => {
-                e.preventDefault();
-                const { logout } = await import('./app.js');
-                await logout();
-            });
-
-            // Modal close buttons
-            setupModalCloseButtons();
-        }
-
-        // Set up chat menu actions
-        function setupChatMenuActions() {
-            // Add nickname
-            document.getElementById('addNicknameBtn')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.getElementById('nicknameModal').classList.add('active');
-            });
-
-            // Block user
-            document.getElementById('blockUserBtn')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.getElementById('blockUserModal').classList.add('active');
-            });
-
-            // Add to favorites
-            document.getElementById('addToFavoritesBtn')?.addEventListener('click', async (e) => {
-                e.preventDefault();
-                try {
-                    const { database } = await import('./firebase-config.js');
-                    await database.ref(`users/${currentUserData.userId}/favorites/${chatWithUserId}`).set(true);
-                    showToast('Added to favorites', 'success');
-                } catch (error) {
-                    console.error('Error adding to favorites:', error);
-                    showToast('Failed to add to favorites', 'error');
-                }
-            });
-
-            // View profile
-            document.getElementById('viewProfileBtn')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                showToast('Profile view coming soon', 'info');
-            });
-
-            // Report user
-            document.getElementById('reportUserBtn')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.getElementById('reportUserModal').classList.add('active');
-            });
-
-            // Delete chat
-            document.getElementById('deleteChatBtn')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.getElementById('deleteChatModal').classList.add('active');
-            });
-
-            // Group info
-            document.getElementById('groupInfoBtn')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                showGroupInfo();
-            });
-
-            // Add members
-            document.getElementById('addMembersBtn')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                showAddMembersModal();
-            });
-
-            // Group settings
-            document.getElementById('groupSettingsBtn')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                showGroupSettings();
-            });
-
-            // Exit group
-            document.getElementById('exitGroupBtn')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                confirmExitGroup();
-            });
-        }
-
-        // Set up modal close buttons
-        function setupModalCloseButtons() {
-            // Nickname modal
-            document.getElementById('closeNicknameModal').addEventListener('click', () => {
-                document.getElementById('nicknameModal').classList.remove('active');
-            });
-
-            document.getElementById('cancelNicknameBtn').addEventListener('click', () => {
-                document.getElementById('nicknameModal').classList.remove('active');
-            });
-
-            document.getElementById('saveNicknameBtn').addEventListener('click', saveNickname);
-
-            // Block modal
-            document.getElementById('closeBlockModal').addEventListener('click', () => {
-                document.getElementById('blockUserModal').classList.remove('active');
-            });
-
-            document.getElementById('cancelBlockBtn').addEventListener('click', () => {
-                document.getElementById('blockUserModal').classList.remove('active');
-            });
-
-            document.getElementById('confirmBlockBtn').addEventListener('click', blockUser);
-
-            // Report modal
-            document.getElementById('closeReportModal').addEventListener('click', () => {
-                document.getElementById('reportUserModal').classList.remove('active');
-            });
-
-            document.getElementById('cancelReportBtn').addEventListener('click', () => {
-                document.getElementById('reportUserModal').classList.remove('active');
-            });
-
-            document.getElementById('submitReportBtn').addEventListener('click', submitReport);
-
-            // Delete chat modal
-            document.getElementById('closeDeleteModal').addEventListener('click', () => {
-                document.getElementById('deleteChatModal').classList.remove('active');
-            });
-
-            document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
-                document.getElementById('deleteChatModal').classList.remove('active');
-            });
-
-            document.getElementById('confirmDeleteBtn').addEventListener('click', deleteChat);
-        }
-
-        // Send message
-        async function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
-            const text = messageInput.value.trim();
-            
-            if (!text && !pendingMedia) return;
-            
-            try {
-                const { sendMessage } = await import('./app.js');
-                
-                let mediaUrl = null;
-                let mediaType = null;
-                
-                if (pendingMedia) {
-                    mediaUrl = pendingMedia.url;
-                    mediaType = pendingMedia.type;
-                    pendingMedia = null;
-                }
-                
-                await sendMessage(currentChatId, text, mediaUrl, mediaType);
-                
-                // Clear input
-                messageInput.value = '';
-                document.getElementById('sendBtn').disabled = true;
-                
-                // Scroll to bottom
-                setTimeout(() => {
-                    const chatMessages = document.getElementById('chatMessages');
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }, 100);
-                
-            } catch (error) {
-                console.error('Error sending message:', error);
-                showToast('Failed to send message', 'error');
-            }
-        }
-
-        // Handle media upload
-        let pendingMedia = null;
-
-        async function handleMediaUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            // Check file size (max 25MB)
-            if (file.size > 25 * 1024 * 1024) {
-                showToast('File size too large (max 25MB)', 'error');
-                return;
-            }
-            
-            try {
-                showToast('Uploading media...', 'info');
-                
-                const { uploadChatMedia } = await import('./app.js');
-                const result = await uploadChatMedia(file);
-                
-                pendingMedia = result;
-                
-                // Add message text input focus
                 const messageInput = document.getElementById('messageInput');
-                messageInput.focus();
-                messageInput.placeholder = 'Add a caption...';
-                
-                showToast('Media uploaded, add caption and send', 'success');
-                
-            } catch (error) {
-                console.error('Error uploading media:', error);
-                showToast('Failed to upload media', 'error');
-            }
-        }
+                if (messageInput) messageInput.focus();
+            }, 500);
 
-        // Set up real-time message listener
-        function setupMessageListener() {
-            const { database } = firebase;
-            const messagesRef = database.ref(`${isGroupChat ? 'groups' : 'chats'}/${currentChatId}/messages`);
-            
-            messagesRef.orderByChild('timestamp').limitToLast(1).on('child_added', (snapshot) => {
-                const newMessage = {
-                    id: snapshot.key,
-                    ...snapshot.val()
-                };
-                
-                // Check if this is a new message (not already in our array)
-                const isNew = !messages.some(msg => msg.id === newMessage.id);
-                
-                if (isNew) {
-                    messages.push(newMessage);
-                    renderMessages();
-                    
-                    // Play notification sound if message is from someone else
-                    if (newMessage.sender !== currentUserData.userId) {
-                        playNotificationSound();
-                    }
-                    
-                    // Mark as read
-                    if (newMessage.sender !== currentUserData.userId && !newMessage.read) {
-                        markMessageAsRead(newMessage.id);
-                    }
-                }
-            });
-        }
-
-        // Mark message as read
-        async function markMessageAsRead(messageId) {
-            try {
-                const { database } = await import('./firebase-config.js');
-                await database.ref(`${isGroupChat ? 'groups' : 'chats'}/${currentChatId}/messages/${messageId}/read`).set(true);
-            } catch (error) {
-                console.error('Error marking message as read:', error);
-            }
-        }
-
-        // Save nickname
-        async function saveNickname() {
-            const nickname = document.getElementById('nicknameInput').value.trim();
-            
-            if (!nickname) {
-                showToast('Please enter a nickname', 'error');
-                return;
-            }
-            
-            try {
-                const { database } = await import('./firebase-config.js');
-                await database.ref(`users/${currentUserData.userId}/contactNicknames/${chatWithUserId}`).set(nickname);
-                
-                // Update header
-                document.getElementById('chatUserName').textContent = nickname;
-                
-                showToast('Nickname saved', 'success');
-                document.getElementById('nicknameModal').classList.remove('active');
-                
-            } catch (error) {
-                console.error('Error saving nickname:', error);
-                showToast('Failed to save nickname', 'error');
-            }
-        }
-
-        // Block user
-        async function blockUser() {
-            try {
-                const { database } = await import('./firebase-config.js');
-                
-                // Add to blocked users
-                await database.ref(`users/${currentUserData.userId}/blocked/${chatWithUserId}`).set({
-                    blockedAt: Date.now(),
-                    reason: 'manual'
-                });
-                
-                // Remove from contacts
-                await database.ref(`users/${currentUserData.userId}/contacts/${chatWithUserId}`).remove();
-                await database.ref(`users/${chatWithUserId}/contacts/${currentUserData.userId}`).remove();
-                
-                showToast('User blocked successfully', 'success');
-                document.getElementById('blockUserModal').classList.remove('active');
-                
-                // Go back to home
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1000);
-                
-            } catch (error) {
-                console.error('Error blocking user:', error);
-                showToast('Failed to block user', 'error');
-            }
-        }
-
-        // Submit report
-        async function submitReport() {
-            const reason = document.getElementById('reportReason').value;
-            const details = document.getElementById('reportDetails').value.trim();
-            
-            if (!reason) {
-                showToast('Please select a reason', 'error');
-                return;
-            }
-            
-            try {
-                const { database } = await import('./firebase-config.js');
-                
-                const reportId = `REPORT_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                const reportData = {
-                    id: reportId,
-                    reporterId: currentUserData.userId,
-                    reportedId: chatWithUserId,
-                    reason: reason,
-                    details: details,
-                    timestamp: Date.now(),
-                    status: 'pending'
-                };
-                
-                await database.ref(`reports/${reportId}`).set(reportData);
-                
-                showToast('Report submitted successfully', 'success');
-                document.getElementById('reportUserModal').classList.remove('active');
-                
-                // Reset form
-                document.getElementById('reportReason').value = '';
-                document.getElementById('reportDetails').value = '';
-                
-            } catch (error) {
-                console.error('Error submitting report:', error);
-                showToast('Failed to submit report', 'error');
-            }
-        }
-
-        // Delete chat
-        async function deleteChat() {
-            try {
-                const { database } = await import('./firebase-config.js');
-                
-                if (isGroupChat) {
-                    // For group chat, just remove user from group
-                    await database.ref(`groups/${currentChatId}/members/${currentUserData.userId}`).remove();
-                    await database.ref(`users/${currentUserData.userId}/groups/${currentChatId}`).remove();
-                } else {
-                    // For 1-on-1 chat, remove from contacts
-                    await database.ref(`users/${currentUserData.userId}/contacts/${chatWithUserId}`).remove();
-                    await database.ref(`users/${chatWithUserId}/contacts/${currentUserData.userId}`).remove();
-                    
-                    // Archive chat instead of deleting (keep messages)
-                    await database.ref(`users/${currentUserData.userId}/archivedChats/${currentChatId}`).set({
-                        archivedAt: Date.now()
-                    });
-                }
-                
-                showToast('Chat deleted successfully', 'success');
-                document.getElementById('deleteChatModal').classList.remove('active');
-                
-                // Go back to home
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1000);
-                
-            } catch (error) {
-                console.error('Error deleting chat:', error);
-                showToast('Failed to delete chat', 'error');
-            }
-        }
-
-        // Show group info
-        function showGroupInfo() {
-            if (!groupData) return;
-            
-            // Create group info modal
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay active';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Group Info</h3>
-                        <button type="button" class="close-modal" onclick="this.closest('.modal-overlay').remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div style="text-align: center; margin-bottom: 20px;">
-                            ${groupData.profilePicUrl ? 
-                                `<img src="${groupData.profilePicUrl}" alt="${groupData.name}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">` : 
-                                `<div style="width: 100px; height: 100px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
-                                    <i class="fas fa-users" style="font-size: 40px; color: #8e8e93;"></i>
-                                </div>`
-                            }
-                            <h4>${groupData.name}</h4>
-                            <p>Created ${formatTime(groupData.created)}</p>
-                        </div>
-                        
-                        <div class="members-container">
-                            <div class="members-header">
-                                <h4>Group Members</h4>
-                                <span class="members-count">${Object.keys(groupData.members || {}).length} members</span>
-                            </div>
-                            <div class="members-list" id="groupInfoMembersList">
-                                <!-- Members will be loaded here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            // Load members
-            loadGroupMembers(modal);
-        }
-
-        // Load group members for info modal
-        async function loadGroupMembers(modal) {
-            try {
-                const { database } = await import('./firebase-config.js');
-                const members = groupData.members || {};
-                const memberIds = Object.keys(members);
-                
-                const membersList = modal.querySelector('#groupInfoMembersList');
-                
-                // Load each member's details
-                for (const memberId of memberIds) {
-                    const snapshot = await database.ref(`users/${memberId}`).once('value');
-                    if (snapshot.exists()) {
-                        const memberData = snapshot.val();
-                        const memberTag = document.createElement('div');
-                        memberTag.className = 'member-tag';
-                        memberTag.innerHTML = `
-                            <span>${memberData.name} ${memberId === currentUserData.userId ? '(You)' : ''}</span>
-                            ${members[memberId].role === 'admin' ? '<span style="color: #007aff; font-size: 12px;">Admin</span>' : ''}
-                        `;
-                        membersList.appendChild(memberTag);
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Error loading group members:', error);
-            }
-        }
-
-        // Show add members modal
-        function showAddMembersModal() {
-            showToast('Add members feature coming soon', 'info');
-        }
-
-        // Show group settings
-        function showGroupSettings() {
-            showToast('Group settings feature coming soon', 'info');
-        }
-
-        // Confirm exit group
-        async function confirmExitGroup() {
-            if (!confirm('Are you sure you want to exit this group? You will no longer receive messages from this group.')) {
-                return;
-            }
-            
-            try {
-                const { database } = await import('./firebase-config.js');
-                
-                // Remove user from group
-                await database.ref(`groups/${currentChatId}/members/${currentUserData.userId}`).remove();
-                await database.ref(`users/${currentUserData.userId}/groups/${currentChatId}`).remove();
-                
-                showToast('You have left the group', 'success');
-                
-                // Go back to home
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1000);
-                
-            } catch (error) {
-                console.error('Error exiting group:', error);
-                showToast('Failed to exit group', 'error');
-            }
-        }
-
-        // View media in full screen
-        window.viewMedia = function(url, type) {
-            const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay active';
-            overlay.style.background = '#000';
-            overlay.style.zIndex = '9999';
-            
-            overlay.innerHTML = `
-                <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-                    <button class="close-modal" style="position: absolute; top: 20px; right: 20px; z-index: 10000; background: rgba(0,0,0,0.5); color: white;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    ${type === 'image' ? 
-                        `<img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` :
-                        `<video src="${url}" controls autoplay style="max-width: 100%; max-height: 100%;"></video>`
-                    }
-                </div>
-            `;
-            
-            document.body.appendChild(overlay);
-            
-            // Close on click
-            overlay.querySelector('.close-modal').addEventListener('click', () => {
-                overlay.remove();
-            });
-            
-            // Close on background click
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    overlay.remove();
-                }
-            });
-        };
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initChatPage);
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }, 1000);
+        });
     </script>
 </body>
 </html>
