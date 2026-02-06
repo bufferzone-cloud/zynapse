@@ -4,9 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynapse - Secure Chat</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="zynaps.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="zynaps.png">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+    <!-- ImageKit SDK -->
+    <script src="https://unpkg.com/imagekit-javascript/dist/imagekit.min.js"></script>
 </head>
 <body>
     <!-- Loading Screen -->
@@ -19,24 +26,26 @@
     </div>
 
     <!-- Welcome Screen -->
-    <div class="auth-page" id="welcomeScreen">
+    <div class="auth-page welcome-page" id="welcomePage">
         <div class="auth-container">
             <div class="welcome-screen">
                 <img src="zynaps.png" alt="Zynapse Logo" class="logo-large">
                 <h1>Zynapse</h1>
                 <p class="tagline">Secure, private messaging for Zambia</p>
-                <p class="tagline">End-to-end encrypted • Fast • Reliable</p>
-                <p class="powered-by">Powered by Buffer Zone</p>
+                <p class="tagline">End-to-end encrypted chats with your contacts</p>
+                <p class="powered-by">powered by buffer zone</p>
                 
                 <div class="welcome-actions">
-                    <button class="btn-primary full-width" id="signupBtn">
-                        <i class="fas fa-user-plus"></i> Create Account
+                    <button class="btn-primary full-width" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
                     </button>
-                    <button class="btn-secondary full-width" id="loginBtn">
-                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    <button class="btn-secondary full-width" id="signupBtn">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
                     </button>
                 </div>
-                
+
                 <div class="welcome-footer">
                     <p>By continuing, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a></p>
                 </div>
@@ -44,93 +53,8 @@
         </div>
     </div>
 
-    <!-- Sign Up Form -->
-    <div class="auth-page" id="signupPage" style="display: none;">
-        <div class="auth-container">
-            <form class="auth-form" id="signupForm">
-                <div class="auth-header">
-                    <button type="button" class="back-btn" id="backToWelcomeFromSignup">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                    <h2>Create Account</h2>
-                    <p>Join Zynapse today</p>
-                </div>
-                
-                <div class="auth-form-content">
-                    <div class="input-group">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="signupName" placeholder="Full Name" required>
-                    </div>
-                    
-                    <div class="input-group">
-                        <i class="fas fa-phone"></i>
-                        <input type="tel" id="signupPhone" placeholder="Phone Number (+260)" required>
-                    </div>
-                    
-                    <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="signupEmail" placeholder="Email Address" required>
-                    </div>
-                    
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="signupPassword" placeholder="Password (min. 6 characters)" required minlength="6">
-                        <i class="fas fa-eye toggle-password" data-target="signupPassword"></i>
-                    </div>
-                    
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required minlength="6">
-                        <i class="fas fa-eye toggle-password" data-target="signupConfirmPassword"></i>
-                    </div>
-                    
-                    <div class="profile-upload-section">
-                        <label class="upload-label">Profile Picture (Optional)</label>
-                        <div class="profile-upload-container">
-                            <div class="upload-preview" id="profilePreview">
-                                <div class="preview-placeholder">
-                                    <i class="fas fa-user-circle"></i>
-                                    <span>No image selected</span>
-                                    <p>Max 5MB</p>
-                                </div>
-                            </div>
-                            <div class="upload-buttons">
-                                <button type="button" class="btn-upload" id="uploadProfileBtn">
-                                    <i class="fas fa-upload"></i> Choose Image
-                                </button>
-                                <button type="button" class="btn-remove" id="removeProfileBtn" style="display: none;">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                            </div>
-                        </div>
-                        <input type="file" id="profilePicture" accept="image/*" style="display: none;">
-                        <p class="upload-hint">Supported: JPG, PNG, GIF • Max 5MB</p>
-                    </div>
-                    
-                    <div class="terms-agreement">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="agreeTerms" required>
-                            <span class="checkmark"></span>
-                            I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>
-                        </label>
-                    </div>
-                    
-                    <button type="submit" class="btn-primary full-width" id="signupSubmitBtn">
-                        <span>Create Account</span>
-                        <div class="spinner" style="display: none;"></div>
-                    </button>
-                    
-                    <div class="auth-switch">
-                        Already have an account? <a href="#" class="link" id="switchToLogin">Sign In</a>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Login Form -->
-    <div class="auth-page" id="loginPage" style="display: none;">
+    <div class="auth-page login-page" id="loginPage" style="display: none;">
         <div class="auth-container">
             <form class="auth-form" id="loginForm">
                 <div class="auth-header">
@@ -139,21 +63,21 @@
                     </button>
                     <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
                     <h2>Welcome Back</h2>
-                    <p>Sign in to your account</p>
+                    <p>Sign in to your Zynapse account</p>
                 </div>
-                
+
                 <div class="auth-form-content">
                     <div class="input-group">
                         <i class="fas fa-envelope"></i>
                         <input type="email" id="loginEmail" placeholder="Email Address" required>
                     </div>
-                    
+
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
                         <input type="password" id="loginPassword" placeholder="Password" required>
-                        <i class="fas fa-eye toggle-password" data-target="loginPassword"></i>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPassword', this)"></i>
                     </div>
-                    
+
                     <div class="form-options">
                         <label class="checkbox-container">
                             <input type="checkbox" id="rememberMe">
@@ -162,235 +86,283 @@
                         </label>
                         <a href="#" class="link" id="forgotPassword">Forgot Password?</a>
                     </div>
-                    
+
                     <button type="submit" class="btn-primary full-width" id="loginSubmitBtn">
                         <span>Sign In</span>
-                        <div class="spinner" style="display: none;"></div>
+                        <div class="spinner" id="loginSpinner" style="display: none;"></div>
                     </button>
-                    
+
+                    <div class="auth-divider">
+                        <span>Or continue with</span>
+                    </div>
+
+                    <button type="button" class="btn-google" id="googleLoginBtn">
+                        <i class="fab fa-google"></i>
+                        Sign in with Google
+                    </button>
+
                     <div class="auth-switch">
-                        Don't have an account? <a href="#" class="link" id="switchToSignup">Sign Up</a>
+                        Don't have an account? <a href="#" class="link" id="switchToSignup">Sign up</a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Signup Form -->
+    <div class="auth-page signup-page" id="signupPage" style="display: none;">
+        <div class="auth-container">
+            <form class="auth-form" id="signupForm">
+                <div class="auth-header">
+                    <button type="button" class="back-btn" id="backToWelcomeFromSignup">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                    <h2>Create Account</h2>
+                    <p>Join Zynapse for secure messaging</p>
+                </div>
+
+                <div class="auth-form-content">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="signupName" placeholder="Full Name" required>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="signupPhone" placeholder="Phone Number" required>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="signupEmail" placeholder="Email Address" required>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupPassword" placeholder="Password" minlength="6" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('signupPassword', this)"></i>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" minlength="6" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('signupConfirmPassword', this)"></i>
+                    </div>
+
+                    <!-- Profile Upload Section -->
+                    <div class="profile-upload-section">
+                        <label class="upload-label">Profile Picture</label>
+                        <div class="profile-upload-container">
+                            <div class="upload-preview" id="profilePreview">
+                                <div class="preview-placeholder">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>No image selected</span>
+                                </div>
+                            </div>
+                            <div class="upload-buttons">
+                                <button type="button" class="btn-upload" id="uploadProfileBtn">
+                                    <i class="fas fa-upload"></i>
+                                    Choose Photo
+                                </button>
+                                <button type="button" class="btn-remove" id="removeProfileBtn" style="display: none;">
+                                    <i class="fas fa-trash"></i>
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                        <p class="upload-hint">Upload a profile picture (JPG, PNG, max 5MB)</p>
+                        <input type="file" id="profileImage" accept="image/*" style="display: none;">
+                    </div>
+
+                    <div class="terms-agreement">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="agreeTerms" required>
+                            <span class="checkmark"></span>
+                            I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary full-width" id="signupSubmitBtn">
+                        <span>Create Account</span>
+                        <div class="spinner" id="signupSpinner" style="display: none;"></div>
+                    </button>
+
+                    <div class="auth-divider">
+                        <span>Or sign up with</span>
+                    </div>
+
+                    <button type="button" class="btn-google" id="googleSignupBtn">
+                        <i class="fab fa-google"></i>
+                        Sign up with Google
+                    </button>
+
+                    <div class="auth-switch">
+                        Already have an account? <a href="#" class="link" id="switchToLogin">Sign in</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotPasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Reset Password</h3>
+                <button type="button" class="close-modal" id="closeForgotPasswordModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="resetEmail" placeholder="Enter your email address">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancelResetBtn">Cancel</button>
+                    <button type="button" class="btn-primary" id="sendResetLinkBtn">Send Reset Link</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="imagekit-config.js"></script>
     <script type="module" src="app.js"></script>
-    <script type="module">
-        import zynapseApp from './app.js';
-        
+    <script>
+        // Toggle password visibility
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Navigation between auth pages
         document.addEventListener('DOMContentLoaded', function() {
-            const loadingScreen = document.getElementById('loadingScreen');
-            const welcomeScreen = document.getElementById('welcomeScreen');
-            const signupPage = document.getElementById('signupPage');
-            const loginPage = document.getElementById('loginPage');
-            
-            const signupBtn = document.getElementById('signupBtn');
-            const loginBtn = document.getElementById('loginBtn');
-            const backToWelcomeFromSignup = document.getElementById('backToWelcomeFromSignup');
-            const backToWelcomeFromLogin = document.getElementById('backToWelcomeFromLogin');
-            const switchToLogin = document.getElementById('switchToLogin');
-            const switchToSignup = document.getElementById('switchToSignup');
-            
-            const signupForm = document.getElementById('signupForm');
-            const loginForm = document.getElementById('loginForm');
-            
-            const profilePicture = document.getElementById('profilePicture');
-            const uploadProfileBtn = document.getElementById('uploadProfileBtn');
-            const removeProfileBtn = document.getElementById('removeProfileBtn');
-            const profilePreview = document.getElementById('profilePreview');
-            
-            // Hide loading screen after 1.5 seconds
+            // Show loading screen initially
             setTimeout(() => {
-                loadingScreen.classList.add('hidden');
+                document.getElementById('loadingScreen').classList.add('hidden');
                 setTimeout(() => {
-                    loadingScreen.style.display = 'none';
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('welcomePage').style.display = 'flex';
                 }, 400);
             }, 1500);
-            
-            // Navigation between screens
-            signupBtn.addEventListener('click', () => {
-                welcomeScreen.style.display = 'none';
-                signupPage.style.display = 'flex';
+
+            // Welcome page buttons
+            document.getElementById('loginBtn').addEventListener('click', () => {
+                document.getElementById('welcomePage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'flex';
             });
-            
-            loginBtn.addEventListener('click', () => {
-                welcomeScreen.style.display = 'none';
-                loginPage.style.display = 'flex';
+
+            document.getElementById('signupBtn').addEventListener('click', () => {
+                document.getElementById('welcomePage').style.display = 'none';
+                document.getElementById('signupPage').style.display = 'flex';
             });
-            
-            backToWelcomeFromSignup.addEventListener('click', () => {
-                signupPage.style.display = 'none';
-                welcomeScreen.style.display = 'flex';
+
+            // Back buttons
+            document.getElementById('backToWelcomeFromLogin').addEventListener('click', () => {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('welcomePage').style.display = 'flex';
             });
-            
-            backToWelcomeFromLogin.addEventListener('click', () => {
-                loginPage.style.display = 'none';
-                welcomeScreen.style.display = 'flex';
+
+            document.getElementById('backToWelcomeFromSignup').addEventListener('click', () => {
+                document.getElementById('signupPage').style.display = 'none';
+                document.getElementById('welcomePage').style.display = 'flex';
             });
-            
-            switchToLogin.addEventListener('click', (e) => {
+
+            // Switch between login/signup
+            document.getElementById('switchToSignup').addEventListener('click', (e) => {
                 e.preventDefault();
-                signupPage.style.display = 'none';
-                loginPage.style.display = 'flex';
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('signupPage').style.display = 'flex';
             });
-            
-            switchToSignup.addEventListener('click', (e) => {
+
+            document.getElementById('switchToLogin').addEventListener('click', (e) => {
                 e.preventDefault();
-                loginPage.style.display = 'none';
-                signupPage.style.display = 'flex';
+                document.getElementById('signupPage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'flex';
             });
-            
-            // Profile picture upload
+
+            // Forgot password
+            document.getElementById('forgotPassword').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('forgotPasswordModal').classList.add('active');
+            });
+
+            document.getElementById('closeForgotPasswordModal').addEventListener('click', () => {
+                document.getElementById('forgotPasswordModal').classList.remove('active');
+            });
+
+            document.getElementById('cancelResetBtn').addEventListener('click', () => {
+                document.getElementById('forgotPasswordModal').classList.remove('active');
+            });
+
+            // Profile image upload
+            const profileImageInput = document.getElementById('profileImage');
+            const profilePreview = document.getElementById('profilePreview');
+            const uploadProfileBtn = document.getElementById('uploadProfileBtn');
+            const removeProfileBtn = document.getElementById('removeProfileBtn');
+
             uploadProfileBtn.addEventListener('click', () => {
-                profilePicture.click();
+                profileImageInput.click();
             });
-            
-            profilePicture.addEventListener('change', function(e) {
+
+            profileImageInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    if (file.size > 5 * 1024 * 1024) {
-                        zynapseApp.showToast('File size must be less than 5MB', 'error');
+                    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                        showToast('File size should be less than 5MB', 'error');
                         return;
                     }
-                    
+
                     const reader = new FileReader();
-                    reader.onload = function(e) {
-                        profilePreview.innerHTML = `<img src="${e.target.result}" alt="Profile Preview">`;
-                        removeProfileBtn.style.display = 'flex';
+                    reader.onload = function(event) {
+                        profilePreview.innerHTML = `<img src="${event.target.result}" alt="Profile Preview">`;
+                        removeProfileBtn.style.display = 'inline-flex';
                     };
                     reader.readAsDataURL(file);
                 }
             });
-            
+
             removeProfileBtn.addEventListener('click', () => {
-                profilePicture.value = '';
                 profilePreview.innerHTML = `
                     <div class="preview-placeholder">
                         <i class="fas fa-user-circle"></i>
                         <span>No image selected</span>
-                        <p>Max 5MB</p>
                     </div>
                 `;
+                profileImageInput.value = '';
                 removeProfileBtn.style.display = 'none';
             });
-            
-            // Password toggle
-            document.querySelectorAll('.toggle-password').forEach(icon => {
-                icon.addEventListener('click', function() {
-                    const targetId = this.getAttribute('data-target');
-                    const input = document.getElementById(targetId);
-                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                    input.setAttribute('type', type);
-                    this.classList.toggle('fa-eye');
-                    this.classList.toggle('fa-eye-slash');
-                });
-            });
-            
-            // Sign up form submission
-            signupForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const name = document.getElementById('signupName').value.trim();
-                const phone = document.getElementById('signupPhone').value.trim();
-                const email = document.getElementById('signupEmail').value.trim();
-                const password = document.getElementById('signupPassword').value;
-                const confirmPassword = document.getElementById('signupConfirmPassword').value;
-                const agreeTerms = document.getElementById('agreeTerms').checked;
-                
-                // Validation
-                if (!name || !phone || !email || !password) {
-                    zynapseApp.showToast('Please fill in all required fields', 'error');
-                    return;
-                }
-                
-                if (password !== confirmPassword) {
-                    zynapseApp.showToast('Passwords do not match', 'error');
-                    return;
-                }
-                
-                if (!agreeTerms) {
-                    zynapseApp.showToast('You must agree to the terms and conditions', 'error');
-                    return;
-                }
-                
-                if (!phone.startsWith('+260')) {
-                    zynapseApp.showToast('Phone number must start with +260', 'error');
-                    return;
-                }
-                
-                // Show loading state
-                const submitBtn = document.getElementById('signupSubmitBtn');
-                const btnText = submitBtn.querySelector('span');
-                const spinner = submitBtn.querySelector('.spinner');
-                btnText.textContent = 'Creating Account...';
-                spinner.style.display = 'block';
-                submitBtn.disabled = true;
-                
-                try {
-                    const profileFile = profilePicture.files[0];
-                    const result = await zynapseApp.signUp(name, phone, email, password, profileFile);
-                    
-                    if (result.success) {
-                        zynapseApp.showToast('Account created successfully!', 'success');
-                        // Redirect happens automatically via auth state change
-                    } else {
-                        zynapseApp.showToast(result.message, 'error');
-                    }
-                } catch (error) {
-                    zynapseApp.showToast('An error occurred. Please try again.', 'error');
-                } finally {
-                    btnText.textContent = 'Create Account';
-                    spinner.style.display = 'none';
-                    submitBtn.disabled = false;
-                }
-            });
-            
-            // Login form submission
-            loginForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const email = document.getElementById('loginEmail').value.trim();
-                const password = document.getElementById('loginPassword').value;
-                
-                if (!email || !password) {
-                    zynapseApp.showToast('Please enter email and password', 'error');
-                    return;
-                }
-                
-                // Show loading state
-                const submitBtn = document.getElementById('loginSubmitBtn');
-                const btnText = submitBtn.querySelector('span');
-                const spinner = submitBtn.querySelector('.spinner');
-                btnText.textContent = 'Signing In...';
-                spinner.style.display = 'block';
-                submitBtn.disabled = true;
-                
-                try {
-                    const result = await zynapseApp.login(email, password);
-                    
-                    if (result.success) {
-                        zynapseApp.showToast('Signed in successfully!', 'success');
-                        // Redirect happens automatically via auth state change
-                    } else {
-                        zynapseApp.showToast(result.message, 'error');
-                    }
-                } catch (error) {
-                    zynapseApp.showToast('An error occurred. Please try again.', 'error');
-                } finally {
-                    btnText.textContent = 'Sign In';
-                    spinner.style.display = 'none';
-                    submitBtn.disabled = false;
-                }
-            });
-            
-            // Forgot password
-            document.getElementById('forgotPassword').addEventListener('click', function(e) {
-                e.preventDefault();
-                zynapseApp.showToast('Password reset feature coming soon', 'info');
-            });
         });
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
     </script>
 </body>
 </html>
