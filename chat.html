@@ -3,60 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zynapse - Chat</title>
+    <title>Chat - Zynapse</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="zynaps.png">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cloudinary-core@2.11.4/cloudinary-core-shrinkwrap.min.js"></script>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-content">
-            <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
-            <div class="spinner-large"></div>
-            <p>Loading chat...</p>
-        </div>
-    </div>
-
-    <!-- Chat Container -->
-    <div class="chat-page" id="chatContainer" style="display: none;">
+    <div class="chat-page">
         <!-- Chat Header -->
         <header class="chat-header">
-            <button class="back-btn" id="backBtn">
+            <button class="back-btn" onclick="goBackToHome()">
                 <i class="fas fa-arrow-left"></i>
             </button>
             
-            <div class="chat-user-info">
-                <img src="" alt="Profile" class="profile-pic-small" id="chatPartnerPic">
+            <div class="chat-user-info" onclick="viewChatProfile()">
+                <img src="" alt="Profile" class="profile-pic-small" id="chatProfilePic">
                 <div class="chat-user-details">
-                    <h3 id="chatPartnerName">Loading...</h3>
+                    <h3 id="chatUserName">Loading...</h3>
                     <div class="chat-status">
-                        <div class="status-dot" id="chatStatusDot"></div>
+                        <span class="status-dot" id="chatStatusDot"></span>
                         <span id="chatStatusText">Loading...</span>
                     </div>
                 </div>
             </div>
-
-            <div class="chat-actions">
-                <button class="icon-btn" id="videoCallBtn">
-                    <i class="fas fa-video"></i>
-                </button>
-                <button class="icon-btn" id="voiceCallBtn">
-                    <i class="fas fa-phone"></i>
-                </button>
-                <button class="icon-btn" id="chatMenuBtn">
+            
+            <div class="chat-header-actions">
+                <button class="icon-btn" onclick="toggleChatMenu()">
                     <i class="fas fa-ellipsis-v"></i>
                 </button>
+                
+                <!-- Chat Menu Dropdown -->
+                <div class="dropdown">
+                    <div class="dropdown-content" id="chatMenuDropdown">
+                        <a href="#" onclick="addNickname()"><i class="fas fa-tag"></i> Add Nickname</a>
+                        <a href="#" onclick="addToFavorites()"><i class="fas fa-star"></i> Add to Favorites</a>
+                        <a href="#" onclick="viewSharedMedia()"><i class="fas fa-photo-video"></i> Shared Media</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" onclick="clearChat()" style="color: var(--orange);"><i class="fas fa-trash"></i> Clear Chat</a>
+                        <a href="#" onclick="blockUser()" style="color: var(--red);"><i class="fas fa-ban"></i> Block User</a>
+                        <a href="#" onclick="reportUser()" style="color: var(--red);"><i class="fas fa-flag"></i> Report</a>
+                    </div>
+                </div>
             </div>
         </header>
 
         <!-- Chat Messages Area -->
         <div class="chat-messages" id="chatMessages">
-            <!-- Messages will be loaded here -->
             <div class="empty-chat">
                 <i class="fas fa-comments"></i>
-                <h3>No messages yet</h3>
-                <p>Send a message to start the conversation</p>
+                <h3>Start a conversation</h3>
+                <p>Send a message to begin chatting</p>
             </div>
         </div>
 
@@ -68,185 +67,122 @@
                     <div class="typing-dot"></div>
                     <div class="typing-dot"></div>
                 </div>
-                <span class="typing-text" id="typingText">typing...</span>
+                <span class="typing-text">typing...</span>
             </div>
         </div>
 
         <!-- Message Input Area -->
         <div class="message-input-area">
-            <button class="icon-btn" id="attachmentBtn">
+            <button class="icon-btn" onclick="toggleAttachmentOptions()">
                 <i class="fas fa-plus"></i>
             </button>
             
+            <!-- Attachment Options -->
+            <div class="attachment-options" id="attachmentOptions">
+                <button class="attachment-btn" onclick="attachPhoto()">
+                    <i class="fas fa-image"></i>
+                    <span>Photo</span>
+                </button>
+                <button class="attachment-btn" onclick="attachVideo()">
+                    <i class="fas fa-video"></i>
+                    <span>Video</span>
+                </button>
+                <button class="attachment-btn" onclick="attachFile()">
+                    <i class="fas fa-file"></i>
+                    <span>File</span>
+                </button>
+            </div>
+            
             <div class="message-input-container">
-                <input type="text" id="messageInput" placeholder="iMessage">
-                <div class="emoji-btn icon-btn" id="emojiBtn">
-                    <i class="far fa-smile"></i>
+                <input type="text" id="messageInput" placeholder="iMessage" onkeypress="handleMessageKeypress(event)" oninput="updateTypingIndicator()">
+                <div class="media-buttons" id="mediaButtons" style="display: none;">
+                    <button class="btn-media" onclick="removeAttachment()">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             </div>
             
-            <button class="send-btn" id="sendMessageBtn">
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
 
-        <!-- Attachment Options -->
-        <div class="attachment-options" id="attachmentOptions">
-            <button class="attachment-btn" data-type="photo">
-                <i class="fas fa-image"></i>
-                <span>Photo</span>
-            </button>
-            <button class="attachment-btn" data-type="video">
-                <i class="fas fa-video"></i>
-                <span>Video</span>
-            </button>
-            <button class="attachment-btn" data-type="document">
-                <i class="fas fa-file"></i>
-                <span>Document</span>
-            </button>
-            <button class="attachment-btn" data-type="camera">
-                <i class="fas fa-camera"></i>
-                <span>Camera</span>
-            </button>
-            <button class="attachment-btn" data-type="location">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>Location</span>
-            </button>
-            <button class="attachment-btn" data-type="contact">
-                <i class="fas fa-user"></i>
-                <span>Contact</span>
-            </button>
-        </div>
-
-        <!-- Chat Menu Dropdown -->
-        <div class="dropdown">
-            <div class="dropdown-content" id="chatMenuDropdown">
-                <a href="#" id="viewProfileBtn">
-                    <i class="fas fa-user"></i> View Profile
-                </a>
-                <a href="#" id="addNicknameBtn">
-                    <i class="fas fa-tag"></i> Add Nickname
-                </a>
-                <a href="#" id="addToFavoritesBtn">
-                    <i class="fas fa-star"></i> Add to Favorites
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" id="blockUserBtn">
-                    <i class="fas fa-ban"></i> Block User
-                </a>
-                <a href="#" id="reportUserBtn">
-                    <i class="fas fa-flag"></i> Report User
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" id="clearChatBtn">
-                    <i class="fas fa-trash"></i> Clear Chat
-                </a>
-                <a href="#" id="deleteChatBtn" class="logout-link">
-                    <i class="fas fa-trash-alt"></i> Delete Chat
-                </a>
+        <!-- Modal for Shared Media -->
+        <div class="modal-overlay" id="sharedMediaModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Shared Media</h3>
+                    <button class="close-modal" onclick="closeSharedMediaModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="media-preview" id="sharedMediaContainer">
+                        <!-- Shared media will be loaded here -->
+                        <div class="empty-state">
+                            <i class="fas fa-photo-video"></i>
+                            <h3>No shared media</h3>
+                            <p>Photos, videos, and files shared in this chat will appear here</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Media Upload Inputs -->
-        <input type="file" id="photoUpload" accept="image/*" style="display: none;" multiple>
-        <input type="file" id="videoUpload" accept="video/*" style="display: none;">
-        <input type="file" id="documentUpload" accept=".pdf,.doc,.docx,.txt,.zip,.rar" style="display: none;">
-
-        <!-- Report User Modal -->
-        <div class="modal-overlay" id="reportModal">
+        <!-- Modal for Block/Report -->
+        <div class="modal-overlay" id="blockReportModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Report User</h3>
-                    <button class="close-modal" id="closeReportModal">&times;</button>
+                    <h3 id="blockReportTitle">Block User</h3>
+                    <button class="close-modal" onclick="closeBlockReportModal()">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div class="confirmation-message">
-                        <i class="fas fa-exclamation-triangle warning-icon"></i>
-                        <h4>Report Inappropriate Behavior</h4>
-                        <p>Please select a reason for reporting this user. Your report will be reviewed by our moderation team.</p>
+                    <div class="confirmation-message" id="blockConfirmation" style="display: none;">
+                        <div class="warning-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <h4>Block <span id="blockUserName"></span>?</h4>
+                        <p>Blocked users will no longer be able to send you messages or see your online status.</p>
+                        <div class="modal-actions">
+                            <button class="btn-secondary" onclick="closeBlockReportModal()">Cancel</button>
+                            <button class="btn-danger" onclick="confirmBlock()">Block</button>
+                        </div>
                     </div>
-                    <form class="report-form" id="reportForm">
+                    
+                    <div class="report-form" id="reportForm" style="display: none;">
                         <div class="input-group">
-                            <label for="reportReason">Reason for Report</label>
-                            <select id="reportReason" required>
-                                <option value="">Select a reason</option>
+                            <label for="reportReason">Reason for reporting</label>
+                            <select id="reportReason">
                                 <option value="spam">Spam</option>
-                                <option value="harassment">Harassment</option>
-                                <option value="inappropriate_content">Inappropriate Content</option>
+                                <option value="harassment">Harassment or bullying</option>
+                                <option value="inappropriate">Inappropriate content</option>
                                 <option value="impersonation">Impersonation</option>
                                 <option value="other">Other</option>
                             </select>
                         </div>
+                        
                         <div class="input-group">
-                            <label for="reportDetails">Additional Details</label>
-                            <textarea id="reportDetails" placeholder="Please provide any additional details..."></textarea>
+                            <label for="reportDetails">Additional details (optional)</label>
+                            <textarea id="reportDetails" placeholder="Please provide more information..." rows="4"></textarea>
                         </div>
-                        <p class="form-hint">Your report is anonymous. The reported user will not know who reported them.</p>
+                        
+                        <p class="form-hint">Your report will be reviewed by our moderation team. We'll notify you of any action taken.</p>
+                        
                         <div class="modal-actions">
-                            <button type="button" class="btn-secondary" id="cancelReport">Cancel</button>
-                            <button type="submit" class="btn-danger" id="submitReport">Submit Report</button>
+                            <button class="btn-secondary" onclick="closeBlockReportModal()">Cancel</button>
+                            <button class="btn-danger" onclick="submitReport()">Submit Report</button>
                         </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Block Confirmation Modal -->
-        <div class="modal-overlay" id="blockModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Block User</h3>
-                    <button class="close-modal" id="closeBlockModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="confirmation-message">
-                        <i class="fas fa-ban warning-icon"></i>
-                        <h4 id="blockUserName">Block User?</h4>
-                        <p>This user will no longer be able to send you messages or see your online status. You can unblock them anytime from your settings.</p>
-                    </div>
-                    <div class="modal-actions">
-                        <button class="btn-secondary" id="cancelBlock">Cancel</button>
-                        <button class="btn-danger" id="confirmBlock">Block User</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Clear Chat Confirmation -->
-        <div class="modal-overlay" id="clearChatModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Clear Chat</h3>
-                    <button class="close-modal" id="closeClearChatModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="confirmation-message">
-                        <i class="fas fa-trash warning-icon"></i>
-                        <h4>Clear Chat History?</h4>
-                        <p>This will delete all messages in this chat. This action cannot be undone.</p>
-                    </div>
-                    <div class="modal-actions">
-                        <button class="btn-secondary" id="cancelClearChat">Cancel</button>
-                        <button class="btn-danger" id="confirmClearChat">Clear Chat</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Toast Container -->
+        <!-- Toast Notifications Container -->
         <div class="toast-container"></div>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
-    <script src="firebase-config.js"></script>
+    <audio id="messageSound" preload="auto">
+        <source src="notification.mp3" type="audio/mpeg">
+    </audio>
+
     <script src="app.js"></script>
-    
-    <!-- Emoji Picker (Optional) -->
-    <script src="https://cdn.jsdelivr.net/npm/@emoji-mart/data"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emoji-mart/web"></script>
 </body>
 </html>
