@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat | Zynapse</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="chat-page">
+    <header class="chat-header">
+        <button class="back-btn" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        
+        <img id="chat-user-profile" src="" alt="Profile" class="chat-profile">
+        
+        <div class="chat-user-info">
+            <h3 id="chat-user-name"></h3>
+            <span id="chat-user-status" class="status">Online</span>
+        </div>
+        
+        <div class="chat-actions">
+            <button class="icon-btn" onclick="toggleChatMenu()">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="dropdown-menu" id="chat-menu">
+                <a href="#" onclick="addNickname()"><i class="fas fa-tag"></i> Add Nickname</a>
+                <a href="#" onclick="toggleFavorite()"><i class="fas fa-star"></i> Add to Favorite</a>
+                <a href="#" onclick="blockUser()"><i class="fas fa-ban"></i> Block User</a>
+                <a href="#" onclick="clearChat()"><i class="fas fa-trash"></i> Clear Chat</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="chat-messages" id="chat-messages">
+        <!-- Messages will be loaded here -->
+    </main>
+
+    <div class="chat-input">
+        <button class="attachment-btn" onclick="attachFile()">
+            <i class="fas fa-paperclip"></i>
+        </button>
+        
+        <input type="text" id="message-input" placeholder="Type a message..." 
+               onkeypress="if(event.key === 'Enter') sendMessage()">
+        
+        <button class="send-btn" onclick="sendMessage()">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+        
+        <input type="file" id="file-upload" hidden accept="image/*,video/*">
+    </div>
+
+    <audio id="message-sound" src="notification.mp3" preload="auto"></audio>
+
+    <script src="firebase-config.js"></script>
+    <script src="imagekit-config.js"></script>
+    <script src="app.js"></script>
+    <script src="chat.js"></script>
+</body>
+</html>
