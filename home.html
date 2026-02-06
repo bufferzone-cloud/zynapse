@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynapse - Home</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="zynaps.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="zynaps.png">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- ImageKit SDK -->
+    <script src="https://unpkg.com/imagekit-javascript/dist/imagekit.min.js"></script>
 </head>
 <body class="app-home">
     <!-- Loading Screen -->
@@ -25,38 +31,46 @@
             <div class="user-info">
                 <h2 id="userName">Loading...</h2>
                 <div class="user-id-container">
-                    <span class="user-id" id="userID">ZYN-0000</span>
-                    <button class="copy-btn" id="copyIDBtn">
-                        <i class="far fa-copy"></i>
+                    <span class="user-id" id="userIdDisplay">ZYN-XXXX</span>
+                    <button class="copy-btn" id="copyUserIdBtn" title="Copy User ID">
+                        <i class="fas fa-copy"></i>
                     </button>
                 </div>
             </div>
         </div>
         
         <div class="header-right">
-            <div class="status-indicator online" id="statusIndicator">
-                <div class="status-dot"></div>
-            </div>
-            
-            <div class="dropdown">
-                <button class="profile-btn" id="profileDropdownBtn">
+            <div class="dropdown" id="profileDropdown">
+                <button class="profile-btn" id="profileBtn">
                     <img src="" alt="Profile" class="profile-pic-small" id="userProfilePic">
                     <i class="fas fa-chevron-down"></i>
                 </button>
-                <div class="dropdown-content" id="profileDropdown">
+                <div class="dropdown-content" id="profileDropdownContent">
                     <div class="dropdown-profile">
                         <img src="" alt="Profile" class="dropdown-profile-pic" id="dropdownProfilePic">
                         <div class="dropdown-profile-info">
                             <strong id="dropdownUserName"></strong>
-                            <span id="dropdownUserID"></span>
+                            <span id="dropdownUserId"></span>
                         </div>
                     </div>
                     <div class="dropdown-divider"></div>
-                    <a href="#"><i class="fas fa-user"></i> My Profile</a>
-                    <a href="#"><i class="fas fa-cog"></i> Settings</a>
-                    <a href="#"><i class="fas fa-moon"></i> Appearance</a>
+                    <a href="#" id="editProfileLink">
+                        <i class="fas fa-user-edit"></i>
+                        Edit Profile
+                    </a>
+                    <a href="#" id="settingsLink">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </a>
+                    <a href="#" id="zambiaThemeLink">
+                        <i class="fas fa-flag"></i>
+                        Zambia Theme
+                    </a>
                     <div class="dropdown-divider"></div>
-                    <a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+                    <a href="#" class="logout-link" id="logoutLink">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Log Out
+                    </a>
                 </div>
             </div>
         </div>
@@ -69,7 +83,7 @@
             <span>HOME</span>
         </a>
         <a href="#" class="nav-item" data-page="zynes">
-            <i class="fas fa-circle"></i>
+            <i class="fas fa-fire"></i>
             <span>ZYNES</span>
             <span class="badge" id="zynesBadge" style="display: none;">0</span>
         </a>
@@ -100,38 +114,39 @@
                 </div>
                 
                 <div class="quick-actions">
-                    <div class="quick-action-card" id="startChatCard">
-                        <i class="fas fa-comment-alt"></i>
+                    <div class="quick-action-card" id="startQuickChat">
+                        <i class="fas fa-comment"></i>
                         <h3>Start Chat</h3>
                         <p>Begin a new conversation</p>
                     </div>
-                    <div class="quick-action-card" id="createGroupCard">
-                        <i class="fas fa-users"></i>
-                        <h3>Create Group</h3>
-                        <p>Chat with multiple people</p>
-                    </div>
-                    <div class="quick-action-card" id="addContactCard">
+                    <div class="quick-action-card" id="addContact">
                         <i class="fas fa-user-plus"></i>
                         <h3>Add Contact</h3>
-                        <p>Connect with friends</p>
+                        <p>Add new people to chat with</p>
                     </div>
-                    <div class="quick-action-card" id="postZyneCard">
-                        <i class="fas fa-circle"></i>
+                    <div class="quick-action-card" id="createGroup">
+                        <i class="fas fa-users"></i>
+                        <h3>Create Group</h3>
+                        <p>Start a group conversation</p>
+                    </div>
+                    <div class="quick-action-card" id="postZyne">
+                        <i class="fas fa-fire"></i>
                         <h3>Post Zyne</h3>
-                        <p>Share your status</p>
+                        <p>Share with your contacts</p>
                     </div>
                 </div>
                 
                 <div class="recent-chats-section">
                     <div class="section-header">
                         <h3>Recent Chats</h3>
-                        <a href="#" class="view-all">View All</a>
+                        <a href="#" class="view-all" id="viewAllChats">View All</a>
                     </div>
-                    <div class="recent-chats-list" id="recentChats">
+                    <div class="recent-chats-list" id="recentChatsList">
+                        <!-- Recent chats will be loaded here -->
                         <div class="empty-state">
                             <i class="fas fa-comments"></i>
                             <h3>No chats yet</h3>
-                            <p>Start a conversation by clicking the chat button</p>
+                            <p>Start a chat by clicking the button below</p>
                         </div>
                     </div>
                 </div>
@@ -143,22 +158,21 @@
             <div class="page-header">
                 <h2>Zynes</h2>
                 <div class="header-actions">
-                    <button class="btn-primary" id="addZyneBtn">
-                        <i class="fas fa-plus"></i> Add Zyne
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search Zynes..." id="searchZynes">
+                    </div>
+                    <button class="btn-primary" id="createZyneBtn">
+                        <i class="fas fa-plus"></i>
+                        New Zyne
                     </button>
                 </div>
             </div>
-            
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="myZynes">My Zynes</button>
-                <button class="tab-btn" data-tab="contactsZynes">Contacts</button>
-            </div>
-            
             <div class="zynes-container" id="zynesContainer">
                 <div class="empty-state">
-                    <i class="fas fa-circle"></i>
+                    <i class="fas fa-fire"></i>
                     <h3>No Zynes yet</h3>
-                    <p>Share what's on your mind with your contacts</p>
+                    <p>Posts from your contacts will appear here</p>
                 </div>
             </div>
         </div>
@@ -168,17 +182,21 @@
             <div class="page-header">
                 <h2>Groups</h2>
                 <div class="header-actions">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search groups..." id="searchGroups">
+                    </div>
                     <button class="btn-primary" id="createGroupBtn">
-                        <i class="fas fa-plus"></i> New Group
+                        <i class="fas fa-plus"></i>
+                        New Group
                     </button>
                 </div>
             </div>
-            
             <div class="groups-container" id="groupsContainer">
                 <div class="empty-state">
                     <i class="fas fa-users"></i>
                     <h3>No groups yet</h3>
-                    <p>Create a group to chat with multiple people</p>
+                    <p>Create or join a group to start chatting</p>
                 </div>
             </div>
         </div>
@@ -187,14 +205,11 @@
         <div class="page" id="requestsPage">
             <div class="page-header">
                 <h2>Chat Requests</h2>
-                <div class="header-actions">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search requests..." id="searchRequests">
-                    </div>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="incoming">Incoming</button>
+                    <button class="tab-btn" data-tab="sent">Sent</button>
                 </div>
             </div>
-            
             <div class="requests-container" id="requestsContainer">
                 <div class="empty-state">
                     <i class="fas fa-user-plus"></i>
@@ -213,12 +228,12 @@
                         <i class="fas fa-search"></i>
                         <input type="text" placeholder="Search contacts..." id="searchContacts">
                     </div>
-                    <button class="btn-secondary" id="addContactBtn">
-                        <i class="fas fa-user-plus"></i> Add
+                    <button class="btn-primary" id="addContactBtn">
+                        <i class="fas fa-user-plus"></i>
+                        Add Contact
                     </button>
                 </div>
             </div>
-            
             <div class="contacts-container" id="contactsContainer">
                 <div class="empty-state">
                     <i class="fas fa-address-book"></i>
@@ -229,79 +244,93 @@
         </div>
     </main>
 
-    <!-- Floating Chat Button -->
-    <button class="floating-btn" id="floatingChatBtn">
+    <!-- Floating Start Chat Button -->
+    <button class="floating-btn" id="startChatBtn">
         <i class="fas fa-comment"></i>
         <span>Start Chat</span>
     </button>
 
-    <!-- Modals -->
+    <!-- Start Chat Modal -->
     <div class="modal-overlay" id="startChatModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Start New Chat</h3>
-                <button class="close-modal" id="closeStartChatModal">&times;</button>
+                <button type="button" class="close-modal" id="closeStartChatModal">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="input-group">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchUserID" placeholder="Enter Zynapse ID (ZYN-XXXX)" maxlength="8">
+                    <input type="text" id="searchUserId" placeholder="Enter User ID (ZYN-XXXX)">
                 </div>
                 
                 <div class="search-result" id="userSearchResult">
-                    <div class="search-placeholder">
-                        <i class="fas fa-user"></i>
-                        <p>Enter a Zynapse ID to search</p>
+                    <div class="search-placeholder" id="searchPlaceholder">
+                        <i class="fas fa-search"></i>
+                        <p>Enter a User ID to search for users</p>
+                    </div>
+                    
+                    <div class="user-found" id="userFoundResult" style="display: none;">
+                        <img src="" alt="User" class="profile-pic" id="foundUserPic">
+                        <div class="found-user-info">
+                            <h4 id="foundUserName"></h4>
+                            <p id="foundUserId"></p>
+                            <p class="already-contact" id="alreadyContact" style="display: none;">Already in contacts</p>
+                        </div>
+                    </div>
+                    
+                    <div class="error" id="searchError" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>User not found</p>
                     </div>
                 </div>
                 
                 <div class="modal-actions">
-                    <div class="action-buttons" id="searchActions" style="display: none;">
+                    <div class="action-buttons">
                         <button class="btn-secondary" id="cancelSearchBtn">Cancel</button>
-                        <button class="btn-primary" id="sendRequestBtn">Send Chat Request</button>
-                        <button class="btn-primary" id="startChatBtn" style="display: none;">Start Chat</button>
+                        <button class="btn-primary" id="sendRequestBtn" style="display: none;">Send Chat Request</button>
+                        <button class="btn-primary" id="startChatDirectBtn" style="display: none;">Start Chat</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Add Zyne Modal -->
-    <div class="modal-overlay" id="addZyneModal">
+    <!-- Create Zyne Modal -->
+    <div class="modal-overlay" id="createZyneModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Add New Zyne</h3>
-                <button class="close-modal" id="closeAddZyneModal">&times;</button>
+                <h3>Create New Zyne</h3>
+                <button type="button" class="close-modal" id="closeCreateZyneModal">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="input-group">
-                    <textarea id="zyneText" placeholder="What's on your mind? (Optional)" rows="3"></textarea>
-                    <div class="character-counter">
-                        <span id="zyneCharCount">0</span>/200
-                    </div>
+                    <i class="fas fa-pen"></i>
+                    <textarea id="zyneText" placeholder="What's on your mind?" rows="3"></textarea>
+                </div>
+                <div class="character-counter">
+                    <span id="zyneCharCount">0</span>/500
                 </div>
                 
-                <div class="profile-upload-section">
-                    <label class="upload-label">Add Photo/Video (Optional)</label>
-                    <div class="media-preview" id="zyneMediaPreview">
-                        <div class="preview-placeholder">
-                            <i class="fas fa-image"></i>
-                            <p>No media selected</p>
-                        </div>
-                    </div>
-                    <div class="media-buttons">
-                        <button type="button" class="btn-media" id="zynePhotoBtn">
-                            <i class="fas fa-camera"></i>
-                        </button>
-                        <button type="button" class="btn-media" id="zyneVideoBtn">
-                            <i class="fas fa-video"></i>
-                        </button>
-                    </div>
-                    <input type="file" id="zyneMedia" accept="image/*,video/*" style="display: none;">
+                <div class="media-preview" id="zyneMediaPreview">
+                    <!-- Media preview will appear here -->
+                </div>
+                
+                <div class="media-buttons">
+                    <button class="btn-media" id="addZyneImageBtn" title="Add Image">
+                        <i class="fas fa-image"></i>
+                    </button>
+                    <button class="btn-media" id="addZyneVideoBtn" title="Add Video">
+                        <i class="fas fa-video"></i>
+                    </button>
+                    <input type="file" id="zyneImageInput" accept="image/*" style="display: none;">
+                    <input type="file" id="zyneVideoInput" accept="video/*" style="display: none;">
                 </div>
                 
                 <div class="modal-actions">
-                    <button class="btn-secondary" id="cancelZyneBtn">Cancel</button>
                     <button class="btn-primary" id="postZyneBtn">Post Zyne</button>
                 </div>
             </div>
@@ -313,1222 +342,1159 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Create New Group</h3>
-                <button class="close-modal" id="closeCreateGroupModal">&times;</button>
+                <button type="button" class="close-modal" id="closeCreateGroupModal">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="input-group">
                     <i class="fas fa-users"></i>
-                    <input type="text" id="groupName" placeholder="Group Name" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-pencil-alt"></i>
-                    <textarea id="groupDescription" placeholder="Group Description (Optional)" rows="2"></textarea>
+                    <input type="text" id="groupName" placeholder="Group Name">
                 </div>
                 
                 <div class="profile-upload-section">
-                    <label class="upload-label">Group Photo (Optional)</label>
-                    <div class="upload-preview" id="groupPhotoPreview">
-                        <div class="preview-placeholder">
-                            <i class="fas fa-users"></i>
-                            <p>No photo selected</p>
+                    <label class="upload-label">Group Photo</label>
+                    <div class="profile-upload-container">
+                        <div class="upload-preview" id="groupProfilePreview">
+                            <div class="preview-placeholder">
+                                <i class="fas fa-users"></i>
+                                <span>No image selected</span>
+                            </div>
+                        </div>
+                        <div class="upload-buttons">
+                            <button type="button" class="btn-upload" id="uploadGroupProfileBtn">
+                                <i class="fas fa-upload"></i>
+                                Choose Photo
+                            </button>
                         </div>
                     </div>
-                    <button type="button" class="btn-upload" id="uploadGroupPhotoBtn">
-                        <i class="fas fa-upload"></i> Choose Photo
+                    <input type="file" id="groupProfileImage" accept="image/*" style="display: none;">
+                </div>
+                
+                <div class="input-group">
+                    <i class="fas fa-user-plus"></i>
+                    <input type="text" id="addMemberInput" placeholder="Add member by User ID">
+                    <button type="button" class="btn-media" id="addMemberBtn">
+                        <i class="fas fa-plus"></i>
                     </button>
-                    <input type="file" id="groupPhoto" accept="image/*" style="display: none;">
                 </div>
                 
                 <div class="members-container">
                     <div class="members-header">
-                        <h4>Add Members</h4>
-                        <span class="members-count" id="memberCount">0 members</span>
-                    </div>
-                    <div class="input-group">
-                        <i class="fas fa-user-plus"></i>
-                        <input type="text" id="addMemberInput" placeholder="Enter Zynapse ID to add member">
+                        <h4>Group Members</h4>
+                        <span class="members-count" id="memberCount">1 member</span>
                     </div>
                     <div class="members-list" id="groupMembersList">
-                        <div class="empty-members">
-                            <i class="fas fa-user-plus"></i>
-                            <p>No members added yet</p>
+                        <div class="member-tag">
+                            <span id="currentUserMember">You</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="modal-actions">
-                    <button class="btn-secondary" id="cancelGroupBtn">Cancel</button>
                     <button class="btn-primary" id="createGroupSubmitBtn">Create Group</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Add Contact Modal -->
-    <div class="modal-overlay" id="addContactModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add Contact</h3>
-                <button class="close-modal" id="closeAddContactModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="contactSearchID" placeholder="Enter Zynapse ID (ZYN-XXXX)" maxlength="8">
-                </div>
-                
-                <div class="search-result" id="contactSearchResult">
-                    <div class="search-placeholder">
-                        <i class="fas fa-user"></i>
-                        <p>Enter a Zynapse ID to search</p>
-                    </div>
-                </div>
-                
-                <div class="modal-actions">
-                    <div class="action-buttons" id="contactActions" style="display: none;">
-                        <button class="btn-secondary" id="cancelContactBtn">Cancel</button>
-                        <button class="btn-primary" id="sendContactRequestBtn">Send Request</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="imagekit-config.js"></script>
     <script type="module" src="app.js"></script>
-    <script type="module">
-        import zynapseApp from './app.js';
-        import { onAuthStateChanged, signOut, ref, onValue, onChildAdded, onChildChanged, onChildRemoved, get } from './firebase-config.js';
-        
-        let currentUser = null;
-        let userData = null;
+    <script>
+        // Current user data
+        let currentUserData = null;
         let contacts = [];
-        let pendingRequests = [];
-        let chats = [];
         let groups = [];
+        let chatRequests = [];
         let zynes = [];
-        let groupMembers = [];
-        let searchResult = null;
-        let contactSearchResult = null;
-        
-        // DOM Elements
-        const loadingScreen = document.getElementById('loadingScreen');
-        const userName = document.getElementById('userName');
-        const userID = document.getElementById('userID');
-        const copyIDBtn = document.getElementById('copyIDBtn');
-        const userProfilePic = document.getElementById('userProfilePic');
-        const dropdownProfilePic = document.getElementById('dropdownProfilePic');
-        const dropdownUserName = document.getElementById('dropdownUserName');
-        const dropdownUserID = document.getElementById('dropdownUserID');
-        const statusIndicator = document.getElementById('statusIndicator');
-        const profileDropdownBtn = document.getElementById('profileDropdownBtn');
-        const profileDropdown = document.getElementById('profileDropdown');
-        const logoutBtn = document.getElementById('logoutBtn');
-        
-        const navItems = document.querySelectorAll('.nav-item');
-        const pages = document.querySelectorAll('.page');
-        
-        const floatingChatBtn = document.getElementById('floatingChatBtn');
-        const startChatModal = document.getElementById('startChatModal');
-        const closeStartChatModal = document.getElementById('closeStartChatModal');
-        const searchUserID = document.getElementById('searchUserID');
-        const userSearchResult = document.getElementById('userSearchResult');
-        const searchActions = document.getElementById('searchActions');
-        const cancelSearchBtn = document.getElementById('cancelSearchBtn');
-        const sendRequestBtn = document.getElementById('sendRequestBtn');
-        const startChatBtn = document.getElementById('startChatBtn');
-        
-        const addZyneBtn = document.getElementById('addZyneBtn');
-        const addZyneModal = document.getElementById('addZyneModal');
-        const closeAddZyneModal = document.getElementById('closeAddZyneModal');
-        const zyneText = document.getElementById('zyneText');
-        const zyneCharCount = document.getElementById('zyneCharCount');
-        const zyneMediaPreview = document.getElementById('zyneMediaPreview');
-        const zynePhotoBtn = document.getElementById('zynePhotoBtn');
-        const zyneVideoBtn = document.getElementById('zyneVideoBtn');
-        const zyneMedia = document.getElementById('zyneMedia');
-        const cancelZyneBtn = document.getElementById('cancelZyneBtn');
-        const postZyneBtn = document.getElementById('postZyneBtn');
-        
-        const createGroupBtn = document.getElementById('createGroupBtn');
-        const createGroupModal = document.getElementById('createGroupModal');
-        const closeCreateGroupModal = document.getElementById('closeCreateGroupModal');
-        const groupName = document.getElementById('groupName');
-        const groupDescription = document.getElementById('groupDescription');
-        const groupPhotoPreview = document.getElementById('groupPhotoPreview');
-        const uploadGroupPhotoBtn = document.getElementById('uploadGroupPhotoBtn');
-        const groupPhoto = document.getElementById('groupPhoto');
-        const addMemberInput = document.getElementById('addMemberInput');
-        const groupMembersList = document.getElementById('groupMembersList');
-        const memberCount = document.getElementById('memberCount');
-        const cancelGroupBtn = document.getElementById('cancelGroupBtn');
-        const createGroupSubmitBtn = document.getElementById('createGroupSubmitBtn');
-        
-        const addContactBtn = document.getElementById('addContactBtn');
-        const addContactModal = document.getElementById('addContactModal');
-        const closeAddContactModal = document.getElementById('closeAddContactModal');
-        const contactSearchID = document.getElementById('contactSearchID');
-        const contactSearchResult = document.getElementById('contactSearchResult');
-        const contactActions = document.getElementById('contactActions');
-        const cancelContactBtn = document.getElementById('cancelContactBtn');
-        const sendContactRequestBtn = document.getElementById('sendContactRequestBtn');
-        
-        const startChatCard = document.getElementById('startChatCard');
-        const createGroupCard = document.getElementById('createGroupCard');
-        const addContactCard = document.getElementById('addContactCard');
-        const postZyneCard = document.getElementById('postZyneCard');
-        
-        const recentChats = document.getElementById('recentChats');
-        const zynesContainer = document.getElementById('zynesContainer');
-        const groupsContainer = document.getElementById('groupsContainer');
-        const requestsContainer = document.getElementById('requestsContainer');
-        const contactsContainer = document.getElementById('contactsContainer');
-        
-        const searchRequests = document.getElementById('searchRequests');
-        const searchContacts = document.getElementById('searchContacts');
-        
-        const zynesBadge = document.getElementById('zynesBadge');
-        const groupsBadge = document.getElementById('groupsBadge');
-        const requestsBadge = document.getElementById('requestsBadge');
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Hide loading screen
-            setTimeout(() => {
-                loadingScreen.classList.add('hidden');
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                }, 400);
-            }, 1000);
-            
-            // Check auth state
-            onAuthStateChanged(zynapseApp.auth, async (user) => {
-                if (user) {
-                    currentUser = user;
-                    await loadUserData();
-                    setupRealtimeListeners();
-                } else {
-                    window.location.href = 'index.html';
-                }
-            });
-            
-            initEventListeners();
-        });
-        
-        async function loadUserData() {
-            userData = await zynapseApp.getUserData(currentUser.uid);
-            if (userData) {
-                updateUI();
-            }
-        }
-        
-        function updateUI() {
-            // Update user info
-            userName.textContent = userData.name;
-            userID.textContent = userData.userID;
-            dropdownUserName.textContent = userData.name;
-            dropdownUserID.textContent = userData.userID;
-            
-            // Update profile picture
-            const defaultProfile = './zynaps.png';
-            if (userData.profilePicture) {
-                userProfilePic.src = userData.profilePicture;
-                dropdownProfilePic.src = userData.profilePicture;
-            } else {
-                userProfilePic.src = defaultProfile;
-                dropdownProfilePic.src = defaultProfile;
-            }
-            
-            // Update status
-            updateStatusIndicator(userData.status);
-        }
-        
-        function updateStatusIndicator(status) {
-            statusIndicator.className = 'status-indicator';
-            statusIndicator.classList.add(status);
-        }
-        
-        function setupRealtimeListeners() {
-            // Listen for user data changes
-            const userRef = ref(zynapseApp.database, `users/${currentUser.uid}`);
-            onValue(userRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    userData = snapshot.val();
-                    updateUI();
-                }
-            });
-            
-            // Listen for incoming chat requests
-            const requestsRef = ref(zynapseApp.database, `users/${currentUser.uid}/incomingRequests`);
-            onChildAdded(requestsRef, async (snapshot) => {
-                if (snapshot.exists()) {
-                    const requestId = snapshot.key;
-                    await loadRequest(requestId);
-                    updateRequestsBadge();
-                }
-            });
-            
-            onChildRemoved(requestsRef, (snapshot) => {
-                const requestId = snapshot.key;
-                removeRequestFromUI(requestId);
-                updateRequestsBadge();
-            });
-            
-            // Listen for contacts
-            const contactsRef = ref(zynapseApp.database, `users/${currentUser.uid}/contacts`);
-            onChildAdded(contactsRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const contactUID = snapshot.key;
-                    loadContact(contactUID, snapshot.val());
-                }
-            });
-            
-            onChildChanged(contactsRef, (snapshot) => {
-                const contactUID = snapshot.key;
-                updateContact(contactUID, snapshot.val());
-            });
-            
-            onChildRemoved(contactsRef, (snapshot) => {
-                const contactUID = snapshot.key;
-                removeContactFromUI(contactUID);
-            });
-            
-            // Listen for chats
-            const chatsRef = ref(zynapseApp.database, `users/${currentUser.uid}/chats`);
-            onChildAdded(chatsRef, async (snapshot) => {
-                if (snapshot.exists()) {
-                    const chatId = snapshot.key;
-                    await loadChat(chatId, snapshot.val());
-                }
-            });
-            
-            onChildChanged(chatsRef, async (snapshot) => {
-                const chatId = snapshot.key;
-                updateChat(chatId, snapshot.val());
-            });
-        }
-        
-        async function loadRequest(requestId) {
+
+        // Initialize home page
+        async function initHomePage() {
             try {
-                const requestRef = ref(zynapseApp.database, `chatRequests/${requestId}`);
-                const snapshot = await get(requestRef);
+                // Check authentication
+                const { auth } = await import('./firebase-config.js');
+                const user = auth.currentUser;
+                
+                if (!user) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // Load user data
+                await loadCurrentUser();
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                // Load initial data
+                await loadInitialData();
+                
+                // Hide loading screen
+                document.getElementById('loadingScreen').classList.add('hidden');
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                }, 400);
+                
+                // Set up real-time listeners
+                setupRealtimeListeners();
+                
+            } catch (error) {
+                console.error('Error initializing home page:', error);
+                showToast('Error loading app', 'error');
+            }
+        }
+
+        // Load current user data
+        async function loadCurrentUser() {
+            try {
+                const { auth, database } = await import('./firebase-config.js');
+                const user = auth.currentUser;
+                
+                // Find user by Firebase UID
+                const usersSnapshot = await database.ref('users').orderByChild('firebaseUid').equalTo(user.uid).once('value');
+                
+                if (usersSnapshot.exists()) {
+                    const users = usersSnapshot.val();
+                    const userId = Object.keys(users)[0];
+                    currentUserData = users[userId];
+                    currentUserData.userId = userId;
+                    
+                    // Update UI
+                    document.getElementById('userName').textContent = currentUserData.name;
+                    document.getElementById('userIdDisplay').textContent = currentUserData.userId;
+                    document.getElementById('dropdownUserName').textContent = currentUserData.name;
+                    document.getElementById('dropdownUserId').textContent = currentUserData.userId;
+                    
+                    // Set profile picture
+                    if (currentUserData.profilePicUrl) {
+                        document.getElementById('userProfilePic').src = currentUserData.profilePicUrl;
+                        document.getElementById('dropdownProfilePic').src = currentUserData.profilePicUrl;
+                    }
+                    
+                    // Update status to online
+                    await database.ref(`users/${userId}`).update({
+                        status: 'online',
+                        lastLogin: Date.now()
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                throw error;
+            }
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = item.getAttribute('data-page');
+                    switchPage(page);
+                    
+                    // Update active state
+                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+                });
+            });
+
+            // Copy User ID
+            document.getElementById('copyUserIdBtn').addEventListener('click', () => {
+                const userId = currentUserData?.userId;
+                if (userId) {
+                    navigator.clipboard.writeText(userId);
+                    showToast('User ID copied to clipboard', 'success');
+                }
+            });
+
+            // Profile dropdown
+            document.getElementById('profileBtn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('profileDropdownContent').classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.dropdown')) {
+                    document.getElementById('profileDropdownContent').classList.remove('show');
+                }
+            });
+
+            // Logout
+            document.getElementById('logoutLink').addEventListener('click', async (e) => {
+                e.preventDefault();
+                const { logout } = await import('./app.js');
+                await logout();
+            });
+
+            // Edit Profile
+            document.getElementById('editProfileLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                showEditProfileModal();
+            });
+
+            // Settings
+            document.getElementById('settingsLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                showSettingsModal();
+            });
+
+            // Zambia Theme
+            document.getElementById('zambiaThemeLink').addEventListener('click', (e) => {
+                e.preventDefault();
+                applyZambiaTheme();
+            });
+
+            // Start Chat button
+            document.getElementById('startChatBtn').addEventListener('click', () => {
+                document.getElementById('startChatModal').classList.add('active');
+                document.getElementById('searchUserId').focus();
+            });
+
+            // Quick action cards
+            document.getElementById('startQuickChat').addEventListener('click', () => {
+                document.getElementById('startChatModal').classList.add('active');
+            });
+
+            document.getElementById('addContact').addEventListener('click', () => {
+                switchPage('contacts');
+                setTimeout(() => {
+                    document.getElementById('addContactBtn').click();
+                }, 100);
+            });
+
+            document.getElementById('createGroup').addEventListener('click', () => {
+                document.getElementById('createGroupModal').classList.add('active');
+            });
+
+            document.getElementById('postZyne').addEventListener('click', () => {
+                document.getElementById('createZyneModal').classList.add('active');
+            });
+
+            // Modal close buttons
+            document.getElementById('closeStartChatModal').addEventListener('click', () => {
+                document.getElementById('startChatModal').classList.remove('active');
+                resetStartChatModal();
+            });
+
+            document.getElementById('closeCreateZyneModal').addEventListener('click', () => {
+                document.getElementById('createZyneModal').classList.remove('active');
+                resetZyneModal();
+            });
+
+            document.getElementById('closeCreateGroupModal').addEventListener('click', () => {
+                document.getElementById('createGroupModal').classList.remove('active');
+                resetGroupModal();
+            });
+
+            // Cancel buttons
+            document.getElementById('cancelSearchBtn').addEventListener('click', () => {
+                document.getElementById('startChatModal').classList.remove('active');
+                resetStartChatModal();
+            });
+
+            // User ID search
+            const searchUserIdInput = document.getElementById('searchUserId');
+            let searchTimeout;
+            
+            searchUserIdInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(searchUser, 500);
+            });
+
+            // Send chat request
+            document.getElementById('sendRequestBtn').addEventListener('click', async () => {
+                const foundUserId = document.getElementById('foundUserId').textContent;
+                if (foundUserId) {
+                    const { sendChatRequest } = await import('./app.js');
+                    await sendChatRequest(foundUserId);
+                    document.getElementById('startChatModal').classList.remove('active');
+                    resetStartChatModal();
+                }
+            });
+
+            // Start chat directly (if already in contacts)
+            document.getElementById('startChatDirectBtn').addEventListener('click', async () => {
+                const foundUserId = document.getElementById('foundUserId').textContent;
+                if (foundUserId && currentUserData) {
+                    // Find chat ID
+                    const chatId = `CHAT_${[currentUserData.userId, foundUserId].sort().join('_')}`;
+                    window.location.href = `chat.html?chatId=${chatId}`;
+                }
+            });
+
+            // Zyne character counter
+            const zyneText = document.getElementById('zyneText');
+            const zyneCharCount = document.getElementById('zyneCharCount');
+            
+            zyneText.addEventListener('input', () => {
+                zyneCharCount.textContent = zyneText.value.length;
+            });
+
+            // Zyne media buttons
+            document.getElementById('addZyneImageBtn').addEventListener('click', () => {
+                document.getElementById('zyneImageInput').click();
+            });
+
+            document.getElementById('addZyneVideoBtn').addEventListener('click', () => {
+                document.getElementById('zyneVideoInput').click();
+            });
+
+            document.getElementById('zyneImageInput').addEventListener('change', handleZyneMediaSelect);
+            document.getElementById('zyneVideoInput').addEventListener('change', handleZyneMediaSelect);
+
+            // Post Zyne
+            document.getElementById('postZyneBtn').addEventListener('click', postZyne);
+
+            // Group creation
+            document.getElementById('createGroupBtn').addEventListener('click', () => {
+                document.getElementById('createGroupModal').classList.add('active');
+            });
+
+            document.getElementById('uploadGroupProfileBtn').addEventListener('click', () => {
+                document.getElementById('groupProfileImage').click();
+            });
+
+            document.getElementById('groupProfileImage').addEventListener('change', handleGroupProfileSelect);
+
+            document.getElementById('addMemberBtn').addEventListener('click', addGroupMember);
+
+            document.getElementById('createGroupSubmitBtn').addEventListener('click', createGroup);
+
+            // Add contact button
+            document.getElementById('addContactBtn').addEventListener('click', () => {
+                document.getElementById('startChatModal').classList.add('active');
+            });
+        }
+
+        // Load initial data
+        async function loadInitialData() {
+            if (!currentUserData) return;
+            
+            try {
+                const { database } = await import('./firebase-config.js');
+                
+                // Load contacts
+                const contactIds = Object.keys(currentUserData.contacts || {});
+                if (contactIds.length > 0) {
+                    const contactPromises = contactIds.map(async (contactId) => {
+                        const snapshot = await database.ref(`users/${contactId}`).once('value');
+                        if (snapshot.exists()) {
+                            return {
+                                userId: contactId,
+                                ...snapshot.val()
+                            };
+                        }
+                        return null;
+                    });
+                    
+                    contacts = (await Promise.all(contactPromises)).filter(Boolean);
+                    renderContacts();
+                }
+                
+                // Load chat requests
+                await loadRequestsList();
+                
+                // Load recent chats
+                await loadRecentChats();
+                
+                // Load groups
+                await loadGroupsList();
+                
+            } catch (error) {
+                console.error('Error loading initial data:', error);
+            }
+        }
+
+        // Switch between pages
+        function switchPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            // Show selected page
+            const pageElement = document.getElementById(`${page}Page`);
+            if (pageElement) {
+                pageElement.classList.add('active');
+                
+                // Load page-specific data
+                switch (page) {
+                    case 'contacts':
+                        renderContacts();
+                        break;
+                    case 'requests':
+                        loadRequestsList();
+                        break;
+                    case 'groups':
+                        loadGroupsList();
+                        break;
+                    case 'zynes':
+                        loadZynes();
+                        break;
+                }
+            }
+        }
+
+        // Search for user by ID
+        async function searchUser() {
+            const userId = document.getElementById('searchUserId').value.trim().toUpperCase();
+            
+            // Reset results
+            document.getElementById('searchPlaceholder').style.display = 'none';
+            document.getElementById('userFoundResult').style.display = 'none';
+            document.getElementById('searchError').style.display = 'none';
+            document.getElementById('sendRequestBtn').style.display = 'none';
+            document.getElementById('startChatDirectBtn').style.display = 'none';
+            
+            if (!userId || !userId.startsWith('ZYN-')) {
+                document.getElementById('searchPlaceholder').style.display = 'block';
+                return;
+            }
+            
+            try {
+                const { database } = await import('./firebase-config.js');
+                const snapshot = await database.ref(`users/${userId}`).once('value');
                 
                 if (snapshot.exists()) {
-                    const request = snapshot.val();
-                    const sender = await zynapseApp.getUserData(request.from);
+                    const userData = snapshot.val();
                     
-                    if (sender) {
-                        const requestData = {
-                            id: requestId,
-                            ...request,
-                            sender: sender
-                        };
-                        
-                        pendingRequests.push(requestData);
-                        displayRequest(requestData);
+                    // Don't show current user
+                    if (userId === currentUserData?.userId) {
+                        document.getElementById('searchError').style.display = 'block';
+                        document.getElementById('searchError').innerHTML = `
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>You cannot chat with yourself</p>
+                        `;
+                        return;
+                    }
+                    
+                    // Show user found
+                    document.getElementById('foundUserName').textContent = userData.name;
+                    document.getElementById('foundUserId').textContent = userId;
+                    
+                    if (userData.profilePicUrl) {
+                        document.getElementById('foundUserPic').src = userData.profilePicUrl;
+                    } else {
+                        document.getElementById('foundUserPic').src = '';
+                        document.getElementById('foundUserPic').alt = userData.name;
+                    }
+                    
+                    // Check if already in contacts
+                    const isContact = currentUserData?.contacts && currentUserData.contacts[userId];
+                    document.getElementById('alreadyContact').style.display = isContact ? 'block' : 'none';
+                    
+                    // Show appropriate button
+                    if (isContact) {
+                        document.getElementById('startChatDirectBtn').style.display = 'block';
+                    } else {
+                        document.getElementById('sendRequestBtn').style.display = 'block';
+                    }
+                    
+                    document.getElementById('userFoundResult').style.display = 'flex';
+                    
+                } else {
+                    document.getElementById('searchError').style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('Error searching user:', error);
+                document.getElementById('searchError').style.display = 'block';
+            }
+        }
+
+        // Reset start chat modal
+        function resetStartChatModal() {
+            document.getElementById('searchUserId').value = '';
+            document.getElementById('searchPlaceholder').style.display = 'block';
+            document.getElementById('userFoundResult').style.display = 'none';
+            document.getElementById('searchError').style.display = 'none';
+            document.getElementById('sendRequestBtn').style.display = 'none';
+            document.getElementById('startChatDirectBtn').style.display = 'none';
+        }
+
+        // Load chat requests
+        window.loadRequestsList = async function() {
+            if (!currentUserData) return;
+            
+            try {
+                const { database } = await import('./firebase-config.js');
+                const requests = currentUserData.chatRequests || {};
+                const requestList = [];
+                
+                for (const requestId in requests) {
+                    const request = requests[requestId];
+                    if (request.status === 'pending') {
+                        const senderSnapshot = await database.ref(`users/${request.from}`).once('value');
+                        if (senderSnapshot.exists()) {
+                            const senderData = senderSnapshot.val();
+                            requestList.push({
+                                requestId: requestId,
+                                from: request.from,
+                                name: senderData.name,
+                                profilePicUrl: senderData.profilePicUrl,
+                                timestamp: request.timestamp
+                            });
+                        }
                     }
                 }
-            } catch (error) {
-                console.error("Error loading request:", error);
-            }
-        }
-        
-        function displayRequest(request) {
-            const requestElement = document.createElement('div');
-            requestElement.className = 'request-card';
-            requestElement.dataset.id = request.id;
-            
-            const profilePic = request.sender.profilePicture || './zynaps.png';
-            
-            requestElement.innerHTML = `
-                <img src="${profilePic}" alt="${request.sender.name}" class="profile-pic">
-                <div class="request-info">
-                    <h4>${request.sender.name}</h4>
-                    <p>${request.sender.userID}</p>
-                    <p class="time">${zynapseApp.formatTime(request.timestamp)}</p>
-                </div>
-                <div class="request-actions">
-                    <button class="action-btn accept-btn" data-action="accept">
-                        <i class="fas fa-check"></i> Accept
-                    </button>
-                    <button class="action-btn reject-btn" data-action="reject">
-                        <i class="fas fa-times"></i> Reject
-                    </button>
-                </div>
-            `;
-            
-            // Check if already exists
-            const existing = requestsContainer.querySelector(`[data-id="${request.id}"]`);
-            if (existing) {
-                existing.replaceWith(requestElement);
-            } else {
-                // Remove empty state if present
-                const emptyState = requestsContainer.querySelector('.empty-state');
-                if (emptyState) {
-                    emptyState.remove();
+                
+                chatRequests = requestList;
+                renderChatRequests();
+                
+                // Update badge
+                const badge = document.getElementById('requestsBadge');
+                if (requestList.length > 0) {
+                    badge.textContent = requestList.length;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
                 }
-                requestsContainer.appendChild(requestElement);
-            }
-            
-            // Add event listeners to buttons
-            const acceptBtn = requestElement.querySelector('[data-action="accept"]');
-            const rejectBtn = requestElement.querySelector('[data-action="reject"]');
-            
-            acceptBtn.addEventListener('click', async () => {
-                await acceptRequest(request.id);
-            });
-            
-            rejectBtn.addEventListener('click', async () => {
-                await rejectRequest(request.id);
-            });
-        }
-        
-        async function acceptRequest(requestId) {
-            const result = await zynapseApp.acceptChatRequest(requestId, currentUser.uid);
-            if (result) {
-                zynapseApp.showToast('Chat request accepted', 'success');
-                // Remove from UI
-                removeRequestFromUI(requestId);
-                updateRequestsBadge();
-            } else {
-                zynapseApp.showToast('Failed to accept request', 'error');
+                
+            } catch (error) {
+                console.error('Error loading requests:', error);
             }
         }
-        
-        async function rejectRequest(requestId) {
-            const result = await zynapseApp.rejectChatRequest(requestId, currentUser.uid);
-            if (result) {
-                zynapseApp.showToast('Chat request rejected', 'success');
-                // Remove from UI
-                removeRequestFromUI(requestId);
-                updateRequestsBadge();
-            } else {
-                zynapseApp.showToast('Failed to reject request', 'error');
-            }
-        }
-        
-        function removeRequestFromUI(requestId) {
-            const requestElement = requestsContainer.querySelector(`[data-id="${requestId}"]`);
-            if (requestElement) {
-                requestElement.remove();
-            }
+
+        // Render chat requests
+        function renderChatRequests() {
+            const container = document.getElementById('requestsContainer');
             
-            // Remove from array
-            pendingRequests = pendingRequests.filter(r => r.id !== requestId);
-            
-            // Show empty state if no requests
-            if (requestsContainer.children.length === 0) {
-                requestsContainer.innerHTML = `
+            if (chatRequests.length === 0) {
+                container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-user-plus"></i>
                         <h3>No pending requests</h3>
                         <p>When someone sends you a chat request, it will appear here</p>
                     </div>
                 `;
-            }
-        }
-        
-        async function loadContact(contactUID, contactData) {
-            try {
-                const contactUser = await zynapseApp.getUserData(contactUID);
-                if (contactUser) {
-                    const contact = {
-                        uid: contactUID,
-                        ...contactData,
-                        ...contactUser
-                    };
-                    
-                    contacts.push(contact);
-                    displayContact(contact);
-                }
-            } catch (error) {
-                console.error("Error loading contact:", error);
-            }
-        }
-        
-        function displayContact(contact) {
-            const contactElement = document.createElement('div');
-            contactElement.className = 'contact-card';
-            contactElement.dataset.uid = contact.uid;
-            
-            const profilePic = contact.profilePicture || './zynaps.png';
-            const statusClass = contact.status || 'offline';
-            
-            contactElement.innerHTML = `
-                <img src="${profilePic}" alt="${contact.name}" class="profile-pic">
-                <div class="contact-info">
-                    <h4>${contact.name}</h4>
-                    <p>${contact.userID}</p>
-                    <p class="status ${statusClass}">${contact.status || 'offline'}</p>
-                </div>
-                <div class="contact-actions">
-                    <button class="action-btn chat-btn" data-action="chat">
-                        <i class="fas fa-comment"></i> Chat
-                    </button>
-                </div>
-            `;
-            
-            // Check if already exists
-            const existing = contactsContainer.querySelector(`[data-uid="${contact.uid}"]`);
-            if (existing) {
-                existing.replaceWith(contactElement);
-            } else {
-                // Remove empty state if present
-                const emptyState = contactsContainer.querySelector('.empty-state');
-                if (emptyState) {
-                    emptyState.remove();
-                }
-                contactsContainer.appendChild(contactElement);
+                return;
             }
             
-            // Add event listener to chat button
-            const chatBtn = contactElement.querySelector('[data-action="chat"]');
-            chatBtn.addEventListener('click', () => {
-                startChatWithContact(contact.userID);
+            container.innerHTML = '';
+            
+            chatRequests.forEach(request => {
+                const requestCard = document.createElement('div');
+                requestCard.className = 'request-card';
+                requestCard.innerHTML = `
+                    <img src="${request.profilePicUrl || ''}" alt="${request.name}" class="profile-pic" 
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNSIgY3k9IjI1IiByPSIyNSIgZmlsbD0iI0ZGRiIgc3Ryb2tlPSIjRUVFIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMjUgMTVjNS41MjggMCAxMCA0LjQ3MiAxMCAxMHMtNC40NzIgMTAtMTAgMTAtMTAtNC40NzItMTAtMTAgNC40NzItMTAgMTAtMTB6bTAgNGE2IDYgMCAxMDAgMTIgNiA2IDAgMDAwLTEyeiIgZmlsbD0iIzhFOEU4RSIvPjwvc3ZnPg=='">
+                    <div class="request-info">
+                        <h4>${request.name}</h4>
+                        <p>${request.from}</p>
+                        <p class="time">${formatTime(request.timestamp)}</p>
+                    </div>
+                    <div class="request-actions">
+                        <button class="action-btn accept-btn" data-request-id="${request.requestId}">
+                            <i class="fas fa-check"></i>
+                            Accept
+                        </button>
+                        <button class="action-btn reject-btn" data-request-id="${request.requestId}">
+                            <i class="fas fa-times"></i>
+                            Reject
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(requestCard);
+                
+                // Add event listeners
+                const acceptBtn = requestCard.querySelector('.accept-btn');
+                const rejectBtn = requestCard.querySelector('.reject-btn');
+                
+                acceptBtn.addEventListener('click', async () => {
+                    const { handleChatRequest } = await import('./app.js');
+                    await handleChatRequest(request.requestId, 'accept');
+                });
+                
+                rejectBtn.addEventListener('click', async () => {
+                    const { handleChatRequest } = await import('./app.js');
+                    await handleChatRequest(request.requestId, 'reject');
+                });
             });
         }
-        
-        function updateContact(contactUID, contactData) {
-            const contactElement = contactsContainer.querySelector(`[data-uid="${contactUID}"]`);
-            if (contactElement) {
-                const statusElement = contactElement.querySelector('.status');
-                if (statusElement) {
-                    statusElement.textContent = contactData.status || 'offline';
-                    statusElement.className = `status ${contactData.status || 'offline'}`;
-                }
-            }
-        }
-        
-        function removeContactFromUI(contactUID) {
-            const contactElement = contactsContainer.querySelector(`[data-uid="${contactUID}"]`);
-            if (contactElement) {
-                contactElement.remove();
-            }
+
+        // Render contacts
+        function renderContacts() {
+            const container = document.getElementById('contactsContainer');
             
-            // Remove from array
-            contacts = contacts.filter(c => c.uid !== contactUID);
-            
-            // Show empty state if no contacts
-            if (contactsContainer.children.length === 0) {
-                contactsContainer.innerHTML = `
+            if (contacts.length === 0) {
+                container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-address-book"></i>
                         <h3>No contacts yet</h3>
                         <p>Add contacts to start chatting</p>
                     </div>
                 `;
-            }
-        }
-        
-        async function loadChat(chatId, chatData) {
-            try {
-                const otherUserUID = chatData.with;
-                const otherUser = await zynapseApp.getUserData(otherUserUID);
-                
-                if (otherUser) {
-                    const chat = {
-                        id: chatId,
-                        ...chatData,
-                        otherUser: otherUser
-                    };
-                    
-                    chats.push(chat);
-                    displayRecentChat(chat);
-                }
-            } catch (error) {
-                console.error("Error loading chat:", error);
-            }
-        }
-        
-        function displayRecentChat(chat) {
-            const chatElement = document.createElement('div');
-            chatElement.className = 'contact-card';
-            chatElement.dataset.chatId = chat.id;
-            
-            const profilePic = chat.otherUser.profilePicture || './zynaps.png';
-            
-            chatElement.innerHTML = `
-                <img src="${profilePic}" alt="${chat.otherUser.name}" class="profile-pic">
-                <div class="contact-info">
-                    <h4>${chat.otherUser.name}</h4>
-                    <p>${chat.otherUser.userID}</p>
-                    <p class="time">${zynapseApp.formatTime(chat.lastActive)}</p>
-                </div>
-                <div class="contact-actions">
-                    <button class="action-btn chat-btn" data-action="open-chat">
-                        <i class="fas fa-comment"></i> Open
-                    </button>
-                </div>
-            `;
-            
-            // Check if already exists
-            const existing = recentChats.querySelector(`[data-chat-id="${chat.id}"]`);
-            if (existing) {
-                existing.replaceWith(chatElement);
-            } else {
-                // Remove empty state if present
-                const emptyState = recentChats.querySelector('.empty-state');
-                if (emptyState) {
-                    emptyState.remove();
-                }
-                recentChats.appendChild(chatElement);
+                return;
             }
             
-            // Add event listener to open chat button
-            const openBtn = chatElement.querySelector('[data-action="open-chat"]');
-            openBtn.addEventListener('click', () => {
-                openChat(chat.id, chat.otherUser);
-            });
-        }
-        
-        function updateChat(chatId, chatData) {
-            const chatElement = recentChats.querySelector(`[data-chat-id="${chatId}"]`);
-            if (chatElement) {
-                const timeElement = chatElement.querySelector('.time');
-                if (timeElement) {
-                    timeElement.textContent = zynapseApp.formatTime(chatData.lastActive);
-                }
-            }
-        }
-        
-        function openChat(chatId, otherUser) {
-            // Store chat data in session storage
-            sessionStorage.setItem('currentChat', JSON.stringify({
-                id: chatId,
-                otherUser: otherUser
-            }));
+            container.innerHTML = '';
             
-            // Open chat page
-            window.location.href = 'chat.html';
-        }
-        
-        function updateRequestsBadge() {
-            const count = pendingRequests.length;
-            if (count > 0) {
-                requestsBadge.textContent = count;
-                requestsBadge.style.display = 'flex';
-            } else {
-                requestsBadge.style.display = 'none';
-            }
-        }
-        
-        function initEventListeners() {
-            // Copy user ID
-            copyIDBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(userData.userID).then(() => {
-                    zynapseApp.showToast('User ID copied to clipboard', 'success');
-                });
-            });
-            
-            // Profile dropdown
-            profileDropdownBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                profileDropdown.classList.toggle('show');
-            });
-            
-            // Logout
-            logoutBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                try {
-                    await zynapseApp.logout();
-                    window.location.href = 'index.html';
-                } catch (error) {
-                    zynapseApp.showToast('Error logging out', 'error');
-                }
-            });
-            
-            // Navigation
-            navItems.forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const page = item.getAttribute('data-page');
-                    
-                    // Update active state
-                    navItems.forEach(nav => nav.classList.remove('active'));
-                    item.classList.add('active');
-                    
-                    // Show corresponding page
-                    pages.forEach(p => p.classList.remove('active'));
-                    document.getElementById(`${page}Page`).classList.add('active');
-                });
-            });
-            
-            // Floating chat button
-            floatingChatBtn.addEventListener('click', openStartChatModal);
-            startChatCard.addEventListener('click', openStartChatModal);
-            
-            // Start chat modal
-            closeStartChatModal.addEventListener('click', () => {
-                startChatModal.classList.remove('active');
-            });
-            
-            searchUserID.addEventListener('input', async (e) => {
-                const id = e.target.value.toUpperCase().trim();
-                if (id.length === 8 && id.startsWith('ZYN-')) {
-                    await searchUser(id);
-                } else {
-                    resetSearchResult();
-                }
-            });
-            
-            cancelSearchBtn.addEventListener('click', () => {
-                resetSearchModal();
-            });
-            
-            sendRequestBtn.addEventListener('click', async () => {
-                if (searchResult) {
-                    await sendChatRequest(searchResult.user.userID);
-                }
-            });
-            
-            startChatBtn.addEventListener('click', async () => {
-                if (searchResult) {
-                    await startDirectChat(searchResult.user.userID);
-                }
-            });
-            
-            // Add Zyne
-            addZyneBtn.addEventListener('click', openAddZyneModal);
-            postZyneCard.addEventListener('click', openAddZyneModal);
-            closeAddZyneModal.addEventListener('click', () => {
-                addZyneModal.classList.remove('active');
-            });
-            
-            zyneText.addEventListener('input', (e) => {
-                const count = e.target.value.length;
-                zyneCharCount.textContent = count;
-                if (count > 200) {
-                    zyneCharCount.style.color = 'var(--red)';
-                } else {
-                    zyneCharCount.style.color = 'var(--gray-500)';
-                }
-            });
-            
-            zynePhotoBtn.addEventListener('click', () => {
-                zyneMedia.accept = 'image/*';
-                zyneMedia.click();
-            });
-            
-            zyneVideoBtn.addEventListener('click', () => {
-                zyneMedia.accept = 'video/*';
-                zyneMedia.click();
-            });
-            
-            zyneMedia.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    if (file.size > 10 * 1024 * 1024) {
-                        zynapseApp.showToast('File size must be less than 10MB', 'error');
-                        return;
-                    }
-                    
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        if (file.type.startsWith('image/')) {
-                            zyneMediaPreview.innerHTML = `
-                                <div class="preview-item">
-                                    <img src="${e.target.result}" alt="Preview">
-                                    <button class="remove-preview" id="removeZyneMedia">&times;</button>
-                                </div>
-                            `;
-                        } else if (file.type.startsWith('video/')) {
-                            zyneMediaPreview.innerHTML = `
-                                <div class="preview-item">
-                                    <video src="${e.target.result}" controls></video>
-                                    <button class="remove-preview" id="removeZyneMedia">&times;</button>
-                                </div>
-                            `;
-                        }
-                        
-                        document.getElementById('removeZyneMedia').addEventListener('click', () => {
-                            zyneMedia.value = '';
-                            zyneMediaPreview.innerHTML = `
-                                <div class="preview-placeholder">
-                                    <i class="fas fa-image"></i>
-                                    <p>No media selected</p>
-                                </div>
-                            `;
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-            
-            cancelZyneBtn.addEventListener('click', () => {
-                resetZyneModal();
-                addZyneModal.classList.remove('active');
-            });
-            
-            postZyneBtn.addEventListener('click', async () => {
-                await postZyne();
-            });
-            
-            // Create Group
-            createGroupBtn.addEventListener('click', openCreateGroupModal);
-            createGroupCard.addEventListener('click', openCreateGroupModal);
-            closeCreateGroupModal.addEventListener('click', () => {
-                createGroupModal.classList.remove('active');
-            });
-            
-            uploadGroupPhotoBtn.addEventListener('click', () => {
-                groupPhoto.click();
-            });
-            
-            groupPhoto.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    if (file.size > 5 * 1024 * 1024) {
-                        zynapseApp.showToast('File size must be less than 5MB', 'error');
-                        return;
-                    }
-                    
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        groupPhotoPreview.innerHTML = `<img src="${e.target.result}" alt="Group Photo Preview">`;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-            
-            addMemberInput.addEventListener('keypress', async (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const id = addMemberInput.value.toUpperCase().trim();
-                    if (id.length === 8 && id.startsWith('ZYN-')) {
-                        await addGroupMember(id);
-                        addMemberInput.value = '';
-                    }
-                }
-            });
-            
-            cancelGroupBtn.addEventListener('click', () => {
-                resetGroupModal();
-                createGroupModal.classList.remove('active');
-            });
-            
-            createGroupSubmitBtn.addEventListener('click', async () => {
-                await createGroup();
-            });
-            
-            // Add Contact
-            addContactBtn.addEventListener('click', openAddContactModal);
-            addContactCard.addEventListener('click', openAddContactModal);
-            closeAddContactModal.addEventListener('click', () => {
-                addContactModal.classList.remove('active');
-            });
-            
-            contactSearchID.addEventListener('input', async (e) => {
-                const id = e.target.value.toUpperCase().trim();
-                if (id.length === 8 && id.startsWith('ZYN-')) {
-                    await searchContact(id);
-                } else {
-                    resetContactSearchResult();
-                }
-            });
-            
-            cancelContactBtn.addEventListener('click', () => {
-                resetContactModal();
-            });
-            
-            sendContactRequestBtn.addEventListener('click', async () => {
-                if (contactSearchResult) {
-                    await sendContactRequest(contactSearchResult.user.userID);
-                }
-            });
-            
-            // Search in pages
-            searchRequests.addEventListener('input', filterRequests);
-            searchContacts.addEventListener('input', filterContacts);
-        }
-        
-        // Modal functions
-        function openStartChatModal() {
-            resetSearchModal();
-            startChatModal.classList.add('active');
-            searchUserID.focus();
-        }
-        
-        function resetSearchModal() {
-            searchUserID.value = '';
-            resetSearchResult();
-            startChatModal.classList.remove('active');
-        }
-        
-        function resetSearchResult() {
-            searchResult = null;
-            userSearchResult.innerHTML = `
-                <div class="search-placeholder">
-                    <i class="fas fa-user"></i>
-                    <p>Enter a Zynapse ID to search</p>
-                </div>
-            `;
-            searchActions.style.display = 'none';
-        }
-        
-        async function searchUser(zynID) {
-            try {
-                userSearchResult.innerHTML = `
-                    <div class="search-placeholder">
-                        <div class="spinner-large"></div>
-                        <p>Searching...</p>
+            contacts.forEach(contact => {
+                const contactCard = document.createElement('div');
+                contactCard.className = 'contact-card';
+                contactCard.innerHTML = `
+                    <img src="${contact.profilePicUrl || ''}" alt="${contact.name}" class="profile-pic"
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNSIgY3k9IjI1IiByPSIyNSIgZmlsbD0iI0ZGRiIgc3Ryb2tlPSIjRUVFIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMjUgMTVjNS41MjggMCAxMCA0LjQ3MiAxMCAxMHMtNC40NzIgMTAtMTAgMTAtMTAtNC40NzItMTAtMTAgNC40NzItMTAgMTAtMTB6bTAgNGE2IDYgMCAxMDAgMTIgNiA2IDAgMDAwLTEyeiIgZmlsbD0iIzhFOEU4RSIvPjwvc3ZnPg=='">
+                    <div class="contact-info">
+                        <h4>${contact.name}</h4>
+                        <p>${contact.userId}</p>
+                        <p class="status ${contact.status || 'offline'}">
+                            ${contact.status === 'online' ? 'Online' : `Last seen ${formatTime(contact.lastSeen)}`}
+                        </p>
                     </div>
-                `;
-                
-                const result = await zynapseApp.searchUser(zynID);
-                
-                if (result.success) {
-                    searchResult = result;
-                    
-                    const profilePic = result.user.profilePicture || './zynaps.png';
-                    
-                    userSearchResult.innerHTML = `
-                        <div class="user-found">
-                            <img src="${profilePic}" alt="${result.user.name}" class="profile-pic">
-                            <div class="user-info">
-                                <h4>${result.user.name}</h4>
-                                <p>${result.user.userID}</p>
-                                ${result.isContact ? '<p class="already-contact"><i class="fas fa-check-circle"></i> Already in contacts</p>' : ''}
-                            </div>
-                        </div>
-                    `;
-                    
-                    searchActions.style.display = 'flex';
-                    if (result.isContact) {
-                        sendRequestBtn.style.display = 'none';
-                        startChatBtn.style.display = 'flex';
-                    } else {
-                        sendRequestBtn.style.display = 'flex';
-                        startChatBtn.style.display = 'none';
-                    }
-                } else {
-                    userSearchResult.innerHTML = `
-                        <div class="error">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>${result.message}</p>
-                        </div>
-                    `;
-                    searchActions.style.display = 'none';
-                }
-            } catch (error) {
-                zynapseApp.showToast('Search error', 'error');
-                resetSearchResult();
-            }
-        }
-        
-        async function sendChatRequest(zynID) {
-            const result = await zynapseApp.startChat(zynID);
-            if (result.success) {
-                if (result.requiresRequest) {
-                    zynapseApp.showToast('Chat request sent successfully', 'success');
-                }
-                resetSearchModal();
-            } else {
-                zynapseApp.showToast(result.message, 'error');
-            }
-        }
-        
-        async function startDirectChat(zynID) {
-            const result = await zynapseApp.startChat(zynID);
-            if (result.success && !result.requiresRequest) {
-                // Open chat immediately
-                sessionStorage.setItem('currentChat', JSON.stringify({
-                    id: result.chatId,
-                    otherUser: result.otherUser
-                }));
-                window.location.href = 'chat.html';
-            }
-        }
-        
-        function openAddZyneModal() {
-            resetZyneModal();
-            addZyneModal.classList.add('active');
-            zyneText.focus();
-        }
-        
-        function resetZyneModal() {
-            zyneText.value = '';
-            zyneCharCount.textContent = '0';
-            zyneMedia.value = '';
-            zyneMediaPreview.innerHTML = `
-                <div class="preview-placeholder">
-                    <i class="fas fa-image"></i>
-                    <p>No media selected</p>
-                </div>
-            `;
-        }
-        
-        async function postZyne() {
-            const text = zyneText.value.trim();
-            const mediaFile = zyneMedia.files[0];
-            
-            if (!text && !mediaFile) {
-                zynapseApp.showToast('Please add text or media', 'error');
-                return;
-            }
-            
-            if (text.length > 200) {
-                zynapseApp.showToast('Text must be less than 200 characters', 'error');
-                return;
-            }
-            
-            postZyneBtn.disabled = true;
-            postZyneBtn.innerHTML = '<div class="spinner"></div>';
-            
-            try {
-                const result = await zynapseApp.createZyne(text, mediaFile);
-                if (result.success) {
-                    zynapseApp.showToast('Zyne posted successfully', 'success');
-                    resetZyneModal();
-                    addZyneModal.classList.remove('active');
-                } else {
-                    zynapseApp.showToast(result.message, 'error');
-                }
-            } catch (error) {
-                zynapseApp.showToast('Error posting zyne', 'error');
-            } finally {
-                postZyneBtn.disabled = false;
-                postZyneBtn.textContent = 'Post Zyne';
-            }
-        }
-        
-        function openCreateGroupModal() {
-            resetGroupModal();
-            createGroupModal.classList.add('active');
-            groupName.focus();
-        }
-        
-        function resetGroupModal() {
-            groupName.value = '';
-            groupDescription.value = '';
-            groupPhoto.value = '';
-            groupPhotoPreview.innerHTML = `
-                <div class="preview-placeholder">
-                    <i class="fas fa-users"></i>
-                    <p>No photo selected</p>
-                </div>
-            `;
-            addMemberInput.value = '';
-            groupMembers = [];
-            updateGroupMembersList();
-        }
-        
-        async function addGroupMember(zynID) {
-            // Check if already added
-            if (groupMembers.some(m => m.userID === zynID)) {
-                zynapseApp.showToast('User already added', 'warning');
-                return;
-            }
-            
-            // Check if adding self
-            if (zynID === userData.userID) {
-                zynapseApp.showToast('Cannot add yourself', 'warning');
-                return;
-            }
-            
-            const result = await zynapseApp.searchUser(zynID);
-            if (result.success) {
-                groupMembers.push(result.user);
-                updateGroupMembersList();
-                zynapseApp.showToast('User added to group', 'success');
-            } else {
-                zynapseApp.showToast(result.message, 'error');
-            }
-        }
-        
-        function updateGroupMembersList() {
-            if (groupMembers.length === 0) {
-                groupMembersList.innerHTML = `
-                    <div class="empty-members">
-                        <i class="fas fa-user-plus"></i>
-                        <p>No members added yet</p>
-                    </div>
-                `;
-            } else {
-                groupMembersList.innerHTML = groupMembers.map(member => `
-                    <div class="member-tag">
-                        <span>${member.name} (${member.userID})</span>
-                        <button class="remove-member" data-id="${member.userID}">
-                            <i class="fas fa-times"></i>
+                    <div class="contact-actions">
+                        <button class="action-btn chat-btn" data-user-id="${contact.userId}">
+                            <i class="fas fa-comment"></i>
+                            Chat
                         </button>
                     </div>
-                `).join('');
+                `;
                 
-                // Add remove event listeners
-                groupMembersList.querySelectorAll('.remove-member').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = btn.getAttribute('data-id');
-                        groupMembers = groupMembers.filter(m => m.userID !== id);
-                        updateGroupMembersList();
-                    });
+                container.appendChild(contactCard);
+                
+                // Add chat button listener
+                const chatBtn = contactCard.querySelector('.chat-btn');
+                chatBtn.addEventListener('click', () => {
+                    const chatId = `CHAT_${[currentUserData.userId, contact.userId].sort().join('_')}`;
+                    window.location.href = `chat.html?chatId=${chatId}`;
                 });
-            }
-            
-            memberCount.textContent = `${groupMembers.length} member${groupMembers.length !== 1 ? 's' : ''}`;
+            });
         }
-        
-        async function createGroup() {
-            const name = groupName.value.trim();
-            const description = groupDescription.value.trim();
-            const photoFile = groupPhoto.files[0];
-            
-            if (!name) {
-                zynapseApp.showToast('Please enter group name', 'error');
-                return;
-            }
-            
-            if (groupMembers.length === 0) {
-                zynapseApp.showToast('Please add at least one member', 'error');
-                return;
-            }
-            
-            createGroupSubmitBtn.disabled = true;
-            createGroupSubmitBtn.innerHTML = '<div class="spinner"></div>';
+
+        // Load recent chats
+        async function loadRecentChats() {
+            if (!currentUserData) return;
             
             try {
-                const memberIDs = groupMembers.map(m => m.userID);
-                const result = await zynapseApp.createGroup(name, description, memberIDs, photoFile);
-                if (result.success) {
-                    zynapseApp.showToast('Group created successfully', 'success');
-                    resetGroupModal();
-                    createGroupModal.classList.remove('active');
-                } else {
-                    zynapseApp.showToast(result.message, 'error');
+                const { database } = await import('./firebase-config.js');
+                const contactIds = Object.keys(currentUserData.contacts || {});
+                
+                if (contactIds.length === 0) {
+                    // Show empty state
+                    return;
                 }
+                
+                // For each contact, get the chat
+                const chatPromises = contactIds.map(async (contactId) => {
+                    const chatId = `CHAT_${[currentUserData.userId, contactId].sort().join('_')}`;
+                    const chatSnapshot = await database.ref(`chats/${chatId}`).once('value');
+                    
+                    if (chatSnapshot.exists()) {
+                        const chatData = chatSnapshot.val();
+                        const contactSnapshot = await database.ref(`users/${contactId}`).once('value');
+                        
+                        if (contactSnapshot.exists()) {
+                            const contactData = contactSnapshot.val();
+                            return {
+                                chatId: chatId,
+                                contactId: contactId,
+                                contactName: contactData.name,
+                                profilePicUrl: contactData.profilePicUrl,
+                                lastMessage: chatData.lastMessage,
+                                lastMessageTime: chatData.lastMessageTime,
+                                unreadCount: 0 // You can implement unread count logic
+                            };
+                        }
+                    }
+                    return null;
+                });
+                
+                const chats = (await Promise.all(chatPromises)).filter(Boolean);
+                
+                // Sort by last message time
+                chats.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
+                
+                // Render recent chats
+                renderRecentChats(chats.slice(0, 5)); // Show only 5 most recent
+                
             } catch (error) {
-                zynapseApp.showToast('Error creating group', 'error');
-            } finally {
-                createGroupSubmitBtn.disabled = false;
-                createGroupSubmitBtn.textContent = 'Create Group';
+                console.error('Error loading recent chats:', error);
             }
         }
-        
-        function openAddContactModal() {
-            resetContactModal();
-            addContactModal.classList.add('active');
-            contactSearchID.focus();
-        }
-        
-        function resetContactModal() {
-            contactSearchID.value = '';
-            resetContactSearchResult();
-            addContactModal.classList.remove('active');
-        }
-        
-        function resetContactSearchResult() {
-            contactSearchResult = null;
-            contactSearchResult.innerHTML = `
-                <div class="search-placeholder">
-                    <i class="fas fa-user"></i>
-                    <p>Enter a Zynapse ID to search</p>
-                </div>
-            `;
-            contactActions.style.display = 'none';
-        }
-        
-        async function searchContact(zynID) {
-            try {
-                contactSearchResult.innerHTML = `
-                    <div class="search-placeholder">
-                        <div class="spinner-large"></div>
-                        <p>Searching...</p>
+
+        // Render recent chats
+        function renderRecentChats(chats) {
+            const container = document.getElementById('recentChatsList');
+            
+            if (chats.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h3>No chats yet</h3>
+                        <p>Start a chat by clicking the button below</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            chats.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'contact-card';
+                chatItem.style.cursor = 'pointer';
+                chatItem.innerHTML = `
+                    <img src="${chat.profilePicUrl || ''}" alt="${chat.contactName}" class="profile-pic"
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNSIgY3k9IjI1IiByPSIyNSIgZmlsbD0iI0ZGRiIgc3Ryb2tlPSIjRUVFIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMjUgMTVjNS41MjggMCAxMCA0LjQ3MiAxMCAxMHMtNC40NzIgMTAtMTAgMTAtMTAtNC40NzItMTAtMTAgNC40NzItMTAgMTAtMTB6bTAgNGE2IDYgMCAxMDAgMTIgNiA2IDAgMDAwLTEyeiIgZmlsbD0iIzhFOEU4RSIvPjwvc3ZnPg=='">
+                    <div class="contact-info">
+                        <h4>${chat.contactName}</h4>
+                        <p class="last-message">${chat.lastMessage || 'No messages yet'}</p>
+                        <p class="time">${formatTime(chat.lastMessageTime)}</p>
                     </div>
                 `;
                 
-                const result = await zynapseApp.searchUser(zynID);
+                chatItem.addEventListener('click', () => {
+                    window.location.href = `chat.html?chatId=${chat.chatId}`;
+                });
                 
-                if (result.success) {
-                    contactSearchResult = result;
-                    
-                    const profilePic = result.user.profilePicture || './zynaps.png';
-                    
-                    contactSearchResult.innerHTML = `
-                        <div class="user-found">
-                            <img src="${profilePic}" alt="${result.user.name}" class="profile-pic">
-                            <div class="user-info">
-                                <h4>${result.user.name}</h4>
-                                <p>${result.user.userID}</p>
-                                ${result.isContact ? '<p class="already-contact"><i class="fas fa-check-circle"></i> Already in contacts</p>' : ''}
-                            </div>
-                        </div>
-                    `;
-                    
-                    contactActions.style.display = 'flex';
-                    if (result.isContact) {
-                        sendContactRequestBtn.style.display = 'none';
-                    } else {
-                        sendContactRequestBtn.style.display = 'flex';
+                container.appendChild(chatItem);
+            });
+        }
+
+        // Load groups
+        async function loadGroupsList() {
+            if (!currentUserData) return;
+            
+            try {
+                const { database } = await import('./firebase-config.js');
+                const groupIds = Object.keys(currentUserData.groups || {});
+                
+                if (groupIds.length === 0) {
+                    // Show empty state
+                    return;
+                }
+                
+                const groupPromises = groupIds.map(async (groupId) => {
+                    const groupSnapshot = await database.ref(`groups/${groupId}`).once('value');
+                    if (groupSnapshot.exists()) {
+                        return {
+                            groupId: groupId,
+                            ...groupSnapshot.val()
+                        };
                     }
-                } else {
-                    contactSearchResult.innerHTML = `
-                        <div class="error">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>${result.message}</p>
+                    return null;
+                });
+                
+                groups = (await Promise.all(groupPromises)).filter(Boolean);
+                renderGroups();
+                
+            } catch (error) {
+                console.error('Error loading groups:', error);
+            }
+        }
+
+        // Render groups
+        function renderGroups() {
+            const container = document.getElementById('groupsContainer');
+            
+            if (groups.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No groups yet</h3>
+                        <p>Create or join a group to start chatting</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            groups.forEach(group => {
+                const groupCard = document.createElement('div');
+                groupCard.className = 'group-card';
+                groupCard.style.cursor = 'pointer';
+                groupCard.innerHTML = `
+                    <img src="${group.profilePicUrl || ''}" alt="${group.name}" class="profile-pic"
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNSIgY3k9IjI1IiByPSIyNSIgZmlsbD0iI0ZGRiIgc3Ryb2tlPSIjRUVFIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMzUgMTVoLTIwYy0xLjY1NyAwLTMgMS4zNDMtMyAzdjE0YzAgMS42NTcgMS4zNDMgMyAzIDNoMjBjMS42NTcgMCAzLTEuMzQzIDMtM1YxOGMwLTEuNjU3LTEuMzQzLTMtMy0zem0tMTAgMTJhNCA0IDAgMTEwLTggNCA0IDAgMDEwIDh6IiBmaWxsPSIjOEU4RThFIi8+PC9zdmc+'">
+                    <div class="group-info">
+                        <h4>${group.name}</h4>
+                        <p>${Object.keys(group.members || {}).length} members</p>
+                        <p class="last-message">${group.lastMessage || 'No messages yet'}</p>
+                    </div>
+                `;
+                
+                groupCard.addEventListener('click', () => {
+                    window.location.href = `chat.html?groupId=${group.groupId}`;
+                });
+                
+                container.appendChild(groupCard);
+            });
+        }
+
+        // Load Zynes
+        async function loadZynes() {
+            // Implement Zynes loading logic
+            // This would load Zynes from contacts
+        }
+
+        // Handle Zyne media selection
+        function handleZyneMediaSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const previewContainer = document.getElementById('zyneMediaPreview');
+            
+            // Remove existing preview
+            previewContainer.innerHTML = '';
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                if (file.type.startsWith('image')) {
+                    previewContainer.innerHTML = `
+                        <div class="preview-item">
+                            <img src="${event.target.result}" alt="Preview">
+                            <button type="button" class="remove-preview" onclick="removeZyneMedia()">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     `;
-                    contactActions.style.display = 'none';
+                } else if (file.type.startsWith('video')) {
+                    previewContainer.innerHTML = `
+                        <div class="preview-item">
+                            <video src="${event.target.result}" controls></video>
+                            <button type="button" class="remove-preview" onclick="removeZyneMedia()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
                 }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove Zyne media
+        window.removeZyneMedia = function() {
+            document.getElementById('zyneMediaPreview').innerHTML = '';
+            document.getElementById('zyneImageInput').value = '';
+            document.getElementById('zyneVideoInput').value = '';
+        };
+
+        // Post Zyne
+        async function postZyne() {
+            const text = document.getElementById('zyneText').value.trim();
+            const imageInput = document.getElementById('zyneImageInput');
+            const videoInput = document.getElementById('zyneVideoInput');
+            
+            if (!text && !imageInput.files[0] && !videoInput.files[0]) {
+                showToast('Please add text or media to post', 'error');
+                return;
+            }
+            
+            try {
+                const { database, uploadMedia } = await import('./imagekit-config.js');
+                
+                let mediaUrl = '';
+                let mediaType = '';
+                
+                // Handle media upload
+                if (imageInput.files[0]) {
+                    const result = await uploadMedia(imageInput.files[0], `zyne_${Date.now()}.jpg`, ['zyne', 'image']);
+                    mediaUrl = result.url;
+                    mediaType = 'image';
+                } else if (videoInput.files[0]) {
+                    const result = await uploadMedia(videoInput.files[0], `zyne_${Date.now()}.mp4`, ['zyne', 'video']);
+                    mediaUrl = result.url;
+                    mediaType = 'video';
+                }
+                
+                // Create Zyne
+                const zyneId = `ZYNE_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const zyneData = {
+                    id: zyneId,
+                    userId: currentUserData.userId,
+                    text: text,
+                    mediaUrl: mediaUrl,
+                    mediaType: mediaType,
+                    timestamp: Date.now(),
+                    expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+                    views: {}
+                };
+                
+                await database.ref(`zynes/${zyneId}`).set(zyneData);
+                
+                // Add to user's Zynes
+                await database.ref(`users/${currentUserData.userId}/zynes/${zyneId}`).set(true);
+                
+                showToast('Zyne posted successfully', 'success');
+                document.getElementById('createZyneModal').classList.remove('active');
+                resetZyneModal();
+                
             } catch (error) {
-                zynapseApp.showToast('Search error', 'error');
-                resetContactSearchResult();
+                console.error('Error posting Zyne:', error);
+                showToast('Failed to post Zyne', 'error');
             }
         }
-        
-        async function sendContactRequest(zynID) {
-            const result = await zynapseApp.startChat(zynID);
-            if (result.success) {
-                zynapseApp.showToast('Contact request sent successfully', 'success');
-                resetContactModal();
-            } else {
-                zynapseApp.showToast(result.message, 'error');
-            }
+
+        // Reset Zyne modal
+        function resetZyneModal() {
+            document.getElementById('zyneText').value = '';
+            document.getElementById('zyneCharCount').textContent = '0';
+            document.getElementById('zyneMediaPreview').innerHTML = '';
+            document.getElementById('zyneImageInput').value = '';
+            document.getElementById('zyneVideoInput').value = '';
         }
-        
-        function filterRequests() {
-            const searchTerm = searchRequests.value.toLowerCase();
-            const requestCards = requestsContainer.querySelectorAll('.request-card');
+
+        // Handle group profile selection
+        function handleGroupProfileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
             
-            requestCards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const preview = document.getElementById('groupProfilePreview');
+                preview.innerHTML = `<img src="${event.target.result}" alt="Group Preview">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Add group member
+        async function addGroupMember() {
+            const memberId = document.getElementById('addMemberInput').value.trim().toUpperCase();
+            
+            if (!memberId || !memberId.startsWith('ZYN-')) {
+                showToast('Please enter a valid User ID', 'error');
+                return;
+            }
+            
+            if (memberId === currentUserData.userId) {
+                showToast('You are already a member', 'info');
+                return;
+            }
+            
+            try {
+                const { database } = await import('./firebase-config.js');
+                const snapshot = await database.ref(`users/${memberId}`).once('value');
+                
+                if (!snapshot.exists()) {
+                    showToast('User not found', 'error');
+                    return;
+                }
+                
+                const userData = snapshot.val();
+                const membersList = document.getElementById('groupMembersList');
+                
+                // Check if already added
+                const existingMember = membersList.querySelector(`[data-user-id="${memberId}"]`);
+                if (existingMember) {
+                    showToast('User already added', 'info');
+                    return;
+                }
+                
+                // Add member tag
+                const memberTag = document.createElement('div');
+                memberTag.className = 'member-tag';
+                memberTag.setAttribute('data-user-id', memberId);
+                memberTag.innerHTML = `
+                    <span>${userData.name}</span>
+                    <button type="button" class="remove-member" onclick="removeGroupMember('${memberId}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                membersList.appendChild(memberTag);
+                
+                // Update member count
+                updateMemberCount();
+                
+                // Clear input
+                document.getElementById('addMemberInput').value = '';
+                
+            } catch (error) {
+                console.error('Error adding group member:', error);
+                showToast('Failed to add member', 'error');
+            }
+        }
+
+        // Remove group member
+        window.removeGroupMember = function(memberId) {
+            const memberTag = document.querySelector(`[data-user-id="${memberId}"]`);
+            if (memberTag) {
+                memberTag.remove();
+                updateMemberCount();
+            }
+        };
+
+        // Update member count
+        function updateMemberCount() {
+            const membersList = document.getElementById('groupMembersList');
+            const memberCount = membersList.querySelectorAll('.member-tag').length;
+            document.getElementById('memberCount').textContent = `${memberCount} member${memberCount !== 1 ? 's' : ''}`;
+        }
+
+        // Create group
+        async function createGroup() {
+            const groupName = document.getElementById('groupName').value.trim();
+            const profileImage = document.getElementById('groupProfileImage');
+            const membersList = document.getElementById('groupMembersList');
+            
+            if (!groupName) {
+                showToast('Please enter a group name', 'error');
+                return;
+            }
+            
+            // Get member IDs
+            const memberTags = membersList.querySelectorAll('.member-tag');
+            const memberIds = Array.from(memberTags).map(tag => tag.getAttribute('data-user-id'));
+            
+            if (memberIds.length === 0) {
+                showToast('Please add at least one member', 'error');
+                return;
+            }
+            
+            try {
+                const { database, uploadMedia } = await import('./imagekit-config.js');
+                
+                // Handle group photo upload
+                let profilePicUrl = '';
+                if (profileImage.files[0]) {
+                    const result = await uploadMedia(
+                        profileImage.files[0],
+                        `group_${Date.now()}.jpg`,
+                        ['group', 'profile']
+                    );
+                    profilePicUrl = result.url;
+                }
+                
+                // Create group
+                const groupId = `GROUP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const groupData = {
+                    id: groupId,
+                    name: groupName,
+                    profilePicUrl: profilePicUrl,
+                    admin: currentUserData.userId,
+                    created: Date.now(),
+                    members: {
+                        [currentUserData.userId]: {
+                            joined: Date.now(),
+                            role: 'admin'
+                        }
+                    }
+                };
+                
+                // Add members
+                memberIds.forEach(memberId => {
+                    groupData.members[memberId] = {
+                        joined: Date.now(),
+                        role: 'member'
+                    };
+                });
+                
+                await database.ref(`groups/${groupId}`).set(groupData);
+                
+                // Add group to each member's groups list
+                const updates = {};
+                updates[`users/${currentUserData.userId}/groups/${groupId}`] = true;
+                
+                memberIds.forEach(memberId => {
+                    updates[`users/${memberId}/groups/${groupId}`] = true;
+                });
+                
+                await database.ref().update(updates);
+                
+                showToast('Group created successfully', 'success');
+                document.getElementById('createGroupModal').classList.remove('active');
+                resetGroupModal();
+                
+                // Refresh groups list
+                await loadGroupsList();
+                
+            } catch (error) {
+                console.error('Error creating group:', error);
+                showToast('Failed to create group', 'error');
+            }
+        }
+
+        // Reset group modal
+        function resetGroupModal() {
+            document.getElementById('groupName').value = '';
+            document.getElementById('groupProfilePreview').innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-users"></i>
+                    <span>No image selected</span>
+                </div>
+            `;
+            document.getElementById('groupProfileImage').value = '';
+            document.getElementById('addMemberInput').value = '';
+            document.getElementById('groupMembersList').innerHTML = `
+                <div class="member-tag">
+                    <span id="currentUserMember">You</span>
+                </div>
+            `;
+            updateMemberCount();
+        }
+
+        // Set up real-time listeners
+        function setupRealtimeListeners() {
+            if (!currentUserData) return;
+            
+            const { database } = firebase;
+            
+            // Listen for new chat requests
+            database.ref(`users/${currentUserData.userId}/chatRequests`).on('child_added', (snapshot) => {
+                const request = snapshot.val();
+                if (request.status === 'pending') {
+                    // Update badge
+                    const badge = document.getElementById('requestsBadge');
+                    const currentCount = parseInt(badge.textContent) || 0;
+                    badge.textContent = currentCount + 1;
+                    badge.style.display = 'block';
+                    
+                    // Play notification sound
+                    playNotificationSound();
+                    
+                    // Show toast notification
+                    showToast('New chat request received', 'info');
                 }
             });
-        }
-        
-        function filterContacts() {
-            const searchTerm = searchContacts.value.toLowerCase();
-            const contactCards = contactsContainer.querySelectorAll('.contact-card');
             
-            contactCards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                if (text.includes(searchTerm)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
+            // Listen for new messages in chats
+            const contactIds = Object.keys(currentUserData.contacts || {});
+            contactIds.forEach(contactId => {
+                const chatId = `CHAT_${[currentUserData.userId, contactId].sort().join('_')}`;
+                database.ref(`chats/${chatId}/messages`).limitToLast(1).on('child_added', (snapshot) => {
+                    const message = snapshot.val();
+                    if (message.sender !== currentUserData.userId) {
+                        // Play notification sound for new message
+                        playNotificationSound();
+                        
+                        // Update recent chats
+                        loadRecentChats();
+                    }
+                });
             });
         }
-        
-        function startChatWithContact(zynID) {
-            // This will trigger the start chat flow
-            openStartChatModal();
-            searchUserID.value = zynID;
-            searchUserID.dispatchEvent(new Event('input'));
+
+        // Show edit profile modal
+        function showEditProfileModal() {
+            // Implement edit profile modal
+            showToast('Edit profile feature coming soon', 'info');
         }
-        
-        // Close modals when clicking outside
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-overlay')) {
-                e.target.classList.remove('active');
-            }
-        });
-        
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', () => {
-            profileDropdown.classList.remove('show');
-        });
+
+        // Show settings modal
+        function showSettingsModal() {
+            // Implement settings modal
+            showToast('Settings feature coming soon', 'info');
+        }
+
+        // Apply Zambia theme
+        function applyZambiaTheme() {
+            // Add Zambia flag colors as accent
+            document.documentElement.style.setProperty('--blue', '#0072C6'); // Zambian blue
+            document.documentElement.style.setProperty('--green', '#009739'); // Zambian green
+            document.documentElement.style.setProperty('--red', '#CE1126'); // Zambian red
+            document.documentElement.style.setProperty('--black', '#000000'); // Zambian black
+            
+            showToast('Zambia theme applied!', 'success');
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initHomePage);
     </script>
 </body>
 </html>
