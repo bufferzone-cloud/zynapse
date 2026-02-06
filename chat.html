@@ -3,709 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zynapse Chat</title>
+    <title>Chat - Zynapse</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="zynaps.png">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <!-- ImageKit SDK -->
-    <script src="https://unpkg.com/imagekit-javascript/dist/imagekit.min.js"></script>
+    <link rel="icon" href="zynaps.png">
 </head>
-<body>
-    <div class="chat-container">
-        <!-- Chat Header -->
-        <header class="chat-header">
-            <div class="chat-header-info">
-                <button class="btn-icon" onclick="goBack()" style="background: none; border: none; margin-right: 8px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M15.41 16.59L10.83 12L15.41 7.41L14 6L8 12L14 18L15.41 16.59Z" fill="var(--primary-blue)"/>
-                    </svg>
-                </button>
-                <img id="chatAvatar" src="" alt="" class="chat-avatar">
+<body class="chat-page">
+    <!-- Chat Header -->
+    <header class="chat-header">
+        <div class="header-left">
+            <a href="home.html" class="back-btn">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <div class="chat-user-info">
+                <img id="chatUserPic" src="zynaps.png" alt="Profile" class="profile-pic-small">
                 <div>
-                    <div class="chat-name" id="chatName">Loading...</div>
-                    <div class="chat-status" id="chatStatus">...</div>
+                    <h3 id="chatUserName">Contact Name</h3>
+                    <span class="chat-status" id="chatUserStatus">Online</span>
                 </div>
             </div>
-            <div class="chat-actions">
-                <button class="btn-icon" onclick="showChatMenu()">
-                    <img src="icons/menu.svg" alt="Menu" class="nav-icon">
-                </button>
-            </div>
-        </header>
-
-        <!-- Messages Container -->
-        <div class="messages-container" id="messagesContainer">
-            <!-- Messages will be loaded here -->
         </div>
+        
+        <div class="header-right">
+            <div class="dropdown">
+                <button class="icon-btn">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="#" id="addNicknameBtn"><i class="fas fa-tag"></i> Add Nickname</a>
+                    <a href="#" id="blockUserBtn"><i class="fas fa-ban"></i> Block User</a>
+                    <a href="#" id="addToFavoritesBtn"><i class="fas fa-star"></i> Add to Favorites</a>
+                    <a href="#" id="viewProfileBtn"><i class="fas fa-user"></i> View Profile</a>
+                    <a href="#" id="deleteChatBtn"><i class="fas fa-trash"></i> Delete Chat</a>
+                    <a href="#" id="reportUserBtn"><i class="fas fa-flag"></i> Report User</a>
+                </div>
+            </div>
+        </div>
+    </header>
 
-        <!-- Message Input -->
+    <!-- Chat Messages Area -->
+    <div class="chat-messages" id="chatMessages">
+        <!-- Messages will be loaded here -->
+        <div class="message-date">Today</div>
+        
+        <!-- Example messages (will be replaced with real data) -->
+        <div class="message received">
+            <div class="message-bubble">
+                <p>Hello! How are you?</p>
+                <span class="message-time">09:30 AM</span>
+            </div>
+        </div>
+        
+        <div class="message sent">
+            <div class="message-bubble">
+                <p>I'm good, thanks! How about you?</p>
+                <span class="message-time">09:31 AM</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Input Area -->
+    <div class="message-input-area">
+        <button class="icon-btn" id="attachBtn">
+            <i class="fas fa-plus"></i>
+        </button>
+        
         <div class="message-input-container">
-            <div class="message-input-wrapper">
-                <button class="attach-btn" onclick="showAttachmentMenu()">
-                    <img src="icons/attach.svg" alt="Attach" style="width: 20px; height: 20px;">
-                </button>
-                <input type="text" id="messageInput" class="message-input" placeholder="iMessage" onkeypress="handleKeyPress(event)">
-                <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
-                    <img src="icons/send.svg" alt="Send" style="width: 20px; height: 20px;">
-                </button>
+            <input type="text" id="messageInput" placeholder="iMessage">
+            <button class="icon-btn" id="emojiBtn">
+                <i class="far fa-smile"></i>
+            </button>
+        </div>
+        
+        <button class="send-btn" id="sendBtn">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+
+    <!-- Attachment Options -->
+    <div class="attachment-options" id="attachmentOptions">
+        <button class="attachment-btn" id="attachPhotoBtn">
+            <i class="fas fa-camera"></i>
+            <span>Photo</span>
+        </button>
+        <button class="attachment-btn" id="attachVideoBtn">
+            <i class="fas fa-video"></i>
+            <span>Video</span>
+        </button>
+        <button class="attachment-btn" id="attachDocumentBtn">
+            <i class="fas fa-file"></i>
+            <span>Document</span>
+        </button>
+    </div>
+
+    <!-- File Inputs (Hidden) -->
+    <input type="file" id="photoInput" accept="image/*" multiple hidden>
+    <input type="file" id="videoInput" accept="video/*" hidden>
+    <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt" hidden>
+
+    <!-- Media Preview Modal -->
+    <div id="mediaPreviewModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Preview</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="mediaPreviewContent"></div>
+                <div class="modal-actions">
+                    <button id="sendMediaBtn" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Chat Menu Dropdown -->
-    <div id="chatMenuDropdown" class="dropdown-menu hidden">
-        <button class="dropdown-item" onclick="addNickname()">
-            <img src="icons/edit.svg" alt="Add Nickname" style="width: 20px; height: 20px;">
-            Add Nickname
-        </button>
-        <button class="dropdown-item" onclick="addToFavorites()">
-            <img src="icons/star.svg" alt="Add to Favorites" style="width: 20px; height: 20px;">
-            Add to Favorites
-        </button>
-        <div class="dropdown-divider"></div>
-        <button class="dropdown-item" onclick="blockUser()">
-            <img src="icons/block.svg" alt="Block User" style="width: 20px; height: 20px;">
-            Block User
-        </button>
-        <button class="dropdown-item" onclick="reportUser()" style="color: var(--message-red);">
-            <img src="icons/report.svg" alt="Report" style="width: 20px; height: 20px;">
-            Report
-        </button>
-        <div class="dropdown-divider"></div>
-        <button class="dropdown-item" onclick="deleteChat()" style="color: var(--message-red);">
-            <img src="icons/delete.svg" alt="Delete Chat" style="width: 20px; height: 20px;">
-            Delete Chat
-        </button>
+    <!-- Add Nickname Modal -->
+    <div id="nicknameModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Nickname</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <input type="text" id="nicknameInput" placeholder="Enter nickname">
+                </div>
+                <button id="saveNicknameBtn" class="btn-primary">Save</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Attachment Menu -->
-    <div id="attachmentMenu" class="dropdown-menu hidden" style="bottom: 80px; left: 16px;">
-        <button class="dropdown-item" onclick="attachPhoto()">
-            <img src="icons/image.svg" alt="Photo" style="width: 20px; height: 20px;">
-            Photo
-        </button>
-        <button class="dropdown-item" onclick="attachVideo()">
-            <img src="icons/video.svg" alt="Video" style="width: 20px; height: 20px;">
-            Video
-        </button>
-        <button class="dropdown-item" onclick="attachDocument()">
-            <img src="icons/document.svg" alt="Document" style="width: 20px; height: 20px;">
-            Document
-        </button>
-    </div>
+    <!-- Notification Sound -->
+    <audio id="notificationSound" preload="auto">
+        <source src="notification.mp3" type="audio/mpeg">
+    </audio>
 
-    <!-- Hidden file inputs -->
-    <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
-    <input type="file" id="videoInput" accept="video/*" class="hidden" onchange="handleVideoUpload(event)">
-
+    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js"></script>
     <script src="firebase-config.js"></script>
     <script src="imagekit-config.js"></script>
-    <script>
-        // Global variables
-        let currentUser = null;
-        let currentUserId = null;
-        let chatType = null;
-        let chatId = null;
-        let otherUserId = null;
-        let groupId = null;
-        let chatName = '';
-        
-        // Initialize chat
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Get URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            chatType = urlParams.get('type'); // 'personal' or 'group'
-            const id = urlParams.get('id');
-            
-            if (!chatType || !id) {
-                window.location.href = 'home.html';
-                return;
-            }
-            
-            // Check authentication
-            auth.onAuthStateChanged(async (user) => {
-                if (!user) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-                
-                currentUser = user;
-                
-                // Get current user ID
-                const snapshot = await database.ref('users').orderByChild('email').equalTo(user.email).once('value');
-                if (snapshot.exists()) {
-                    const userData = Object.values(snapshot.val())[0];
-                    currentUserId = userData.userId;
-                    
-                    if (chatType === 'personal') {
-                        await setupPersonalChat(id);
-                    } else if (chatType === 'group') {
-                        await setupGroupChat(id);
-                    }
-                    
-                    setupMessageListener();
-                    setupTypingIndicator();
-                }
-            });
-            
-            // Setup message input listener
-            const messageInput = document.getElementById('messageInput');
-            const sendBtn = document.getElementById('sendBtn');
-            
-            messageInput.addEventListener('input', () => {
-                sendBtn.disabled = messageInput.value.trim() === '';
-            });
-        });
-        
-        // Setup personal chat
-        async function setupPersonalChat(otherUserIdParam) {
-            otherUserId = otherUserIdParam;
-            chatId = [currentUserId, otherUserId].sort().join('_');
-            
-            // Get other user's data
-            const snapshot = await database.ref('users/' + otherUserId).once('value');
-            if (!snapshot.exists()) {
-                window.location.href = 'home.html';
-                return;
-            }
-            
-            const userData = snapshot.val();
-            chatName = userData.name;
-            
-            // Update UI
-            document.getElementById('chatName').textContent = chatName;
-            document.getElementById('chatAvatar').src = userData.profileUrl || '';
-            document.getElementById('chatStatus').textContent = userData.status === 'online' ? 'Online' : 'Last seen ' + formatTime(userData.lastSeen);
-            
-            // Load messages
-            await loadMessages();
-            
-            // Update user's status in real-time
-            database.ref('users/' + otherUserId + '/status').on('value', (snapshot) => {
-                const status = snapshot.val();
-                const lastSeen = snapshot.child('lastSeen').val();
-                document.getElementById('chatStatus').textContent = 
-                    status === 'online' ? 'Online' : 'Last seen ' + formatTime(lastSeen);
-            });
-        }
-        
-        // Setup group chat
-        async function setupGroupChat(groupIdParam) {
-            groupId = groupIdParam;
-            chatId = groupId;
-            
-            // Get group data
-            const snapshot = await database.ref('groups/' + groupId).once('value');
-            if (!snapshot.exists()) {
-                window.location.href = 'home.html';
-                return;
-            }
-            
-            const groupData = snapshot.val();
-            chatName = groupData.name;
-            
-            // Update UI
-            document.getElementById('chatName').textContent = chatName;
-            document.getElementById('chatAvatar').src = groupData.photoUrl || '';
-            document.getElementById('chatStatus').textContent = groupData.memberCount + ' members';
-            
-            // Load messages
-            await loadMessages();
-        }
-        
-        // Load messages
-        async function loadMessages() {
-            const messagesContainer = document.getElementById('messagesContainer');
-            messagesContainer.innerHTML = '';
-            
-            const messagesRef = chatType === 'personal' 
-                ? database.ref('chats/' + chatId + '/messages')
-                : database.ref('groupChats/' + chatId + '/messages');
-            
-            const snapshot = await messagesRef.orderByChild('timestamp').limitToLast(50).once('value');
-            
-            if (!snapshot.exists()) {
-                // Add welcome message for new chats
-                if (chatType === 'personal') {
-                    const welcomeMessage = createMessageElement({
-                        text: 'You are now connected on Zynapse! Say hello! 👋',
-                        senderId: 'system',
-                        timestamp: Date.now()
-                    });
-                    messagesContainer.appendChild(welcomeMessage);
-                }
-                return;
-            }
-            
-            const messages = [];
-            snapshot.forEach(childSnapshot => {
-                messages.push({
-                    id: childSnapshot.key,
-                    ...childSnapshot.val()
-                });
-            });
-            
-            // Sort messages by timestamp
-            messages.sort((a, b) => a.timestamp - b.timestamp);
-            
-            // Add messages to UI
-            messages.forEach(message => {
-                const messageElement = createMessageElement(message);
-                messagesContainer.appendChild(messageElement);
-            });
-            
-            // Scroll to bottom
-            scrollToBottom();
-        }
-        
-        // Setup real-time message listener
-        function setupMessageListener() {
-            const messagesRef = chatType === 'personal'
-                ? database.ref('chats/' + chatId + '/messages')
-                : database.ref('groupChats/' + chatId + '/messages');
-            
-            messagesRef.orderByChild('timestamp').limitToLast(1).on('child_added', (snapshot) => {
-                const message = snapshot.val();
-                if (message.senderId !== currentUserId) {
-                    playNotificationSound();
-                }
-                
-                const messagesContainer = document.getElementById('messagesContainer');
-                const messageElement = createMessageElement(message);
-                messagesContainer.appendChild(messageElement);
-                
-                scrollToBottom();
-                
-                // Update last message
-                if (chatType === 'personal') {
-                    database.ref('chats/' + chatId + '/lastMessage').set({
-                        text: message.text || '📷 Photo' || '🎬 Video',
-                        senderId: message.senderId,
-                        timestamp: message.timestamp
-                    });
-                }
-            });
-        }
-        
-        // Setup typing indicator
-        function setupTypingIndicator() {
-            if (chatType !== 'personal') return;
-            
-            const messageInput = document.getElementById('messageInput');
-            
-            messageInput.addEventListener('input', debounce(() => {
-                if (messageInput.value.trim()) {
-                    database.ref('chats/' + chatId + '/typing/' + currentUserId).set(true);
-                    setTimeout(() => {
-                        database.ref('chats/' + chatId + '/typing/' + currentUserId).remove();
-                    }, 2000);
-                }
-            }, 500));
-            
-            // Listen for other user's typing
-            database.ref('chats/' + chatId + '/typing/' + otherUserId).on('value', (snapshot) => {
-                const chatStatus = document.getElementById('chatStatus');
-                if (snapshot.exists()) {
-                    chatStatus.textContent = 'typing...';
-                } else {
-                    // Restore original status
-                    database.ref('users/' + otherUserId).once('value').then(userSnapshot => {
-                        const userData = userSnapshot.val();
-                        chatStatus.textContent = userData.status === 'online' ? 'Online' : 'Last seen ' + formatTime(userData.lastSeen);
-                    });
-                }
-            });
-        }
-        
-        // Create message element
-        function createMessageElement(message) {
-            const div = document.createElement('div');
-            
-            const isSent = message.senderId === currentUserId || message.senderId === 'system';
-            const isSystem = message.senderId === 'system';
-            
-            let messageClass = isSent ? 'message-sent' : 'message-received';
-            if (isSystem) messageClass = 'message-system';
-            
-            let content = '';
-            if (message.mediaUrl) {
-                if (message.mediaType === 'image') {
-                    content = `<img src="${message.mediaUrl}" alt="Image" class="message-media" onclick="viewMedia('${message.mediaUrl}')">`;
-                } else if (message.mediaType === 'video') {
-                    content = `
-                        <video controls class="message-media" onclick="viewMedia('${message.mediaUrl}')">
-                            <source src="${message.mediaUrl}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    `;
-                }
-                if (message.text) {
-                    content += `<div class="message-text">${message.text}</div>`;
-                }
-            } else {
-                content = `<div class="message-text">${message.text}</div>`;
-            }
-            
-            div.className = `message-bubble ${messageClass}`;
-            div.innerHTML = `
-                ${content}
-                <div class="message-time">${formatTime(message.timestamp)}</div>
-            `;
-            
-            return div;
-        }
-        
-        // Send message
-        async function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
-            const text = messageInput.value.trim();
-            
-            if (!text) return;
-            
-            const message = {
-                text: text,
-                senderId: currentUserId,
-                timestamp: Date.now(),
-                read: false
-            };
-            
-            try {
-                if (chatType === 'personal') {
-                    await database.ref('chats/' + chatId + '/messages').push().set(message);
-                    
-                    // Update last message
-                    await database.ref('chats/' + chatId + '/lastMessage').set({
-                        text: text,
-                        senderId: currentUserId,
-                        timestamp: message.timestamp
-                    });
-                    
-                    // Notify other user
-                    await database.ref('notifications/' + otherUserId).push().set({
-                        type: 'message',
-                        from: currentUserId,
-                        chatId: chatId,
-                        message: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
-                        timestamp: Date.now(),
-                        read: false
-                    });
-                    
-                } else if (chatType === 'group') {
-                    await database.ref('groupChats/' + chatId + '/messages').push().set(message);
-                    
-                    // Notify all group members except sender
-                    const groupSnapshot = await database.ref('groups/' + groupId + '/members').once('value');
-                    groupSnapshot.forEach(memberSnapshot => {
-                        const memberId = memberSnapshot.key;
-                        if (memberId !== currentUserId) {
-                            database.ref('notifications/' + memberId).push().set({
-                                type: 'group_message',
-                                from: currentUserId,
-                                groupId: groupId,
-                                groupName: chatName,
-                                message: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
-                                timestamp: Date.now(),
-                                read: false
-                            });
-                        }
-                    });
-                }
-                
-                // Clear input
-                messageInput.value = '';
-                document.getElementById('sendBtn').disabled = true;
-                
-                // Scroll to bottom
-                scrollToBottom();
-                
-            } catch (error) {
-                console.error('Error sending message:', error);
-                alert('Failed to send message');
-            }
-        }
-        
-        // Send media message
-        async function sendMediaMessage(mediaUrl, mediaType, text = '') {
-            const message = {
-                text: text,
-                senderId: currentUserId,
-                timestamp: Date.now(),
-                mediaUrl: mediaUrl,
-                mediaType: mediaType,
-                read: false
-            };
-            
-            try {
-                if (chatType === 'personal') {
-                    await database.ref('chats/' + chatId + '/messages').push().set(message);
-                    
-                    // Update last message
-                    await database.ref('chats/' + chatId + '/lastMessage').set({
-                        text: text || '📷 Photo' || '🎬 Video',
-                        senderId: currentUserId,
-                        timestamp: message.timestamp
-                    });
-                    
-                } else if (chatType === 'group') {
-                    await database.ref('groupChats/' + chatId + '/messages').push().set(message);
-                }
-                
-                scrollToBottom();
-                
-            } catch (error) {
-                console.error('Error sending media:', error);
-                alert('Failed to send media');
-            }
-        }
-        
-        // Handle photo upload
-        async function handlePhotoUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            try {
-                // Show loading
-                const messageInput = document.getElementById('messageInput');
-                messageInput.placeholder = 'Uploading...';
-                messageInput.disabled = true;
-                
-                // Upload to ImageKit
-                const result = await uploadToImageKit(file, `chat_photo_${Date.now()}.jpg`, ['chat', 'photo']);
-                
-                // Send message with photo
-                await sendMediaMessage(result.url, 'image');
-                
-                // Reset input
-                event.target.value = '';
-                messageInput.placeholder = 'iMessage';
-                messageInput.disabled = false;
-                
-            } catch (error) {
-                console.error('Error uploading photo:', error);
-                alert('Failed to upload photo');
-            }
-        }
-        
-        // Handle video upload
-        async function handleVideoUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            // Check file size (limit to 50MB)
-            if (file.size > 50 * 1024 * 1024) {
-                alert('Video file too large. Maximum size is 50MB.');
-                return;
-            }
-            
-            try {
-                // Show loading
-                const messageInput = document.getElementById('messageInput');
-                messageInput.placeholder = 'Uploading video...';
-                messageInput.disabled = true;
-                
-                // Upload to ImageKit
-                const result = await uploadToImageKit(file, `chat_video_${Date.now()}.mp4`, ['chat', 'video']);
-                
-                // Send message with video
-                await sendMediaMessage(result.url, 'video');
-                
-                // Reset input
-                event.target.value = '';
-                messageInput.placeholder = 'iMessage';
-                messageInput.disabled = false;
-                
-            } catch (error) {
-                console.error('Error uploading video:', error);
-                alert('Failed to upload video');
-            }
-        }
-        
-        // Handle key press (Enter to send)
-        function handleKeyPress(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-        }
-        
-        // Scroll to bottom of messages
-        function scrollToBottom() {
-            const messagesContainer = document.getElementById('messagesContainer');
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-        
-        // Show chat menu
-        function showChatMenu() {
-            const menu = document.getElementById('chatMenuDropdown');
-            menu.classList.toggle('hidden');
-            
-            // Close menu when clicking outside
-            document.addEventListener('click', function closeMenu(e) {
-                if (!menu.contains(e.target) && !e.target.closest('.chat-actions .btn-icon')) {
-                    menu.classList.add('hidden');
-                    document.removeEventListener('click', closeMenu);
-                }
-            });
-        }
-        
-        // Show attachment menu
-        function showAttachmentMenu() {
-            const menu = document.getElementById('attachmentMenu');
-            menu.classList.toggle('hidden');
-            
-            // Close menu when clicking outside
-            document.addEventListener('click', function closeMenu(e) {
-                if (!menu.contains(e.target) && !e.target.closest('.attach-btn')) {
-                    menu.classList.add('hidden');
-                    document.removeEventListener('click', closeMenu);
-                }
-            });
-        }
-        
-        // Attach photo
-        function attachPhoto() {
-            document.getElementById('photoInput').click();
-            document.getElementById('attachmentMenu').classList.add('hidden');
-        }
-        
-        // Attach video
-        function attachVideo() {
-            document.getElementById('videoInput').click();
-            document.getElementById('attachmentMenu').classList.add('hidden');
-        }
-        
-        // Attach document
-        function attachDocument() {
-            alert('Document attachment coming soon!');
-            document.getElementById('attachmentMenu').classList.add('hidden');
-        }
-        
-        // View media in full screen
-        function viewMedia(url) {
-            window.open(url, '_blank');
-        }
-        
-        // Go back to home
-        function goBack() {
-            window.location.href = 'home.html';
-        }
-        
-        // Play notification sound
-        function playNotificationSound() {
-            try {
-                const audio = new Audio('notification.mp3');
-                audio.currentTime = 0;
-                audio.play().catch(e => console.log('Audio play failed:', e));
-            } catch (error) {
-                console.error('Error playing notification:', error);
-            }
-        }
-        
-        // Utility functions
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-        
-        function formatTime(timestamp) {
-            if (!timestamp) return '';
-            
-            const date = new Date(timestamp);
-            const now = new Date();
-            const diff = now - date;
-            
-            if (diff < 60000) return 'Just now';
-            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-            if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
-            
-            return date.toLocaleDateString();
-        }
-        
-        // Menu actions
-        function addNickname() {
-            const nickname = prompt('Enter nickname for ' + chatName);
-            if (nickname && nickname.trim()) {
-                // Save nickname to database
-                database.ref('userSettings/' + currentUserId + '/nicknames/' + chatId).set(nickname.trim());
-                alert('Nickname saved!');
-            }
-        }
-        
-        function addToFavorites() {
-            database.ref('userSettings/' + currentUserId + '/favorites/' + chatId).set(true);
-            alert('Added to favorites!');
-        }
-        
-        function blockUser() {
-            if (confirm(`Are you sure you want to block ${chatName}?`)) {
-                // Remove from contacts
-                database.ref('userContacts/' + currentUserId + '/' + otherUserId).remove();
-                database.ref('userContacts/' + otherUserId + '/' + currentUserId).remove();
-                
-                // Mark as blocked
-                database.ref('userSettings/' + currentUserId + '/blocked/' + otherUserId).set(true);
-                
-                alert(`${chatName} has been blocked.`);
-                goBack();
-            }
-        }
-        
-        function reportUser() {
-            const reason = prompt('Please describe the reason for reporting ' + chatName);
-            if (reason && reason.trim()) {
-                database.ref('reports').push().set({
-                    reporterId: currentUserId,
-                    reportedId: otherUserId,
-                    reason: reason.trim(),
-                    timestamp: Date.now()
-                });
-                alert('Thank you for your report. We will review it shortly.');
-            }
-        }
-        
-        function deleteChat() {
-            if (confirm('Are you sure you want to delete this chat? This action cannot be undone.')) {
-                if (chatType === 'personal') {
-                    // Remove chat from user's chat list
-                    database.ref('userChats/' + currentUserId + '/' + chatId).remove();
-                } else if (chatType === 'group') {
-                    // Leave group
-                    database.ref('groups/' + groupId + '/members/' + currentUserId).remove();
-                    database.ref('userGroups/' + currentUserId + '/' + groupId).remove();
-                }
-                alert('Chat deleted.');
-                goBack();
-            }
-        }
-        
-        // ImageKit upload function
-        async function uploadToImageKit(file, fileName, tags = []) {
-            return new Promise((resolve, reject) => {
-                imagekit.upload({
-                    file: file,
-                    fileName: fileName,
-                    tags: tags,
-                    folder: "/zynapse/chat_media"
-                }, function(err, result) {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(result);
-                    }
-                });
-            });
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
