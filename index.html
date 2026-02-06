@@ -3,688 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zynapse</title>
+    <title>Zynapse - Welcome</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cloudinary-core@2.13.0/cloudinary-core-shrinkwrap.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/cloudinary-core@2.11.4/cloudinary-core-shrinkwrap.min.js"></script>
 </head>
 <body>
     <!-- Loading Screen -->
-    <div id="loadingScreen" class="loading-screen">
+    <div class="loading-screen" id="loadingScreen">
         <div class="loading-content">
             <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
             <div class="spinner-large"></div>
-            <p>Initializing Zynapse...</p>
+            <p>Loading Zynapse...</p>
         </div>
     </div>
 
-    <!-- Main App Container -->
-    <div id="appContainer" style="display: none;">
-        <!-- Welcome Screen -->
-        <div id="welcomeScreen" class="auth-page">
-            <div class="auth-container">
-                <div class="welcome-screen">
-                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-large">
-                    <h1>Zynapse</h1>
-                    <p class="tagline">Seamless. Secure. Social.</p>
-                    <p class="tagline">Connect instantly with friends and colleagues</p>
-                    <p class="powered-by">Powered by Buffer Zone</p>
-                    
-                    <div class="welcome-actions">
-                        <button id="getStartedBtn" class="btn-primary full-width">
-                            <span>Get Started</span>
-                        </button>
-                        <button id="loginBtn" class="btn-secondary full-width">
-                            <span>Already have an account? Log In</span>
-                        </button>
-                    </div>
-                    
-                    <div class="welcome-footer">
-                        <p>By continuing, you agree to our <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a></p>
-                    </div>
+    <!-- Welcome Screen -->
+    <div class="auth-page" id="welcomeScreen" style="display: none;">
+        <div class="auth-container">
+            <div class="welcome-screen">
+                <img src="zynaps.png" alt="Zynapse Logo" class="logo-large">
+                <h1>Zynapse</h1>
+                <p class="tagline">Connect instantly with secure, private messaging</p>
+                <p class="powered-by">Powered by Buffer Zone</p>
+                
+                <div class="welcome-actions">
+                    <button class="btn-primary full-width" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </button>
+                    <button class="btn-secondary full-width" id="signupBtn">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+                </div>
+                
+                <div class="welcome-footer">
+                    By continuing, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Sign Up Form -->
-        <div id="signupForm" class="auth-page" style="display: none;">
-            <div class="auth-container">
-                <div class="auth-form">
-                    <div class="auth-header">
-                        <button id="backToWelcomeFromSignup" class="back-btn">
-                            <i class="fas fa-arrow-left"></i>
-                        </button>
-                        <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                        <h2>Create Account</h2>
-                        <p>Join Zynapse today</p>
-                    </div>
-                    
-                    <div class="auth-form-content">
-                        <div class="input-group">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="signupName" placeholder="Full Name" required>
-                        </div>
-                        
-                        <div class="input-group">
-                            <i class="fas fa-phone"></i>
-                            <input type="tel" id="signupPhone" placeholder="Phone Number" required>
-                        </div>
-                        
-                        <div class="input-group">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" id="signupEmail" placeholder="Email Address" required>
-                        </div>
-                        
-                        <div class="input-group">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="signupPassword" placeholder="Password" required>
-                            <i class="fas fa-eye toggle-password"></i>
-                        </div>
-                        
-                        <div class="input-group">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
-                            <i class="fas fa-eye toggle-password"></i>
-                        </div>
-                        
-                        <div class="profile-upload-section">
-                            <label class="upload-label">Profile Picture</label>
-                            <div class="profile-upload-container">
-                                <div class="upload-preview" id="profilePreview">
-                                    <div class="preview-placeholder">
-                                        <i class="fas fa-user-circle"></i>
-                                        <span>No image selected</span>
-                                        <p>Click to upload</p>
-                                    </div>
-                                </div>
-                                <div class="upload-buttons">
-                                    <button id="uploadProfileBtn" class="btn-upload">
-                                        <i class="fas fa-upload"></i>
-                                        <span>Upload Photo</span>
-                                    </button>
-                                    <button id="removeProfileBtn" class="btn-remove" style="display: none;">
-                                        <i class="fas fa-trash"></i>
-                                        <span>Remove</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <input type="file" id="profileUpload" accept="image/*" style="display: none;">
-                            <p class="upload-hint">Max size: 5MB • JPG, PNG, GIF</p>
-                        </div>
-                        
-                        <div class="terms-agreement">
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="agreeTerms" required>
-                                <span class="checkmark"></span>
-                                I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>
-                            </label>
-                        </div>
-                        
-                        <button id="signupSubmitBtn" class="btn-primary full-width">
-                            <span>Create Account</span>
-                            <div class="spinner" style="display: none;"></div>
-                        </button>
-                        
-                        <div class="auth-divider">
-                            <span>or</span>
-                        </div>
-                        
-                        <button id="googleSignupBtn" class="btn-google">
-                            <i class="fab fa-google"></i>
-                            <span>Continue with Google</span>
-                        </button>
-                        
-                        <div class="auth-switch">
-                            <span>Already have an account? </span>
-                            <a href="#" id="switchToLogin" class="link">Log In</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Login Form -->
-        <div id="loginForm" class="auth-page" style="display: none;">
-            <div class="auth-container">
-                <div class="auth-form">
-                    <div class="auth-header">
-                        <button id="backToWelcomeFromLogin" class="back-btn">
-                            <i class="fas fa-arrow-left"></i>
-                        </button>
-                        <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                        <h2>Welcome Back</h2>
-                        <p>Log in to your Zynapse account</p>
-                    </div>
-                    
-                    <div class="auth-form-content">
-                        <div class="input-group">
-                            <i class="fas fa-user"></i>
-                            <input type="email" id="loginEmail" placeholder="Email Address" required>
-                        </div>
-                        
-                        <div class="input-group">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="loginPassword" placeholder="Password" required>
-                            <i class="fas fa-eye toggle-password"></i>
-                        </div>
-                        
-                        <div class="form-options">
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="rememberMe">
-                                <span class="checkmark"></span>
-                                Remember me
-                            </label>
-                            <a href="#" id="forgotPassword" class="link">Forgot Password?</a>
-                        </div>
-                        
-                        <button id="loginSubmitBtn" class="btn-primary full-width">
-                            <span>Log In</span>
-                            <div class="spinner" style="display: none;"></div>
-                        </button>
-                        
-                        <div class="auth-divider">
-                            <span>or</span>
-                        </div>
-                        
-                        <button id="googleLoginBtn" class="btn-google">
-                            <i class="fab fa-google"></i>
-                            <span>Continue with Google</span>
-                        </button>
-                        
-                        <div class="auth-switch">
-                            <span>Don't have an account? </span>
-                            <a href="#" id="switchToSignup" class="link">Sign Up</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Home Page -->
-        <div id="homePage" class="app-home" style="display: none;">
-            <div class="app-header">
-                <div class="header-left">
-                    <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
-                    <div class="user-info">
-                        <h2 id="userNameDisplay">Loading...</h2>
-                        <div class="user-id-container">
-                            <span id="userIDDisplay" class="user-id">ZYN-0000</span>
-                            <button id="copyUserIDBtn" class="copy-btn" title="Copy User ID">
-                                <i class="far fa-copy"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="header-right">
-                    <div class="status-indicator online" id="statusIndicator">
-                        <div class="status-dot"></div>
-                    </div>
-                    <button class="profile-btn" id="profileDropdownBtn">
-                        <img id="headerProfilePic" src="" alt="Profile" class="profile-pic-small">
-                        <i class="fas fa-chevron-down"></i>
+    <!-- Login Form -->
+    <div class="auth-page" id="loginForm" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-form">
+                <div class="auth-header">
+                    <button class="back-btn" id="backToWelcomeFromLogin">
+                        <i class="fas fa-arrow-left"></i>
                     </button>
+                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to your Zynapse account</p>
                 </div>
                 
-                <!-- Profile Dropdown -->
-                <div class="dropdown">
-                    <div class="dropdown-content" id="profileDropdown">
-                        <div class="dropdown-profile">
-                            <img id="dropdownProfilePic" src="" alt="Profile" class="dropdown-profile-pic">
-                            <div class="dropdown-profile-info">
-                                <strong id="dropdownUserName"></strong>
-                                <span id="dropdownUserID"></span>
-                            </div>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <a href="#"><i class="fas fa-user"></i> My Profile</a>
-                        <a href="#"><i class="fas fa-moon"></i> Appearance</a>
-                        <a href="#"><i class="fas fa-bell"></i> Notifications</a>
-                        <a href="#"><i class="fas fa-shield-alt"></i> Privacy</a>
-                        <a href="#"><i class="fas fa-cog"></i> Settings</a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" id="logoutBtn" class="logout-link"><i class="fas fa-sign-out-alt"></i> Log Out</a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="app-nav">
-                <a href="#" class="nav-item active" data-page="home">
-                    <i class="fas fa-home"></i>
-                    <span>HOME</span>
-                </a>
-                <a href="#" class="nav-item" data-page="zynes">
-                    <i class="fas fa-play-circle"></i>
-                    <span>ZYNES</span>
-                    <span class="badge" id="zynBadge" style="display: none;">0</span>
-                </a>
-                <a href="#" class="nav-item" data-page="groups">
-                    <i class="fas fa-users"></i>
-                    <span>GROUPS</span>
-                    <span class="badge" id="groupsBadge" style="display: none;">0</span>
-                </a>
-                <a href="#" class="nav-item" data-page="requests">
-                    <i class="fas fa-user-plus"></i>
-                    <span>REQUESTS</span>
-                    <span class="badge" id="requestsBadge" style="display: none;">0</span>
-                </a>
-                <a href="#" class="nav-item" data-page="contacts">
-                    <i class="fas fa-address-book"></i>
-                    <span>CONTACTS</span>
-                    <span class="badge" id="contactsBadge" style="display: none;">0</span>
-                </a>
-            </div>
-            
-            <div class="app-main">
-                <!-- Home Page -->
-                <div id="homePageContent" class="page active">
-                    <div class="home-content">
-                        <div class="welcome-message">
-                            <h1>Welcome back, <span id="welcomeUserName"></span>!</h1>
-                            <p>Ready to connect with your friends?</p>
-                        </div>
-                        
-                        <div class="quick-actions">
-                            <div class="quick-action-card" id="startChatAction">
-                                <i class="fas fa-comment"></i>
-                                <h3>New Chat</h3>
-                                <p>Start a conversation</p>
-                            </div>
-                            <div class="quick-action-card" id="createGroupAction">
-                                <i class="fas fa-user-plus"></i>
-                                <h3>Create Group</h3>
-                                <p>Chat with multiple people</p>
-                            </div>
-                            <div class="quick-action-card" id="viewZynesAction">
-                                <i class="fas fa-play-circle"></i>
-                                <h3>View Zynes</h3>
-                                <p>See what's new</p>
-                            </div>
-                            <div class="quick-action-card" id="addContactsAction">
-                                <i class="fas fa-address-book"></i>
-                                <h3>Add Contacts</h3>
-                                <p>Connect with friends</p>
-                            </div>
-                        </div>
-                        
-                        <div class="recent-chats-section">
-                            <div class="section-header">
-                                <h3>Recent Chats</h3>
-                                <a href="#" class="view-all" id="viewAllChats">View All</a>
-                            </div>
-                            <div class="recent-chats-list" id="recentChatsList">
-                                <!-- Recent chats will be populated here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Zynes Page -->
-                <div id="zynPageContent" class="page">
-                    <div class="page-header">
-                        <h2>Zynes</h2>
-                        <div class="header-actions">
-                            <div class="tabs">
-                                <button class="tab-btn active" data-tab="myZynes">My Zynes</button>
-                                <button class="tab-btn" data-tab="friendsZynes">Friends</button>
-                            </div>
-                            <button class="btn-primary" id="createZyneBtn">
-                                <i class="fas fa-plus"></i>
-                                <span>New Zyne</span>
-                            </button>
-                        </div>
+                <div class="auth-form-content">
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="loginEmail" placeholder="Email Address" required>
                     </div>
                     
-                    <div class="zynes-container" id="zynesContainer">
-                        <!-- Zynes will be populated here -->
-                    </div>
-                </div>
-                
-                <!-- Groups Page -->
-                <div id="groupsPageContent" class="page">
-                    <div class="page-header">
-                        <h2>Groups</h2>
-                        <div class="header-actions">
-                            <button class="btn-primary" id="createGroupBtn">
-                                <i class="fas fa-plus"></i>
-                                <span>Create Group</span>
-                            </button>
-                        </div>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password" id="toggleLoginPassword"></i>
                     </div>
                     
-                    <div class="groups-container" id="groupsContainer">
-                        <!-- Groups will be populated here -->
-                    </div>
-                </div>
-                
-                <!-- Requests Page -->
-                <div id="requestsPageContent" class="page">
-                    <div class="page-header">
-                        <h2>Chat Requests</h2>
-                        <div class="tabs">
-                            <button class="tab-btn active" data-tab="received">Received</button>
-                            <button class="tab-btn" data-tab="sent">Sent</button>
-                        </div>
+                    <div class="form-options">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="rememberMe">
+                            <span class="checkmark"></span>
+                            Remember me
+                        </label>
+                        <a href="#" class="link" id="forgotPassword">Forgot Password?</a>
                     </div>
                     
-                    <div class="requests-container" id="requestsContainer">
-                        <!-- Requests will be populated here -->
-                    </div>
-                </div>
-                
-                <!-- Contacts Page -->
-                <div id="contactsPageContent" class="page">
-                    <div class="page-header">
-                        <h2>Contacts</h2>
-                        <div class="header-actions">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="searchContacts" placeholder="Search contacts...">
-                            </div>
-                            <button class="btn-secondary" id="addContactBtn">
-                                <i class="fas fa-user-plus"></i>
-                                <span>Add Contact</span>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="contacts-container" id="contactsContainer">
-                        <!-- Contacts will be populated here -->
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Floating Chat Button -->
-            <button class="floating-btn" id="floatingChatBtn">
-                <i class="fas fa-comment"></i>
-                <span>Start Chat</span>
-            </button>
-            
-            <!-- Modals -->
-            <div class="modal-overlay" id="startChatModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Start New Chat</h3>
-                        <button class="close-modal" id="closeStartChatModal">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="input-group">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="searchUserID" placeholder="Enter Zynapse User ID (ZYN-XXXX)" maxlength="8">
-                        </div>
-                        <div id="searchResult" class="search-result">
-                            <!-- Search results will appear here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="modal-overlay" id="createGroupModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Create New Group</h3>
-                        <button class="close-modal" id="closeCreateGroupModal">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="input-group">
-                            <i class="fas fa-users"></i>
-                            <input type="text" id="groupName" placeholder="Group Name">
-                        </div>
-                        
-                        <div class="profile-upload-section">
-                            <label class="upload-label">Group Photo</label>
-                            <div class="profile-upload-container">
-                                <div class="upload-preview" id="groupProfilePreview">
-                                    <div class="preview-placeholder">
-                                        <i class="fas fa-users"></i>
-                                        <span>No image selected</span>
-                                        <p>Click to upload</p>
-                                    </div>
-                                </div>
-                                <div class="upload-buttons">
-                                    <button id="uploadGroupProfileBtn" class="btn-upload">
-                                        <i class="fas fa-upload"></i>
-                                        <span>Upload Photo</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <input type="file" id="groupProfileUpload" accept="image/*" style="display: none;">
-                        </div>
-                        
-                        <div class="members-container">
-                            <div class="members-header">
-                                <h4>Add Members</h4>
-                                <span class="members-count" id="membersCount">0 members</span>
-                            </div>
-                            <div class="input-group">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="searchMemberID" placeholder="Search contacts or enter User ID">
-                            </div>
-                            <div class="members-list" id="groupMembersList">
-                                <!-- Selected members will appear here -->
-                            </div>
-                        </div>
-                        
-                        <div class="modal-actions">
-                            <button id="createGroupSubmitBtn" class="btn-primary">
-                                <span>Create Group</span>
-                                <div class="spinner" style="display: none;"></div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="modal-overlay" id="createZyneModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Create New Zyne</h3>
-                        <button class="close-modal" id="closeCreateZyneModal">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="input-group">
-                            <textarea id="zyneText" placeholder="What's on your mind?" rows="3"></textarea>
-                            <div class="character-counter">
-                                <span id="zyneCharCount">0/500</span>
-                            </div>
-                        </div>
-                        
-                        <div class="media-preview" id="zyneMediaPreview">
-                            <!-- Media preview will appear here -->
-                        </div>
-                        
-                        <div class="media-buttons">
-                            <button class="btn-media" id="addZynePhotoBtn">
-                                <i class="fas fa-image"></i>
-                            </button>
-                            <button class="btn-media" id="addZyneVideoBtn">
-                                <i class="fas fa-video"></i>
-                            </button>
-                            <input type="file" id="zyneMediaUpload" accept="image/*,video/*" multiple style="display: none;">
-                        </div>
-                        
-                        <div class="modal-actions">
-                            <div class="action-buttons">
-                                <button id="cancelZyneBtn" class="btn-secondary">Cancel</button>
-                                <button id="postZyneBtn" class="btn-primary">
-                                    <span>Post Zyne</span>
-                                    <div class="spinner" style="display: none;"></div>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Chat Page -->
-        <div id="chatPage" class="chat-page" style="display: none;">
-            <div class="chat-header">
-                <button class="back-btn" id="backToHomeBtn">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                
-                <div class="chat-user-info">
-                    <img id="chatUserProfilePic" src="" alt="" class="profile-pic-small">
-                    <div class="chat-user-details">
-                        <h3 id="chatUserName">Loading...</h3>
-                        <div class="chat-status">
-                            <div class="status-dot online" id="chatUserStatus"></div>
-                            <span id="chatUserStatusText">Online</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="chat-header-actions">
-                    <button class="icon-btn" id="chatMenuBtn">
-                        <i class="fas fa-ellipsis-v"></i>
+                    <button class="btn-primary full-width" id="loginSubmitBtn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
                     </button>
                     
-                    <!-- Chat Menu Dropdown -->
-                    <div class="dropdown">
-                        <div class="dropdown-content" id="chatDropdown">
-                            <a href="#" id="addNicknameBtn"><i class="fas fa-user-edit"></i> Add Nickname</a>
-                            <a href="#" id="blockUserBtn"><i class="fas fa-ban"></i> Block User</a>
-                            <a href="#" id="favoriteBtn"><i class="fas fa-star"></i> Add to Favorites</a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" id="viewProfileBtn"><i class="fas fa-eye"></i> View Profile</a>
-                            <a href="#" id="reportUserBtn"><i class="fas fa-flag"></i> Report User</a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" id="clearChatBtn"><i class="fas fa-trash"></i> Clear Chat</a>
-                            <a href="#" id="deleteChatBtn" class="logout-link"><i class="fas fa-trash-alt"></i> Delete Chat</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="chat-messages" id="chatMessages">
-                <!-- Messages will be populated here -->
-            </div>
-            
-            <div class="message-input-area">
-                <button class="icon-btn" id="attachmentBtn">
-                    <i class="fas fa-plus"></i>
-                </button>
-                
-                <div class="message-input-container">
-                    <input type="text" id="messageInput" placeholder="iMessage" maxlength="1000">
-                </div>
-                
-                <button class="send-btn" id="sendMessageBtn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-                
-                <!-- Attachment Options -->
-                <div class="attachment-options" id="attachmentOptions">
-                    <button class="attachment-btn" id="attachPhotoBtn">
-                        <i class="fas fa-image"></i>
-                        <span>Photo</span>
-                    </button>
-                    <button class="attachment-btn" id="attachVideoBtn">
-                        <i class="fas fa-video"></i>
-                        <span>Video</span>
-                    </button>
-                    <button class="attachment-btn" id="attachFileBtn">
-                        <i class="fas fa-file"></i>
-                        <span>File</span>
-                    </button>
-                </div>
-                
-                <!-- Hidden file inputs -->
-                <input type="file" id="photoUpload" accept="image/*" multiple style="display: none;">
-                <input type="file" id="videoUpload" accept="video/*" style="display: none;">
-                <input type="file" id="fileUpload" accept="*" style="display: none;">
-            </div>
-            
-            <!-- Media Preview Modal -->
-            <div class="modal-overlay" id="mediaPreviewModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Preview</h3>
-                        <button class="close-modal" id="closeMediaPreview">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div id="mediaPreviewContent">
-                            <!-- Media preview will appear here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Report User Modal -->
-            <div class="modal-overlay" id="reportModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Report User</h3>
-                        <button class="close-modal" id="closeReportModal">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="confirmation-message">
-                            <div class="warning-icon">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <h4>Report User</h4>
-                            <p>Please select a reason for reporting this user. All reports are anonymous and will be reviewed by our team.</p>
-                        </div>
-                        
-                        <div class="report-form">
-                            <div class="input-group">
-                                <label>Reason for Report</label>
-                                <select id="reportReason">
-                                    <option value="spam">Spam or harassment</option>
-                                    <option value="inappropriate">Inappropriate content</option>
-                                    <option value="impersonation">Impersonation</option>
-                                    <option value="threats">Threats or violence</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            
-                            <div class="input-group">
-                                <label>Additional Details (Optional)</label>
-                                <textarea id="reportDetails" placeholder="Please provide more details..." rows="4"></textarea>
-                            </div>
-                            
-                            <p class="form-hint">Your report will be reviewed within 24 hours. We take all reports seriously to ensure a safe community.</p>
-                        </div>
-                        
-                        <div class="modal-actions">
-                            <div class="action-buttons">
-                                <button id="cancelReportBtn" class="btn-secondary">Cancel</button>
-                                <button id="submitReportBtn" class="btn-danger">
-                                    <span>Submit Report</span>
-                                </button>
-                            </div>
-                        </div>
+                    <div class="auth-switch">
+                        Don't have an account? <a href="#" class="link" id="switchToSignup">Sign Up</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notifications Container -->
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- Signup Form -->
+    <div class="auth-page" id="signupForm" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-form">
+                <div class="auth-header">
+                    <button class="back-btn" id="backToWelcomeFromSignup">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                    <h2>Create Account</h2>
+                    <p>Join Zynapse today</p>
+                </div>
+                
+                <div class="auth-form-content">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="signupName" placeholder="Full Name" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="signupPhone" placeholder="Phone Number" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="signupEmail" placeholder="Email Address" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupPassword" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password" id="toggleSignupPassword"></i>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
+                        <i class="fas fa-eye toggle-password" id="toggleConfirmPassword"></i>
+                    </div>
+                    
+                    <!-- Profile Upload Section -->
+                    <div class="profile-upload-section">
+                        <label class="upload-label">Profile Picture</label>
+                        <div class="profile-upload-container">
+                            <div class="upload-preview" id="profilePreview">
+                                <div class="preview-placeholder">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>No image selected</span>
+                                    <p>Click to upload</p>
+                                </div>
+                            </div>
+                            <div class="upload-buttons">
+                                <button class="btn-upload" id="uploadProfileBtn">
+                                    <i class="fas fa-upload"></i>
+                                    Choose Image
+                                </button>
+                                <button class="btn-remove" id="removeProfileBtn" style="display: none;">
+                                    <i class="fas fa-trash"></i>
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                        <input type="file" id="profileImage" accept="image/*" style="display: none;">
+                        <p class="upload-hint">Recommended: Square image, max 2MB</p>
+                    </div>
+                    
+                    <div class="terms-agreement checkbox-container">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <span class="checkmark"></span>
+                        I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>
+                    </div>
+                    
+                    <button class="btn-primary full-width" id="signupSubmitBtn">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+                    
+                    <div class="auth-switch">
+                        Already have an account? <a href="#" class="link" id="switchToLogin">Sign In</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Notification Sound -->
-    <audio id="notificationSound" preload="auto">
-        <source src="notification.mp3" type="audio/mpeg">
-    </audio>
+    <!-- Toast Container -->
+    <div class="toast-container"></div>
 
     <script>
-        // ===== FIREBASE CONFIGURATION =====
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
             authDomain: "zynapse-68181.firebaseapp.com",
@@ -696,48 +197,403 @@
             measurementId: "G-4764XLL6WS"
         };
 
-        // ===== CLOUDINARY CONFIGURATION =====
+        // Cloudinary Configuration
         const CLOUDINARY_CONFIG = {
             cloudName: 'dd3lcymrk',
             apiKey: '489857926297197',
             uploadPreset: 'h3eyhc2o',
-            folder: 'zynapse',
-            maxFileSize: 50 * 1024 * 1024 // 50MB
+            folder: 'zynapse/profiles'
         };
 
-        // ===== GLOBAL VARIABLES =====
+        // Global Variables
         let currentUser = null;
-        let currentChatUser = null;
-        let currentChatId = null;
-        let userData = null;
-        let contacts = [];
-        let groups = [];
-        let chatRequests = [];
-        let zynes = [];
-        let conversations = [];
-        let unsubscribeFunctions = [];
+        let profileImageFile = null;
+        let profileImageUrl = null;
+        let isLoading = false;
 
-        // ===== FIREBASE INITIALIZATION =====
-        try {
-            firebase.initializeApp(firebaseConfig);
-            console.log("Firebase initialized successfully");
-        } catch (error) {
-            console.error("Firebase initialization error:", error);
-        }
-
+        // Firebase Initialization
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
-        const storage = firebase.storage();
 
-        // ===== UTILITY FUNCTIONS =====
+        // DOM Elements
+        const loadingScreen = document.getElementById('loadingScreen');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        
+        // Navigation Buttons
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const backToWelcomeFromLogin = document.getElementById('backToWelcomeFromWelcomeFromLogin');
+        const backToWelcomeFromSignup = document.getElementById('backToWelcomeFromSignup');
+        const switchToSignup = document.getElementById('switchToSignup');
+        const switchToLogin = document.getElementById('switchToLogin');
+        const forgotPassword = document.getElementById('forgotPassword');
+        
+        // Login Form Elements
+        const loginEmail = document.getElementById('loginEmail');
+        const loginPassword = document.getElementById('loginPassword');
+        const toggleLoginPassword = document.getElementById('toggleLoginPassword');
+        const rememberMe = document.getElementById('rememberMe');
+        const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+        
+        // Signup Form Elements
+        const signupName = document.getElementById('signupName');
+        const signupPhone = document.getElementById('signupPhone');
+        const signupEmail = document.getElementById('signupEmail');
+        const signupPassword = document.getElementById('signupPassword');
+        const signupConfirmPassword = document.getElementById('signupConfirmPassword');
+        const toggleSignupPassword = document.getElementById('toggleSignupPassword');
+        const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+        const agreeTerms = document.getElementById('agreeTerms');
+        const signupSubmitBtn = document.getElementById('signupSubmitBtn');
+        
+        // Profile Upload Elements
+        const profilePreview = document.getElementById('profilePreview');
+        const uploadProfileBtn = document.getElementById('uploadProfileBtn');
+        const removeProfileBtn = document.getElementById('removeProfileBtn');
+        const profileImage = document.getElementById('profileImage');
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        async function initializeApp() {
+            // Check if user is already logged in
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    // User is logged in, redirect to home
+                    await fetchUserData(user.uid);
+                    window.location.href = 'home.html';
+                } else {
+                    // Show welcome screen after loading
+                    setTimeout(() => {
+                        loadingScreen.classList.add('hidden');
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                            welcomeScreen.style.display = 'flex';
+                        }, 300);
+                    }, 1000);
+                }
+            });
+
+            // Setup event listeners
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // Navigation
+            loginBtn.addEventListener('click', () => showScreen(loginForm));
+            signupBtn.addEventListener('click', () => showScreen(signupForm));
+            
+            if (backToWelcomeFromLogin) {
+                backToWelcomeFromLogin.addEventListener('click', () => showScreen(welcomeScreen));
+            }
+            
+            if (backToWelcomeFromSignup) {
+                backToWelcomeFromSignup.addEventListener('click', () => showScreen(welcomeScreen));
+            }
+            
+            switchToSignup.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen(signupForm);
+            });
+            
+            switchToLogin.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen(loginForm);
+            });
+            
+            forgotPassword.addEventListener('click', (e) => {
+                e.preventDefault();
+                showForgotPasswordModal();
+            });
+
+            // Toggle password visibility
+            toggleLoginPassword.addEventListener('click', () => togglePasswordVisibility(loginPassword, toggleLoginPassword));
+            toggleSignupPassword.addEventListener('click', () => togglePasswordVisibility(signupPassword, toggleSignupPassword));
+            toggleConfirmPassword.addEventListener('click', () => togglePasswordVisibility(signupConfirmPassword, toggleConfirmPassword));
+
+            // Profile image upload
+            uploadProfileBtn.addEventListener('click', () => profileImage.click());
+            profileImage.addEventListener('change', handleProfileImageUpload);
+            removeProfileBtn.addEventListener('click', removeProfileImage);
+            profilePreview.addEventListener('click', () => profileImage.click());
+
+            // Form submissions
+            loginSubmitBtn.addEventListener('click', handleLogin);
+            signupSubmitBtn.addEventListener('click', handleSignup);
+            
+            // Enter key support
+            loginPassword.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+            
+            signupConfirmPassword.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSignup();
+            });
+        }
+
+        function showScreen(screen) {
+            // Hide all screens
+            welcomeScreen.style.display = 'none';
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'none';
+            
+            // Show selected screen
+            screen.style.display = 'flex';
+        }
+
+        function togglePasswordVisibility(passwordField, toggleIcon) {
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            toggleIcon.classList.toggle('fa-eye');
+            toggleIcon.classList.toggle('fa-eye-slash');
+        }
+
+        async function handleProfileImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file
+            if (!file.type.match('image.*')) {
+                showToast('Please select an image file', 'error');
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('Image size must be less than 2MB', 'error');
+                return;
+            }
+
+            // Preview image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                profilePreview.innerHTML = `<img src="${e.target.result}" alt="Profile Preview">`;
+                removeProfileBtn.style.display = 'flex';
+                profileImageFile = file;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeProfileImage() {
+            profilePreview.innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-user-circle"></i>
+                    <span>No image selected</span>
+                    <p>Click to upload</p>
+                </div>`;
+            removeProfileBtn.style.display = 'none';
+            profileImageFile = null;
+            profileImage.value = '';
+        }
+
+        async function uploadToCloudinary(file) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+                formData.append('folder', CLOUDINARY_CONFIG.folder);
+                formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
+
+                fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.secure_url) {
+                        resolve(data.secure_url);
+                    } else {
+                        reject(new Error('Upload failed'));
+                    }
+                })
+                .catch(error => reject(error));
+            });
+        }
+
+        function generateUserId() {
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            return `ZYN-${randomNum}`;
+        }
+
+        async function handleLogin() {
+            if (isLoading) return;
+            
+            const email = loginEmail.value.trim();
+            const password = loginPassword.value.trim();
+
+            // Validation
+            if (!email || !password) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+
+            isLoading = true;
+            loginSubmitBtn.innerHTML = '<div class="spinner"></div> Signing In...';
+            loginSubmitBtn.disabled = true;
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Update last active
+                await database.ref(`users/${user.uid}`).update({
+                    lastActive: Date.now(),
+                    isOnline: true
+                });
+
+                showToast('Successfully signed in!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 1000);
+
+            } catch (error) {
+                let message = 'Login failed';
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        message = 'No account found with this email';
+                        break;
+                    case 'auth/wrong-password':
+                        message = 'Incorrect password';
+                        break;
+                    case 'auth/invalid-email':
+                        message = 'Invalid email address';
+                        break;
+                }
+                showToast(message, 'error');
+            } finally {
+                isLoading = false;
+                loginSubmitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+                loginSubmitBtn.disabled = false;
+            }
+        }
+
+        async function handleSignup() {
+            if (isLoading) return;
+            
+            // Get form values
+            const name = signupName.value.trim();
+            const phone = signupPhone.value.trim();
+            const email = signupEmail.value.trim();
+            const password = signupPassword.value;
+            const confirmPassword = signupConfirmPassword.value;
+
+            // Validation
+            if (!name || !phone || !email || !password || !confirmPassword) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            if (!agreeTerms.checked) {
+                showToast('You must agree to the terms and conditions', 'error');
+                return;
+            }
+
+            isLoading = true;
+            signupSubmitBtn.innerHTML = '<div class="spinner"></div> Creating Account...';
+            signupSubmitBtn.disabled = true;
+
+            try {
+                // Upload profile image if selected
+                let profileUrl = null;
+                if (profileImageFile) {
+                    try {
+                        profileUrl = await uploadToCloudinary(profileImageFile);
+                    } catch (error) {
+                        console.error('Profile upload failed:', error);
+                        // Continue without profile image
+                    }
+                }
+
+                // Create user in Firebase Auth
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // Generate user ID
+                const userId = generateUserId();
+
+                // Prepare user data
+                const userData = {
+                    uid: user.uid,
+                    userId: userId,
+                    name: name,
+                    phone: phone,
+                    email: email,
+                    profileUrl: profileUrl,
+                    createdAt: Date.now(),
+                    lastActive: Date.now(),
+                    isOnline: true,
+                    status: 'Available',
+                    contacts: {},
+                    chatRequests: {},
+                    chats: {},
+                    groups: {}
+                };
+
+                // Save to database
+                await database.ref(`users/${user.uid}`).set(userData);
+                await database.ref(`userIds/${userId}`).set(user.uid);
+
+                showToast('Account created successfully!', 'success');
+                
+                // Redirect to home
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 1500);
+
+            } catch (error) {
+                let message = 'Registration failed';
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        message = 'Email already registered';
+                        break;
+                    case 'auth/invalid-email':
+                        message = 'Invalid email address';
+                        break;
+                    case 'auth/weak-password':
+                        message = 'Password is too weak';
+                        break;
+                }
+                showToast(message, 'error');
+            } finally {
+                isLoading = false;
+                signupSubmitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+                signupSubmitBtn.disabled = false;
+            }
+        }
+
+        async function fetchUserData(uid) {
+            try {
+                const snapshot = await database.ref(`users/${uid}`).once('value');
+                currentUser = snapshot.val();
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        }
+
         function showToast(message, type = 'info') {
-            const toastContainer = document.getElementById('toastContainer');
+            const toastContainer = document.querySelector('.toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             
-            const icon = type === 'success' ? 'fa-check-circle' :
-                        type === 'error' ? 'fa-exclamation-circle' :
-                        type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+            let icon = 'fa-info-circle';
+            switch (type) {
+                case 'success': icon = 'fa-check-circle'; break;
+                case 'error': icon = 'fa-exclamation-circle'; break;
+                case 'warning': icon = 'fa-exclamation-triangle'; break;
+            }
             
             toast.innerHTML = `
                 <i class="fas ${icon}"></i>
@@ -748,1377 +604,53 @@
             
             // Remove toast after 3 seconds
             setTimeout(() => {
-                toast.style.animation = 'fadeOut 0.3s ease forwards';
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
+                toast.remove();
             }, 3000);
         }
 
-        function generateUserID() {
-            const randomNumber = Math.floor(1000 + Math.random() * 9000);
-            return `ZYN-${randomNumber}`;
-        }
-
-        function playNotificationSound() {
-            const sound = document.getElementById('notificationSound');
-            sound.currentTime = 0;
-            sound.play().catch(e => console.log("Audio play failed:", e));
-        }
-
-        function formatDate(date) {
-            const now = new Date();
-            const diff = now - date;
-            const diffMinutes = Math.floor(diff / 60000);
-            const diffHours = Math.floor(diff / 3600000);
-            const diffDays = Math.floor(diff / 86400000);
-            
-            if (diffMinutes < 1) return 'Just now';
-            if (diffMinutes < 60) return `${diffMinutes}m ago`;
-            if (diffHours < 24) return `${diffHours}h ago`;
-            if (diffDays < 7) return `${diffDays}d ago`;
-            
-            return date.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric',
-                year: now.getFullYear() !== date.getFullYear() ? 'numeric' : undefined
-            });
-        }
-
-        function formatTime(date) {
-            return date.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-            }).toLowerCase();
-        }
-
-        async function uploadToCloudinary(file, type = 'image') {
-            return new Promise((resolve, reject) => {
-                if (!file) {
-                    reject(new Error('No file provided'));
-                    return;
-                }
-
-                if (file.size > CLOUDINARY_CONFIG.maxFileSize) {
-                    reject(new Error('File size exceeds 50MB limit'));
-                    return;
-                }
-
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-                formData.append('folder', CLOUDINARY_CONFIG.folder);
-                
-                // Add resource type based on file type
-                if (type === 'video') {
-                    formData.append('resource_type', 'video');
-                }
-
-                const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/${type === 'video' ? 'video' : 'image'}/upload`;
-
-                fetch(url, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.secure_url) {
-                        resolve({
-                            url: data.secure_url,
-                            publicId: data.public_id,
-                            format: data.format,
-                            bytes: data.bytes
-                        });
-                    } else {
-                        reject(new Error(data.error?.message || 'Upload failed'));
-                    }
-                })
-                .catch(error => {
-                    reject(error);
-                });
-            });
-        }
-
-        function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
-        }
-
-        function validatePhone(phone) {
-            const re = /^\+?[1-9]\d{1,14}$/;
-            return re.test(phone.replace(/\D/g, ''));
-        }
-
-        function validatePassword(password) {
-            return password.length >= 6;
-        }
-
-        // ===== AUTHENTICATION FUNCTIONS =====
-        async function handleSignup() {
-            const name = document.getElementById('signupName').value.trim();
-            const phone = document.getElementById('signupPhone').value.trim();
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('signupConfirmPassword').value;
-            const agreeTerms = document.getElementById('agreeTerms').checked;
-            const profilePic = document.querySelector('#profilePreview img');
-            const profileUrl = profilePic ? profilePic.src : null;
-
-            // Validation
-            if (!name || !phone || !email || !password || !confirmPassword) {
-                showToast('Please fill in all fields', 'error');
-                return;
-            }
-
-            if (!validateEmail(email)) {
-                showToast('Please enter a valid email address', 'error');
-                return;
-            }
-
-            if (!validatePhone(phone)) {
-                showToast('Please enter a valid phone number', 'error');
-                return;
-            }
-
-            if (!validatePassword(password)) {
-                showToast('Password must be at least 6 characters', 'error');
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                showToast('Passwords do not match', 'error');
-                return;
-            }
-
-            if (!agreeTerms) {
-                showToast('Please agree to the terms and conditions', 'error');
-                return;
-            }
-
-            const submitBtn = document.getElementById('signupSubmitBtn');
-            const spinner = submitBtn.querySelector('.spinner');
-            submitBtn.disabled = true;
-            spinner.style.display = 'block';
-
-            try {
-                // Check if user ID is unique
-                const userID = generateUserID();
-                const userIDCheck = await database.ref('userIDs').child(userID).once('value');
-                
-                if (userIDCheck.exists()) {
-                    showToast('User ID generation failed. Please try again.', 'error');
-                    return;
-                }
-
-                // Create user in Firebase Auth
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-
-                // Prepare user data
-                const userData = {
-                    uid: user.uid,
-                    name: name,
-                    email: email,
-                    phone: phone,
-                    userID: userID,
-                    profilePicture: profileUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-                    createdAt: Date.now(),
-                    lastSeen: Date.now(),
-                    status: 'online',
-                    contacts: [],
-                    groups: [],
-                    chatRequests: [],
-                    zynes: []
-                };
-
-                // Save user data to database
-                await database.ref('users').child(user.uid).set(userData);
-                await database.ref('userIDs').child(userID).set(user.uid);
-                await database.ref('userEmails').child(email.replace(/\./g, ',')).set(user.uid);
-
-                showToast('Account created successfully!', 'success');
-                
-                // Auto login
-                await handleLogin(email, password);
-
-            } catch (error) {
-                console.error('Signup error:', error);
-                showToast(error.message || 'Signup failed. Please try again.', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                spinner.style.display = 'none';
-            }
-        }
-
-        async function handleLogin(email, password) {
-            const loginBtn = document.getElementById('loginSubmitBtn');
-            const spinner = loginBtn ? loginBtn.querySelector('.spinner') : null;
-            
-            if (loginBtn) {
-                loginBtn.disabled = true;
-                if (spinner) spinner.style.display = 'block';
-            }
-
-            try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Get user data from database
-                const userSnapshot = await database.ref('users').child(user.uid).once('value');
-                userData = userSnapshot.val();
-                
-                if (!userData) {
-                    throw new Error('User data not found');
-                }
-
-                // Update last seen and status
-                await database.ref('users').child(user.uid).update({
-                    lastSeen: Date.now(),
-                    status: 'online'
-                });
-
-                showToast('Welcome back!', 'success');
-                loadHomePage();
-
-            } catch (error) {
-                console.error('Login error:', error);
-                showToast(error.message || 'Login failed. Please check your credentials.', 'error');
-            } finally {
-                if (loginBtn) {
-                    loginBtn.disabled = false;
-                    if (spinner) spinner.style.display = 'none';
-                }
-            }
-        }
-
-        async function handleLogout() {
-            try {
-                if (currentUser) {
-                    // Update status to offline
-                    await database.ref('users').child(currentUser.uid).update({
-                        status: 'offline',
-                        lastSeen: Date.now()
-                    });
-                }
-
-                // Unsubscribe from all listeners
-                unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
-                unsubscribeFunctions = [];
-
-                await auth.signOut();
-                showToast('Logged out successfully', 'success');
-                showWelcomeScreen();
-
-            } catch (error) {
-                console.error('Logout error:', error);
-                showToast('Logout failed', 'error');
-            }
-        }
-
-        // ===== UI MANAGEMENT FUNCTIONS =====
-        function showWelcomeScreen() {
-            document.getElementById('welcomeScreen').style.display = 'flex';
-            document.getElementById('signupForm').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('homePage').style.display = 'none';
-            document.getElementById('chatPage').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'block';
-        }
-
-        function showSignupForm() {
-            document.getElementById('welcomeScreen').style.display = 'none';
-            document.getElementById('signupForm').style.display = 'flex';
-            document.getElementById('loginForm').style.display = 'none';
-        }
-
-        function showLoginForm() {
-            document.getElementById('welcomeScreen').style.display = 'none';
-            document.getElementById('signupForm').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'flex';
-        }
-
-        function loadHomePage() {
-            document.getElementById('welcomeScreen').style.display = 'none';
-            document.getElementById('signupForm').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('homePage').style.display = 'flex';
-            document.getElementById('chatPage').style.display = 'none';
-            
-            // Update user info
-            if (userData) {
-                document.getElementById('userNameDisplay').textContent = userData.name;
-                document.getElementById('userIDDisplay').textContent = userData.userID;
-                document.getElementById('welcomeUserName').textContent = userData.name.split(' ')[0];
-                document.getElementById('headerProfilePic').src = userData.profilePicture;
-                document.getElementById('dropdownProfilePic').src = userData.profilePicture;
-                document.getElementById('dropdownUserName').textContent = userData.name;
-                document.getElementById('dropdownUserID').textContent = userData.userID;
-            }
-
-            // Load user data
-            loadContacts();
-            loadGroups();
-            loadChatRequests();
-            loadRecentChats();
-            loadZynes();
-        }
-
-        function loadChatPage(chatUserData, chatId = null) {
-            document.getElementById('homePage').style.display = 'none';
-            document.getElementById('chatPage').style.display = 'flex';
-            
-            currentChatUser = chatUserData;
-            currentChatId = chatId || generateChatId(currentUser.uid, chatUserData.uid);
-            
-            // Update chat header
-            document.getElementById('chatUserName').textContent = chatUserData.name;
-            document.getElementById('chatUserProfilePic').src = chatUserData.profilePicture;
-            
-            // Load chat messages
-            loadChatMessages();
-            
-            // Set up real-time listener for new messages
-            setupChatListener();
-        }
-
-        function generateChatId(userId1, userId2) {
-            return [userId1, userId2].sort().join('_');
-        }
-
-        // ===== DATA LOADING FUNCTIONS =====
-        async function loadContacts() {
-            if (!userData) return;
-            
-            const contactsContainer = document.getElementById('contactsContainer');
-            contactsContainer.innerHTML = '';
-            
-            if (!userData.contacts || userData.contacts.length === 0) {
-                contactsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-address-book"></i>
-                        <h3>No Contacts Yet</h3>
-                        <p>Add friends to start chatting</p>
+        function showForgotPasswordModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Reset Password</h3>
+                        <button class="close-modal">&times;</button>
                     </div>
-                `;
-                return;
-            }
-
-            for (const contactId of userData.contacts) {
-                try {
-                    const contactSnapshot = await database.ref('users').child(contactId).once('value');
-                    const contactData = contactSnapshot.val();
-                    
-                    if (contactData) {
-                        const contactCard = createContactCard(contactData);
-                        contactsContainer.appendChild(contactCard);
-                    }
-                } catch (error) {
-                    console.error('Error loading contact:', error);
-                }
-            }
-        }
-
-        function createContactCard(contactData) {
-            const card = document.createElement('div');
-            card.className = 'contact-card';
-            card.innerHTML = `
-                <img src="${contactData.profilePicture}" alt="${contactData.name}" class="profile-pic">
-                <div class="contact-info">
-                    <h4>${contactData.name}</h4>
-                    <p>${contactData.userID}</p>
-                    <div class="status ${contactData.status}">${contactData.status}</div>
-                    <div class="time">Last seen: ${formatDate(new Date(contactData.lastSeen))}</div>
-                </div>
-                <div class="contact-actions">
-                    <button class="action-btn chat-btn" data-userid="${contactData.uid}">
-                        <i class="fas fa-comment"></i>
-                        <span>Chat</span>
-                    </button>
-                </div>
-            `;
-            return card;
-        }
-
-        async function loadGroups() {
-            if (!userData) return;
-            
-            const groupsContainer = document.getElementById('groupsContainer');
-            groupsContainer.innerHTML = '';
-            
-            if (!userData.groups || userData.groups.length === 0) {
-                groupsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>No Groups Yet</h3>
-                        <p>Create or join a group to start chatting</p>
-                    </div>
-                `;
-                return;
-            }
-
-            for (const groupId of userData.groups) {
-                try {
-                    const groupSnapshot = await database.ref('groups').child(groupId).once('value');
-                    const groupData = groupSnapshot.val();
-                    
-                    if (groupData) {
-                        const groupCard = createGroupCard(groupData);
-                        groupsContainer.appendChild(groupCard);
-                    }
-                } catch (error) {
-                    console.error('Error loading group:', error);
-                }
-            }
-        }
-
-        function createGroupCard(groupData) {
-            const card = document.createElement('div');
-            card.className = 'group-card';
-            card.innerHTML = `
-                <img src="${groupData.photo || 'https://cdn-icons-png.flaticon.com/512/979/979585.png'}" alt="${groupData.name}" class="profile-pic">
-                <div class="group-info">
-                    <h4>${groupData.name}</h4>
-                    <p>${groupData.members ? Object.keys(groupData.members).length : 0} members</p>
-                    <div class="time">Created: ${formatDate(new Date(groupData.createdAt))}</div>
-                </div>
-                <div class="group-actions">
-                    <button class="action-btn chat-btn" data-groupid="${groupData.id}">
-                        <i class="fas fa-comment"></i>
-                        <span>Open</span>
-                    </button>
-                </div>
-            `;
-            return card;
-        }
-
-        async function loadChatRequests() {
-            if (!userData) return;
-            
-            const requestsContainer = document.getElementById('requestsContainer');
-            requestsContainer.innerHTML = '';
-            
-            // Listen for incoming requests
-            const unsubscribe = database.ref('chatRequests')
-                .orderByChild('receiverId')
-                .equalTo(currentUser.uid)
-                .on('value', async (snapshot) => {
-                    requestsContainer.innerHTML = '';
-                    
-                    if (!snapshot.exists()) {
-                        requestsContainer.innerHTML = `
-                            <div class="empty-state">
-                                <i class="fas fa-user-plus"></i>
-                                <h3>No Requests</h3>
-                                <p>You have no pending chat requests</p>
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    const requests = snapshot.val();
-                    
-                    for (const requestId in requests) {
-                        const request = requests[requestId];
-                        if (request.status === 'pending') {
-                            try {
-                                const senderSnapshot = await database.ref('users').child(request.senderId).once('value');
-                                const senderData = senderSnapshot.val();
-                                
-                                if (senderData) {
-                                    const requestCard = createRequestCard(requestId, request, senderData);
-                                    requestsContainer.appendChild(requestCard);
-                                }
-                            } catch (error) {
-                                console.error('Error loading request:', error);
-                            }
-                        }
-                    }
-                });
-
-            unsubscribeFunctions.push(unsubscribe);
-        }
-
-        function createRequestCard(requestId, request, senderData) {
-            const card = document.createElement('div');
-            card.className = 'request-card';
-            card.innerHTML = `
-                <img src="${senderData.profilePicture}" alt="${senderData.name}" class="profile-pic">
-                <div class="request-info">
-                    <h4>${senderData.name}</h4>
-                    <p>${senderData.userID}</p>
-                    <div class="time">${formatDate(new Date(request.timestamp))}</div>
-                </div>
-                <div class="request-actions">
-                    <button class="action-btn accept-btn" data-requestid="${requestId}" data-senderid="${senderData.uid}">
-                        <i class="fas fa-check"></i>
-                        <span>Accept</span>
-                    </button>
-                    <button class="action-btn reject-btn" data-requestid="${requestId}">
-                        <i class="fas fa-times"></i>
-                        <span>Reject</span>
-                    </button>
-                </div>
-            `;
-            return card;
-        }
-
-        async function loadRecentChats() {
-            const recentChatsList = document.getElementById('recentChatsList');
-            recentChatsList.innerHTML = '';
-            
-            if (!currentUser) return;
-            
-            // Load recent conversations from database
-            const conversationsRef = database.ref('conversations').orderByChild('users/' + currentUser.uid).equalTo(true);
-            
-            const unsubscribe = conversationsRef.on('value', async (snapshot) => {
-                recentChatsList.innerHTML = '';
-                
-                if (!snapshot.exists()) {
-                    recentChatsList.innerHTML = `
-                        <div class="empty-state" style="padding: 20px;">
-                            <i class="fas fa-comments"></i>
-                            <p>No conversations yet</p>
+                    <div class="modal-body">
+                        <div class="input-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="resetEmail" placeholder="Enter your email address">
                         </div>
-                    `;
-                    return;
-                }
-
-                const conversations = snapshot.val();
-                const sortedConversations = Object.values(conversations).sort((a, b) => b.lastMessage?.timestamp - a.lastMessage?.timestamp);
-                
-                for (const conv of sortedConversations.slice(0, 5)) {
-                    try {
-                        // Get other user's ID
-                        const otherUserId = Object.keys(conv.users).find(id => id !== currentUser.uid);
-                        
-                        if (otherUserId) {
-                            const userSnapshot = await database.ref('users').child(otherUserId).once('value');
-                            const userData = userSnapshot.val();
-                            
-                            if (userData) {
-                                const chatItem = createRecentChatItem(conv, userData);
-                                recentChatsList.appendChild(chatItem);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error loading recent chat:', error);
-                    }
-                }
-            });
-
-            unsubscribeFunctions.push(unsubscribe);
-        }
-
-        function createRecentChatItem(conversation, userData) {
-            const item = document.createElement('div');
-            item.className = 'contact-card';
-            item.style.cursor = 'pointer';
-            
-            const lastMessage = conversation.lastMessage || {};
-            const messageText = lastMessage.type === 'image' ? '📷 Photo' : 
-                              lastMessage.type === 'video' ? '🎬 Video' : 
-                              lastMessage.type === 'file' ? '📎 File' : 
-                              lastMessage.text || 'No messages yet';
-            
-            item.innerHTML = `
-                <img src="${userData.profilePicture}" alt="${userData.name}" class="profile-pic">
-                <div class="contact-info">
-                    <h4>${userData.name}</h4>
-                    <p>${messageText}</p>
-                    <div class="time">${lastMessage.timestamp ? formatDate(new Date(lastMessage.timestamp)) : ''}</div>
+                        <div class="modal-actions">
+                            <button class="btn-secondary" id="cancelReset">Cancel</button>
+                            <button class="btn-primary" id="sendResetLink">Send Reset Link</button>
+                        </div>
+                    </div>
                 </div>
             `;
             
-            item.addEventListener('click', () => {
-                loadChatPage(userData, conversation.id);
-            });
+            document.body.appendChild(modal);
             
-            return item;
-        }
-
-        async function loadZynes() {
-            const zynesContainer = document.getElementById('zynesContainer');
-            zynesContainer.innerHTML = '';
-            
-            if (!currentUser) return;
-            
-            // Load zynes from contacts
-            const userSnapshot = await database.ref('users').child(currentUser.uid).once('value');
-            const userData = userSnapshot.val();
-            
-            if (!userData.contacts || userData.contacts.length === 0) {
-                zynesContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-play-circle"></i>
-                        <h3>No Zynes Yet</h3>
-                        <p>Add friends to see their Zynes</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Load zynes from all contacts
-            for (const contactId of userData.contacts) {
+            // Event listeners for modal
+            modal.querySelector('.close-modal').addEventListener('click', () => modal.remove());
+            modal.querySelector('#cancelReset').addEventListener('click', () => modal.remove());
+            modal.querySelector('#sendResetLink').addEventListener('click', async () => {
+                const email = modal.querySelector('#resetEmail').value.trim();
+                if (!email) {
+                    showToast('Please enter your email', 'error');
+                    return;
+                }
+                
                 try {
-                    const contactSnapshot = await database.ref('users').child(contactId).once('value');
-                    const contactData = contactSnapshot.val();
-                    
-                    if (contactData && contactData.zynes) {
-                        for (const zyneId in contactData.zynes) {
-                            const zyne = contactData.zynes[zyneId];
-                            // Show only zynes from last 24 hours
-                            if (Date.now() - zyne.timestamp < 24 * 60 * 60 * 1000) {
-                                const zyneCard = createZyneCard(zyne, contactData);
-                                zynesContainer.appendChild(zyneCard);
-                            }
-                        }
-                    }
+                    await auth.sendPasswordResetEmail(email);
+                    showToast('Password reset link sent to your email', 'success');
+                    modal.remove();
                 } catch (error) {
-                    console.error('Error loading zyne:', error);
-                }
-            }
-        }
-
-        function createZyneCard(zyne, userData) {
-            const card = document.createElement('div');
-            card.className = 'contact-card';
-            
-            const mediaContent = zyne.media ? 
-                (zyne.media.type === 'image' ? 
-                    `<img src="${zyne.media.url}" alt="Zyne" style="width: 100%; border-radius: 10px; margin-bottom: 10px;">` :
-                    zyne.media.type === 'video' ?
-                    `<video src="${zyne.media.url}" controls style="width: 100%; border-radius: 10px; margin-bottom: 10px;"></video>` :
-                    '') : '';
-            
-            card.innerHTML = `
-                <img src="${userData.profilePicture}" alt="${userData.name}" class="profile-pic">
-                <div class="contact-info" style="width: 100%;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <h4>${userData.name}</h4>
-                        <div class="time">${formatDate(new Date(zyne.timestamp))}</div>
-                    </div>
-                    ${mediaContent}
-                    <p>${zyne.text || ''}</p>
-                </div>
-            `;
-            return card;
-        }
-
-        // ===== CHAT FUNCTIONS =====
-        async function loadChatMessages() {
-            const chatMessages = document.getElementById('chatMessages');
-            chatMessages.innerHTML = '';
-            
-            if (!currentChatId) return;
-            
-            // Load chat messages
-            const messagesRef = database.ref('messages').orderByChild('chatId').equalTo(currentChatId);
-            
-            const unsubscribe = messagesRef.on('value', (snapshot) => {
-                chatMessages.innerHTML = '';
-                
-                if (!snapshot.exists()) {
-                    chatMessages.innerHTML = `
-                        <div class="empty-chat">
-                            <i class="fas fa-comments"></i>
-                            <h3>No messages yet</h3>
-                            <p>Send a message to start the conversation</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                const messages = snapshot.val();
-                const sortedMessages = Object.values(messages).sort((a, b) => a.timestamp - b.timestamp);
-                
-                let lastDate = null;
-                
-                sortedMessages.forEach(message => {
-                    const messageDate = new Date(message.timestamp);
-                    const dateString = messageDate.toDateString();
-                    
-                    // Add date separator if date changed
-                    if (lastDate !== dateString) {
-                        const dateDivider = document.createElement('div');
-                        dateDivider.className = 'message-date';
-                        dateDivider.textContent = formatDate(messageDate);
-                        chatMessages.appendChild(dateDivider);
-                        lastDate = dateString;
-                    }
-                    
-                    const messageElement = createMessageElement(message);
-                    chatMessages.appendChild(messageElement);
-                });
-                
-                // Scroll to bottom
-                setTimeout(() => {
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }, 100);
-            });
-
-            unsubscribeFunctions.push(unsubscribe);
-        }
-
-        function createMessageElement(message) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${message.senderId === currentUser.uid ? 'sent' : 'received'}`;
-            
-            let content = '';
-            if (message.type === 'text') {
-                content = `<p>${message.text}</p>`;
-            } else if (message.type === 'image') {
-                content = `
-                    <div class="media-message">
-                        <img src="${message.mediaUrl}" alt="Image" class="chat-media" onclick="previewMedia('${message.mediaUrl}', 'image')">
-                        ${message.text ? `<p>${message.text}</p>` : ''}
-                    </div>
-                `;
-            } else if (message.type === 'video') {
-                content = `
-                    <div class="media-message">
-                        <video src="${message.mediaUrl}" controls class="chat-media" onclick="previewMedia('${message.mediaUrl}', 'video')"></video>
-                        ${message.text ? `<p>${message.text}</p>` : ''}
-                    </div>
-                `;
-            } else if (message.type === 'file') {
-                content = `
-                    <div class="media-message">
-                        <a href="${message.mediaUrl}" target="_blank" class="btn-secondary" style="display: inline-block; padding: 8px 16px; margin-bottom: 8px;">
-                            <i class="fas fa-file"></i>
-                            <span>Download File (${formatFileSize(message.fileSize)})</span>
-                        </a>
-                        ${message.text ? `<p>${message.text}</p>` : ''}
-                    </div>
-                `;
-            }
-            
-            messageDiv.innerHTML = `
-                <div class="message-bubble">
-                    ${content}
-                    <span class="message-time">${formatTime(new Date(message.timestamp))}</span>
-                </div>
-            `;
-            
-            return messageDiv;
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        async function sendMessage(text, type = 'text', mediaData = null) {
-            if (!currentChatId || !currentChatUser) return;
-            
-            const message = {
-                id: database.ref().child('messages').push().key,
-                chatId: currentChatId,
-                senderId: currentUser.uid,
-                receiverId: currentChatUser.uid,
-                text: text,
-                type: type,
-                timestamp: Date.now(),
-                status: 'sent'
-            };
-            
-            if (mediaData) {
-                message.mediaUrl = mediaData.url;
-                if (mediaData.fileSize) message.fileSize = mediaData.fileSize;
-            }
-            
-            try {
-                // Save message
-                await database.ref('messages').child(message.id).set(message);
-                
-                // Update conversation
-                await updateConversation(message);
-                
-                // Update last seen
-                await database.ref('users').child(currentUser.uid).update({
-                    lastSeen: Date.now()
-                });
-                
-                // Play notification sound for receiver
-                playNotificationSound();
-                
-            } catch (error) {
-                console.error('Error sending message:', error);
-                showToast('Failed to send message', 'error');
-            }
-        }
-
-        async function updateConversation(message) {
-            const conversation = {
-                id: currentChatId,
-                users: {
-                    [currentUser.uid]: true,
-                    [currentChatUser.uid]: true
-                },
-                lastMessage: {
-                    text: message.text,
-                    senderId: message.senderId,
-                    timestamp: message.timestamp,
-                    type: message.type
-                },
-                updatedAt: message.timestamp
-            };
-            
-            await database.ref('conversations').child(currentChatId).set(conversation);
-        }
-
-        async function sendChatRequest(receiverId) {
-            if (!currentUser) return;
-            
-            const request = {
-                id: database.ref().child('chatRequests').push().key,
-                senderId: currentUser.uid,
-                receiverId: receiverId,
-                timestamp: Date.now(),
-                status: 'pending'
-            };
-            
-            try {
-                await database.ref('chatRequests').child(request.id).set(request);
-                showToast('Chat request sent successfully', 'success');
-            } catch (error) {
-                console.error('Error sending chat request:', error);
-                showToast('Failed to send chat request', 'error');
-            }
-        }
-
-        async function handleChatRequest(requestId, action, senderId = null) {
-            try {
-                if (action === 'accept') {
-                    // Add to contacts
-                    await database.ref('users').child(currentUser.uid).child('contacts').push(senderId);
-                    await database.ref('users').child(senderId).child('contacts').push(currentUser.uid);
-                    
-                    // Update request status
-                    await database.ref('chatRequests').child(requestId).update({
-                        status: 'accepted'
-                    });
-                    
-                    showToast('Chat request accepted', 'success');
-                    
-                    // Load sender data and open chat
-                    const senderSnapshot = await database.ref('users').child(senderId).once('value');
-                    const senderData = senderSnapshot.val();
-                    
-                    if (senderData) {
-                        loadChatPage(senderData);
-                    }
-                    
-                } else if (action === 'reject') {
-                    await database.ref('chatRequests').child(requestId).update({
-                        status: 'rejected'
-                    });
-                    
-                    showToast('Chat request rejected', 'success');
-                }
-            } catch (error) {
-                console.error('Error handling chat request:', error);
-                showToast('Failed to process request', 'error');
-            }
-        }
-
-        // ===== EVENT LISTENERS =====
-        function initializeEventListeners() {
-            // Welcome screen
-            document.getElementById('getStartedBtn').addEventListener('click', showSignupForm);
-            document.getElementById('loginBtn').addEventListener('click', showLoginForm);
-            
-            // Back buttons
-            document.getElementById('backToWelcomeFromSignup').addEventListener('click', showWelcomeScreen);
-            document.getElementById('backToWelcomeFromLogin').addEventListener('click', showWelcomeScreen);
-            
-            // Form switches
-            document.getElementById('switchToLogin').addEventListener('click', (e) => {
-                e.preventDefault();
-                showLoginForm();
-            });
-            
-            document.getElementById('switchToSignup').addEventListener('click', (e) => {
-                e.preventDefault();
-                showSignupForm();
-            });
-            
-            // Signup form
-            document.getElementById('signupSubmitBtn').addEventListener('click', handleSignup);
-            
-            // Login form
-            document.getElementById('loginSubmitBtn').addEventListener('click', () => {
-                const email = document.getElementById('loginEmail').value;
-                const password = document.getElementById('loginPassword').value;
-                handleLogin(email, password);
-            });
-            
-            // Profile picture upload
-            document.getElementById('uploadProfileBtn').addEventListener('click', () => {
-                document.getElementById('profileUpload').click();
-            });
-            
-            document.getElementById('profileUpload').addEventListener('change', handleProfileUpload);
-            document.getElementById('removeProfileBtn').addEventListener('click', removeProfilePicture);
-            
-            // Toggle password visibility
-            document.querySelectorAll('.toggle-password').forEach(icon => {
-                icon.addEventListener('click', function() {
-                    const input = this.parentElement.querySelector('input');
-                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                    input.setAttribute('type', type);
-                    this.classList.toggle('fa-eye');
-                    this.classList.toggle('fa-eye-slash');
-                });
-            });
-            
-            // Navigation
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const page = item.getAttribute('data-page');
-                    
-                    // Update active state
-                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                    item.classList.add('active');
-                    
-                    // Show selected page
-                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                    document.getElementById(`${page}PageContent`).classList.add('active');
-                });
-            });
-            
-            // Quick actions
-            document.getElementById('startChatAction').addEventListener('click', () => {
-                document.getElementById('startChatModal').classList.add('active');
-            });
-            
-            document.getElementById('createGroupAction').addEventListener('click', () => {
-                document.getElementById('createGroupModal').classList.add('active');
-            });
-            
-            document.getElementById('viewZynesAction').addEventListener('click', () => {
-                document.querySelector('.nav-item[data-page="zynes"]').click();
-            });
-            
-            document.getElementById('addContactsAction').addEventListener('click', () => {
-                document.querySelector('.nav-item[data-page="contacts"]').click();
-                document.getElementById('addContactBtn').click();
-            });
-            
-            // Floating chat button
-            document.getElementById('floatingChatBtn').addEventListener('click', () => {
-                document.getElementById('startChatModal').classList.add('active');
-            });
-            
-            // Modals
-            document.getElementById('closeStartChatModal').addEventListener('click', () => {
-                document.getElementById('startChatModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeCreateGroupModal').addEventListener('click', () => {
-                document.getElementById('createGroupModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeCreateZyneModal').addEventListener('click', () => {
-                document.getElementById('createZyneModal').classList.remove('active');
-            });
-            
-            // User ID search
-            document.getElementById('searchUserID').addEventListener('input', async (e) => {
-                const searchTerm = e.target.value.trim().toUpperCase();
-                const searchResult = document.getElementById('searchResult');
-                
-                if (searchTerm.length === 8 && searchTerm.startsWith('ZYN-')) {
-                    try {
-                        // Find user by ID
-                        const userIdSnapshot = await database.ref('userIDs').child(searchTerm).once('value');
-                        
-                        if (userIdSnapshot.exists()) {
-                            const userId = userIdSnapshot.val();
-                            const userSnapshot = await database.ref('users').child(userId).once('value');
-                            const userData = userSnapshot.val();
-                            
-                            if (userData) {
-                                // Check if already in contacts
-                                const isContact = userData.contacts && userData.contacts.includes(currentUser.uid);
-                                
-                                searchResult.innerHTML = `
-                                    <div class="user-found">
-                                        <img src="${userData.profilePicture}" alt="${userData.name}" class="profile-pic">
-                                        <div>
-                                            <h4>${userData.name}</h4>
-                                            <p>${userData.userID}</p>
-                                            ${isContact ? '<p class="already-contact">✓ Already in your contacts</p>' : ''}
-                                        </div>
-                                    </div>
-                                    ${!isContact ? `
-                                        <div class="modal-actions">
-                                            <button id="sendRequestBtn" class="btn-primary">
-                                                <i class="fas fa-user-plus"></i>
-                                                <span>Send Chat Request</span>
-                                            </button>
-                                        </div>
-                                    ` : ''}
-                                `;
-                                
-                                if (!isContact) {
-                                    document.getElementById('sendRequestBtn').addEventListener('click', () => {
-                                        sendChatRequest(userData.uid);
-                                        document.getElementById('startChatModal').classList.remove('active');
-                                    });
-                                }
-                                
-                                searchResult.classList.add('active');
-                            }
-                        } else {
-                            searchResult.innerHTML = `
-                                <div class="search-placeholder">
-                                    <i class="fas fa-search"></i>
-                                    <p>User not found</p>
-                                </div>
-                            `;
-                            searchResult.classList.add('active');
-                        }
-                    } catch (error) {
-                        console.error('Search error:', error);
-                        searchResult.innerHTML = `
-                            <div class="error">
-                                <p>Error searching for user</p>
-                            </div>
-                        `;
-                        searchResult.classList.add('active');
-                    }
-                } else if (searchTerm.length > 0) {
-                    searchResult.innerHTML = `
-                        <div class="search-placeholder">
-                            <i class="fas fa-search"></i>
-                            <p>Enter a valid Zynapse ID (ZYN-XXXX)</p>
-                        </div>
-                    `;
-                    searchResult.classList.add('active');
-                } else {
-                    searchResult.classList.remove('active');
-                }
-            });
-            
-            // Copy User ID
-            document.getElementById('copyUserIDBtn').addEventListener('click', () => {
-                const userID = document.getElementById('userIDDisplay').textContent;
-                navigator.clipboard.writeText(userID).then(() => {
-                    showToast('User ID copied to clipboard', 'success');
-                });
-            });
-            
-            // Logout
-            document.getElementById('logoutBtn').addEventListener('click', (e) => {
-                e.preventDefault();
-                handleLogout();
-            });
-            
-            // Back to home from chat
-            document.getElementById('backToHomeBtn').addEventListener('click', () => {
-                // Unsubscribe from chat listeners
-                unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
-                unsubscribeFunctions = [];
-                
-                loadHomePage();
-            });
-            
-            // Send message
-            document.getElementById('sendMessageBtn').addEventListener('click', () => {
-                const messageInput = document.getElementById('messageInput');
-                const text = messageInput.value.trim();
-                
-                if (text) {
-                    sendMessage(text);
-                    messageInput.value = '';
-                }
-            });
-            
-            document.getElementById('messageInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    document.getElementById('sendMessageBtn').click();
-                }
-            });
-            
-            // Attachment buttons
-            document.getElementById('attachmentBtn').addEventListener('click', () => {
-                const options = document.getElementById('attachmentOptions');
-                options.classList.toggle('show');
-            });
-            
-            document.getElementById('attachPhotoBtn').addEventListener('click', () => {
-                document.getElementById('photoUpload').click();
-                document.getElementById('attachmentOptions').classList.remove('show');
-            });
-            
-            document.getElementById('attachVideoBtn').addEventListener('click', () => {
-                document.getElementById('videoUpload').click();
-                document.getElementById('attachmentOptions').classList.remove('show');
-            });
-            
-            document.getElementById('attachFileBtn').addEventListener('click', () => {
-                document.getElementById('fileUpload').click();
-                document.getElementById('attachmentOptions').classList.remove('show');
-            });
-            
-            // File uploads
-            document.getElementById('photoUpload').addEventListener('change', handleMediaUpload);
-            document.getElementById('videoUpload').addEventListener('change', handleMediaUpload);
-            document.getElementById('fileUpload').addEventListener('change', handleMediaUpload);
-            
-            // Zyne character counter
-            document.getElementById('zyneText').addEventListener('input', (e) => {
-                const count = e.target.value.length;
-                document.getElementById('zyneCharCount').textContent = `${count}/500`;
-            });
-            
-            // Add contact button
-            document.getElementById('addContactBtn').addEventListener('click', () => {
-                document.getElementById('startChatModal').classList.add('active');
-            });
-            
-            // Create group button
-            document.getElementById('createGroupBtn').addEventListener('click', () => {
-                document.getElementById('createGroupModal').classList.add('active');
-            });
-            
-            // Create zyne button
-            document.getElementById('createZyneBtn').addEventListener('click', () => {
-                document.getElementById('createZyneModal').classList.add('active');
-            });
-            
-            // Add zyne media
-            document.getElementById('addZynePhotoBtn').addEventListener('click', () => {
-                document.getElementById('zyneMediaUpload').click();
-            });
-            
-            document.getElementById('addZyneVideoBtn').addEventListener('click', () => {
-                document.getElementById('zyneMediaUpload').click();
-            });
-            
-            // Close modals when clicking outside
-            document.querySelectorAll('.modal-overlay').forEach(modal => {
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        modal.classList.remove('active');
-                    }
-                });
-            });
-            
-            // Window click to close dropdowns
-            window.addEventListener('click', (e) => {
-                // Close profile dropdown
-                const profileDropdown = document.getElementById('profileDropdown');
-                if (!e.target.closest('.profile-btn') && profileDropdown.classList.contains('show')) {
-                    profileDropdown.classList.remove('show');
-                }
-                
-                // Close chat dropdown
-                const chatDropdown = document.getElementById('chatDropdown');
-                if (!e.target.closest('.icon-btn') && chatDropdown.classList.contains('show')) {
-                    chatDropdown.classList.remove('show');
-                }
-                
-                // Close attachment options
-                const attachmentOptions = document.getElementById('attachmentOptions');
-                if (!e.target.closest('#attachmentBtn') && attachmentOptions.classList.contains('show')) {
-                    attachmentOptions.classList.remove('show');
+                    showToast('Failed to send reset link', 'error');
                 }
             });
         }
-
-        // ===== FILE HANDLING FUNCTIONS =====
-        async function handleProfileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            if (!file.type.startsWith('image/')) {
-                showToast('Please select an image file', 'error');
-                return;
-            }
-            
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Image must be less than 5MB', 'error');
-                return;
-            }
-            
-            const preview = document.getElementById('profilePreview');
-            const removeBtn = document.getElementById('removeProfileBtn');
-            const uploadBtn = document.getElementById('uploadProfileBtn');
-            
-            // Show preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.innerHTML = `<img src="${e.target.result}" alt="Profile Preview">`;
-                removeBtn.style.display = 'flex';
-                uploadBtn.disabled = true;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function removeProfilePicture() {
-            const preview = document.getElementById('profilePreview');
-            const removeBtn = document.getElementById('removeProfileBtn');
-            const uploadBtn = document.getElementById('uploadProfileBtn');
-            
-            preview.innerHTML = `
-                <div class="preview-placeholder">
-                    <i class="fas fa-user-circle"></i>
-                    <span>No image selected</span>
-                    <p>Click to upload</p>
-                </div>
-            `;
-            
-            removeBtn.style.display = 'none';
-            uploadBtn.disabled = false;
-            document.getElementById('profileUpload').value = '';
-        }
-
-        async function handleMediaUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const messageInput = document.getElementById('messageInput');
-            const text = messageInput.value;
-            
-            try {
-                showToast('Uploading file...', 'info');
-                
-                let type = 'image';
-                if (file.type.startsWith('video/')) {
-                    type = 'video';
-                } else if (!file.type.startsWith('image/')) {
-                    type = 'file';
-                }
-                
-                const uploadResult = await uploadToCloudinary(file, type);
-                
-                sendMessage(text || '', type, {
-                    url: uploadResult.url,
-                    fileSize: uploadResult.bytes
-                });
-                
-                messageInput.value = '';
-                showToast('File uploaded and sent', 'success');
-                
-            } catch (error) {
-                console.error('Upload error:', error);
-                showToast(error.message || 'Failed to upload file', 'error');
-            }
-        }
-
-        function previewMedia(url, type) {
-            const modal = document.getElementById('mediaPreviewModal');
-            const content = document.getElementById('mediaPreviewContent');
-            
-            if (type === 'image') {
-                content.innerHTML = `<img src="${url}" alt="Preview" style="width: 100%; border-radius: 10px;">`;
-            } else if (type === 'video') {
-                content.innerHTML = `<video src="${url}" controls style="width: 100%; border-radius: 10px;"></video>`;
-            }
-            
-            modal.classList.add('active');
-        }
-
-        // ===== INITIALIZATION =====
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize event listeners
-            initializeEventListeners();
-            
-            // Check auth state
-            auth.onAuthStateChanged(async (user) => {
-                const loadingScreen = document.getElementById('loadingScreen');
-                const appContainer = document.getElementById('appContainer');
-                
-                if (user) {
-                    currentUser = user;
-                    
-                    // Get user data
-                    const userSnapshot = await database.ref('users').child(user.uid).once('value');
-                    userData = userSnapshot.val();
-                    
-                    if (userData) {
-                        // Update status to online
-                        await database.ref('users').child(user.uid).update({
-                            status: 'online',
-                            lastSeen: Date.now()
-                        });
-                        
-                        // Hide loading screen
-                        setTimeout(() => {
-                            loadingScreen.classList.add('hidden');
-                            setTimeout(() => {
-                                loadingScreen.style.display = 'none';
-                                appContainer.style.display = 'block';
-                                loadHomePage();
-                            }, 400);
-                        }, 1000);
-                    } else {
-                        // User data not found, sign out
-                        await auth.signOut();
-                        showWelcomeScreen();
-                    }
-                } else {
-                    // Not logged in
-                    setTimeout(() => {
-                        loadingScreen.classList.add('hidden');
-                        setTimeout(() => {
-                            loadingScreen.style.display = 'none';
-                            appContainer.style.display = 'block';
-                            showWelcomeScreen();
-                        }, 400);
-                    }, 1000);
-                }
-            });
-            
-            // Handle online/offline status
-            window.addEventListener('online', () => {
-                if (currentUser) {
-                    database.ref('users').child(currentUser.uid).update({
-                        status: 'online',
-                        lastSeen: Date.now()
-                    });
-                }
-            });
-            
-            window.addEventListener('offline', () => {
-                if (currentUser) {
-                    database.ref('users').child(currentUser.uid).update({
-                        status: 'offline',
-                        lastSeen: Date.now()
-                    });
-                }
-            });
-            
-            // Handle page visibility
-            document.addEventListener('visibilitychange', () => {
-                if (currentUser) {
-                    if (document.hidden) {
-                        database.ref('users').child(currentUser.uid).update({
-                            status: 'away',
-                            lastSeen: Date.now()
-                        });
-                    } else {
-                        database.ref('users').child(currentUser.uid).update({
-                            status: 'online',
-                            lastSeen: Date.now()
-                        });
-                    }
-                }
-            });
-        });
-
-        // ===== GLOBAL FUNCTIONS FOR HTML USE =====
-        window.previewMedia = previewMedia;
     </script>
 </body>
 </html>
