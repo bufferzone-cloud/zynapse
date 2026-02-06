@@ -6,12 +6,22 @@
     <title>Zynapse - Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
-    <div class="app-home">
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
+            <div class="spinner-large"></div>
+            <p>Loading Zynapse...</p>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div class="app-home" id="appContainer" style="display: none;">
         <!-- Header -->
         <header class="app-header">
             <div class="header-left">
@@ -19,38 +29,38 @@
                 <div class="user-info">
                     <h2 id="userName">Loading...</h2>
                     <div class="user-id-container">
-                        <span class="user-id" id="userId">ZYN-0000</span>
-                        <button class="copy-btn" onclick="copyUserId()" title="Copy User ID">
+                        <span class="user-id" id="userId">ZYN-XXXX</span>
+                        <button class="copy-btn" id="copyUserId" title="Copy ID">
                             <i class="far fa-copy"></i>
                         </button>
                     </div>
                 </div>
             </div>
+            
             <div class="header-right">
-                <div class="status-indicator online" onclick="toggleStatus()">
+                <div class="status-indicator online" id="statusIndicator">
                     <div class="status-dot"></div>
                 </div>
-                <button class="profile-btn" onclick="toggleProfileDropdown()">
-                    <img src="" alt="Profile" class="profile-pic-small" id="headerProfilePic">
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-                
-                <!-- Profile Dropdown -->
                 <div class="dropdown">
+                    <button class="profile-btn" id="profileDropdownBtn">
+                        <img src="" alt="Profile" class="profile-pic-small" id="userProfilePic">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
                     <div class="dropdown-content" id="profileDropdown">
                         <div class="dropdown-profile">
                             <img src="" alt="Profile" class="dropdown-profile-pic" id="dropdownProfilePic">
                             <div class="dropdown-profile-info">
-                                <strong id="dropdownUserName"></strong>
-                                <span id="dropdownUserId"></span>
+                                <strong id="dropdownUserName">Loading...</strong>
+                                <span id="dropdownUserId">ZYN-XXXX</span>
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
-                        <a href="#" onclick="viewMyProfile()"><i class="fas fa-user"></i> My Profile</a>
-                        <a href="#" onclick="showSettings()"><i class="fas fa-cog"></i> Settings</a>
-                        <a href="#" onclick="showThemeOptions()"><i class="fas fa-palette"></i> Appearance</a>
+                        <a href="#"><i class="fas fa-user"></i> My Profile</a>
+                        <a href="#"><i class="fas fa-moon"></i> Dark Mode</a>
+                        <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="#"><i class="fas fa-question-circle"></i> Help</a>
                         <div class="dropdown-divider"></div>
-                        <a href="#" class="logout-link" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        <a href="#" class="logout-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</a>
                     </div>
                 </div>
             </div>
@@ -58,30 +68,28 @@
 
         <!-- Navigation -->
         <nav class="app-nav">
-            <a href="#" class="nav-item active" onclick="showPage('home')" id="navHome">
+            <a href="#" class="nav-item active" data-page="home">
                 <i class="fas fa-home"></i>
                 <span>HOME</span>
-                <span class="badge" id="homeBadge" style="display: none;">0</span>
             </a>
-            <a href="#" class="nav-item" onclick="showPage('zynes')" id="navZynes">
-                <i class="fas fa-circle"></i>
+            <a href="#" class="nav-item" data-page="zynes">
+                <i class="fas fa-bolt"></i>
                 <span>ZYNES</span>
                 <span class="badge" id="zynesBadge" style="display: none;">0</span>
             </a>
-            <a href="#" class="nav-item" onclick="showPage('groups')" id="navGroups">
+            <a href="#" class="nav-item" data-page="groups">
                 <i class="fas fa-users"></i>
                 <span>GROUPS</span>
                 <span class="badge" id="groupsBadge" style="display: none;">0</span>
             </a>
-            <a href="#" class="nav-item" onclick="showPage('requests')" id="navRequests">
+            <a href="#" class="nav-item" data-page="requests">
                 <i class="fas fa-user-plus"></i>
                 <span>REQUESTS</span>
                 <span class="badge" id="requestsBadge" style="display: none;">0</span>
             </a>
-            <a href="#" class="nav-item" onclick="showPage('contacts')" id="navContacts">
+            <a href="#" class="nav-item" data-page="contacts">
                 <i class="fas fa-address-book"></i>
                 <span>CONTACTS</span>
-                <span class="badge" id="contactsBadge" style="display: none;">0</span>
             </a>
         </nav>
 
@@ -91,44 +99,44 @@
             <div class="page active" id="homePage">
                 <div class="home-content">
                     <div class="welcome-message">
-                        <h1>Welcome to Zynapse</h1>
-                        <p>Secure messaging for Zambia</p>
+                        <h1 id="welcomeTitle">Welcome to Zynapse</h1>
+                        <p id="welcomeSubtitle">Connect with friends and family securely</p>
                     </div>
                     
                     <div class="quick-actions">
-                        <div class="quick-action-card" onclick="startNewChat()">
+                        <div class="quick-action-card" id="startChatBtn">
                             <i class="fas fa-comment-medical"></i>
                             <h3>New Chat</h3>
-                            <p>Start a private conversation</p>
+                            <p>Start a conversation</p>
                         </div>
-                        <div class="quick-action-card" onclick="createNewGroup()">
-                            <i class="fas fa-plus-circle"></i>
+                        <div class="quick-action-card" id="createGroupBtn">
+                            <i class="fas fa-users"></i>
                             <h3>Create Group</h3>
-                            <p>Create a group chat</p>
+                            <p>Chat with multiple people</p>
                         </div>
-                        <div class="quick-action-card" onclick="showPage('zynes')">
-                            <i class="fas fa-circle"></i>
-                            <h3>My Zynes</h3>
-                            <p>View your status updates</p>
+                        <div class="quick-action-card" id="addContactBtn">
+                            <i class="fas fa-user-plus"></i>
+                            <h3>Add Contact</h3>
+                            <p>Add new friends</p>
                         </div>
-                        <div class="quick-action-card" onclick="showPage('contacts')">
-                            <i class="fas fa-user-friends"></i>
-                            <h3>Find Friends</h3>
-                            <p>Discover new contacts</p>
+                        <div class="quick-action-card" id="shareIdBtn">
+                            <i class="fas fa-share-alt"></i>
+                            <h3>Share ID</h3>
+                            <p>Share your Zynapse ID</p>
                         </div>
                     </div>
-
+                    
                     <div class="recent-chats-section">
                         <div class="section-header">
                             <h3>Recent Chats</h3>
-                            <a href="#" class="view-all" onclick="showAllChats()">View All</a>
+                            <a href="#" class="view-all" id="viewAllChats">View All</a>
                         </div>
-                        <div class="recent-chats-list" id="recentChatsList">
+                        <div class="recent-chats-list" id="recentChats">
                             <!-- Recent chats will be loaded here -->
                             <div class="empty-state">
                                 <i class="fas fa-comments"></i>
-                                <h3>No chats yet</h3>
-                                <p>Start a conversation by clicking "New Chat"</p>
+                                <h3>No Recent Chats</h3>
+                                <p>Start a conversation by clicking the floating button</p>
                             </div>
                         </div>
                     </div>
@@ -140,18 +148,16 @@
                 <div class="page-header">
                     <h2>Zynes</h2>
                     <div class="header-actions">
-                        <button class="btn-primary" onclick="createNewZyne()">
-                            <i class="fas fa-plus"></i> New Zyne
+                        <button class="btn-primary" id="createZyneBtn">
+                            <i class="fas fa-plus"></i> Create Zyne
                         </button>
                     </div>
                 </div>
                 <div class="zynes-container" id="zynesContainer">
-                    <!-- Zynes will be loaded here -->
                     <div class="empty-state">
-                        <i class="fas fa-circle"></i>
-                        <h3>No Zynes yet</h3>
-                        <p>Share a photo, video, or text update with your contacts</p>
-                        <button class="btn-primary" onclick="createNewZyne()">Create Your First Zyne</button>
+                        <i class="fas fa-bolt"></i>
+                        <h3>No Zynes Available</h3>
+                        <p>Create a Zyne or view your contacts' status updates</p>
                     </div>
                 </div>
             </div>
@@ -161,47 +167,36 @@
                 <div class="page-header">
                     <h2>Groups</h2>
                     <div class="header-actions">
-                        <button class="btn-primary" onclick="createNewGroup()">
+                        <button class="btn-primary" id="createGroupPageBtn">
                             <i class="fas fa-plus"></i> New Group
                         </button>
                     </div>
                 </div>
                 <div class="groups-container" id="groupsContainer">
-                    <!-- Groups will be loaded here -->
                     <div class="empty-state">
                         <i class="fas fa-users"></i>
-                        <h3>No groups yet</h3>
-                        <p>Create a group to chat with multiple people</p>
-                        <button class="btn-primary" onclick="createNewGroup()">Create Your First Group</button>
+                        <h3>No Groups</h3>
+                        <p>Create a group or wait to be added to one</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Chat Requests Page -->
+            <!-- Requests Page -->
             <div class="page" id="requestsPage">
                 <div class="page-header">
                     <h2>Chat Requests</h2>
                     <div class="header-actions">
                         <div class="tabs">
-                            <button class="tab-btn active" onclick="showRequestsTab('incoming')">Incoming</button>
-                            <button class="tab-btn" onclick="showRequestsTab('outgoing')">Outgoing</button>
+                            <button class="tab-btn active" data-tab="received">Received</button>
+                            <button class="tab-btn" data-tab="sent">Sent</button>
                         </div>
                     </div>
                 </div>
-                <div class="requests-container" id="incomingRequestsContainer">
-                    <!-- Incoming requests will be loaded here -->
+                <div class="requests-container" id="requestsContainer">
                     <div class="empty-state">
                         <i class="fas fa-user-plus"></i>
-                        <h3>No incoming requests</h3>
-                        <p>When someone sends you a chat request, it will appear here</p>
-                    </div>
-                </div>
-                <div class="requests-container" id="outgoingRequestsContainer" style="display: none;">
-                    <!-- Outgoing requests will be loaded here -->
-                    <div class="empty-state">
-                        <i class="fas fa-paper-plane"></i>
-                        <h3>No outgoing requests</h3>
-                        <p>Requests you've sent will appear here</p>
+                        <h3>No Requests</h3>
+                        <p>You don't have any pending chat requests</p>
                     </div>
                 </div>
             </div>
@@ -213,62 +208,79 @@
                     <div class="header-actions">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" id="contactSearch" placeholder="Search contacts..." oninput="searchContacts()">
+                            <input type="text" id="searchContacts" placeholder="Search contacts...">
                         </div>
-                        <button class="btn-primary" onclick="startNewChat()">
-                            <i class="fas fa-user-plus"></i> Add Contact
+                        <button class="btn-media" id="addContactPageBtn" title="Add Contact">
+                            <i class="fas fa-user-plus"></i>
                         </button>
                     </div>
                 </div>
                 <div class="contacts-container" id="contactsContainer">
-                    <!-- Contacts will be loaded here -->
                     <div class="empty-state">
                         <i class="fas fa-address-book"></i>
-                        <h3>No contacts yet</h3>
-                        <p>Add contacts by sending them chat requests</p>
-                        <button class="btn-primary" onclick="startNewChat()">Add Your First Contact</button>
+                        <h3>No Contacts</h3>
+                        <p>Add contacts to start chatting</p>
                     </div>
                 </div>
             </div>
         </main>
 
-        <!-- Floating Start Chat Button -->
-        <button class="floating-btn" onclick="startNewChat()" title="Start New Chat">
+        <!-- Floating Chat Button -->
+        <button class="floating-btn" id="floatingChatBtn">
             <i class="fas fa-comment"></i>
-            <span>Chat</span>
+            <span>CHAT</span>
         </button>
 
-        <!-- Modal for Starting New Chat -->
-        <div class="modal-overlay" id="newChatModal">
+        <!-- Modals -->
+        <div class="modal-overlay" id="startChatModal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>Start New Chat</h3>
-                    <button class="close-modal" onclick="closeNewChatModal()">&times;</button>
+                    <button class="close-modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="input-group">
                         <i class="fas fa-id-card"></i>
-                        <input type="text" id="searchUserId" placeholder="Enter ZYN-ID (e.g., ZYN-1234)" oninput="searchUser()">
+                        <input type="text" id="searchUserId" placeholder="Enter Zynapse ID (ZYN-XXXX)" maxlength="8">
                     </div>
-                    
-                    <div class="search-placeholder" id="searchPlaceholder">
-                        <i class="fas fa-search"></i>
-                        <p>Enter a ZYN-ID above to search for users</p>
-                    </div>
-                    
                     <div class="search-result" id="searchResult">
-                        <!-- Search result will appear here -->
+                        <div class="search-placeholder">
+                            <i class="fas fa-search"></i>
+                            <p>Enter a Zynapse ID to search for users</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modal for Creating New Group -->
-        <div class="modal-overlay" id="newGroupModal">
+        <!-- Add Contact Modal -->
+        <div class="modal-overlay" id="addContactModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add Contact</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="contactUserId" placeholder="Enter Zynapse ID (ZYN-XXXX)" maxlength="8">
+                    </div>
+                    <div class="search-result" id="contactSearchResult">
+                        <div class="search-placeholder">
+                            <i class="fas fa-search"></i>
+                            <p>Enter a Zynapse ID to add as contact</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Group Modal -->
+        <div class="modal-overlay" id="createGroupModal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>Create New Group</h3>
-                    <button class="close-modal" onclick="closeNewGroupModal()">&times;</button>
+                    <button class="close-modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="input-group">
@@ -276,81 +288,1668 @@
                         <input type="text" id="groupName" placeholder="Group Name">
                     </div>
                     
-                    <div class="input-group">
-                        <i class="fas fa-image"></i>
-                        <input type="text" id="groupPhotoUrl" placeholder="Group Photo URL (optional)">
-                    </div>
-                    
-                    <div class="input-group">
-                        <i class="fas fa-id-card"></i>
-                        <input type="text" id="addMemberInput" placeholder="Add members by ZYN-ID" onkeypress="addGroupMember(event)">
+                    <div class="profile-upload-section">
+                        <label class="upload-label">Group Photo</label>
+                        <div class="profile-upload-container">
+                            <div class="upload-preview" id="groupPhotoPreview">
+                                <div class="preview-placeholder">
+                                    <i class="fas fa-users"></i>
+                                    <span>No image selected</span>
+                                    <p>Click to upload</p>
+                                </div>
+                            </div>
+                            <div class="upload-buttons">
+                                <button class="btn-upload" id="uploadGroupPhotoBtn">
+                                    <i class="fas fa-upload"></i>
+                                    Choose Image
+                                </button>
+                            </div>
+                        </div>
+                        <input type="file" id="groupPhoto" accept="image/*" style="display: none;">
                     </div>
                     
                     <div class="members-container">
                         <div class="members-header">
-                            <h4>Group Members</h4>
-                            <span class="members-count" id="membersCount">0 members</span>
+                            <h4>Add Members</h4>
+                            <span class="members-count">0 members</span>
                         </div>
                         <div class="members-list" id="groupMembersList">
                             <div class="empty-members">
                                 <i class="fas fa-user-plus"></i>
-                                <p>Add members using their ZYN-ID</p>
+                                <p>Add members using their Zynapse ID</p>
                             </div>
+                        </div>
+                        <div class="input-group" style="margin-top: 15px;">
+                            <i class="fas fa-id-card"></i>
+                            <input type="text" id="addMemberId" placeholder="Enter Zynapse ID to add member">
+                            <button class="btn-media" id="addMemberBtn">
+                                <i class="fas fa-plus"></i>
+                            </button>
                         </div>
                     </div>
                     
                     <div class="modal-actions">
-                        <button class="btn-secondary" onclick="closeNewGroupModal()">Cancel</button>
-                        <button class="btn-primary" onclick="createGroup()">Create Group</button>
+                        <button class="btn-secondary" id="cancelGroup">Cancel</button>
+                        <button class="btn-primary" id="createGroup">Create Group</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Modal for Creating New Zyne -->
-        <div class="modal-overlay" id="newZyneModal">
+        <!-- Create Zyne Modal -->
+        <div class="modal-overlay" id="createZyneModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Create New Zyne</h3>
-                    <button class="close-modal" onclick="closeNewZyneModal()">&times;</button>
+                    <h3>Create Zyne</h3>
+                    <button class="close-modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="input-group">
-                        <i class="fas fa-align-left"></i>
                         <textarea id="zyneText" placeholder="What's on your mind?" rows="3"></textarea>
+                        <div class="character-counter">
+                            <span id="zyneCharCount">0</span>/200
+                        </div>
                     </div>
                     
-                    <div class="media-preview" id="zyneMediaPreview">
-                        <!-- Media preview will appear here -->
-                    </div>
-                    
-                    <div class="character-counter">
-                        <span id="zyneCharCount">0</span>/500
-                    </div>
+                    <div class="media-preview" id="zyneMediaPreview"></div>
                     
                     <div class="modal-actions">
                         <div class="action-buttons">
-                            <button class="btn-media" onclick="addZynePhoto()">
-                                <i class="fas fa-image"></i>
-                            </button>
-                            <button class="btn-media" onclick="addZyneVideo()">
-                                <i class="fas fa-video"></i>
-                            </button>
+                            <div class="media-buttons">
+                                <button class="btn-media" id="zyneAddPhoto">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                                <button class="btn-media" id="zyneAddVideo">
+                                    <i class="fas fa-video"></i>
+                                </button>
+                            </div>
                         </div>
-                        <button class="btn-primary" onclick="postZyne()">Post Zyne</button>
+                        <button class="btn-primary" id="postZyne">Post Zyne</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Toast Notifications Container -->
+        <!-- Toast Container -->
         <div class="toast-container"></div>
     </div>
 
+    <!-- Notification Sound -->
     <audio id="notificationSound" preload="auto">
         <source src="notification.mp3" type="audio/mpeg">
     </audio>
 
-    <script src="app.js"></script>
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
+            authDomain: "zynapse-68181.firebaseapp.com",
+            databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
+            projectId: "zynapse-68181",
+            storageBucket: "zynapse-68181.firebasestorage.app",
+            messagingSenderId: "841353050519",
+            appId: "1:841353050519:web:3b16d95d8f4cd3b9506cd2",
+            measurementId: "G-4764XLL6WS"
+        };
+
+        // Cloudinary Configuration
+        const CLOUDINARY_CONFIG = {
+            cloudName: 'dd3lcymrk',
+            apiKey: '489857926297197',
+            uploadPreset: 'h3eyhc2o',
+            folder: 'zynapse'
+        };
+
+        // Global Variables
+        let currentUser = null;
+        let userData = null;
+        let contacts = {};
+        let chatRequests = {};
+        let groups = {};
+        let zynes = {};
+        let recentChats = [];
+        let onlineUsers = new Set();
+        let notifications = [];
+
+        // Firebase Initialization
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // DOM Elements
+        const loadingScreen = document.getElementById('loadingScreen');
+        const appContainer = document.getElementById('appContainer');
+        
+        // User Info Elements
+        const userName = document.getElementById('userName');
+        const userId = document.getElementById('userId');
+        const copyUserId = document.getElementById('copyUserId');
+        const userProfilePic = document.getElementById('userProfilePic');
+        const dropdownUserName = document.getElementById('dropdownUserName');
+        const dropdownUserId = document.getElementById('dropdownUserId');
+        const dropdownProfilePic = document.getElementById('dropdownProfilePic');
+        
+        // Navigation Elements
+        const navItems = document.querySelectorAll('.nav-item');
+        const zynesBadge = document.getElementById('zynesBadge');
+        const groupsBadge = document.getElementById('groupsBadge');
+        const requestsBadge = document.getElementById('requestsBadge');
+        
+        // Page Elements
+        const pages = document.querySelectorAll('.page');
+        const welcomeTitle = document.getElementById('welcomeTitle');
+        const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+        
+        // Containers
+        const recentChatsContainer = document.getElementById('recentChats');
+        const zynesContainer = document.getElementById('zynesContainer');
+        const groupsContainer = document.getElementById('groupsContainer');
+        const requestsContainer = document.getElementById('requestsContainer');
+        const contactsContainer = document.getElementById('contactsContainer');
+        
+        // Quick Action Buttons
+        const startChatBtn = document.getElementById('startChatBtn');
+        const createGroupBtn = document.getElementById('createGroupBtn');
+        const addContactBtn = document.getElementById('addContactBtn');
+        const shareIdBtn = document.getElementById('shareIdBtn');
+        const viewAllChats = document.getElementById('viewAllChats');
+        
+        // Page Action Buttons
+        const createZyneBtn = document.getElementById('createZyneBtn');
+        const createGroupPageBtn = document.getElementById('createGroupPageBtn');
+        const addContactPageBtn = document.getElementById('addContactPageBtn');
+        const searchContacts = document.getElementById('searchContacts');
+        
+        // Floating Button
+        const floatingChatBtn = document.getElementById('floatingChatBtn');
+        
+        // Profile Dropdown
+        const profileDropdownBtn = document.getElementById('profileDropdownBtn');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const statusIndicator = document.getElementById('statusIndicator');
+        
+        // Modals
+        const startChatModal = document.getElementById('startChatModal');
+        const addContactModal = document.getElementById('addContactModal');
+        const createGroupModal = document.getElementById('createGroupModal');
+        const createZyneModal = document.getElementById('createZyneModal');
+        
+        // Modal Elements
+        const searchUserId = document.getElementById('searchUserId');
+        const searchResult = document.getElementById('searchResult');
+        const contactUserId = document.getElementById('contactUserId');
+        const contactSearchResult = document.getElementById('contactSearchResult');
+        const groupName = document.getElementById('groupName');
+        const groupPhotoPreview = document.getElementById('groupPhotoPreview');
+        const uploadGroupPhotoBtn = document.getElementById('uploadGroupPhotoBtn');
+        const groupPhoto = document.getElementById('groupPhoto');
+        const groupMembersList = document.getElementById('groupMembersList');
+        const addMemberId = document.getElementById('addMemberId');
+        const addMemberBtn = document.getElementById('addMemberBtn');
+        const cancelGroup = document.getElementById('cancelGroup');
+        const createGroupButton = document.getElementById('createGroup');
+        const zyneText = document.getElementById('zyneText');
+        const zyneCharCount = document.getElementById('zyneCharCount');
+        const zyneMediaPreview = document.getElementById('zyneMediaPreview');
+        const zyneAddPhoto = document.getElementById('zyneAddPhoto');
+        const zyneAddVideo = document.getElementById('zyneAddVideo');
+        const postZyne = document.getElementById('postZyne');
+        
+        // Notification Sound
+        const notificationSound = document.getElementById('notificationSound');
+        
+        // Close Modal Buttons
+        const closeModalButtons = document.querySelectorAll('.close-modal');
+        
+        // Tab Buttons
+        const tabButtons = document.querySelectorAll('.tab-btn');
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        async function initializeApp() {
+            // Check authentication
+            auth.onAuthStateChanged(async (user) => {
+                if (!user) {
+                    // Not logged in, redirect to index
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Load user data
+                await loadUserData(user.uid);
+                
+                // Setup real-time listeners
+                setupRealtimeListeners();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Load initial data
+                await loadInitialData();
+                
+                // Show app
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        appContainer.style.display = 'flex';
+                    }, 300);
+                }, 1000);
+            });
+        }
+
+        async function loadUserData(uid) {
+            try {
+                const snapshot = await database.ref(`users/${uid}`).once('value');
+                userData = snapshot.val();
+                currentUser = auth.currentUser;
+                
+                // Update UI with user data
+                updateUserUI();
+                
+                // Store in localStorage
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showToast('Failed to load user data', 'error');
+            }
+        }
+
+        function updateUserUI() {
+            if (!userData) return;
+            
+            // Update header info
+            userName.textContent = userData.name;
+            userId.textContent = userData.userId;
+            dropdownUserName.textContent = userData.name;
+            dropdownUserId.textContent = userData.userId;
+            
+            // Update profile pictures
+            if (userData.profileUrl) {
+                userProfilePic.src = userData.profileUrl;
+                dropdownProfilePic.src = userData.profileUrl;
+            } else {
+                userProfilePic.src = 'zynaps.png';
+                dropdownProfilePic.src = 'zynaps.png';
+            }
+            
+            // Update welcome message
+            welcomeTitle.textContent = `Welcome, ${userData.name.split(' ')[0]}!`;
+            const hour = new Date().getHours();
+            if (hour < 12) {
+                welcomeSubtitle.textContent = 'Good morning! Ready to connect?';
+            } else if (hour < 18) {
+                welcomeSubtitle.textContent = 'Good afternoon! How is your day going?';
+            } else {
+                welcomeSubtitle.textContent = 'Good evening! Hope you had a great day!';
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!userData) return;
+            
+            const userId = userData.uid;
+            
+            // Listen for chat requests
+            database.ref(`users/${userId}/chatRequests`).on('value', (snapshot) => {
+                chatRequests = snapshot.val() || {};
+                updateRequestsBadge();
+                if (document.getElementById('requestsPage').classList.contains('active')) {
+                    loadRequests();
+                }
+            });
+            
+            // Listen for contacts
+            database.ref(`users/${userId}/contacts`).on('value', (snapshot) => {
+                contacts = snapshot.val() || {};
+                if (document.getElementById('contactsPage').classList.contains('active')) {
+                    loadContacts();
+                }
+                updateOnlineStatus();
+            });
+            
+            // Listen for groups
+            database.ref(`users/${userId}/groups`).on('value', (snapshot) => {
+                groups = snapshot.val() || {};
+                updateGroupsBadge();
+                if (document.getElementById('groupsPage').classList.contains('active')) {
+                    loadGroups();
+                }
+            });
+            
+            // Listen for recent chats
+            database.ref(`users/${userId}/chats`).on('value', (snapshot) => {
+                const chats = snapshot.val() || {};
+                recentChats = Object.values(chats).sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+                if (document.getElementById('homePage').classList.contains('active')) {
+                    loadRecentChats();
+                }
+            });
+            
+            // Update online status periodically
+            setInterval(() => {
+                if (userData) {
+                    database.ref(`users/${userId}`).update({
+                        lastActive: Date.now(),
+                        isOnline: true
+                    });
+                }
+            }, 30000);
+            
+            // Listen for notifications
+            database.ref(`notifications/${userId}`).on('child_added', (snapshot) => {
+                const notification = snapshot.val();
+                showNotification(notification);
+                database.ref(`notifications/${userId}/${snapshot.key}`).remove();
+            });
+        }
+
+        async function loadInitialData() {
+            await Promise.all([
+                loadContacts(),
+                loadRequests(),
+                loadGroups(),
+                loadRecentChats(),
+                loadZynes()
+            ]);
+        }
+
+        async function loadContacts() {
+            if (!userData || !contacts) return;
+            
+            const contactsContainer = document.getElementById('contactsContainer');
+            const contactIds = Object.keys(contacts);
+            
+            if (contactIds.length === 0) {
+                contactsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-address-book"></i>
+                        <h3>No Contacts</h3>
+                        <p>Add contacts to start chatting</p>
+                    </div>`;
+                return;
+            }
+            
+            try {
+                // Fetch contact details
+                const contactPromises = contactIds.map(async (contactId) => {
+                    const snapshot = await database.ref(`users/${contactId}`).once('value');
+                    return snapshot.val();
+                });
+                
+                const contactUsers = await Promise.all(contactPromises);
+                
+                // Filter out null values and sort by online status and name
+                const validContacts = contactUsers.filter(Boolean).sort((a, b) => {
+                    if (a.isOnline && !b.isOnline) return -1;
+                    if (!a.isOnline && b.isOnline) return 1;
+                    return a.name.localeCompare(b.name);
+                });
+                
+                // Render contacts
+                contactsContainer.innerHTML = '';
+                validContacts.forEach(contact => {
+                    const contactElement = createContactElement(contact);
+                    contactsContainer.appendChild(contactElement);
+                });
+                
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+                showToast('Failed to load contacts', 'error');
+            }
+        }
+
+        function createContactElement(contact) {
+            const div = document.createElement('div');
+            div.className = 'contact-card';
+            div.dataset.userId = contact.uid;
+            
+            const lastActive = contact.lastActive ? formatTime(contact.lastActive) : 'Never';
+            const statusClass = contact.isOnline ? 'online' : 'offline';
+            const statusText = contact.isOnline ? 'Online' : `Last seen ${lastActive}`;
+            
+            div.innerHTML = `
+                <img src="${contact.profileUrl || 'zynaps.png'}" alt="${contact.name}" class="profile-pic">
+                <div class="contact-info">
+                    <h4>${contact.name}</h4>
+                    <p class="status ${statusClass}">${statusText}</p>
+                    <p class="user-id">${contact.userId}</p>
+                </div>
+                <div class="contact-actions">
+                    <button class="action-btn chat-btn start-chat-btn" title="Start Chat">
+                        <i class="fas fa-comment"></i>
+                    </button>
+                    <button class="action-btn reject-btn remove-contact-btn" title="Remove Contact">
+                        <i class="fas fa-user-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add event listeners
+            div.querySelector('.start-chat-btn').addEventListener('click', () => startChatWithUser(contact));
+            div.querySelector('.remove-contact-btn').addEventListener('click', () => removeContact(contact.uid));
+            
+            return div;
+        }
+
+        async function loadRequests() {
+            if (!userData || !chatRequests) return;
+            
+            const requestsContainer = document.getElementById('requestsContainer');
+            const requestIds = Object.keys(chatRequests);
+            
+            if (requestIds.length === 0) {
+                requestsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-user-plus"></i>
+                        <h3>No Requests</h3>
+                        <p>You don't have any pending chat requests</p>
+                    </div>`;
+                return;
+            }
+            
+            try {
+                // Fetch request details
+                const requestPromises = requestIds.map(async (requestId) => {
+                    const snapshot = await database.ref(`users/${requestId}`).once('value');
+                    const user = snapshot.val();
+                    if (user) {
+                        return {
+                            ...user,
+                            requestId: requestId,
+                            timestamp: chatRequests[requestId]
+                        };
+                    }
+                    return null;
+                });
+                
+                const requests = (await Promise.all(requestPromises)).filter(Boolean);
+                
+                // Sort by timestamp
+                requests.sort((a, b) => b.timestamp - a.timestamp);
+                
+                // Render requests
+                requestsContainer.innerHTML = '';
+                requests.forEach(request => {
+                    const requestElement = createRequestElement(request);
+                    requestsContainer.appendChild(requestElement);
+                });
+                
+            } catch (error) {
+                console.error('Error loading requests:', error);
+                showToast('Failed to load requests', 'error');
+            }
+        }
+
+        function createRequestElement(request) {
+            const div = document.createElement('div');
+            div.className = 'request-card';
+            
+            const time = formatTime(request.timestamp);
+            
+            div.innerHTML = `
+                <img src="${request.profileUrl || 'zynaps.png'}" alt="${request.name}" class="profile-pic">
+                <div class="request-info">
+                    <h4>${request.name}</h4>
+                    <p>${request.userId}</p>
+                    <p class="time">Requested ${time}</p>
+                </div>
+                <div class="request-actions">
+                    <button class="action-btn accept-btn accept-request-btn">
+                        <i class="fas fa-check"></i> Accept
+                    </button>
+                    <button class="action-btn reject-btn reject-request-btn">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            `;
+            
+            // Add event listeners
+            div.querySelector('.accept-request-btn').addEventListener('click', () => acceptRequest(request.uid));
+            div.querySelector('.reject-request-btn').addEventListener('click', () => rejectRequest(request.uid));
+            
+            return div;
+        }
+
+        async function loadGroups() {
+            if (!userData || !groups) return;
+            
+            const groupsContainer = document.getElementById('groupsContainer');
+            const groupIds = Object.keys(groups);
+            
+            if (groupIds.length === 0) {
+                groupsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No Groups</h3>
+                        <p>Create a group or wait to be added to one</p>
+                    </div>`;
+                return;
+            }
+            
+            try {
+                // Fetch group details
+                const groupPromises = groupIds.map(async (groupId) => {
+                    const snapshot = await database.ref(`groups/${groupId}`).once('value');
+                    return snapshot.val();
+                });
+                
+                const groupData = await Promise.all(groupPromises);
+                
+                // Filter and sort
+                const validGroups = groupData.filter(Boolean).sort((a, b) => b.lastActive - a.lastActive);
+                
+                // Render groups
+                groupsContainer.innerHTML = '';
+                validGroups.forEach(group => {
+                    const groupElement = createGroupElement(group);
+                    groupsContainer.appendChild(groupElement);
+                });
+                
+            } catch (error) {
+                console.error('Error loading groups:', error);
+                showToast('Failed to load groups', 'error');
+            }
+        }
+
+        function createGroupElement(group) {
+            const div = document.createElement('div');
+            div.className = 'group-card';
+            div.dataset.groupId = group.id;
+            
+            const memberCount = Object.keys(group.members || {}).length;
+            const lastActive = group.lastMessageTime ? formatTime(group.lastMessageTime) : 'No messages yet';
+            
+            div.innerHTML = `
+                <img src="${group.photoUrl || 'zynaps.png'}" alt="${group.name}" class="profile-pic">
+                <div class="group-info">
+                    <h4>${group.name}</h4>
+                    <p>${memberCount} members</p>
+                    <p class="time">${lastActive}</p>
+                </div>
+                <div class="group-actions">
+                    <button class="action-btn chat-btn enter-group-btn" title="Enter Group">
+                        <i class="fas fa-comments"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add event listener
+            div.querySelector('.enter-group-btn').addEventListener('click', () => enterGroup(group.id));
+            
+            return div;
+        }
+
+        async function loadRecentChats() {
+            if (!recentChats || recentChats.length === 0) {
+                recentChatsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h3>No Recent Chats</h3>
+                        <p>Start a conversation by clicking the floating button</p>
+                    </div>`;
+                return;
+            }
+            
+            try {
+                // Fetch chat details
+                const chatPromises = recentChats.map(async (chat) => {
+                    if (chat.type === 'user') {
+                        const snapshot = await database.ref(`users/${chat.withUserId}`).once('value');
+                        const user = snapshot.val();
+                        if (user) {
+                            return {
+                                ...chat,
+                                name: user.name,
+                                profileUrl: user.profileUrl,
+                                userId: user.userId,
+                                isOnline: user.isOnline
+                            };
+                        }
+                    } else if (chat.type === 'group') {
+                        const snapshot = await database.ref(`groups/${chat.groupId}`).once('value');
+                        const group = snapshot.val();
+                        if (group) {
+                            return {
+                                ...chat,
+                                name: group.name,
+                                profileUrl: group.photoUrl,
+                                isGroup: true
+                            };
+                        }
+                    }
+                    return null;
+                });
+                
+                const chats = (await Promise.all(chatPromises)).filter(Boolean);
+                
+                // Render chats
+                recentChatsContainer.innerHTML = '';
+                chats.forEach(chat => {
+                    const chatElement = createRecentChatElement(chat);
+                    recentChatsContainer.appendChild(chatElement);
+                });
+                
+            } catch (error) {
+                console.error('Error loading recent chats:', error);
+                showToast('Failed to load recent chats', 'error');
+            }
+        }
+
+        function createRecentChatElement(chat) {
+            const div = document.createElement('div');
+            div.className = 'contact-card';
+            
+            const lastMessage = chat.lastMessage || 'No messages yet';
+            const time = chat.lastMessageTime ? formatTime(chat.lastMessageTime) : '';
+            const statusClass = chat.isOnline ? 'online' : 'offline';
+            
+            div.innerHTML = `
+                <img src="${chat.profileUrl || 'zynaps.png'}" alt="${chat.name}" class="profile-pic">
+                <div class="contact-info">
+                    <h4>${chat.name} ${chat.isGroup ? '<i class="fas fa-users"></i>' : ''}</h4>
+                    <p class="last-message">${lastMessage}</p>
+                    ${chat.userId ? `<p class="user-id">${chat.userId}</p>` : ''}
+                    <p class="time">${time}</p>
+                </div>
+                <div class="contact-actions">
+                    <button class="action-btn chat-btn enter-chat-btn" title="Open Chat">
+                        <i class="fas fa-comment"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add event listener
+            div.querySelector('.enter-chat-btn').addEventListener('click', () => {
+                if (chat.isGroup) {
+                    enterGroup(chat.groupId);
+                } else {
+                    startChatWithUser({ uid: chat.withUserId });
+                }
+            });
+            
+            return div;
+        }
+
+        async function loadZynes() {
+            // This would load status updates from contacts
+            // For now, showing empty state
+            zynesContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-bolt"></i>
+                    <h3>No Zynes Available</h3>
+                    <p>Create a Zyne or view your contacts' status updates</p>
+                </div>`;
+        }
+
+        function setupEventListeners() {
+            // Navigation
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = item.dataset.page;
+                    switchPage(page);
+                });
+            });
+            
+            // Profile Dropdown
+            profileDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                profileDropdown.classList.remove('show');
+            });
+            
+            // Logout
+            logoutBtn.addEventListener('click', handleLogout);
+            
+            // Copy User ID
+            copyUserId.addEventListener('click', copyToClipboard);
+            
+            // Quick Actions
+            startChatBtn.addEventListener('click', showStartChatModal);
+            createGroupBtn.addEventListener('click', showCreateGroupModal);
+            addContactBtn.addEventListener('click', showAddContactModal);
+            shareIdBtn.addEventListener('click', shareUserId);
+            viewAllChats.addEventListener('click', (e) => {
+                e.preventDefault();
+                // In a full implementation, this would show all chats
+                showToast('View all chats feature coming soon', 'info');
+            });
+            
+            // Page Actions
+            createZyneBtn.addEventListener('click', showCreateZyneModal);
+            createGroupPageBtn.addEventListener('click', showCreateGroupModal);
+            addContactPageBtn.addEventListener('click', showAddContactModal);
+            
+            // Search Contacts
+            searchContacts.addEventListener('input', searchContactsHandler);
+            
+            // Floating Button
+            floatingChatBtn.addEventListener('click', showStartChatModal);
+            
+            // Modal Close Buttons
+            closeModalButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const modal = btn.closest('.modal-overlay');
+                    modal.classList.remove('active');
+                });
+            });
+            
+            // Start Chat Modal
+            searchUserId.addEventListener('input', searchUserHandler);
+            
+            // Add Contact Modal
+            contactUserId.addEventListener('input', searchContactHandler);
+            
+            // Create Group Modal
+            uploadGroupPhotoBtn.addEventListener('click', () => groupPhoto.click());
+            groupPhoto.addEventListener('change', handleGroupPhotoUpload);
+            addMemberBtn.addEventListener('click', addGroupMember);
+            addMemberId.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addGroupMember();
+            });
+            cancelGroup.addEventListener('click', () => createGroupModal.classList.remove('active'));
+            createGroupButton.addEventListener('click', createGroup);
+            
+            // Create Zyne Modal
+            zyneText.addEventListener('input', updateZyneCharCount);
+            zyneAddPhoto.addEventListener('click', () => {
+                // Implementation for adding photo to Zyne
+                showToast('Photo upload feature coming soon', 'info');
+            });
+            zyneAddVideo.addEventListener('click', () => {
+                // Implementation for adding video to Zyne
+                showToast('Video upload feature coming soon', 'info');
+            });
+            postZyne.addEventListener('click', postZyneHandler);
+            
+            // Tab Buttons
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    // In a full implementation, this would switch between received and sent requests
+                });
+            });
+        }
+
+        function switchPage(page) {
+            // Update navigation
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === page) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Update pages
+            pages.forEach(p => {
+                p.classList.remove('active');
+                if (p.id === `${page}Page`) {
+                    p.classList.add('active');
+                }
+            });
+            
+            // Load page data if needed
+            switch(page) {
+                case 'contacts':
+                    loadContacts();
+                    break;
+                case 'requests':
+                    loadRequests();
+                    break;
+                case 'groups':
+                    loadGroups();
+                    break;
+                case 'zynes':
+                    loadZynes();
+                    break;
+                case 'home':
+                    loadRecentChats();
+                    break;
+            }
+        }
+
+        function showStartChatModal() {
+            startChatModal.classList.add('active');
+            searchUserId.value = '';
+            searchResult.innerHTML = `
+                <div class="search-placeholder">
+                    <i class="fas fa-search"></i>
+                    <p>Enter a Zynapse ID to search for users</p>
+                </div>`;
+        }
+
+        async function searchUserHandler() {
+            const userIdInput = searchUserId.value.trim().toUpperCase();
+            
+            if (userIdInput.length < 8) {
+                searchResult.innerHTML = `
+                    <div class="search-placeholder">
+                        <i class="fas fa-search"></i>
+                        <p>Enter a Zynapse ID (ZYN-XXXX)</p>
+                    </div>`;
+                return;
+            }
+            
+            if (!userIdInput.startsWith('ZYN-') || userIdInput.length !== 8) {
+                searchResult.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Invalid Zynapse ID format. Use ZYN-XXXX</p>
+                    </div>`;
+                return;
+            }
+            
+            try {
+                // Search for user by ID
+                const snapshot = await database.ref(`userIds/${userIdInput}`).once('value');
+                const targetUserId = snapshot.val();
+                
+                if (!targetUserId) {
+                    searchResult.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-user-times"></i>
+                            <p>User not found</p>
+                        </div>`;
+                    return;
+                }
+                
+                // Check if it's the current user
+                if (targetUserId === userData.uid) {
+                    searchResult.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-user"></i>
+                            <p>That's your own ID!</p>
+                        </div>`;
+                    return;
+                }
+                
+                // Get user details
+                const userSnapshot = await database.ref(`users/${targetUserId}`).once('value');
+                const user = userSnapshot.val();
+                
+                if (!user) {
+                    searchResult.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-user-times"></i>
+                            <p>User not found</p>
+                        </div>`;
+                    return;
+                }
+                
+                // Check if already a contact
+                const isContact = contacts && contacts[targetUserId];
+                
+                // Display user found
+                searchResult.innerHTML = `
+                    <div class="user-found">
+                        <img src="${user.profileUrl || 'zynaps.png'}" alt="${user.name}" class="profile-pic">
+                        <div>
+                            <h4>${user.name}</h4>
+                            <p>${user.userId}</p>
+                            ${isContact ? '<p class="already-contact"><i class="fas fa-check"></i> Already in contacts</p>' : ''}
+                        </div>
+                        <div class="action-buttons">
+                            ${!isContact ? `
+                                <button class="action-btn accept-btn" id="sendRequestBtn">
+                                    <i class="fas fa-paper-plane"></i> Send Request
+                                </button>
+                            ` : ''}
+                            <button class="action-btn chat-btn" id="startChatDirectBtn">
+                                <i class="fas fa-comment"></i> Chat
+                            </button>
+                        </div>
+                    </div>`;
+                
+                // Add event listeners to buttons
+                if (!isContact) {
+                    document.getElementById('sendRequestBtn').addEventListener('click', () => sendChatRequest(targetUserId));
+                }
+                document.getElementById('startChatDirectBtn').addEventListener('click', () => {
+                    if (isContact) {
+                        startChatWithUser(user);
+                    } else {
+                        showToast('Add this user to contacts first', 'warning');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error searching user:', error);
+                searchResult.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error searching for user</p>
+                    </div>`;
+            }
+        }
+
+        async function sendChatRequest(targetUserId) {
+            try {
+                const requestData = {
+                    timestamp: Date.now(),
+                    status: 'pending'
+                };
+                
+                // Add to target user's chat requests
+                await database.ref(`users/${targetUserId}/chatRequests/${userData.uid}`).set(Date.now());
+                
+                // Show success
+                showToast('Chat request sent successfully', 'success');
+                startChatModal.classList.remove('active');
+                
+            } catch (error) {
+                console.error('Error sending chat request:', error);
+                showToast('Failed to send chat request', 'error');
+            }
+        }
+
+        async function acceptRequest(senderId) {
+            try {
+                // Add to contacts
+                await database.ref(`users/${userData.uid}/contacts/${senderId}`).set(true);
+                await database.ref(`users/${senderId}/contacts/${userData.uid}`).set(true);
+                
+                // Remove from requests
+                await database.ref(`users/${userData.uid}/chatRequests/${senderId}`).remove();
+                
+                // Create chat record for both users
+                const chatId = generateChatId(userData.uid, senderId);
+                const chatData = {
+                    id: chatId,
+                    participants: {
+                        [userData.uid]: true,
+                        [senderId]: true
+                    },
+                    lastMessage: '',
+                    lastMessageTime: Date.now(),
+                    type: 'user'
+                };
+                
+                await database.ref(`chats/${chatId}`).set(chatData);
+                await database.ref(`users/${userData.uid}/chats/${chatId}`).set({
+                    withUserId: senderId,
+                    lastMessageTime: Date.now(),
+                    type: 'user'
+                });
+                await database.ref(`users/${senderId}/chats/${chatId}`).set({
+                    withUserId: userData.uid,
+                    lastMessageTime: Date.now(),
+                    type: 'user'
+                });
+                
+                // Send notification to sender
+                await sendNotification(senderId, {
+                    type: 'request_accepted',
+                    fromUserId: userData.uid,
+                    fromUserName: userData.name,
+                    timestamp: Date.now(),
+                    message: `${userData.name} accepted your chat request`
+                });
+                
+                showToast('Request accepted', 'success');
+                
+                // Start chat with the user
+                const senderSnapshot = await database.ref(`users/${senderId}`).once('value');
+                const sender = senderSnapshot.val();
+                startChatWithUser(sender);
+                
+            } catch (error) {
+                console.error('Error accepting request:', error);
+                showToast('Failed to accept request', 'error');
+            }
+        }
+
+        async function rejectRequest(senderId) {
+            try {
+                await database.ref(`users/${userData.uid}/chatRequests/${senderId}`).remove();
+                showToast('Request rejected', 'success');
+            } catch (error) {
+                console.error('Error rejecting request:', error);
+                showToast('Failed to reject request', 'error');
+            }
+        }
+
+        function showAddContactModal() {
+            addContactModal.classList.add('active');
+            contactUserId.value = '';
+            contactSearchResult.innerHTML = `
+                <div class="search-placeholder">
+                    <i class="fas fa-search"></i>
+                    <p>Enter a Zynapse ID to add as contact</p>
+                </div>`;
+        }
+
+        async function searchContactHandler() {
+            const userIdInput = contactUserId.value.trim().toUpperCase();
+            
+            if (userIdInput.length < 8) {
+                contactSearchResult.innerHTML = `
+                    <div class="search-placeholder">
+                        <i class="fas fa-search"></i>
+                        <p>Enter a Zynapse ID (ZYN-XXXX)</p>
+                    </div>`;
+                return;
+            }
+            
+            if (!userIdInput.startsWith('ZYN-') || userIdInput.length !== 8) {
+                contactSearchResult.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Invalid Zynapse ID format. Use ZYN-XXXX</p>
+                    </div>`;
+                return;
+            }
+            
+            try {
+                // Search for user by ID
+                const snapshot = await database.ref(`userIds/${userIdInput}`).once('value');
+                const targetUserId = snapshot.val();
+                
+                if (!targetUserId) {
+                    contactSearchResult.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-user-times"></i>
+                            <p>User not found</p>
+                        </div>`;
+                    return;
+                }
+                
+                // Check if it's the current user
+                if (targetUserId === userData.uid) {
+                    contactSearchResult.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-user"></i>
+                            <p>That's your own ID!</p>
+                        </div>`;
+                    return;
+                }
+                
+                // Get user details
+                const userSnapshot = await database.ref(`users/${targetUserId}`).once('value');
+                const user = userSnapshot.val();
+                
+                if (!user) {
+                    contactSearchResult.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-user-times"></i>
+                            <p>User not found</p>
+                        </div>`;
+                    return;
+                }
+                
+                // Check if already a contact
+                const isContact = contacts && contacts[targetUserId];
+                
+                // Display user found
+                contactSearchResult.innerHTML = `
+                    <div class="user-found">
+                        <img src="${user.profileUrl || 'zynaps.png'}" alt="${user.name}" class="profile-pic">
+                        <div>
+                            <h4>${user.name}</h4>
+                            <p>${user.userId}</p>
+                            ${isContact ? '<p class="already-contact"><i class="fas fa-check"></i> Already a contact</p>' : ''}
+                        </div>
+                        <div class="action-buttons">
+                            ${!isContact ? `
+                                <button class="action-btn accept-btn" id="addContactBtn">
+                                    <i class="fas fa-user-plus"></i> Add Contact
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>`;
+                
+                // Add event listener to add button
+                if (!isContact) {
+                    document.getElementById('addContactBtn').addEventListener('click', () => addContact(targetUserId));
+                }
+                
+            } catch (error) {
+                console.error('Error searching user:', error);
+                contactSearchResult.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error searching for user</p>
+                    </div>`;
+            }
+        }
+
+        async function addContact(targetUserId) {
+            try {
+                // Send chat request instead of directly adding
+                await database.ref(`users/${targetUserId}/chatRequests/${userData.uid}`).set(Date.now());
+                
+                showToast('Chat request sent', 'success');
+                addContactModal.classList.remove('active');
+                
+            } catch (error) {
+                console.error('Error adding contact:', error);
+                showToast('Failed to send request', 'error');
+            }
+        }
+
+        async function removeContact(contactId) {
+            if (!confirm('Remove this contact?')) return;
+            
+            try {
+                // Remove from both users' contacts
+                await database.ref(`users/${userData.uid}/contacts/${contactId}`).remove();
+                await database.ref(`users/${contactId}/contacts/${userData.uid}`).remove();
+                
+                showToast('Contact removed', 'success');
+                
+            } catch (error) {
+                console.error('Error removing contact:', error);
+                showToast('Failed to remove contact', 'error');
+            }
+        }
+
+        function showCreateGroupModal() {
+            createGroupModal.classList.add('active');
+            groupName.value = '';
+            groupPhotoPreview.innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-users"></i>
+                    <span>No image selected</span>
+                    <p>Click to upload</p>
+                </div>`;
+            groupMembersList.innerHTML = `
+                <div class="empty-members">
+                    <i class="fas fa-user-plus"></i>
+                    <p>Add members using their Zynapse ID</p>
+                </div>`;
+            addMemberId.value = '';
+        }
+
+        function handleGroupPhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Preview image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                groupPhotoPreview.innerHTML = `<img src="${e.target.result}" alt="Group Photo Preview">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        let groupMembers = [];
+
+        async function addGroupMember() {
+            const userIdInput = addMemberId.value.trim().toUpperCase();
+            
+            if (!userIdInput.startsWith('ZYN-') || userIdInput.length !== 8) {
+                showToast('Invalid Zynapse ID format', 'error');
+                return;
+            }
+            
+            try {
+                // Find user by ID
+                const snapshot = await database.ref(`userIds/${userIdInput}`).once('value');
+                const targetUserId = snapshot.val();
+                
+                if (!targetUserId) {
+                    showToast('User not found', 'error');
+                    return;
+                }
+                
+                // Check if already added
+                if (groupMembers.includes(targetUserId)) {
+                    showToast('User already added', 'warning');
+                    return;
+                }
+                
+                // Get user details
+                const userSnapshot = await database.ref(`users/${targetUserId}`).once('value');
+                const user = userSnapshot.val();
+                
+                if (!user) {
+                    showToast('User not found', 'error');
+                    return;
+                }
+                
+                // Add to members list
+                groupMembers.push(targetUserId);
+                
+                // Update UI
+                if (groupMembersList.querySelector('.empty-members')) {
+                    groupMembersList.innerHTML = '';
+                }
+                
+                const memberTag = document.createElement('div');
+                memberTag.className = 'member-tag';
+                memberTag.innerHTML = `
+                    <span>${user.name}</span>
+                    <button class="remove-member" data-user-id="${targetUserId}">&times;</button>
+                `;
+                
+                groupMembersList.appendChild(memberTag);
+                
+                // Update count
+                document.querySelector('.members-count').textContent = `${groupMembers.length} members`;
+                
+                // Clear input
+                addMemberId.value = '';
+                
+                // Add remove event listener
+                memberTag.querySelector('.remove-member').addEventListener('click', (e) => {
+                    const userId = e.target.dataset.userId;
+                    groupMembers = groupMembers.filter(id => id !== userId);
+                    memberTag.remove();
+                    document.querySelector('.members-count').textContent = `${groupMembers.length} members`;
+                    
+                    if (groupMembers.length === 0) {
+                        groupMembersList.innerHTML = `
+                            <div class="empty-members">
+                                <i class="fas fa-user-plus"></i>
+                                <p>Add members using their Zynapse ID</p>
+                            </div>`;
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error adding group member:', error);
+                showToast('Failed to add member', 'error');
+            }
+        }
+
+        async function createGroup() {
+            const name = groupName.value.trim();
+            
+            if (!name) {
+                showToast('Please enter a group name', 'error');
+                return;
+            }
+            
+            if (groupMembers.length === 0) {
+                showToast('Add at least one member to the group', 'error');
+                return;
+            }
+            
+            try {
+                // Generate group ID
+                const groupId = `GRP-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                
+                // Prepare group data
+                const groupData = {
+                    id: groupId,
+                    name: name,
+                    createdBy: userData.uid,
+                    createdAt: Date.now(),
+                    lastActive: Date.now(),
+                    members: {
+                        [userData.uid]: {
+                            joinedAt: Date.now(),
+                            isAdmin: true
+                        }
+                    },
+                    admins: [userData.uid]
+                };
+                
+                // Add members
+                groupMembers.forEach(memberId => {
+                    groupData.members[memberId] = {
+                        joinedAt: Date.now(),
+                        isAdmin: false
+                    };
+                });
+                
+                // Upload group photo if selected
+                if (groupPhoto.files[0]) {
+                    try {
+                        const photoUrl = await uploadToCloudinary(groupPhoto.files[0], 'groups');
+                        groupData.photoUrl = photoUrl;
+                    } catch (error) {
+                        console.error('Failed to upload group photo:', error);
+                    }
+                }
+                
+                // Save group to database
+                await database.ref(`groups/${groupId}`).set(groupData);
+                
+                // Add group to each member's groups list
+                const allMembers = [userData.uid, ...groupMembers];
+                const updatePromises = allMembers.map(memberId => {
+                    return database.ref(`users/${memberId}/groups/${groupId}`).set(true);
+                });
+                
+                await Promise.all(updatePromises);
+                
+                // Create initial group chat
+                const chatData = {
+                    id: groupId,
+                    type: 'group',
+                    groupId: groupId,
+                    lastMessage: 'Group created',
+                    lastMessageTime: Date.now(),
+                    participants: groupData.members
+                };
+                
+                await database.ref(`chats/${groupId}`).set(chatData);
+                
+                // Send notifications to members
+                const notificationPromises = groupMembers.map(memberId => {
+                    return sendNotification(memberId, {
+                        type: 'group_invite',
+                        groupId: groupId,
+                        groupName: name,
+                        fromUserId: userData.uid,
+                        fromUserName: userData.name,
+                        timestamp: Date.now(),
+                        message: `${userData.name} added you to group "${name}"`
+                    });
+                });
+                
+                await Promise.all(notificationPromises);
+                
+                showToast('Group created successfully', 'success');
+                createGroupModal.classList.remove('active');
+                
+                // Reset form
+                groupMembers = [];
+                
+            } catch (error) {
+                console.error('Error creating group:', error);
+                showToast('Failed to create group', 'error');
+            }
+        }
+
+        function showCreateZyneModal() {
+            createZyneModal.classList.add('active');
+            zyneText.value = '';
+            updateZyneCharCount();
+            zyneMediaPreview.innerHTML = '';
+        }
+
+        function updateZyneCharCount() {
+            const count = zyneText.value.length;
+            zyneCharCount.textContent = count;
+            
+            if (count > 200) {
+                zyneCharCount.style.color = 'var(--red)';
+            } else if (count > 180) {
+                zyneCharCount.style.color = 'var(--orange)';
+            } else {
+                zyneCharCount.style.color = 'var(--gray-500)';
+            }
+        }
+
+        async function postZyneHandler() {
+            const text = zyneText.value.trim();
+            
+            if (!text && zyneMediaPreview.children.length === 0) {
+                showToast('Add text or media to post a Zyne', 'error');
+                return;
+            }
+            
+            if (text.length > 200) {
+                showToast('Zyne text too long (max 200 characters)', 'error');
+                return;
+            }
+            
+            try {
+                const zyneId = `ZNE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                
+                const zyneData = {
+                    id: zyneId,
+                    userId: userData.uid,
+                    userName: userData.name,
+                    userProfile: userData.profileUrl,
+                    text: text,
+                    createdAt: Date.now(),
+                    expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+                    viewers: {}
+                };
+                
+                // In a full implementation, media would be uploaded here
+                
+                await database.ref(`zynes/${zyneId}`).set(zyneData);
+                await database.ref(`users/${userData.uid}/zynes/${zyneId}`).set(Date.now());
+                
+                showToast('Zyne posted successfully', 'success');
+                createZyneModal.classList.remove('active');
+                
+            } catch (error) {
+                console.error('Error posting Zyne:', error);
+                showToast('Failed to post Zyne', 'error');
+            }
+        }
+
+        function startChatWithUser(user) {
+            // Generate chat ID
+            const chatId = generateChatId(userData.uid, user.uid);
+            
+            // Redirect to chat page with user data
+            const chatData = {
+                chatId: chatId,
+                userId: user.uid,
+                userName: user.name,
+                userProfile: user.profileUrl,
+                userZynId: user.userId,
+                type: 'user'
+            };
+            
+            localStorage.setItem('currentChat', JSON.stringify(chatData));
+            window.location.href = `chat.html?chat=${chatId}&type=user&with=${user.uid}`;
+        }
+
+        function enterGroup(groupId) {
+            // Redirect to chat page with group data
+            const chatData = {
+                chatId: groupId,
+                type: 'group',
+                groupId: groupId
+            };
+            
+            localStorage.setItem('currentChat', JSON.stringify(chatData));
+            window.location.href = `chat.html?chat=${groupId}&type=group`;
+        }
+
+        function generateChatId(userId1, userId2) {
+            const sortedIds = [userId1, userId2].sort();
+            return `CHAT-${sortedIds[0]}-${sortedIds[1]}`;
+        }
+
+        async function uploadToCloudinary(file, folder = 'general') {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+                formData.append('folder', `${CLOUDINARY_CONFIG.folder}/${folder}`);
+                formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
+                
+                fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.secure_url) {
+                        resolve(data.secure_url);
+                    } else {
+                        reject(new Error('Upload failed'));
+                    }
+                })
+                .catch(error => reject(error));
+            });
+        }
+
+        async function sendNotification(userId, notification) {
+            try {
+                await database.ref(`notifications/${userId}`).push(notification);
+            } catch (error) {
+                console.error('Error sending notification:', error);
+            }
+        }
+
+        function showNotification(notification) {
+            // Play notification sound
+            try {
+                notificationSound.currentTime = 0;
+                notificationSound.play();
+            } catch (error) {
+                console.error('Error playing notification sound:', error);
+            }
+            
+            // Show toast notification
+            showToast(notification.message, 'info');
+            
+            // Update badges based on notification type
+            switch(notification.type) {
+                case 'message':
+                    // Update chat badges
+                    break;
+                case 'request_received':
+                    updateRequestsBadge();
+                    break;
+                case 'group_invite':
+                    updateGroupsBadge();
+                    break;
+            }
+        }
+
+        function updateRequestsBadge() {
+            const count = Object.keys(chatRequests || {}).length;
+            if (count > 0) {
+                requestsBadge.textContent = count > 99 ? '99+' : count;
+                requestsBadge.style.display = 'flex';
+            } else {
+                requestsBadge.style.display = 'none';
+            }
+        }
+
+        function updateGroupsBadge() {
+            // In a full implementation, this would show unread group messages
+            groupsBadge.style.display = 'none';
+        }
+
+        function updateZynesBadge() {
+            // In a full implementation, this would show new Zynes
+            zynesBadge.style.display = 'none';
+        }
+
+        function updateOnlineStatus() {
+            // In a full implementation, this would update online status indicators
+        }
+
+        function searchContactsHandler() {
+            const searchTerm = searchContacts.value.toLowerCase();
+            const contactCards = document.querySelectorAll('.contact-card');
+            
+            contactCards.forEach(card => {
+                const name = card.querySelector('h4').textContent.toLowerCase();
+                const userId = card.querySelector('.user-id')?.textContent.toLowerCase() || '';
+                
+                if (name.includes(searchTerm) || userId.includes(searchTerm)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function shareUserId() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Zynapse ID',
+                    text: `Connect with me on Zynapse! My ID is: ${userData.userId}`,
+                    url: window.location.href
+                });
+            } else {
+                copyToClipboard();
+                showToast('User ID copied to clipboard', 'success');
+            }
+        }
+
+        async function copyToClipboard() {
+            try {
+                await navigator.clipboard.writeText(userData.userId);
+                showToast('User ID copied to clipboard', 'success');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = userData.userId;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('User ID copied to clipboard', 'success');
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                // Update online status
+                if (userData) {
+                    await database.ref(`users/${userData.uid}`).update({
+                        isOnline: false,
+                        lastActive: Date.now()
+                    });
+                }
+                
+                // Sign out
+                await auth.signOut();
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('currentChat');
+                
+                // Redirect to login
+                window.location.href = 'index.html';
+                
+            } catch (error) {
+                console.error('Error logging out:', error);
+                showToast('Failed to log out', 'error');
+            }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return 'Never';
+            
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'fa-info-circle';
+            switch (type) {
+                case 'success': icon = 'fa-check-circle'; break;
+                case 'error': icon = 'fa-exclamation-circle'; break;
+                case 'warning': icon = 'fa-exclamation-triangle'; break;
+            }
+            
+            toast.innerHTML = `
+                <i class="fas ${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
