@@ -3,66 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zynapse - Chat</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Chat - Zynapse</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="zynaps.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="zynaps.png">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/cloudinary-core@2.13.0/cloudinary-core-shrinkwrap.min.js"></script>
 </head>
 <body>
     <div class="chat-page" id="chatPage">
+        <!-- Loading Screen -->
+        <div class="loading-screen" id="loadingScreen">
+            <div class="loading-content">
+                <img src="zynaps.png" alt="Zynapse" class="loading-logo">
+                <div class="spinner-large"></div>
+                <p>Loading chat...</p>
+            </div>
+        </div>
+
         <!-- Chat Header -->
         <header class="chat-header">
-            <button class="back-btn" id="backToHomeBtn">
+            <button class="back-btn" onclick="window.history.back()">
                 <i class="fas fa-arrow-left"></i>
             </button>
-
+            
             <div class="chat-user-info">
-                <img src="" alt="Contact" class="profile-pic-small" id="chatProfilePic">
+                <img src="zynaps.png" alt="User" class="chat-user-avatar" id="chatAvatar">
                 <div class="chat-user-details">
-                    <h3 id="chatContactName">Loading...</h3>
+                    <h3 id="chatUserName">Loading...</h3>
                     <div class="chat-status">
-                        <div class="status-dot" id="chatStatusDot"></div>
-                        <span id="chatStatusText">Loading...</span>
+                        <span class="status-dot" id="statusDot"></span>
+                        <span id="statusText">Loading...</span>
                     </div>
                 </div>
             </div>
-
-            <div class="chat-header-actions">
-                <button class="icon-btn" id="voiceCallBtn">
-                    <i class="fas fa-phone"></i>
+            
+            <div class="chat-actions">
+                <button class="icon-btn" onclick="toggleChatMenu()">
+                    <i class="fas fa-ellipsis-v"></i>
                 </button>
-                <button class="icon-btn" id="videoCallBtn">
-                    <i class="fas fa-video"></i>
+            </div>
+            
+            <!-- Chat Menu Dropdown -->
+            <div class="dropdown-content" id="chatMenuDropdown">
+                <button class="dropdown-item" onclick="viewProfile()">
+                    <i class="fas fa-user"></i>
+                    <span>View Profile</span>
                 </button>
-                <div class="dropdown">
-                    <button class="icon-btn" id="chatMenuBtn">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <div class="dropdown-content" id="chatDropdown">
-                        <a href="#" id="viewProfileBtn"><i class="fas fa-user"></i> View Profile</a>
-                        <a href="#" id="addNicknameBtn"><i class="fas fa-tag"></i> Add Nickname</a>
-                        <a href="#" id="addToFavoritesBtn"><i class="fas fa-star"></i> Add to Favorites</a>
-                        <a href="#" id="muteChatBtn"><i class="fas fa-bell-slash"></i> Mute Notifications</a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" id="clearChatBtn"><i class="fas fa-broom"></i> Clear Chat</a>
-                        <a href="#" id="reportUserBtn"><i class="fas fa-flag"></i> Report User</a>
-                        <a href="#" id="blockUserBtn"><i class="fas fa-ban"></i> Block User</a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" id="deleteChatBtn" class="logout-link"><i class="fas fa-trash"></i> Delete Chat</a>
+                <button class="dropdown-item" onclick="addNickname()">
+                    <i class="fas fa-tag"></i>
+                    <span>Add Nickname</span>
+                </button>
+                <button class="dropdown-item" onclick="toggleFavorite()">
+                    <i class="fas fa-star"></i>
+                    <span id="favoriteText">Add to Favorites</span>
+                </button>
+                <div class="dropdown-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Mute</span>
+                    <div style="margin-left: auto;">
+                        <label class="switch" style="transform: scale(0.8);">
+                            <input type="checkbox" id="muteToggle">
+                            <span class="slider"></span>
+                        </label>
                     </div>
                 </div>
+                <button class="dropdown-item danger" onclick="blockUser()">
+                    <i class="fas fa-ban"></i>
+                    <span>Block User</span>
+                </button>
+                <button class="dropdown-item danger" onclick="deleteChat()">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete Chat</span>
+                </button>
             </div>
         </header>
 
-        <!-- Chat Messages Area -->
+        <!-- Chat Messages -->
         <div class="chat-messages" id="chatMessages">
             <!-- Messages will be loaded here -->
-            <div class="empty-chat">
-                <i class="fas fa-comments"></i>
-                <h3>No messages yet</h3>
-                <p>Say hello to start the conversation!</p>
-            </div>
-
+            
             <!-- Typing Indicator -->
             <div class="typing-indicator" id="typingIndicator">
                 <div class="typing-bubble">
@@ -71,280 +95,381 @@
                         <div class="typing-dot"></div>
                         <div class="typing-dot"></div>
                     </div>
-                    <span class="typing-text" id="typingText">typing...</span>
+                    <span class="typing-text">typing...</span>
                 </div>
             </div>
         </div>
 
-        <!-- Message Input Area -->
+        <!-- Message Input -->
         <div class="message-input-area">
-            <button class="icon-btn" id="attachmentBtn">
+            <button class="attach-btn" id="attachBtn">
                 <i class="fas fa-plus"></i>
             </button>
-
+            
             <div class="message-input-container">
-                <input type="text" id="messageInput" placeholder="iMessage" autocomplete="off">
-                <button class="icon-btn" id="emojiBtn">
-                    <i class="far fa-smile"></i>
-                </button>
+                <textarea 
+                    class="message-input" 
+                    id="messageInput" 
+                    placeholder="iMessage"
+                    rows="1"
+                    onkeydown="handleMessageInput(event)"
+                    oninput="autoResizeTextarea(this)"
+                ></textarea>
             </div>
-
-            <button class="send-btn" id="sendMessageBtn">
+            
+            <button class="send-btn" id="sendBtn">
                 <i class="fas fa-paper-plane"></i>
             </button>
-        </div>
-
-        <!-- Attachment Options -->
-        <div class="attachment-options" id="attachmentOptions">
-            <button class="attachment-btn" id="attachPhotoBtn">
-                <i class="fas fa-image"></i>
-                <span>Photo</span>
-            </button>
-            <button class="attachment-btn" id="attachVideoBtn">
-                <i class="fas fa-video"></i>
-                <span>Video</span>
-            </button>
-            <button class="attachment-btn" id="attachDocumentBtn">
-                <i class="fas fa-file"></i>
-                <span>Document</span>
-            </button>
-            <button class="attachment-btn" id="attachAudioBtn">
-                <i class="fas fa-microphone"></i>
-                <span>Voice</span>
-            </button>
-            <button class="attachment-btn" id="attachLocationBtn">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>Location</span>
-            </button>
-            <button class="attachment-btn" id="attachContactBtn">
-                <i class="fas fa-user-plus"></i>
-                <span>Contact</span>
-            </button>
-        </div>
-
-        <!-- Hidden Inputs -->
-        <input type="file" id="photoUpload" accept="image/*" style="display: none;" multiple>
-        <input type="file" id="videoUpload" accept="video/*" style="display: none;">
-        <input type="file" id="documentUpload" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx" style="display: none;">
-        <input type="file" id="audioUpload" accept="audio/*" style="display: none;">
-
-        <!-- Audio Recorder -->
-        <div class="audio-recorder" id="audioRecorder" style="display: none;">
-            <div class="recorder-controls">
-                <button class="icon-btn" id="cancelRecordingBtn">
-                    <i class="fas fa-times"></i>
+            
+            <!-- Attachment Options -->
+            <div class="attachment-options" id="attachmentOptions">
+                <button class="attachment-btn" data-type="image">
+                    <i class="fas fa-image"></i>
+                    <span>Photo</span>
                 </button>
-                <div class="recording-timer" id="recordingTimer">0:00</div>
-                <button class="icon-btn" id="sendRecordingBtn">
-                    <i class="fas fa-check"></i>
+                <button class="attachment-btn" data-type="video">
+                    <i class="fas fa-video"></i>
+                    <span>Video</span>
+                </button>
+                <button class="attachment-btn" data-type="document">
+                    <i class="fas fa-file"></i>
+                    <span>Document</span>
+                </button>
+                <button class="attachment-btn" data-type="location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Location</span>
+                </button>
+                <button class="attachment-btn" data-type="voice">
+                    <i class="fas fa-microphone"></i>
+                    <span>Voice</span>
                 </button>
             </div>
-            <div class="recording-visualizer" id="recordingVisualizer"></div>
         </div>
-    </div>
 
-    <!-- Modals -->
-    <div class="modal-overlay" id="modalOverlay">
-        <!-- View Profile Modal -->
-        <div class="modal-content" id="viewProfileModal">
-            <div class="modal-header">
-                <h3>Profile</h3>
-                <button class="close-modal" id="closeViewProfileModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="profile-display">
-                    <img src="" alt="Profile" class="profile-large" id="viewProfilePic">
-                    <h3 id="viewProfileName">Loading...</h3>
-                    <p class="user-id-display" id="viewProfileID">ZYN-0000</p>
-                    <p class="user-bio" id="viewProfileBio">No bio yet</p>
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Profile Modal -->
+        <div class="modal-overlay" id="profileModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="profileModalTitle">Profile</h3>
+                    <button class="close-modal" onclick="closeModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" style="text-align: center;">
+                    <img src="zynaps.png" alt="Profile" class="chat-user-avatar" style="width: 100px; height: 100px; margin: 0 auto 16px;" id="modalProfilePic">
+                    <h3 style="margin-bottom: 4px;" id="modalUserName">User Name</h3>
+                    <p style="color: var(--gray-600); margin-bottom: 8px;" id="modalUserId">ZYN-0000</p>
+                    <p style="color: var(--gray-500); font-size: 14px;" id="modalUserStatus">Last seen recently</p>
                     
-                    <div class="profile-info-grid">
-                        <div class="info-item">
-                            <i class="fas fa-phone"></i>
-                            <span id="viewProfilePhone">Loading...</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-envelope"></i>
-                            <span id="viewProfileEmail">Loading...</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-calendar"></i>
-                            <span id="viewProfileJoined">Loading...</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-circle"></i>
-                            <span id="viewProfileStatus">Loading...</span>
-                        </div>
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button class="action-btn" style="flex: 1;" onclick="startChatFromProfile()">
+                            <i class="fas fa-comment"></i>
+                            Message
+                        </button>
+                        <button class="action-btn" style="flex: 1; background: var(--gray-100); color: var(--black);" onclick="closeModal()">
+                            <i class="fas fa-times"></i>
+                            Close
+                        </button>
                     </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button class="btn-secondary" id="startCallFromProfileBtn">
-                        <i class="fas fa-phone"></i> Call
-                    </button>
-                    <button class="btn-primary" id="messageFromProfileBtn">
-                        <i class="fas fa-comment"></i> Message
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add Nickname Modal -->
-        <div class="modal-content" id="nicknameModal">
-            <div class="modal-header">
-                <h3>Add Nickname</h3>
-                <button class="close-modal" id="closeNicknameModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group">
-                    <i class="fas fa-tag"></i>
-                    <input type="text" id="nicknameInput" placeholder="Enter nickname">
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-primary" id="saveNicknameBtn">
-                        <i class="fas fa-save"></i> Save Nickname
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Location Picker Modal -->
-        <div class="modal-content" id="locationModal">
-            <div class="modal-header">
-                <h3>Share Location</h3>
-                <button class="close-modal" id="closeLocationModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="location-map" id="locationMap">
-                    <!-- Map will be loaded here -->
-                    <div class="map-placeholder">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <p>Loading map...</p>
-                    </div>
-                </div>
-                <div class="location-details" id="locationDetails">
-                    <h4>Current Location</h4>
-                    <p id="locationAddress">Fetching address...</p>
-                    <p id="locationCoordinates">Fetching coordinates...</p>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-primary" id="shareLocationBtn">
-                        <i class="fas fa-share"></i> Share Location
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Media Viewer Modal -->
-        <div class="modal-content" id="mediaViewerModal">
-            <div class="modal-header">
-                <h3 id="mediaViewerTitle">Media</h3>
-                <button class="close-modal" id="closeMediaViewerModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="media-viewer" id="mediaViewer">
-                    <!-- Media will be displayed here -->
-                </div>
-                <div class="media-info" id="mediaInfo">
-                    <p>Sent by <span id="mediaSender">Unknown</span></p>
-                    <p id="mediaTimestamp">Just now</p>
-                </div>
-                <div class="media-actions">
-                    <button class="btn-media" id="downloadMediaBtn">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button class="btn-media" id="shareMediaBtn">
-                        <i class="fas fa-share"></i>
-                    </button>
-                    <button class="btn-media" id="deleteMediaBtn">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Report User Modal -->
-        <div class="modal-content" id="reportModal">
-            <div class="modal-header">
-                <h3>Report User</h3>
-                    <button class="close-modal" id="closeReportModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="report-form">
-                    <div class="input-group">
-                        <label>Reason for Report</label>
-                        <select id="reportReason">
-                            <option value="spam">Spam</option>
-                            <option value="harassment">Harassment</option>
-                            <option value="inappropriate">Inappropriate Content</option>
-                            <option value="impersonation">Impersonation</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Additional Details</label>
-                        <textarea id="reportDetails" placeholder="Please provide more details..." rows="4"></textarea>
-                    </div>
-                    <p class="form-hint">Your report will be reviewed within 24 hours. False reports may result in account suspension.</p>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-danger" id="submitReportBtn">
-                        <i class="fas fa-flag"></i> Submit Report
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Confirmation Modal -->
-        <div class="modal-content" id="confirmationModal">
-            <div class="modal-header">
-                <h3 id="confirmationTitle">Confirm Action</h3>
-                <button class="close-modal" id="closeConfirmationModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="confirmation-message">
-                    <i class="fas fa-exclamation-triangle warning-icon"></i>
-                    <h4 id="confirmationMessage">Are you sure you want to perform this action?</h4>
-                    <p id="confirmationDetails">This action cannot be undone.</p>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-secondary" id="confirmCancelBtn">Cancel</button>
-                    <button class="btn-danger" id="confirmActionBtn">Confirm</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notifications -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Audio for notifications -->
-    <audio id="notificationSound" preload="auto">
-        <source src="notification.mp3" type="audio/mpeg">
-    </audio>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs&callback=initMap" async defer></script>
     <script src="app.js"></script>
     <script>
-        // Chat page specific JavaScript
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeChatPage();
+        // Chat page specific functions
+        let chatData = null;
+        let otherUserId = null;
+        let isGroup = false;
+        let isFavorite = false;
+        let isMuted = false;
+        
+        async function initChat() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const chatId = urlParams.get('chatId');
+            const groupId = urlParams.get('groupId');
+            const userId = urlParams.get('userId');
+            
+            if (groupId) {
+                isGroup = true;
+                await loadGroupChat(groupId);
+            } else if (chatId && userId) {
+                await loadIndividualChat(chatId, userId);
+            } else {
+                window.location.href = 'home.html';
+            }
+            
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }, 500);
+        }
+        
+        async function loadIndividualChat(chatId, userId) {
+            try {
+                // Get other user data
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.orderByChild('userId').equalTo(userId).once('value');
+                
+                if (snapshot.exists()) {
+                    const userData = Object.values(snapshot.val())[0];
+                    otherUserId = Object.keys(snapshot.val())[0];
+                    
+                    // Update UI
+                    document.getElementById('chatUserName').textContent = userData.name;
+                    document.getElementById('chatAvatar').src = userData.profileUrl || 'zynaps.png';
+                    
+                    // Update status
+                    updateUserStatusDisplay(otherUserId);
+                    
+                    // Listen for status changes
+                    database.ref('users/' + otherUserId + '/status').on('value', (snapshot) => {
+                        updateUserStatusDisplay(otherUserId);
+                    });
+                    
+                    // Load messages
+                    loadMessages(chatId);
+                    
+                    // Set up typing listener
+                    setupTypingListener(chatId);
+                }
+            } catch (error) {
+                console.error('Error loading chat:', error);
+                showToast('Failed to load chat', 'error');
+            }
+        }
+        
+        async function loadGroupChat(groupId) {
+            try {
+                const groupRef = database.ref('groups/' + groupId);
+                const snapshot = await groupRef.once('value');
+                
+                if (snapshot.exists()) {
+                    chatData = snapshot.val();
+                    
+                    // Update UI
+                    document.getElementById('chatUserName').textContent = chatData.name;
+                    document.getElementById('chatAvatar').src = chatData.photoUrl || 'zynaps.png';
+                    document.getElementById('statusText').textContent = `${Object.keys(chatData.members || {}).length} members`;
+                    document.getElementById('statusDot').classList.add('online');
+                    
+                    // Load messages
+                    loadMessages(groupId);
+                }
+            } catch (error) {
+                console.error('Error loading group chat:', error);
+                showToast('Failed to load group chat', 'error');
+            }
+        }
+        
+        function updateUserStatusDisplay(userId) {
+            const status = userStatus[userId] || 'offline';
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            
+            if (status === 'online') {
+                dot.className = 'status-dot online';
+                text.textContent = 'Online';
+            } else {
+                dot.className = 'status-dot offline';
+                text.textContent = 'Offline';
+            }
+        }
+        
+        function toggleChatMenu() {
+            const dropdown = document.getElementById('chatMenuDropdown');
+            dropdown.classList.toggle('show');
+        }
+        
+        async function viewProfile() {
+            if (isGroup) {
+                showGroupInfo();
+                return;
+            }
+            
+            try {
+                const userRef = database.ref('users/' + otherUserId);
+                const snapshot = await userRef.once('value');
+                
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    
+                    // Update modal
+                    document.getElementById('modalProfilePic').src = userData.profileUrl || 'zynaps.png';
+                    document.getElementById('modalUserName').textContent = userData.name;
+                    document.getElementById('modalUserId').textContent = userData.userId;
+                    document.getElementById('modalUserStatus').textContent = userData.status === 'online' ? 'Online' : 'Last seen recently';
+                    
+                    // Show modal
+                    document.getElementById('profileModal').classList.add('active');
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showToast('Failed to load profile', 'error');
+            }
+        }
+        
+        function showGroupInfo() {
+            if (!chatData) return;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Group Info</h3>
+                        <button class="close-modal" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <img src="${chatData.photoUrl || 'zynaps.png'}" alt="${chatData.name}" style="width: 80px; height: 80px; border-radius: var(--radius-circle); object-fit: cover; margin-bottom: 12px;">
+                            <h3 style="margin-bottom: 4px;">${chatData.name}</h3>
+                            <p style="color: var(--gray-600);">${Object.keys(chatData.members || {}).length} members</p>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <h4 style="margin-bottom: 12px; font-size: 16px;">Members</h4>
+                            <div id="groupMembersList" style="max-height: 200px; overflow-y: auto;">
+                                <!-- Members will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        ${chatData.createdBy === currentUser.uid ? `
+                        <div style="margin-top: 20px;">
+                            <button class="btn-primary" style="width: 100%;" onclick="editGroup()">
+                                <i class="fas fa-edit"></i>
+                                Edit Group
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            loadGroupMembers();
+        }
+        
+        async function loadGroupMembers() {
+            if (!chatData?.members) return;
+            
+            const list = document.getElementById('groupMembersList');
+            if (!list) return;
+            
+            list.innerHTML = '';
+            
+            for (const [memberId, memberData] of Object.entries(chatData.members)) {
+                try {
+                    const userRef = database.ref('users/' + memberId);
+                    const snapshot = await userRef.once('value');
+                    
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        const isAdmin = memberData.role === 'admin';
+                        
+                        const div = document.createElement('div');
+                        div.className = 'contact-card';
+                        div.style.margin = '8px 0';
+                        
+                        div.innerHTML = `
+                            <img src="${userData.profileUrl || 'zynaps.png'}" alt="${userData.name}" class="contact-avatar">
+                            <div class="contact-info">
+                                <h3>${userData.name}</h3>
+                                <div class="contact-status">
+                                    <span>${userData.userId}</span>
+                                </div>
+                            </div>
+                            ${isAdmin ? '<span style="color: var(--blue); font-size: 12px;">Admin</span>' : ''}
+                        `;
+                        
+                        list.appendChild(div);
+                    }
+                } catch (error) {
+                    console.error('Error loading member:', error);
+                }
+            }
+        }
+        
+        function startChatFromProfile() {
+            closeModal();
+            // Already in chat, do nothing
+        }
+        
+        function addNickname() {
+            const nickname = prompt('Enter nickname:');
+            if (nickname) {
+                // Save nickname to database
+                const chatId = getChatIdFromURL();
+                if (chatId) {
+                    database.ref(`users/${currentUser.uid}/nicknames/${otherUserId}`).set(nickname);
+                    showToast('Nickname added', 'success');
+                }
+            }
+        }
+        
+        function toggleFavorite() {
+            isFavorite = !isFavorite;
+            const text = document.getElementById('favoriteText');
+            text.textContent = isFavorite ? 'Remove from Favorites' : 'Add to Favorites';
+            
+            // Save to database
+            const chatId = getChatIdFromURL();
+            if (chatId) {
+                database.ref(`users/${currentUser.uid}/favorites/${chatId}`).set(isFavorite);
+            }
+            
+            showToast(isFavorite ? 'Added to favorites' : 'Removed from favorites', 'success');
+        }
+        
+        function blockUser() {
+            if (confirm('Are you sure you want to block this user?')) {
+                // Block user logic
+                const chatId = getChatIdFromURL();
+                if (chatId && otherUserId) {
+                    database.ref(`users/${currentUser.uid}/blocked/${otherUserId}`).set(true);
+                    showToast('User blocked', 'success');
+                    setTimeout(() => {
+                        window.history.back();
+                    }, 1000);
+                }
+            }
+        }
+        
+        async function deleteChat() {
+            if (confirm('Are you sure you want to delete this chat? All messages will be lost.')) {
+                const chatId = getChatIdFromURL();
+                if (chatId) {
+                    // Remove chat from user's chat list
+                    await database.ref(`users/${currentUser.uid}/chats/${chatId}`).remove();
+                    
+                    showToast('Chat deleted', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 1000);
+                }
+            }
+        }
+        
+        function autoResizeTextarea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+        }
+        
+        // Close modals when clicking outside
+        document.addEventListener('click', (event) => {
+            if (event.target.classList.contains('modal-overlay')) {
+                closeModal();
+            }
         });
+        
+        // Initialize chat page
+        document.addEventListener('DOMContentLoaded', initChat);
     </script>
 </body>
 </html>
