@@ -2,27 +2,652 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Zynapse - Sign Up</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zynapse - Secure Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="zynaps.png" type="image/png">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-    <!-- Cloudinary Upload Widget -->
-    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    <style>
+        /* ==================== ZYNAPSE iOS THEMED CHAT APP - PRODUCTION CSS ==================== */
+        /* Reset & Base Styles - Compact iOS Style */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            /* Color Palette - Pure White iOS Theme */
+            --white: #ffffff;
+            --white-98: #fafafa;
+            --white-95: #f2f2f2;
+            --gray-50: #f8f8f8;
+            --gray-100: #f0f0f0;
+            --gray-150: #e8e8e8;
+            --gray-200: #e0e0e0;
+            --gray-300: #d1d1d6;
+            --gray-400: #c7c7cc;
+            --gray-500: #8e8e93;
+            --gray-600: #6d6d72;
+            --gray-700: #48484a;
+            --gray-800: #3a3a3c;
+            --gray-900: #2c2c2e;
+            --black: #000000;
+            
+            /* Message Colors */
+            --blue: #007aff;
+            --blue-light: rgba(0, 122, 255, 0.1);
+            --blue-msg: #007aff;
+            --blue-msg-light: #5ac8fa;
+            --green: #34c759;
+            --green-light: #4cd964;
+            --red: #ff3b30;
+            --red-light: #ff5757;
+            --red-dark: #d70015;
+            --red-msg: #ff3b30;
+            --orange: #ff9500;
+            --purple: #af52de;
+            --yellow: #ffcc00;
+            --zyne-red: #ff3b30;
+            
+            /* Shadows */
+            --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.06);
+            --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.08);
+            
+            /* Border Radius */
+            --radius-xs: 4px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-2xl: 24px;
+            --radius-circle: 50%;
+            
+            /* Typography - Compact */
+            --font-sf: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+            --font-mono: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+            
+            /* Spacing - Compact */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --space-10: 40px;
+            
+            /* Transitions */
+            --transition-fast: 150ms ease;
+            --transition-normal: 250ms ease;
+            --transition-slow: 350ms ease;
+            --transition-spring: 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Base Styles */
+        html {
+            font-size: 15px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: var(--font-sf);
+            background: var(--white);
+            color: var(--gray-900);
+            line-height: 1.35;
+            height: 100%;
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Loading & Auth Styles */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            opacity: 1;
+            transition: opacity var(--transition-slow);
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-content {
+            text-align: center;
+            padding: var(--space-6);
+        }
+
+        .loading-logo {
+            width: 72px;
+            height: 72px;
+            margin-bottom: var(--space-6);
+            border-radius: var(--radius-lg);
+            object-fit: contain;
+            animation: gentlePulse 2s infinite;
+        }
+
+        .spinner-large {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(0, 122, 255, 0.08);
+            border-top-color: var(--blue);
+            border-radius: var(--radius-circle);
+            margin: 0 auto var(--space-4);
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Authentication Pages */
+        .auth-page {
+            height: 100vh;
+            height: 100dvh;
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .auth-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-6);
+            max-width: 400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .welcome-screen {
+            text-align: center;
+            width: 100%;
+            animation: fadeInUp 0.5s var(--transition-spring);
+        }
+
+        .logo-large {
+            width: 88px;
+            height: 88px;
+            margin: 0 auto var(--space-4);
+            border-radius: var(--radius-lg);
+            object-fit: contain;
+            transition: transform var(--transition-normal);
+        }
+
+        .welcome-screen h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--black);
+            margin-bottom: var(--space-2);
+            letter-spacing: -0.5px;
+        }
+
+        .tagline {
+            font-size: 15px;
+            color: var(--gray-600);
+            margin-bottom: var(--space-2);
+            line-height: 1.4;
+            padding: 0 var(--space-4);
+        }
+
+        .powered-by {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-bottom: var(--space-8);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .welcome-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+            margin-bottom: var(--space-6);
+            width: 100%;
+        }
+
+        /* Auth Forms */
+        .auth-form {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            width: 100%;
+            animation: fadeInUp 0.4s var(--transition-spring);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: var(--space-6);
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            font-size: 18px;
+            cursor: pointer;
+            padding: var(--space-2);
+            border-radius: var(--radius-circle);
+            transition: all var(--transition-normal);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-small {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-4);
+            object-fit: contain;
+        }
+
+        .auth-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--black);
+            margin-bottom: var(--space-1);
+        }
+
+        .auth-header p {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .auth-form-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+            font-size: 16px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 14px 14px 40px;
+            font-size: 15px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            background: var(--white);
+            color: var(--black);
+            transition: all var(--transition-normal);
+            font-family: var(--font-sf);
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.08);
+        }
+
+        .input-group input::placeholder {
+            color: var(--gray-400);
+            font-weight: 400;
+        }
+
+        .toggle-password {
+            left: auto !important;
+            right: 14px;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        /* Profile Upload */
+        .profile-upload-section {
+            margin: var(--space-4) 0;
+        }
+
+        .upload-label {
+            display: block;
+            margin-bottom: var(--space-3);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .profile-upload-container {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin-bottom: var(--space-3);
+        }
+
+        .upload-preview {
+            width: 72px;
+            height: 72px;
+            border-radius: var(--radius-circle);
+            background: var(--gray-50);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1.5px dashed var(--gray-300);
+            transition: all var(--transition-normal);
+            flex-shrink: 0;
+        }
+
+        .upload-preview:hover {
+            border-color: var(--blue);
+        }
+
+        .preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: var(--space-2);
+        }
+
+        .preview-placeholder i {
+            font-size: 22px;
+            color: var(--gray-400);
+            margin-bottom: 4px;
+        }
+
+        .preview-placeholder span {
+            font-size: 11px;
+            color: var(--gray-500);
+        }
+
+        .upload-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .btn-upload, .btn-remove {
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: 1.5px solid;
+        }
+
+        .btn-upload {
+            background: var(--white);
+            color: var(--blue);
+            border-color: var(--blue);
+        }
+
+        .btn-upload:hover:not(:disabled) {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        .btn-remove {
+            background: var(--white);
+            color: var(--red);
+            border-color: var(--red);
+        }
+
+        .btn-remove:hover:not(:disabled) {
+            background: var(--red);
+            color: var(--white);
+        }
+
+        .upload-hint {
+            font-size: 11px;
+            color: var(--gray-500);
+            margin-top: 2px;
+        }
+
+        /* Terms */
+        .terms-agreement {
+            margin: var(--space-3) 0;
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        /* Divider */
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            margin: var(--space-4) 0;
+            color: var(--gray-400);
+            font-size: 12px;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--gray-200);
+        }
+
+        .auth-divider span {
+            padding: 0 var(--space-3);
+        }
+
+        /* Buttons */
+        .btn-primary, .btn-secondary, .btn-danger {
+            padding: 14px;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #0066d6;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--blue);
+            border: 1.5px solid var(--blue);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: var(--red);
+            color: var(--white);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: var(--red-dark);
+        }
+
+        .btn-google {
+            background: var(--white);
+            color: var(--gray-800);
+            border: 1.5px solid var(--gray-200);
+            padding: 12px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn-google:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-300);
+        }
+
+        /* Auth Switch */
+        .auth-switch {
+            text-align: center;
+            margin-top: var(--space-4);
+            padding-top: var(--space-4);
+            border-top: 1px solid var(--gray-150);
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .auth-switch .link {
+            color: var(--blue);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* Error Messages */
+        .error-message {
+            color: var(--red);
+            font-size: 13px;
+            margin-top: 4px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .error-message.show {
+            display: flex;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes gentlePulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: var(--space-4);
+            }
+            
+            .auth-form {
+                padding: var(--space-5);
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 10;
+            border-radius: inherit;
+            backdrop-filter: blur(2px);
+        }
+
+        /* Safe Area */
+        .safe-area-top {
+            padding-top: env(safe-area-inset-top);
+            padding-top: constant(safe-area-inset-top);
+        }
+
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-bottom: constant(safe-area-inset-bottom);
+        }
+    </style>
 </head>
 <body>
-    <div class="auth-page">
-        <!-- Welcome Screen -->
-        <div class="welcome-screen active" id="welcomeScreen">
-            <div class="auth-container">
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
+            <div class="spinner-large"></div>
+            <p>Initializing Zynapse...</p>
+        </div>
+    </div>
+
+    <!-- Auth Page -->
+    <div class="auth-page" id="authPage">
+        <div class="auth-container">
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcomeScreen">
                 <img src="zynaps.png" alt="Zynapse Logo" class="logo-large">
                 <h1>Zynapse</h1>
-                <p class="tagline">Connect instantly with secure, real-time messaging. Share moments, stay in sync.</p>
+                <p class="tagline">Secure, private messaging with end-to-end encryption. Connect instantly with friends and colleagues.</p>
                 <p class="powered-by">Powered by Buffer Zone</p>
                 
                 <div class="welcome-actions">
@@ -33,215 +658,209 @@
                         <i class="fas fa-sign-in-alt"></i> Sign In
                     </button>
                 </div>
-                
-                <div class="auth-divider">
-                    <span>or continue with</span>
-                </div>
-                
-                <button class="btn-google" onclick="signInWithGoogle()">
-                    <i class="fab fa-google"></i> Continue with Google
-                </button>
-                
-                <div class="welcome-footer">
-                    By continuing, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a>
-                </div>
-            </div>
-        </div>
 
-        <!-- Signup Form -->
-        <div class="auth-form hidden" id="signupForm">
-            <div class="auth-header">
-                <button class="back-btn" onclick="showWelcome()">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                <h2>Create Account</h2>
-                <p>Join Zynapse today</p>
+                <div class="welcome-footer">
+                    By proceeding, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a>
+                </div>
             </div>
-            
-            <div class="auth-form-content">
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="signupName" placeholder="Full Name" required>
+
+            <!-- Signup Form -->
+            <div class="auth-form hidden" id="signupForm">
+                <div class="auth-header">
+                    <button class="back-btn" onclick="showWelcome()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                    <h2>Create Account</h2>
+                    <p>Join Zynapse today</p>
                 </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-phone"></i>
-                    <input type="tel" id="signupPhone" placeholder="Phone Number" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="signupEmail" placeholder="Email Address" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="signupPassword" placeholder="Password" required>
-                    <i class="fas fa-eye toggle-password" onclick="togglePassword('signupPassword')"></i>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
-                    <i class="fas fa-eye toggle-password" onclick="togglePassword('signupConfirmPassword')"></i>
-                </div>
-                
-                <div class="profile-upload-section">
-                    <label class="upload-label">Profile Picture</label>
-                    <div class="profile-upload-container">
-                        <div class="upload-preview" id="profilePreview">
-                            <div class="preview-placeholder">
-                                <i class="fas fa-user"></i>
-                                <span>Upload</span>
+
+                <div class="auth-form-content">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="signupName" placeholder="Full Name" required>
+                        <div class="error-message" id="nameError">
+                            <i class="fas fa-exclamation-circle"></i> Please enter your name
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="signupPhone" placeholder="Phone Number" required>
+                        <div class="error-message" id="phoneError">
+                            <i class="fas fa-exclamation-circle"></i> Valid phone number required
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="signupEmail" placeholder="Email Address" required>
+                        <div class="error-message" id="emailError">
+                            <i class="fas fa-exclamation-circle"></i> Valid email required
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupPassword" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('signupPassword', this)"></i>
+                        <div class="error-message" id="passwordError">
+                            <i class="fas fa-exclamation-circle"></i> Minimum 6 characters required
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('signupConfirmPassword', this)"></i>
+                        <div class="error-message" id="confirmPasswordError">
+                            <i class="fas fa-exclamation-circle"></i> Passwords don't match
+                        </div>
+                    </div>
+
+                    <div class="profile-upload-section">
+                        <label class="upload-label">Profile Picture</label>
+                        <div class="profile-upload-container">
+                            <div class="upload-preview" id="profilePreview">
+                                <div class="preview-placeholder">
+                                    <i class="fas fa-user"></i>
+                                    <span>No image</span>
+                                </div>
+                            </div>
+                            <div class="upload-buttons">
+                                <button class="btn-upload" onclick="document.getElementById('profileUpload').click()">
+                                    <i class="fas fa-upload"></i> Upload
+                                </button>
+                                <button class="btn-remove" onclick="removeProfileImage()">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
                             </div>
                         </div>
-                        <div class="upload-buttons">
-                            <button class="btn-upload" onclick="uploadProfilePicture()">
-                                <i class="fas fa-upload"></i> Upload
-                            </button>
-                            <button class="btn-remove" onclick="removeProfilePicture()" disabled>
-                                <i class="fas fa-trash"></i> Remove
-                            </button>
+                        <p class="upload-hint">JPEG, PNG or GIF. Max 5MB</p>
+                        <input type="file" id="profileUpload" accept="image/*" style="display: none;" onchange="handleProfileUpload(event)">
+                    </div>
+
+                    <div class="terms-agreement">
+                        <input type="checkbox" id="termsAgreement" style="margin-right: 8px;">
+                        <label for="termsAgreement">I agree to the Terms of Service and Privacy Policy</label>
+                        <div class="error-message" id="termsError">
+                            <i class="fas fa-exclamation-circle"></i> You must agree to the terms
                         </div>
                     </div>
-                    <p class="upload-hint">JPG, PNG or GIF • Max 5MB</p>
-                    <input type="hidden" id="profilePictureUrl">
-                </div>
-                
-                <div class="terms-agreement">
-                    <input type="checkbox" id="termsAgree" required>
-                    <label for="termsAgree">I agree to the Terms of Service and Privacy Policy</label>
-                </div>
-                
-                <button class="btn-primary" onclick="signup()" id="signupBtn">
-                    <i class="fas fa-user-plus"></i> Create Account
-                </button>
-                
-                <div class="auth-switch">
-                    Already have an account? <a href="#" class="link" onclick="showLogin()">Sign In</a>
-                </div>
-            </div>
-        </div>
 
-        <!-- Login Form -->
-        <div class="auth-form hidden" id="loginForm">
-            <div class="auth-header">
-                <button class="back-btn" onclick="showWelcome()">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                <h2>Welcome Back</h2>
-                <p>Sign in to your account</p>
-            </div>
-            
-            <div class="auth-form-content">
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="loginEmail" placeholder="Email Address" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="loginPassword" placeholder="Password" required>
-                    <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPassword')"></i>
-                </div>
-                
-                <div class="flex-between mt-2">
-                    <div class="terms-agreement">
-                        <input type="checkbox" id="rememberMe">
-                        <label for="rememberMe">Remember me</label>
+                    <button class="btn-primary" id="signupBtn" onclick="signup()">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+
+                    <div class="auth-divider">
+                        <span>Or continue with</span>
                     </div>
-                    <a href="#" class="link text-sm" onclick="showForgotPassword()">Forgot password?</a>
-                </div>
-                
-                <button class="btn-primary" onclick="login()" id="loginBtn">
-                    <i class="fas fa-sign-in-alt"></i> Sign In
-                </button>
-                
-                <div class="auth-divider">
-                    <span>or continue with</span>
-                </div>
-                
-                <button class="btn-google" onclick="signInWithGoogle()">
-                    <i class="fab fa-google"></i> Sign in with Google
-                </button>
-                
-                <div class="auth-switch">
-                    Don't have an account? <a href="#" class="link" onclick="showSignup()">Sign Up</a>
-                </div>
-            </div>
-        </div>
 
-        <!-- Forgot Password Form -->
-        <div class="auth-form hidden" id="forgotPasswordForm">
-            <div class="auth-header">
-                <button class="back-btn" onclick="showLogin()">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                <h2>Reset Password</h2>
-                <p>Enter your email to reset password</p>
-            </div>
-            
-            <div class="auth-form-content">
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="resetEmail" placeholder="Email Address" required>
-                </div>
-                
-                <p class="text-sm text-gray-600 mb-4">
-                    We'll send you a link to reset your password.
-                </p>
-                
-                <button class="btn-primary" onclick="resetPassword()" id="resetBtn">
-                    <i class="fas fa-paper-plane"></i> Send Reset Link
-                </button>
-            </div>
-        </div>
-    </div>
+                    <button class="btn-google">
+                        <i class="fab fa-google"></i> Google
+                    </button>
 
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-content">
-            <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
-            <div class="spinner-large"></div>
-            <p>Loading Zynapse...</p>
+                    <div class="auth-switch">
+                        Already have an account? <a href="#" class="link" onclick="showLogin()">Sign In</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <div class="auth-form hidden" id="loginForm">
+                <div class="auth-header">
+                    <button class="back-btn" onclick="showWelcome()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to your account</p>
+                </div>
+
+                <div class="auth-form-content">
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="loginEmail" placeholder="Email Address" required>
+                        <div class="error-message" id="loginEmailError">
+                            <i class="fas fa-exclamation-circle"></i> Valid email required
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPassword', this)"></i>
+                        <div class="error-message" id="loginPasswordError">
+                            <i class="fas fa-exclamation-circle"></i> Password required
+                        </div>
+                    </div>
+
+                    <button class="btn-primary" id="loginBtn" onclick="login()">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </button>
+
+                    <div class="auth-divider">
+                        <span>Or continue with</span>
+                    </div>
+
+                    <button class="btn-google">
+                        <i class="fab fa-google"></i> Google
+                    </button>
+
+                    <div class="auth-switch">
+                        Don't have an account? <a href="#" class="link" onclick="showSignup()">Create Account</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="app.js"></script>
     <script>
-        // Page-specific functions for index.html
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
+            authDomain: "zynapse-68181.firebaseapp.com",
+            databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
+            projectId: "zynapse-68181",
+            storageBucket: "zynapse-68181.firebasestorage.app",
+            messagingSenderId: "841353050519",
+            appId: "1:841353050519:web:3b16d95d8f4cd3b9506cd2",
+            measurementId: "G-4764XLL6WS"
+        };
+
+        // Cloudinary Configuration
+        const CLOUDINARY_CONFIG = {
+            cloudName: 'dd3lcymrk',
+            apiKey: '489857926297197',
+            uploadPreset: 'h3eyhc2o',
+            folder: 'zynapse/profiles'
+        };
+
+        let currentUser = null;
+        let profileImageUrl = null;
+
+        // UI Functions
         function showWelcome() {
-            document.getElementById('welcomeScreen').classList.add('active');
+            document.getElementById('welcomeScreen').classList.remove('hidden');
             document.getElementById('signupForm').classList.add('hidden');
             document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
         }
 
         function showSignup() {
-            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('welcomeScreen').classList.add('hidden');
             document.getElementById('signupForm').classList.remove('hidden');
             document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
         }
 
         function showLogin() {
-            document.getElementById('welcomeScreen').classList.remove('active');
+            document.getElementById('welcomeScreen').classList.add('hidden');
             document.getElementById('signupForm').classList.add('hidden');
             document.getElementById('loginForm').classList.remove('hidden');
-            document.getElementById('forgotPasswordForm').classList.add('hidden');
         }
 
-        function showForgotPassword() {
-            document.getElementById('loginForm').classList.add('hidden');
-            document.getElementById('forgotPasswordForm').classList.remove('hidden');
-        }
-
-        function togglePassword(inputId) {
+        function togglePassword(inputId, icon) {
             const input = document.getElementById(inputId);
-            const icon = input.nextElementSibling;
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('fa-eye');
@@ -253,20 +872,243 @@
             }
         }
 
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if user is already logged in
-            firebase.auth().onAuthStateChanged((user) => {
-                if (user) {
-                    // User is signed in, redirect to home
-                    window.location.href = 'home.html';
-                } else {
-                    // User is signed out, show welcome screen
-                    setTimeout(() => {
-                        document.getElementById('loadingScreen').classList.add('hidden');
-                    }, 1000);
-                }
+        function handleProfileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                showError('File size must be less than 5MB');
+                return;
+            }
+
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                showError('Please select an image file');
+                return;
+            }
+
+            // Preview image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('profilePreview');
+                preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                profileImageUrl = e.target.result; // Base64 for preview
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeProfileImage() {
+            const preview = document.getElementById('profilePreview');
+            preview.innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-user"></i>
+                    <span>No image</span>
+                </div>
+            `;
+            profileImageUrl = null;
+            document.getElementById('profileUpload').value = '';
+        }
+
+        function showError(message) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = 'toast error';
+            toast.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function showSuccess(message) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = 'toast success';
+            toast.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function validateSignup() {
+            let isValid = true;
+            
+            // Reset errors
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
             });
+
+            // Validate name
+            const name = document.getElementById('signupName').value.trim();
+            if (!name) {
+                document.getElementById('nameError').classList.add('show');
+                isValid = false;
+            }
+
+            // Validate phone
+            const phone = document.getElementById('signupPhone').value.trim();
+            if (!phone || phone.length < 10) {
+                document.getElementById('phoneError').classList.add('show');
+                isValid = false;
+            }
+
+            // Validate email
+            const email = document.getElementById('signupEmail').value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) {
+                document.getElementById('emailError').classList.add('show');
+                isValid = false;
+            }
+
+            // Validate password
+            const password = document.getElementById('signupPassword').value;
+            if (!password || password.length < 6) {
+                document.getElementById('passwordError').classList.add('show');
+                isValid = false;
+            }
+
+            // Validate confirm password
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            if (password !== confirmPassword) {
+                document.getElementById('confirmPasswordError').classList.add('show');
+                isValid = false;
+            }
+
+            // Validate terms
+            if (!document.getElementById('termsAgreement').checked) {
+                document.getElementById('termsError').classList.add('show');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function validateLogin() {
+            let isValid = true;
+            
+            // Reset errors
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
+            });
+
+            // Validate email
+            const email = document.getElementById('loginEmail').value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) {
+                document.getElementById('loginEmailError').classList.add('show');
+                isValid = false;
+            }
+
+            // Validate password
+            const password = document.getElementById('loginPassword').value;
+            if (!password) {
+                document.getElementById('loginPasswordError').classList.add('show');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        async function signup() {
+            if (!validateSignup()) return;
+
+            const btn = document.getElementById('signupBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            try {
+                // Generate user ID
+                const userId = 'ZYN-' + Math.floor(1000 + Math.random() * 9000);
+                
+                // Get form values
+                const userData = {
+                    name: document.getElementById('signupName').value.trim(),
+                    phone: document.getElementById('signupPhone').value.trim(),
+                    email: document.getElementById('signupEmail').value.trim(),
+                    password: document.getElementById('signupPassword').value,
+                    userId: userId,
+                    profileImage: profileImageUrl,
+                    createdAt: new Date().toISOString(),
+                    status: 'Hey there! I am using Zynapse',
+                    lastSeen: new Date().toISOString(),
+                    isOnline: true
+                };
+
+                // Upload profile image to Cloudinary if exists
+                let profileUrl = '';
+                if (profileImageUrl && profileImageUrl.startsWith('data:image')) {
+                    profileUrl = await uploadToCloudinary(profileImageUrl);
+                }
+
+                // Save user to Firebase
+                await saveUserToFirebase(userData, profileUrl);
+                
+                // Create Firebase auth user
+                await createFirebaseUser(userData.email, userData.password, userId);
+                
+                // Show success and redirect
+                showSuccess('Account created successfully!');
+                setTimeout(() => {
+                    window.location.href = `home.html?userId=${userId}`;
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Signup error:', error);
+                showError(error.message || 'Signup failed. Please try again.');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        async function login() {
+            if (!validateLogin()) return;
+
+            const btn = document.getElementById('loginBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            try {
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+
+                // Authenticate with Firebase
+                const userId = await authenticateFirebaseUser(email, password);
+                
+                if (userId) {
+                    showSuccess('Login successful!');
+                    setTimeout(() => {
+                        window.location.href = `home.html?userId=${userId}`;
+                    }, 1000);
+                } else {
+                    showError('Invalid credentials');
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showError(error.message || 'Login failed. Please try again.');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Initialize app
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                showWelcome();
+            }, 1000);
         });
     </script>
 </body>
