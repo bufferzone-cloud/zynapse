@@ -3,172 +3,650 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zynapse - Connect Instantly</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Zynapse - Secure Chat App</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/recordrtc/5.6.2/RecordRTC.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="zynaps.png">
 </head>
 <body>
-    <div id="loadingScreen" class="loading-screen">
-        <div class="loading-content">
-            <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
-            <div class="spinner-large"></div>
-            <p>Loading Zynapse...</p>
+    <div class="auth-page">
+        <!-- Loading Screen -->
+        <div class="loading-screen active" id="loadingScreen">
+            <div class="loading-content">
+                <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
+                <div class="spinner-large"></div>
+                <p>Initializing Zynapse...</p>
+            </div>
         </div>
-    </div>
 
-    <div id="authContainer" class="auth-page" style="display: none;">
-        <div class="auth-container">
-            <div id="welcomeScreen" class="welcome-screen">
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" id="welcomeScreen">
+            <div class="auth-container">
                 <img src="zynaps.png" alt="Zynapse Logo" class="logo-large">
                 <h1>Zynapse</h1>
-                <p class="tagline">Connect instantly with secure, real-time messaging. Your conversations, your control.</p>
+                <p class="tagline">Secure, real-time messaging with end-to-end encryption</p>
                 <p class="powered-by">powered by buffer zone</p>
                 
                 <div class="welcome-actions">
-                    <button id="showSignupBtn" class="btn-primary">
-                        <i class="fas fa-user-plus"></i> Create Account
+                    <button class="btn-primary" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> Log In
                     </button>
-                    <div class="auth-divider">
-                        <span>or</span>
-                    </div>
-                    <button id="showLoginBtn" class="btn-secondary">
-                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    <button class="btn-secondary" id="signupBtn">
+                        <i class="fas fa-user-plus"></i> Sign Up
                     </button>
                 </div>
-                
-                <p class="welcome-footer">
-                    By continuing, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a>
-                </p>
+
+                <div class="welcome-footer">
+                    <p>By continuing, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Form -->
+        <div class="auth-form hidden" id="loginForm">
+            <div class="auth-header">
+                <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                <h2>Welcome Back</h2>
+                <p>Log in to your Zynapse account</p>
             </div>
 
-            <!-- Signup Form -->
-            <div id="signupForm" class="auth-form" style="display: none;">
-                <div class="auth-header">
-                    <button id="backToWelcomeFromSignup" class="back-btn">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                    <h2>Create Account</h2>
-                    <p>Join Zynapse today</p>
+            <div class="auth-form-content">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="loginEmail" placeholder="Email address" required>
                 </div>
 
-                <form id="signupFormElement" class="auth-form-content">
-                    <div class="input-group">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="signupName" placeholder="Full Name" required>
-                    </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                    <i class="fas fa-eye toggle-password" id="toggleLoginPassword"></i>
+                </div>
 
-                    <div class="input-group">
-                        <i class="fas fa-phone"></i>
-                        <input type="tel" id="signupPhone" placeholder="Phone Number" required>
-                    </div>
+                <button class="btn-primary" id="submitLogin">
+                    <i class="fas fa-sign-in-alt"></i> Log In
+                </button>
 
-                    <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="signupEmail" placeholder="Email Address" required>
-                    </div>
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
 
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="signupPassword" placeholder="Password" required>
-                        <i class="fas fa-eye toggle-password" data-target="signupPassword"></i>
-                    </div>
+                <button class="btn-google" id="googleLogin">
+                    <i class="fab fa-google"></i> Continue with Google
+                </button>
 
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
-                        <i class="fas fa-eye toggle-password" data-target="signupConfirmPassword"></i>
-                    </div>
+                <div class="auth-switch">
+                    <p>Don't have an account? <a href="#" class="link" id="goToSignup">Sign Up</a></p>
+                </div>
+            </div>
+        </div>
 
-                    <div class="profile-upload-section">
-                        <label class="upload-label">Profile Picture</label>
-                        <div class="profile-upload-container">
-                            <div id="profilePreview" class="upload-preview">
-                                <div class="preview-placeholder">
-                                    <i class="fas fa-user-circle"></i>
-                                    <span>No image</span>
-                                </div>
-                            </div>
-                            <div class="upload-buttons">
-                                <button type="button" id="uploadProfileBtn" class="btn-upload">
-                                    <i class="fas fa-upload"></i> Upload
-                                </button>
-                                <button type="button" id="removeProfileBtn" class="btn-remove" style="display: none;">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                            </div>
-                        </div>
-                        <p class="upload-hint">JPG, PNG or GIF. Max 5MB</p>
-                        <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
-                    </div>
-
-                    <div class="terms-agreement">
-                        <input type="checkbox" id="agreeTerms" required>
-                        <label for="agreeTerms">I agree to the Terms of Service and Privacy Policy</label>
-                    </div>
-
-                    <button type="submit" class="btn-primary" id="signupSubmitBtn">
-                        <i class="fas fa-user-plus"></i> Create Account
-                    </button>
-
-                    <div class="auth-switch">
-                        Already have an account? <a href="#" id="switchToLogin" class="link">Sign In</a>
-                    </div>
-                </form>
+        <!-- Signup Form -->
+        <div class="auth-form hidden" id="signupForm">
+            <div class="auth-header">
+                <button class="back-btn" id="backToWelcome">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                <h2>Create Account</h2>
+                <p>Join Zynapse secure messaging</p>
             </div>
 
-            <!-- Login Form -->
-            <div id="loginForm" class="auth-form" style="display: none;">
-                <div class="auth-header">
-                    <button id="backToWelcomeFromLogin" class="back-btn">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                    <h2>Welcome Back</h2>
-                    <p>Sign in to your account</p>
+            <div class="auth-form-content">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="signupName" placeholder="Full name" required>
                 </div>
 
-                <form id="loginFormElement" class="auth-form-content">
-                    <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="loginEmail" placeholder="Email Address" required>
-                    </div>
+                <div class="input-group">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" id="signupPhone" placeholder="Phone number" required>
+                </div>
 
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="loginPassword" placeholder="Password" required>
-                        <i class="fas fa-eye toggle-password" data-target="loginPassword"></i>
-                    </div>
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="signupEmail" placeholder="Email address" required>
+                </div>
 
-                    <div class="flex-between" style="margin: var(--space-3) 0;">
-                        <div>
-                            <input type="checkbox" id="rememberMe">
-                            <label for="rememberMe">Remember me</label>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="signupPassword" placeholder="Password" required>
+                    <i class="fas fa-eye toggle-password" id="toggleSignupPassword"></i>
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="signupConfirmPassword" placeholder="Confirm password" required>
+                    <i class="fas fa-eye toggle-password" id="toggleConfirmPassword"></i>
+                </div>
+
+                <!-- Profile Upload Section -->
+                <div class="profile-upload-section">
+                    <label class="upload-label">Profile Picture</label>
+                    <div class="profile-upload-container">
+                        <div class="upload-preview" id="profilePreview">
+                            <div class="preview-placeholder">
+                                <i class="fas fa-user-circle"></i>
+                                <span>No image</span>
+                            </div>
                         </div>
-                        <a href="#" id="forgotPassword" class="link text-sm">Forgot password?</a>
+                        <div class="upload-buttons">
+                            <button class="btn-upload" id="uploadProfileBtn">
+                                <i class="fas fa-upload"></i> Upload
+                            </button>
+                            <button class="btn-remove hidden" id="removeProfileBtn">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
                     </div>
+                    <input type="file" id="profileImageInput" accept="image/*" class="hidden">
+                    <p class="upload-hint">Max 5MB. JPG, PNG, or GIF</p>
+                </div>
 
-                    <button type="submit" class="btn-primary" id="loginSubmitBtn">
-                        <i class="fas fa-sign-in-alt"></i> Sign In
-                    </button>
+                <div class="terms-agreement">
+                    <input type="checkbox" id="agreeTerms" required>
+                    <label for="agreeTerms">I agree to the Terms of Service and Privacy Policy</label>
+                </div>
 
-                    <div class="auth-switch">
-                        Don't have an account? <a href="#" id="switchToSignup" class="link">Sign Up</a>
-                    </div>
-                </form>
+                <button class="btn-primary" id="submitSignup">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+
+                <div class="auth-switch">
+                    <p>Already have an account? <a href="#" class="link" id="goToLogin">Log In</a></p>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="toastContainer" class="toast-container"></div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="app.js"></script>
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
+            authDomain: "zynapse-68181.firebaseapp.com",
+            databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
+            projectId: "zynapse-68181",
+            storageBucket: "zynapse-68181.firebasestorage.app",
+            messagingSenderId: "841353050519",
+            appId: "1:841353050519:web:3b16d95d8f4cd3b9506cd2",
+            measurementId: "G-4764XLL6WS"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        
+        // DOM Elements
+        const loadingScreen = document.getElementById('loadingScreen');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const goToLogin = document.getElementById('goToLogin');
+        const goToSignup = document.getElementById('goToSignup');
+        const backToWelcome = document.getElementById('backToWelcome');
+        
+        // Show welcome screen after loading
+        setTimeout(() => {
+            loadingScreen.classList.remove('active');
+            welcomeScreen.classList.remove('hidden');
+        }, 1500);
+        
+        // Navigation between forms
+        loginBtn.addEventListener('click', () => {
+            welcomeScreen.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+        });
+        
+        signupBtn.addEventListener('click', () => {
+            welcomeScreen.classList.add('hidden');
+            signupForm.classList.remove('hidden');
+        });
+        
+        goToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            signupForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+        });
+        
+        goToSignup.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.classList.add('hidden');
+            signupForm.classList.remove('hidden');
+        });
+        
+        backToWelcome.addEventListener('click', () => {
+            signupForm.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+        });
+        
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('input');
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        });
+        
+        // Profile image upload
+        const profileImageInput = document.getElementById('profileImageInput');
+        const profilePreview = document.getElementById('profilePreview');
+        const uploadProfileBtn = document.getElementById('uploadProfileBtn');
+        const removeProfileBtn = document.getElementById('removeProfileBtn');
+        let profileImageFile = null;
+        
+        uploadProfileBtn.addEventListener('click', () => {
+            profileImageInput.click();
+        });
+        
+        profileImageInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                profileImageFile = this.files[0];
+                
+                // Validate file size (5MB max)
+                if (profileImageFile.size > 5 * 1024 * 1024) {
+                    showToast('File size exceeds 5MB limit', 'error');
+                    return;
+                }
+                
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(profileImageFile.type)) {
+                    showToast('Invalid file type. Use JPG, PNG, or GIF', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePreview.innerHTML = `<img src="${e.target.result}" alt="Profile Preview" style="width:100%;height:100%;object-fit:cover;">`;
+                    uploadProfileBtn.classList.add('hidden');
+                    removeProfileBtn.classList.remove('hidden');
+                };
+                reader.readAsDataURL(profileImageFile);
+            }
+        });
+        
+        removeProfileBtn.addEventListener('click', () => {
+            profileImageFile = null;
+            profilePreview.innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-user-circle"></i>
+                    <span>No image</span>
+                </div>
+            `;
+            uploadProfileBtn.classList.remove('hidden');
+            removeProfileBtn.classList.add('hidden');
+            profileImageInput.value = '';
+        });
+        
+        // Form submissions
+        document.getElementById('submitLogin').addEventListener('click', handleLogin);
+        document.getElementById('submitSignup').addEventListener('click', handleSignup);
+        document.getElementById('googleLogin').addEventListener('click', handleGoogleLogin);
+        
+        // Handle Enter key for form submission
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (!loginForm.classList.contains('hidden')) {
+                    handleLogin();
+                } else if (!signupForm.classList.contains('hidden')) {
+                    handleSignup();
+                }
+            }
+        });
+        
+        // Authentication functions
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+            
+            const loginBtn = document.getElementById('submitLogin');
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            loginBtn.disabled = true;
+            
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Get user data from database
+                    const userId = userCredential.user.uid;
+                    const db = firebase.database();
+                    
+                    db.ref('users/' + userId).once('value')
+                        .then((snapshot) => {
+                            const userData = snapshot.val();
+                            if (userData) {
+                                // Store user data in localStorage
+                                localStorage.setItem('zynapse_user', JSON.stringify({
+                                    uid: userId,
+                                    ...userData
+                                }));
+                                
+                                // Redirect to home page
+                                window.location.href = 'home.html';
+                            } else {
+                                showToast('User data not found', 'error');
+                                firebase.auth().signOut();
+                            }
+                        })
+                        .catch((error) => {
+                            showToast('Error fetching user data', 'error');
+                            console.error('Error:', error);
+                        });
+                })
+                .catch((error) => {
+                    let errorMessage = 'Login failed';
+                    switch (error.code) {
+                        case 'auth/user-not-found':
+                            errorMessage = 'No account found with this email';
+                            break;
+                        case 'auth/wrong-password':
+                            errorMessage = 'Incorrect password';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage = 'Invalid email address';
+                            break;
+                        case 'auth/user-disabled':
+                            errorMessage = 'Account has been disabled';
+                            break;
+                        default:
+                            errorMessage = error.message;
+                    }
+                    showToast(errorMessage, 'error');
+                })
+                .finally(() => {
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Log In';
+                    loginBtn.disabled = false;
+                });
+        }
+        
+        function handleSignup() {
+            const name = document.getElementById('signupName').value.trim();
+            const phone = document.getElementById('signupPhone').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            
+            // Validation
+            if (!name || !phone || !email || !password || !confirmPassword) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            if (!agreeTerms) {
+                showToast('Please agree to the terms and conditions', 'error');
+                return;
+            }
+            
+            // Phone number validation
+            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+            if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
+                showToast('Please enter a valid phone number', 'error');
+                return;
+            }
+            
+            const signupBtn = document.getElementById('submitSignup');
+            signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            signupBtn.disabled = true;
+            
+            // First create auth user
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const userId = userCredential.user.uid;
+                    
+                    // Generate unique user ID
+                    const userNumber = Math.floor(1000 + Math.random() * 9000);
+                    const generatedUserId = `ZYN-${userNumber}`;
+                    
+                    // Check if this ID already exists
+                    const db = firebase.database();
+                    return db.ref('user_ids').child(generatedUserId).once('value')
+                        .then((snapshot) => {
+                            if (snapshot.exists()) {
+                                // Try again with different number
+                                const newNumber = Math.floor(1000 + Math.random() * 9000);
+                                return `ZYN-${newNumber}`;
+                            }
+                            return generatedUserId;
+                        })
+                        .then((finalUserId) => {
+                            // Upload profile picture if exists
+                            if (profileImageFile) {
+                                return uploadToCloudinary(profileImageFile)
+                                    .then(profileUrl => ({ finalUserId, profileUrl }))
+                                    .catch(() => ({ finalUserId, profileUrl: null }));
+                            }
+                            return { finalUserId, profileUrl: null };
+                        })
+                        .then(({ finalUserId, profileUrl }) => {
+                            // Create user data object
+                            const userData = {
+                                name: name,
+                                phone: phone,
+                                email: email,
+                                userId: finalUserId,
+                                profileUrl: profileUrl || 'https://via.placeholder.com/150/cccccc/969696?text=Z',
+                                createdAt: Date.now(),
+                                lastSeen: Date.now(),
+                                status: 'Hey there! I am using Zynapse',
+                                contacts: {},
+                                chatRequests: {},
+                                zynes: {}
+                            };
+                            
+                            // Save user data to database
+                            const updates = {};
+                            updates['users/' + userId] = userData;
+                            updates['user_ids/' + finalUserId] = userId;
+                            updates['phone_numbers/' + phone.replace(/[^\d]/g, '')] = userId;
+                            
+                            return db.ref().update(updates)
+                                .then(() => {
+                                    // Store user data in localStorage
+                                    localStorage.setItem('zynapse_user', JSON.stringify({
+                                        uid: userId,
+                                        ...userData
+                                    }));
+                                    
+                                    // Redirect to home page
+                                    window.location.href = 'home.html';
+                                });
+                        });
+                })
+                .catch((error) => {
+                    let errorMessage = 'Signup failed';
+                    switch (error.code) {
+                        case 'auth/email-already-in-use':
+                            errorMessage = 'Email already registered';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage = 'Invalid email address';
+                            break;
+                        case 'auth/operation-not-allowed':
+                            errorMessage = 'Operation not allowed';
+                            break;
+                        case 'auth/weak-password':
+                            errorMessage = 'Password is too weak';
+                            break;
+                        default:
+                            errorMessage = error.message;
+                    }
+                    showToast(errorMessage, 'error');
+                })
+                .finally(() => {
+                    signupBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+                    signupBtn.disabled = false;
+                });
+        }
+        
+        function handleGoogleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.addScope('profile');
+            provider.addScope('email');
+            
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    const db = firebase.database();
+                    
+                    // Check if user already exists in database
+                    db.ref('users/' + user.uid).once('value')
+                        .then((snapshot) => {
+                            if (snapshot.exists()) {
+                                // Existing user - store data and redirect
+                                const userData = snapshot.val();
+                                localStorage.setItem('zynapse_user', JSON.stringify({
+                                    uid: user.uid,
+                                    ...userData
+                                }));
+                                window.location.href = 'home.html';
+                            } else {
+                                // New Google user - create profile
+                                const userNumber = Math.floor(1000 + Math.random() * 9000);
+                                const generatedUserId = `ZYN-${userNumber}`;
+                                
+                                const userData = {
+                                    name: user.displayName || 'Google User',
+                                    phone: user.phoneNumber || '',
+                                    email: user.email,
+                                    userId: generatedUserId,
+                                    profileUrl: user.photoURL || 'https://via.placeholder.com/150/cccccc/969696?text=G',
+                                    createdAt: Date.now(),
+                                    lastSeen: Date.now(),
+                                    status: 'Hey there! I am using Zynapse',
+                                    contacts: {},
+                                    chatRequests: {},
+                                    zynes: {},
+                                    isGoogleUser: true
+                                };
+                                
+                                // Save to database
+                                const updates = {};
+                                updates['users/' + user.uid] = userData;
+                                updates['user_ids/' + generatedUserId] = user.uid;
+                                
+                                if (user.phoneNumber) {
+                                    updates['phone_numbers/' + user.phoneNumber.replace(/[^\d]/g, '')] = user.uid;
+                                }
+                                
+                                db.ref().update(updates)
+                                    .then(() => {
+                                        localStorage.setItem('zynapse_user', JSON.stringify({
+                                            uid: user.uid,
+                                            ...userData
+                                        }));
+                                        window.location.href = 'home.html';
+                                    });
+                            }
+                        });
+                })
+                .catch((error) => {
+                    console.error('Google login error:', error);
+                    showToast('Google login failed', 'error');
+                });
+        }
+        
+        // Cloudinary upload function
+        function uploadToCloudinary(file) {
+            return new Promise((resolve, reject) => {
+                const cloudName = 'dd3lcymrk';
+                const uploadPreset = 'h3eyhc2o';
+                const folder = 'zynapse/profiles';
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', uploadPreset);
+                formData.append('folder', folder);
+                formData.append('cloud_name', cloudName);
+                
+                fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.secure_url) {
+                        resolve(data.secure_url);
+                    } else {
+                        reject('Upload failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Cloudinary upload error:', error);
+                    reject(error);
+                });
+            });
+        }
+        
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                const container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'info-circle';
+            switch(type) {
+                case 'success': icon = 'check-circle'; break;
+                case 'error': icon = 'exclamation-circle'; break;
+                case 'warning': icon = 'exclamation-triangle'; break;
+            }
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.querySelector('.toast-container').appendChild(toast);
+            
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Check if user is already logged in
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                const db = firebase.database();
+                db.ref('users/' + user.uid).once('value')
+                    .then((snapshot) => {
+                        if (snapshot.exists()) {
+                            const userData = snapshot.val();
+                            localStorage.setItem('zynapse_user', JSON.stringify({
+                                uid: user.uid,
+                                ...userData
+                            }));
+                            window.location.href = 'home.html';
+                        }
+                    });
+            }
+        });
+    </script>
 </body>
 </html>
