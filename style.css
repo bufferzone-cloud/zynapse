@@ -1,3 +1,4 @@
+
 /* ==================== ZYNAPSE iOS THEMED CHAT APP - PRODUCTION CSS ==================== */
 /* Reset & Base Styles - Compact iOS Style */
 * {
@@ -41,6 +42,7 @@
     --orange: #ff9500;
     --purple: #af52de;
     --yellow: #ffcc00;
+    --zyne-red: #ff3b30;
     
     /* Shadows */
     --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -1027,10 +1029,12 @@ body {
     border-radius: var(--radius-xl);
     width: 100%;
     max-width: 400px;
-    max-height: 90vh;
+    max-height: 85vh;
     overflow: hidden;
     animation: modalSlideUp 0.4s var(--transition-spring);
     box-shadow: var(--shadow-float);
+    position: relative;
+    margin: auto;
 }
 
 .modal-header {
@@ -1074,7 +1078,7 @@ body {
 
 .modal-body {
     padding: 20px;
-    max-height: calc(90vh - 60px);
+    max-height: calc(85vh - 60px);
     overflow-y: auto;
 }
 
@@ -1734,6 +1738,7 @@ body {
     align-items: center;
     gap: 10px;
     border-bottom: 1px solid var(--gray-100);
+    cursor: pointer;
 }
 
 .zyne-avatar {
@@ -1741,6 +1746,7 @@ body {
     height: 36px;
     border-radius: var(--radius-circle);
     object-fit: cover;
+    border: 2px solid var(--zyne-red);
 }
 
 .zyne-user-info {
@@ -1777,6 +1783,7 @@ body {
     margin-bottom: 12px;
     max-height: 300px;
     object-fit: contain;
+    cursor: pointer;
 }
 
 .zyne-actions {
@@ -1835,6 +1842,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 .comment-item {
@@ -1870,6 +1879,131 @@ body {
     margin-top: 2px;
     display: flex;
     justify-content: space-between;
+}
+
+/* Zyne Detail Modal */
+.zyne-detail-modal .modal-content {
+    max-width: 500px;
+    max-height: 85vh;
+}
+
+.zyne-detail-content {
+    padding: 0;
+}
+
+.zyne-detail-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--gray-150);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.zyne-detail-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-circle);
+    object-fit: cover;
+    border: 2px solid var(--zyne-red);
+}
+
+.zyne-detail-info h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--black);
+    margin-bottom: 2px;
+}
+
+.zyne-detail-time {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.zyne-detail-body {
+    padding: 16px;
+}
+
+.zyne-detail-text {
+    font-size: 16px;
+    color: var(--black);
+    line-height: 1.4;
+    margin-bottom: 16px;
+    white-space: pre-wrap;
+}
+
+.zyne-detail-media {
+    width: 100%;
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+    max-height: 400px;
+    object-fit: contain;
+}
+
+.zyne-detail-stats {
+    padding: 12px 16px;
+    border-top: 1px solid var(--gray-150);
+    border-bottom: 1px solid var(--gray-150);
+    background: var(--gray-50);
+}
+
+.zyne-detail-actions {
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+}
+
+.zyne-detail-action-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    transition: all var(--transition-normal);
+}
+
+.zyne-detail-action-btn.like {
+    background: var(--white);
+    color: var(--gray-700);
+    border: 1.5px solid var(--gray-200);
+}
+
+.zyne-detail-action-btn.like.active {
+    background: var(--red);
+    color: var(--white);
+    border-color: var(--red);
+}
+
+.zyne-detail-action-btn.comment {
+    background: var(--blue);
+    color: var(--white);
+}
+
+.zyne-detail-comments {
+    padding: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.zyne-detail-comment-input {
+    padding: 16px;
+    border-top: 1px solid var(--gray-150);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.zyne-detail-comment-input input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    font-size: 14px;
 }
 
 /* ==================== GROUPS PAGE STYLES ==================== */
@@ -1975,6 +2109,72 @@ body {
     display: flex;
     align-items: center;
     gap: 4px;
+}
+
+/* Create Group Modal */
+.create-group-modal .modal-content {
+    max-width: 450px;
+}
+
+.member-search-input {
+    margin-bottom: 16px;
+}
+
+.members-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.member-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.member-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-circle);
+    object-fit: cover;
+}
+
+.member-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--black);
+}
+
+.member-checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--gray-300);
+    cursor: pointer;
+}
+
+.member-checkbox.checked {
+    background: var(--blue);
+    border-color: var(--blue);
+    position: relative;
+}
+
+.member-checkbox.checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 12px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 /* ==================== CONTACTS PAGE STYLES ==================== */
@@ -2694,6 +2894,11 @@ body {
     justify-content: center;
     color: var(--gray-500);
     font-size: 24px;
+    position: relative;
+}
+
+.location-map i {
+    position: absolute;
 }
 
 .location-info {
