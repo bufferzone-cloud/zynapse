@@ -2,25 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynapse - Secure Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="zynaps.png">
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-    <script src="https://unpkg.com/cloudinary-core@2.13.0/cloudinary-core-shrinkwrap.min.js"></script>
+    <link rel="icon" href="zynaps.png" type="image/png">
 </head>
 <body>
-    <div class="auth-page">
+    <div class="auth-page" id="authPage">
         <!-- Loading Screen -->
         <div class="loading-screen" id="loadingScreen">
             <div class="loading-content">
-                <img src="zynaps.png" alt="Zynapse" class="loading-logo">
+                <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
                 <div class="spinner-large"></div>
                 <p>Initializing Zynapse...</p>
             </div>
@@ -29,541 +22,145 @@
         <!-- Welcome Screen -->
         <div class="welcome-screen" id="welcomeScreen">
             <div class="auth-container">
-                <img src="zynaps.png" alt="Zynapse" class="logo-large">
+                <img src="zynaps.png" alt="Zynapse Logo" class="logo-large">
                 <h1>Zynapse</h1>
-                <p class="tagline">Secure, private messaging with end-to-end encryption. Connect instantly with friends and colleagues.</p>
-                <p class="powered-by">POWERED BY BUFFER ZONE</p>
+                <p class="tagline">Secure, private messaging with end-to-end encryption and instant connections</p>
+                <p class="powered-by">Powered by Buffer Zone</p>
                 
                 <div class="welcome-actions">
-                    <button class="btn-primary" onclick="showAuthForm('signup')">
-                        <i class="fas fa-user-plus"></i>
-                        Create Account
+                    <button class="btn-primary" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> Log In
                     </button>
-                    <button class="btn-secondary" onclick="showAuthForm('login')">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Sign In
-                    </button>
-                    <div class="auth-divider">
-                        <span>or continue with</span>
-                    </div>
-                    <button class="btn-google" onclick="signInWithGoogle()">
-                        <i class="fab fa-google"></i>
-                        Google Account
+                    <button class="btn-secondary" id="signupBtn">
+                        <i class="fas fa-user-plus"></i> Sign Up
                     </button>
                 </div>
-                
+
                 <div class="welcome-footer">
                     By continuing, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a>
                 </div>
             </div>
         </div>
 
-        <!-- Sign Up Form -->
-        <div class="auth-form hidden" id="signupForm">
+        <!-- Login Form -->
+        <div class="auth-form hidden" id="loginForm">
             <div class="auth-header">
-                <button class="back-btn" onclick="showWelcomeScreen()">
+                <button class="back-btn" id="backToWelcomeFromLogin">
                     <i class="fas fa-arrow-left"></i>
                 </button>
-                <img src="zynaps.png" alt="Zynapse" class="logo-small">
-                <h2>Create Account</h2>
-                <p>Join Zynapse's secure network</p>
+                <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                <h2>Welcome Back</h2>
+                <p>Log in to your Zynapse account</p>
             </div>
-            
-            <form class="auth-form-content" onsubmit="signUp(event)">
+
+            <div class="auth-form-content">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="loginEmail" placeholder="Email" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                    <i class="fas fa-eye toggle-password" id="toggleLoginPassword"></i>
+                </div>
+
+                <button class="btn-primary" id="submitLogin">
+                    <i class="fas fa-sign-in-alt"></i> Log In
+                </button>
+
+                <div class="auth-divider">
+                    <span>or continue with</span>
+                </div>
+
+                <button class="btn-google">
+                    <i class="fab fa-google"></i> Google
+                </button>
+
+                <div class="auth-switch">
+                    Don't have an account? <a href="#" class="link" id="switchToSignup">Sign Up</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signup Form -->
+        <div class="auth-form hidden" id="signupForm">
+            <div class="auth-header">
+                <button class="back-btn" id="backToWelcomeFromSignup">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
+                <h2>Create Account</h2>
+                <p>Join Zynapse for secure messaging</p>
+            </div>
+
+            <div class="auth-form-content">
                 <div class="input-group">
                     <i class="fas fa-user"></i>
                     <input type="text" id="signupName" placeholder="Full Name" required>
                 </div>
-                
+
                 <div class="input-group">
                     <i class="fas fa-phone"></i>
                     <input type="tel" id="signupPhone" placeholder="Phone Number" required>
                 </div>
-                
+
                 <div class="input-group">
                     <i class="fas fa-envelope"></i>
-                    <input type="email" id="signupEmail" placeholder="Email Address" required>
+                    <input type="email" id="signupEmail" placeholder="Email" required>
                 </div>
-                
+
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="signupPassword" placeholder="Password (min. 8 characters)" minlength="8" required>
-                    <i class="fas fa-eye toggle-password" onclick="togglePassword('signupPassword', this)"></i>
+                    <input type="password" id="signupPassword" placeholder="Password" required>
+                    <i class="fas fa-eye toggle-password" id="toggleSignupPassword"></i>
                 </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" minlength="8" required>
-                    <i class="fas fa-eye toggle-password" onclick="togglePassword('signupConfirmPassword', this)"></i>
-                </div>
-                
+
                 <div class="profile-upload-section">
                     <label class="upload-label">Profile Picture</label>
                     <div class="profile-upload-container">
-                        <div class="upload-preview" onclick="triggerProfileUpload()">
-                            <div class="preview-placeholder" id="profilePreview">
-                                <i class="fas fa-camera"></i>
-                                <span>Tap to upload</span>
+                        <div class="upload-preview" id="profilePreview">
+                            <div class="preview-placeholder">
+                                <i class="fas fa-user-circle"></i>
+                                <span>No image</span>
                             </div>
                         </div>
                         <div class="upload-buttons">
-                            <button type="button" class="btn-upload" onclick="triggerProfileUpload()">
-                                <i class="fas fa-upload"></i>
-                                Upload
+                            <button class="btn-upload" id="uploadProfileBtn">
+                                <i class="fas fa-upload"></i> Upload
                             </button>
-                            <button type="button" class="btn-remove" onclick="removeProfileImage()">
-                                <i class="fas fa-trash"></i>
-                                Remove
+                            <button class="btn-remove hidden" id="removeProfileBtn">
+                                <i class="fas fa-trash"></i> Remove
                             </button>
                         </div>
                     </div>
-                    <p class="upload-hint">JPG, PNG up to 5MB. Max 500x500px</p>
-                    <input type="file" id="profileUpload" accept="image/*" style="display: none;" onchange="handleProfileUpload(event)">
+                    <p class="upload-hint">JPG, PNG, or GIF. Max 5MB</p>
+                    <input type="file" id="profileImageInput" accept="image/*" hidden>
                 </div>
-                
-                <div class="terms-agreement">
-                    <input type="checkbox" id="termsAgreement" required>
-                    <label for="termsAgreement">I agree to Zynapse's Terms of Service and Privacy Policy</label>
-                </div>
-                
-                <button type="submit" class="btn-primary" id="signupBtn">
-                    <i class="fas fa-user-plus"></i>
-                    Create Account
-                </button>
-                
-                <div class="auth-switch">
-                    Already have an account? <a href="#" class="link" onclick="showAuthForm('login')">Sign In</a>
-                </div>
-            </form>
-        </div>
 
-        <!-- Login Form -->
-        <div class="auth-form hidden" id="loginForm">
-            <div class="auth-header">
-                <button class="back-btn" onclick="showWelcomeScreen()">
-                    <i class="fas fa-arrow-left"></i>
+                <div class="terms-agreement">
+                    <input type="checkbox" id="agreeTerms" required>
+                    <label for="agreeTerms">I agree to the Terms of Service and Privacy Policy</label>
+                </div>
+
+                <button class="btn-primary" id="submitSignup">
+                    <i class="fas fa-user-plus"></i> Create Account
                 </button>
-                <img src="zynaps.png" alt="Zynapse" class="logo-small">
-                <h2>Welcome Back</h2>
-                <p>Sign in to your Zynapse account</p>
+
+                <div class="auth-switch">
+                    Already have an account? <a href="#" class="link" id="switchToLogin">Log In</a>
+                </div>
             </div>
-            
-            <form class="auth-form-content" onsubmit="login(event)">
-                <div class="input-group">
-                    <i class="fas fa-user-circle"></i>
-                    <input type="text" id="loginEmail" placeholder="Email or User ID" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="loginPassword" placeholder="Password" required>
-                    <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPassword', this)"></i>
-                </div>
-                
-                <div class="auth-switch">
-                    <a href="#" class="link">Forgot Password?</a>
-                </div>
-                
-                <button type="submit" class="btn-primary" id="loginBtn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Sign In
-                </button>
-                
-                <div class="auth-switch">
-                    Don't have an account? <a href="#" class="link" onclick="showAuthForm('signup')">Create Account</a>
-                </div>
-            </form>
         </div>
     </div>
 
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
-            authDomain: "zynapse-68181.firebaseapp.com",
-            databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
-            projectId: "zynapse-68181",
-            storageBucket: "zynapse-68181.firebasestorage.app",
-            messagingSenderId: "841353050519",
-            appId: "1:841353050519:web:3b16d95d8f4cd3b9506cd2",
-            measurementId: "G-4764XLL6WS"
-        };
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-        // Cloudinary Configuration
-        const CLOUDINARY_CONFIG = {
-            cloudName: 'dd3lcymrk',
-            apiKey: '489857926297197',
-            uploadPreset: 'h3eyhc2o',
-            folder: 'zynapse/profiles'
-        };
-
-        // Global Variables
-        let currentUser = null;
-        let profileImageUrl = null;
-        let profileImageFile = null;
-
-        // Initialize Firebase
-        function initializeFirebase() {
-            try {
-                firebase.initializeApp(firebaseConfig);
-                console.log("Firebase initialized");
-                
-                // Check auth state
-                firebase.auth().onAuthStateChanged((user) => {
-                    if (user) {
-                        // User is signed in
-                        checkUserInDatabase(user.uid);
-                    } else {
-                        // User is signed out
-                        hideLoadingScreen();
-                    }
-                });
-            } catch (error) {
-                console.error("Firebase initialization error:", error);
-                hideLoadingScreen();
-            }
-        }
-
-        // Generate ZYN-XXXX User ID
-        function generateUserID() {
-            const randomNum = Math.floor(1000 + Math.random() * 9000);
-            return `ZYN-${randomNum}`;
-        }
-
-        // Show/Hide Functions
-        function hideLoadingScreen() {
-            document.getElementById('loadingScreen').classList.add('hidden');
-        }
-
-        function showWelcomeScreen() {
-            document.getElementById('welcomeScreen').classList.remove('hidden');
-            document.getElementById('signupForm').classList.add('hidden');
-            document.getElementById('loginForm').classList.add('hidden');
-        }
-
-        function showAuthForm(type) {
-            document.getElementById('welcomeScreen').classList.add('hidden');
-            document.getElementById('signupForm').classList.add('hidden');
-            document.getElementById('loginForm').classList.add('hidden');
-            
-            if (type === 'signup') {
-                document.getElementById('signupForm').classList.remove('hidden');
-            } else if (type === 'login') {
-                document.getElementById('loginForm').classList.remove('hidden');
-            }
-        }
-
-        // Toggle Password Visibility
-        function togglePassword(inputId, icon) {
-            const input = document.getElementById(inputId);
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
-
-        // Profile Image Handling
-        function triggerProfileUpload() {
-            document.getElementById('profileUpload').click();
-        }
-
-        function handleProfileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // Validate file
-            if (!file.type.startsWith('image/')) {
-                showToast('Please upload an image file', 'error');
-                return;
-            }
-
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Image size should be less than 5MB', 'error');
-                return;
-            }
-
-            profileImageFile = file;
-
-            // Preview image
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('profilePreview');
-                preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function removeProfileImage() {
-            profileImageFile = null;
-            const preview = document.getElementById('profilePreview');
-            preview.innerHTML = `<i class="fas fa-camera"></i><span>Tap to upload</span>`;
-        }
-
-        // Upload to Cloudinary
-        async function uploadToCloudinary(file, type = 'image') {
-            return new Promise((resolve, reject) => {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-                formData.append('folder', type === 'image' ? 'zynapse/profiles' : 'zynapse/media');
-                formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
-                
-                fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.secure_url) {
-                        resolve(data.secure_url);
-                    } else {
-                        reject(new Error('Upload failed'));
-                    }
-                })
-                .catch(error => {
-                    reject(error);
-                });
-            });
-        }
-
-        // Sign Up Function
-        async function signUp(event) {
-            event.preventDefault();
-            
-            const name = document.getElementById('signupName').value.trim();
-            const phone = document.getElementById('signupPhone').value.trim();
-            const email = document.getElementById('signupEmail').value.trim().toLowerCase();
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('signupConfirmPassword').value;
-            
-            // Validation
-            if (password !== confirmPassword) {
-                showToast('Passwords do not match', 'error');
-                return;
-            }
-
-            if (password.length < 8) {
-                showToast('Password must be at least 8 characters', 'error');
-                return;
-            }
-
-            const signupBtn = document.getElementById('signupBtn');
-            signupBtn.disabled = true;
-            signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
-
-            try {
-                // Upload profile image if exists
-                let profileUrl = null;
-                if (profileImageFile) {
-                    profileUrl = await uploadToCloudinary(profileImageFile, 'image');
-                }
-
-                // Create user in Firebase Auth
-                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Generate User ID
-                const userId = generateUserID();
-                
-                // Create user data
-                const userData = {
-                    userId: userId,
-                    name: name,
-                    phone: phone,
-                    email: email,
-                    profileUrl: profileUrl,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP,
-                    lastSeen: firebase.database.ServerValue.TIMESTAMP,
-                    status: 'online',
-                    contacts: {},
-                    chatRequests: {},
-                    chats: {},
-                    zynes: {}
-                };
-
-                // Save to Firebase Database
-                await firebase.database().ref('users/' + user.uid).set(userData);
-                
-                showToast('Account created successfully!', 'success');
-                
-                // Auto login
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1500);
-
-            } catch (error) {
-                console.error('Signup error:', error);
-                let errorMessage = 'Failed to create account';
-                
-                switch(error.code) {
-                    case 'auth/email-already-in-use':
-                        errorMessage = 'Email already registered';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage = 'Invalid email address';
-                        break;
-                    case 'auth/weak-password':
-                        errorMessage = 'Password is too weak';
-                        break;
-                }
-                
-                showToast(errorMessage, 'error');
-                signupBtn.disabled = false;
-                signupBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
-            }
-        }
-
-        // Login Function
-        async function login(event) {
-            event.preventDefault();
-            
-            const identifier = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            
-            const loginBtn = document.getElementById('loginBtn');
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
-
-            try {
-                // Check if identifier is email or user ID
-                let email = identifier;
-                
-                // If identifier is in ZYN-XXXX format, look up email in database
-                if (identifier.startsWith('ZYN-')) {
-                    // Search for user by userId
-                    const usersRef = firebase.database().ref('users');
-                    const snapshot = await usersRef.orderByChild('userId').equalTo(identifier).once('value');
-                    
-                    if (snapshot.exists()) {
-                        const userData = Object.values(snapshot.val())[0];
-                        email = userData.email;
-                    } else {
-                        throw new Error('User ID not found');
-                    }
-                }
-                
-                // Sign in with email and password
-                await firebase.auth().signInWithEmailAndPassword(email, password);
-                
-                showToast('Signed in successfully!', 'success');
-                
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1000);
-
-            } catch (error) {
-                console.error('Login error:', error);
-                let errorMessage = 'Login failed';
-                
-                switch(error.code) {
-                    case 'auth/user-not-found':
-                    case 'auth/wrong-password':
-                        errorMessage = 'Invalid credentials';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage = 'Invalid email format';
-                        break;
-                    case 'auth/user-disabled':
-                        errorMessage = 'Account disabled';
-                        break;
-                    case 'auth/too-many-requests':
-                        errorMessage = 'Too many attempts. Try later';
-                        break;
-                }
-                
-                showToast(errorMessage, 'error');
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
-            }
-        }
-
-        // Google Sign In
-        async function signInWithGoogle() {
-            try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                const result = await firebase.auth().signInWithPopup(provider);
-                
-                // Check if user exists in database
-                const userRef = firebase.database().ref('users/' + result.user.uid);
-                const snapshot = await userRef.once('value');
-                
-                if (!snapshot.exists()) {
-                    // Create new user from Google
-                    const userId = generateUserID();
-                    const userData = {
-                        userId: userId,
-                        name: result.user.displayName,
-                        email: result.user.email,
-                        profileUrl: result.user.photoURL,
-                        createdAt: firebase.database.ServerValue.TIMESTAMP,
-                        lastSeen: firebase.database.ServerValue.TIMESTAMP,
-                        status: 'online',
-                        contacts: {},
-                        chatRequests: {},
-                        chats: {},
-                        zynes: {}
-                    };
-                    
-                    await userRef.set(userData);
-                }
-                
-                showToast('Signed in with Google', 'success');
-                
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1000);
-
-            } catch (error) {
-                console.error('Google sign in error:', error);
-                showToast('Failed to sign in with Google', 'error');
-            }
-        }
-
-        // Check user in database after auth
-        async function checkUserInDatabase(uid) {
-            try {
-                const userRef = firebase.database().ref('users/' + uid);
-                const snapshot = await userRef.once('value');
-                
-                if (snapshot.exists()) {
-                    // User exists, redirect to home
-                    window.location.href = 'home.html';
-                } else {
-                    // User doesn't exist in database (shouldn't happen)
-                    await firebase.auth().signOut();
-                    hideLoadingScreen();
-                }
-            } catch (error) {
-                console.error('Database check error:', error);
-                hideLoadingScreen();
-            }
-        }
-
-        // Toast Notification
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                <span>${message}</span>
-            `;
-            
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-
-        // Initialize on load
-        window.addEventListener('DOMContentLoaded', () => {
-            initializeFirebase();
-        });
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
