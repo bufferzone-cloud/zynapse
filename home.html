@@ -2,16 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Zynapse</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="zynaps.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="zynaps.png" type="image/png">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+    <!-- Cloudinary Upload Widget -->
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
 </head>
 <body>
     <div class="app-container">
         <!-- Loading Screen -->
-        <div class="loading-screen active" id="loadingScreen">
+        <div class="loading-screen" id="loadingScreen">
             <div class="loading-content">
                 <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
                 <div class="spinner-large"></div>
@@ -19,2551 +26,652 @@
             </div>
         </div>
 
-        <!-- App Header -->
-        <header class="app-header safe-area-top">
-            <div class="header-left">
-                <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
-                <div class="user-info">
-                    <h2 id="userName">Loading...</h2>
-                    <div class="user-id-container">
-                        <span class="user-id" id="userIdDisplay">ZYN-0000</span>
-                        <button class="copy-btn" id="copyUserIdBtn" title="Copy ID">
-                            <i class="far fa-copy"></i>
+        <!-- Main App (hidden initially) -->
+        <div class="app-home hidden" id="appHome">
+            <!-- Header -->
+            <div class="app-header">
+                <div class="header-left">
+                    <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
+                    <div class="user-info">
+                        <h2 id="userName">Loading...</h2>
+                        <div class="user-id-container">
+                            <span class="user-id" id="userId">ZYN-0000</span>
+                            <button class="copy-btn" onclick="copyUserId()" title="Copy User ID">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dropdown">
+                    <button class="profile-btn" id="profileBtn">
+                        <img src="" alt="Profile" class="profile-pic-small" id="profilePic">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-content" id="profileDropdown">
+                        <button class="dropdown-item" onclick="viewMyProfile()">
+                            <i class="fas fa-user"></i> My Profile
+                        </button>
+                        <button class="dropdown-item" onclick="openSettings()">
+                            <i class="fas fa-cog"></i> Settings
+                        </button>
+                        <button class="dropdown-item" onclick="openAppOptions()">
+                            <i class="fas fa-palette"></i> App Options
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item danger" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
                         </button>
                     </div>
                 </div>
             </div>
-            <button class="profile-btn" id="profileBtn">
-                <img src="https://via.placeholder.com/150/cccccc/969696?text=Z" alt="Profile" class="profile-pic-small" id="profilePic">
+
+            <!-- Navigation -->
+            <nav class="app-nav">
+                <a href="#" class="nav-item active" data-page="home">
+                    <i class="fas fa-home"></i>
+                    <span>HOME</span>
+                    <span class="badge hidden" id="homeBadge">0</span>
+                </a>
+                <a href="#" class="nav-item" data-page="zynes">
+                    <i class="fas fa-fire"></i>
+                    <span>ZYNES</span>
+                    <span class="badge hidden" id="zyneBadge">0</span>
+                </a>
+                <a href="#" class="nav-item" data-page="groups">
+                    <i class="fas fa-users"></i>
+                    <span>GROUPS</span>
+                    <span class="badge hidden" id="groupBadge">0</span>
+                </a>
+                <a href="#" class="nav-item" data-page="requests">
+                    <i class="fas fa-user-plus"></i>
+                    <span>REQUESTS</span>
+                    <span class="badge hidden" id="requestBadge">0</span>
+                </a>
+                <a href="#" class="nav-item" data-page="contacts">
+                    <i class="fas fa-address-book"></i>
+                    <span>CONTACTS</span>
+                </a>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="app-main" id="appMain">
+                <!-- Home Page (Chats) -->
+                <div class="page active" id="homePage">
+                    <div class="chats-header">
+                        <h2>Chats</h2>
+                    </div>
+                    <div class="chats-list" id="chatsList">
+                        <!-- Chat items will be loaded here -->
+                        <div class="empty-state">
+                            <i class="fas fa-comments"></i>
+                            <h3>No Chats Yet</h3>
+                            <p>Start a chat by clicking the + button below</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zynes Page -->
+                <div class="page" id="zynesPage">
+                    <div class="zynes-header">
+                        <h2>Zynes</h2>
+                    </div>
+                    <div class="create-zyne">
+                        <textarea class="create-input" id="zyneText" placeholder="What's happening?"></textarea>
+                        <div class="media-preview" id="zyneMediaPreview"></div>
+                        <div class="create-actions">
+                            <div class="attachment-options">
+                                <button class="attachment-btn" onclick="attachZyneMedia('photo')">
+                                    <i class="fas fa-image"></i>
+                                    <span>Photo</span>
+                                </button>
+                                <button class="attachment-btn" onclick="attachZyneMedia('video')">
+                                    <i class="fas fa-video"></i>
+                                    <span>Video</span>
+                                </button>
+                            </div>
+                            <button class="btn-primary" onclick="postZyne()">
+                                <i class="fas fa-paper-plane"></i> Post
+                            </button>
+                        </div>
+                    </div>
+                    <div class="zynes-list" id="zynesList">
+                        <!-- Zynes will be loaded here -->
+                        <div class="empty-state">
+                            <i class="fas fa-fire"></i>
+                            <h3>No Zynes Yet</h3>
+                            <p>Share your first Zyne above</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groups Page -->
+                <div class="page" id="groupsPage">
+                    <div class="groups-header">
+                        <h2>Groups</h2>
+                        <button class="create-group-btn" onclick="showCreateGroupModal()">
+                            <i class="fas fa-plus"></i> New Group
+                        </button>
+                    </div>
+                    <div class="groups-list" id="groupsList">
+                        <!-- Groups will be loaded here -->
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h3>No Groups Yet</h3>
+                            <p>Create a group or wait for an invitation</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Requests Page -->
+                <div class="page" id="requestsPage">
+                    <div class="requests-header">
+                        <h2>Chat Requests</h2>
+                    </div>
+                    <div class="requests-list" id="requestsList">
+                        <!-- Requests will be loaded here -->
+                        <div class="empty-state">
+                            <i class="fas fa-user-plus"></i>
+                            <h3>No Requests</h3>
+                            <p>When someone sends you a request, it will appear here</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contacts Page -->
+                <div class="page" id="contactsPage">
+                    <div class="contacts-header">
+                        <h2>Contacts</h2>
+                    </div>
+                    <div class="contacts-list" id="contactsList">
+                        <!-- Contacts will be loaded here -->
+                        <div class="empty-state">
+                            <i class="fas fa-address-book"></i>
+                            <h3>No Contacts Yet</h3>
+                            <p>Add contacts by accepting chat requests</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Interface (Hidden by default) -->
+                <div class="chat-page hidden" id="chatPage">
+                    <div class="chat-header">
+                        <button class="back-btn" onclick="closeChat()">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="chat-user-info" id="chatHeaderInfo">
+                            <!-- Chat header content loaded dynamically -->
+                        </div>
+                        <div class="chat-actions">
+                            <div class="dropdown">
+                                <button class="icon-btn" id="chatMenuBtn">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-content" id="chatMenu">
+                                    <button class="dropdown-item" onclick="addChatNickname()">
+                                        <i class="fas fa-tag"></i> Add Nickname
+                                    </button>
+                                    <button class="dropdown-item" onclick="viewChatProfile()">
+                                        <i class="fas fa-user"></i> View Profile
+                                    </button>
+                                    <button class="dropdown-item" onclick="addToFavorites()">
+                                        <i class="fas fa-star"></i> Add to Favorites
+                                    </button>
+                                    <button class="dropdown-item" onclick="blockUser()">
+                                        <i class="fas fa-ban"></i> Block User
+                                    </button>
+                                    <button class="dropdown-item danger" onclick="deleteChat()">
+                                        <i class="fas fa-trash"></i> Delete Chat
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages loaded here -->
+                    </div>
+                    
+                    <div class="message-input-area">
+                        <div class="dropdown">
+                            <button class="attach-btn" id="attachBtn">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <div class="attachment-options" id="attachmentOptions">
+                                <button class="attachment-btn" onclick="attachMedia('photo')">
+                                    <i class="fas fa-image"></i>
+                                    <span>Photo</span>
+                                </button>
+                                <button class="attachment-btn" onclick="attachMedia('video')">
+                                    <i class="fas fa-video"></i>
+                                    <span>Video</span>
+                                </button>
+                                <button class="attachment-btn" onclick="attachMedia('document')">
+                                    <i class="fas fa-file"></i>
+                                    <span>Document</span>
+                                </button>
+                                <button class="attachment-btn" onclick="attachLocation()">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Location</span>
+                                </button>
+                                <button class="attachment-btn" onclick="startVoiceRecording()">
+                                    <i class="fas fa-microphone"></i>
+                                    <span>Voice</span>
+                                </button>
+                                <button class="attachment-btn" onclick="sendViewOnce()">
+                                    <i class="fas fa-eye"></i>
+                                    <span>View Once</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="message-input-container">
+                            <textarea class="message-input" id="messageInput" 
+                                      placeholder="Message" 
+                                      rows="1"></textarea>
+                        </div>
+                        
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="typing-indicator" id="typingIndicator">
+                        <div class="typing-bubble">
+                            <div class="typing-dots">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                            </div>
+                            <span class="typing-text">typing</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Floating Start Chat Button -->
+            <button class="floating-btn" onclick="showStartChatModal()">
+                <i class="fas fa-comment"></i>
+                <span>CHAT</span>
             </button>
-            
-            <!-- Profile Dropdown -->
-            <div class="dropdown-content" id="profileDropdown">
-                <button class="dropdown-item" id="viewProfileBtn">
-                    <i class="fas fa-user"></i> View Profile
-                </button>
-                <button class="dropdown-item" id="settingsBtn">
-                    <i class="fas fa-cog"></i> Settings
-                </button>
-                <button class="dropdown-item" id="themeBtn">
-                    <i class="fas fa-palette"></i> Theme
-                </button>
-                <hr>
-                <button class="dropdown-item danger" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> Log Out
-                </button>
-            </div>
-        </header>
-
-        <!-- Navigation -->
-        <nav class="app-nav">
-            <a href="#" class="nav-item active" data-page="home">
-                <i class="fas fa-home"></i>
-                <span>HOME</span>
-            </a>
-            <a href="#" class="nav-item" data-page="zynes">
-                <i class="fas fa-bolt"></i>
-                <span>ZYNES</span>
-                <span class="badge hidden" id="zyneBadge">0</span>
-            </a>
-            <a href="#" class="nav-item" data-page="groups">
-                <i class="fas fa-users"></i>
-                <span>GROUPS</span>
-                <span class="badge hidden" id="groupBadge">0</span>
-            </a>
-            <a href="#" class="nav-item" data-page="requests">
-                <i class="fas fa-user-plus"></i>
-                <span>REQUESTS</span>
-                <span class="badge hidden" id="requestBadge">0</span>
-            </a>
-            <a href="#" class="nav-item" data-page="contacts">
-                <i class="fas fa-address-book"></i>
-                <span>CONTACTS</span>
-            </a>
-        </nav>
-
-        <!-- Main Content Area -->
-        <main class="app-main" id="mainContent">
-            <!-- Home Page -->
-            <div class="page active" id="homePage">
-                <div class="chats-header">
-                    <h2>Chats</h2>
-                </div>
-                <div class="chats-list" id="chatsList">
-                    <!-- Chats will be loaded here -->
-                    <div class="empty-state">
-                        <i class="fas fa-comments"></i>
-                        <h3>No chats yet</h3>
-                        <p>Start a new chat by tapping the button below</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Zynes Page -->
-            <div class="page" id="zynesPage">
-                <div class="zynes-header">
-                    <h2>Zynes</h2>
-                </div>
-                <div class="create-zyne">
-                    <textarea class="create-input" id="zyneText" placeholder="What's on your mind?"></textarea>
-                    <div class="media-preview" id="zyneMediaPreview"></div>
-                    <div class="create-actions">
-                        <div class="attachment-buttons">
-                            <button class="icon-btn" id="addZynePhoto">
-                                <i class="fas fa-image"></i>
-                            </button>
-                            <button class="icon-btn" id="addZyneVideo">
-                                <i class="fas fa-video"></i>
-                            </button>
-                        </div>
-                        <button class="btn-primary" id="postZyneBtn">Post</button>
-                    </div>
-                </div>
-                <div class="zynes-list" id="zynesList">
-                    <!-- Zynes will be loaded here -->
-                </div>
-            </div>
-
-            <!-- Groups Page -->
-            <div class="page" id="groupsPage">
-                <div class="groups-header">
-                    <h2>Groups</h2>
-                    <button class="create-group-btn" id="createGroupBtn">
-                        <i class="fas fa-plus"></i> New Group
-                    </button>
-                </div>
-                <div class="groups-list" id="groupsList">
-                    <!-- Groups will be loaded here -->
-                </div>
-            </div>
-
-            <!-- Chat Requests Page -->
-            <div class="page" id="requestsPage">
-                <div class="requests-header">
-                    <h2>Chat Requests</h2>
-                </div>
-                <div class="requests-list" id="requestsList">
-                    <!-- Requests will be loaded here -->
-                </div>
-            </div>
-
-            <!-- Contacts Page -->
-            <div class="page" id="contactsPage">
-                <div class="contacts-header">
-                    <h2>Contacts</h2>
-                </div>
-                <div class="contacts-list" id="contactsList">
-                    <!-- Contacts will be loaded here -->
-                </div>
-            </div>
-        </main>
-
-        <!-- Floating Chat Button -->
-        <button class="floating-btn" id="startChatBtn">
-            <i class="fas fa-plus"></i>
-            <span>CHAT</span>
-        </button>
-
-        <!-- Chat Interface (Hidden by default) -->
-        <div class="chat-page hidden" id="chatPage">
-            <div class="chat-header">
-                <button class="back-btn" id="backToHome">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <div class="chat-user-info">
-                    <img src="https://via.placeholder.com/150/cccccc/969696?text=U" alt="User" class="chat-user-avatar" id="chatUserAvatar">
-                    <div class="chat-user-details">
-                        <h3 id="chatUserName">User</h3>
-                        <div class="chat-status">
-                            <span class="status-dot" id="chatStatusDot"></span>
-                            <span id="chatStatusText">Offline</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="chat-actions">
-                    <button class="icon-btn" id="chatMenuBtn">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                </div>
-                
-                <!-- Chat Menu Dropdown -->
-                <div class="dropdown-content" id="chatMenuDropdown">
-                    <button class="dropdown-item" id="addNicknameBtn">
-                        <i class="fas fa-tag"></i> Add Nickname
-                    </button>
-                    <button class="dropdown-item" id="viewChatProfileBtn">
-                        <i class="fas fa-user"></i> View Profile
-                    </button>
-                    <button class="dropdown-item" id="addToFavoritesBtn">
-                        <i class="fas fa-star"></i> Add to Favorites
-                    </button>
-                    <hr>
-                    <button class="dropdown-item danger" id="blockUserBtn">
-                        <i class="fas fa-ban"></i> Block User
-                    </button>
-                    <button class="dropdown-item danger" id="deleteChatBtn">
-                        <i class="fas fa-trash"></i> Delete Chat
-                    </button>
-                </div>
-            </div>
-
-            <div class="chat-messages" id="chatMessages">
-                <!-- Messages will be loaded here -->
-            </div>
-
-            <div class="message-input-area">
-                <button class="attach-btn" id="attachBtn">
-                    <i class="fas fa-plus"></i>
-                </button>
-                <div class="message-input-container">
-                    <textarea class="message-input" id="messageInput" placeholder="iMessage" rows="1"></textarea>
-                </div>
-                <button class="send-btn" id="sendMessageBtn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-                
-                <!-- Attachment Options -->
-                <div class="attachment-options" id="attachmentOptions">
-                    <button class="attachment-btn" data-type="photo">
-                        <i class="fas fa-image"></i>
-                        <span>Photo</span>
-                    </button>
-                    <button class="attachment-btn" data-type="video">
-                        <i class="fas fa-video"></i>
-                        <span>Video</span>
-                    </button>
-                    <button class="attachment-btn" data-type="document">
-                        <i class="fas fa-file"></i>
-                        <span>Document</span>
-                    </button>
-                    <button class="attachment-btn" data-type="location">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>Location</span>
-                    </button>
-                    <button class="attachment-btn" data-type="viewonce">
-                        <i class="fas fa-eye-slash"></i>
-                        <span>View Once</span>
-                    </button>
-                    <button class="attachment-btn" data-type="voice">
-                        <i class="fas fa-microphone"></i>
-                        <span>Voice</span>
-                    </button>
-                </div>
-                
-                <!-- Voice Recording Interface -->
-                <div class="voice-recorder hidden" id="voiceRecorder">
-                    <div class="voice-waveform" id="voiceWaveform"></div>
-                    <button class="icon-btn" id="stopRecordingBtn">
-                        <i class="fas fa-stop"></i>
-                    </button>
-                    <span class="voice-duration" id="voiceDuration">0:00</span>
-                </div>
-            </div>
         </div>
 
-        <!-- Hidden file inputs -->
-        <input type="file" id="photoInput" accept="image/*" class="hidden">
-        <input type="file" id="videoInput" accept="video/*" class="hidden">
-        <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt,.rtf" class="hidden">
-        <input type="file" id="zynePhotoInput" accept="image/*" class="hidden">
-        <input type="file" id="zyneVideoInput" accept="video/*" class="hidden">
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
     </div>
 
     <!-- Modals -->
+    <!-- Start Chat Modal -->
     <div class="modal-overlay" id="startChatModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Start New Chat</h3>
-                <button class="close-modal" id="closeStartChatModal">
+                <button class="close-modal" onclick="closeModal('startChatModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="search-input-group">
-                    <input type="text" id="searchUserId" placeholder="Enter ZYN-ID (e.g., ZYN-1234)" autocomplete="off">
+                    <input type="text" id="searchUserId" placeholder="Enter User ID (ZYN-XXXX)" maxlength="8">
                 </div>
-                <div id="searchResult">
-                    <!-- Search result will appear here -->
+                <div class="search-result" id="searchResult">
+                    <!-- Search results appear here -->
+                </div>
+                <div class="modal-actions">
+                    <button class="action-btn btn-secondary" onclick="closeModal('startChatModal')">
+                        Cancel
+                    </button>
+                    <button class="action-btn btn-primary" id="sendRequestBtn" onclick="sendChatRequest()" disabled>
+                        <i class="fas fa-paper-plane"></i> Send Request
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Create Group Modal -->
     <div class="modal-overlay" id="createGroupModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Create New Group</h3>
-                <button class="close-modal" id="closeGroupModal">
+                <button class="close-modal" onclick="closeModal('createGroupModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
-                <div class="input-group">
-                    <i class="fas fa-users"></i>
-                    <input type="text" id="groupName" placeholder="Group name" required>
+                <div class="input-group mb-4">
+                    <input type="text" id="groupName" placeholder="Group Name" required>
                 </div>
                 <div class="profile-upload-section">
                     <label class="upload-label">Group Photo</label>
                     <div class="profile-upload-container">
-                        <div class="upload-preview" id="groupProfilePreview">
+                        <div class="upload-preview" id="groupPhotoPreview">
                             <div class="preview-placeholder">
                                 <i class="fas fa-users"></i>
-                                <span>No image</span>
+                                <span>Upload</span>
                             </div>
                         </div>
                         <div class="upload-buttons">
-                            <button class="btn-upload" id="uploadGroupPhotoBtn">
+                            <button class="btn-upload" onclick="uploadGroupPhoto()">
                                 <i class="fas fa-upload"></i> Upload
+                            </button>
+                            <button class="btn-remove" onclick="removeGroupPhoto()" disabled>
+                                <i class="fas fa-trash"></i> Remove
                             </button>
                         </div>
                     </div>
-                    <input type="file" id="groupPhotoInput" accept="image/*" class="hidden">
+                    <input type="hidden" id="groupPhotoUrl">
                 </div>
                 <div class="member-search-input">
                     <input type="text" id="searchMember" placeholder="Search contacts to add...">
                 </div>
                 <div class="members-list" id="membersList">
-                    <!-- Members list will appear here -->
+                    <!-- Members list appears here -->
                 </div>
                 <div class="modal-actions">
-                    <button class="action-btn btn-secondary" id="cancelGroupBtn">Cancel</button>
-                    <button class="action-btn btn-primary" id="createGroupSubmitBtn">Create Group</button>
+                    <button class="action-btn btn-secondary" onclick="closeModal('createGroupModal')">
+                        Cancel
+                    </button>
+                    <button class="action-btn btn-primary" onclick="createGroup()">
+                        <i class="fas fa-plus"></i> Create Group
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal-overlay" id="viewProfileModal">
+    <!-- Profile View Modal -->
+    <div class="modal-overlay" id="profileModal">
         <div class="modal-content">
+            <div class="modal-header">
+                <h3>Profile</h3>
+                <button class="close-modal" onclick="closeModal('profileModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
             <div class="modal-body">
-                <div class="profile-view">
-                    <img src="https://via.placeholder.com/150/cccccc/969696?text=Z" alt="Profile" class="profile-large" id="viewProfileImage">
-                    <h2 id="viewProfileName">User Name</h2>
-                    <p class="user-id" id="viewProfileId">ZYN-0000</p>
-                    <p class="user-status" id="viewProfileStatus">Hey there! I am using Zynapse</p>
-                    <div class="profile-actions">
-                        <button class="btn-primary" id="startChatFromProfile">Start Chat</button>
-                        <button class="btn-secondary" id="closeProfileModal">Close</button>
+                <!-- Profile content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="close-modal" onclick="closeModal('settingsModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h4>Notifications</h4>
+                    <div class="setting-item">
+                        <span>Message Notifications</span>
+                        <label class="switch">
+                            <input type="checkbox" id="msgNotifications" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span>Request Notifications</span>
+                        <label class="switch">
+                            <input type="checkbox" id="requestNotifications" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span>Zyne Notifications</span>
+                        <label class="switch">
+                            <input type="checkbox" id="zyneNotifications" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h4>Privacy</h4>
+                    <div class="setting-item">
+                        <span>Last Seen</span>
+                        <select id="lastSeenPrivacy">
+                            <option value="everyone">Everyone</option>
+                            <option value="contacts">Contacts Only</option>
+                            <option value="nobody">Nobody</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <span>Profile Photo</span>
+                        <select id="profilePhotoPrivacy">
+                            <option value="everyone">Everyone</option>
+                            <option value="contacts">Contacts Only</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <span>Zynes Visibility</span>
+                        <select id="zynePrivacy">
+                            <option value="contacts">Contacts Only</option>
+                            <option value="nobody">Nobody</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h4>Account</h4>
+                    <button class="action-btn btn-secondary" onclick="changePassword()">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                    <button class="action-btn btn-secondary" onclick="updateProfile()">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                    <button class="action-btn btn-danger" onclick="deleteAccount()">
+                        <i class="fas fa-trash"></i> Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zyne Detail Modal -->
+    <div class="modal-overlay" id="zyneDetailModal">
+        <div class="modal-content">
+            <!-- Zyne detail content loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Group Chat Modal -->
+    <div class="modal-overlay" id="groupChatModal">
+        <div class="modal-content">
+            <!-- Group chat loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Audio Recorder -->
+    <div class="modal-overlay" id="audioRecorderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Record Voice Message</h3>
+                <button class="close-modal" onclick="stopRecording()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="audio-recorder">
+                    <div class="recording-visualizer" id="recordingVisualizer">
+                        <!-- Visualizer bars -->
+                    </div>
+                    <div class="recording-time" id="recordingTime">00:00</div>
+                    <div class="recording-controls">
+                        <button class="action-btn btn-danger" onclick="stopRecording()" id="stopBtn">
+                            <i class="fas fa-stop"></i> Stop
+                        </button>
+                        <button class="action-btn btn-primary" onclick="sendRecording()" id="sendRecordingBtn" disabled>
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Location Picker -->
     <div class="modal-overlay" id="locationModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Send Location</h3>
-                <button class="close-modal" id="closeLocationModal">
+                <button class="close-modal" onclick="closeModal('locationModal')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="modal-body">
                 <div class="location-map" id="locationMap">
                     <i class="fas fa-map-marker-alt"></i>
-                    <p>Getting your location...</p>
+                    <span>Loading map...</span>
                 </div>
                 <div class="location-info" id="locationInfo">
-                    <p class="location-address">Location not available</p>
-                    <div class="location-details">
-                        <span id="locationStreet">-</span>
-                        <span id="locationCity">-</span>
-                        <span id="locationArea">-</span>
-                    </div>
+                    <!-- Location info appears here -->
                 </div>
                 <div class="modal-actions">
-                    <button class="action-btn btn-secondary" id="cancelLocationBtn">Cancel</button>
-                    <button class="action-btn btn-primary" id="sendLocationBtn">Send Location</button>
+                    <button class="action-btn btn-secondary" onclick="closeModal('locationModal')">
+                        Cancel
+                    </button>
+                    <button class="action-btn btn-primary" onclick="sendLocation()">
+                        <i class="fas fa-paper-plane"></i> Send Location
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Audio element for notification sound -->
-    <audio id="notificationSound" preload="auto">
-        <source src="notification.mp3" type="audio/mpeg">
-    </audio>
-
-    <!-- Audio element for voice messages -->
-    <audio id="voicePlayer" preload="none"></audio>
-
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="app.js"></script>
-    
-    <!-- Firebase and Cloudinary configuration -->
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
-            authDomain: "zynapse-68181.firebaseapp.com",
-            databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
-            projectId: "zynapse-68181",
-            storageBucket: "zynapse-68181.firebasestorage.app",
-            messagingSenderId: "841353050519",
-            appId: "1:841353050519:web:3b16d95d8f4cd3b9506cd2",
-            measurementId: "G-4764XLL6WS"
-        };
-
-        // Cloudinary Configuration
-        const CLOUDINARY_CONFIG = {
-            cloudName: 'dd3lcymrk',
-            apiKey: '489857926297197',
-            uploadPreset: 'h3eyhc2o',
-            folder: 'zynapse'
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        
-        // Global variables
-        let currentUser = null;
-        let currentChat = null;
-        let currentGroup = null;
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let recordingTimer = null;
-        let recordingStartTime = 0;
-        let notificationsEnabled = true;
-        let chatListeners = {};
-        let groupListeners = {};
-        
-        // DOM Elements
-        const loadingScreen = document.getElementById('loadingScreen');
-        const userName = document.getElementById('userName');
-        const userIdDisplay = document.getElementById('userIdDisplay');
-        const profilePic = document.getElementById('profilePic');
-        const profileBtn = document.getElementById('profileBtn');
-        const profileDropdown = document.getElementById('profileDropdown');
-        const navItems = document.querySelectorAll('.nav-item');
-        const pages = document.querySelectorAll('.page');
-        const startChatBtn = document.getElementById('startChatBtn');
-        const startChatModal = document.getElementById('startChatModal');
-        const closeStartChatModal = document.getElementById('closeStartChatModal');
-        const searchUserId = document.getElementById('searchUserId');
-        const searchResult = document.getElementById('searchResult');
-        const chatPage = document.getElementById('chatPage');
-        const backToHome = document.getElementById('backToHome');
-        const chatMessages = document.getElementById('chatMessages');
-        const messageInput = document.getElementById('messageInput');
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
-        const attachBtn = document.getElementById('attachBtn');
-        const attachmentOptions = document.getElementById('attachmentOptions');
-        const attachmentBtns = document.querySelectorAll('.attachment-btn');
-        const photoInput = document.getElementById('photoInput');
-        const videoInput = document.getElementById('videoInput');
-        const documentInput = document.getElementById('documentInput');
-        const voiceRecorder = document.getElementById('voiceRecorder');
-        const voiceWaveform = document.getElementById('voiceWaveform');
-        const stopRecordingBtn = document.getElementById('stopRecordingBtn');
-        const voiceDuration = document.getElementById('voiceDuration');
-        const createGroupBtn = document.getElementById('createGroupBtn');
-        const createGroupModal = document.getElementById('createGroupModal');
-        const closeGroupModal = document.getElementById('closeGroupModal');
-        const createGroupSubmitBtn = document.getElementById('createGroupSubmitBtn');
-        const cancelGroupBtn = document.getElementById('cancelGroupBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const notificationSound = document.getElementById('notificationSound');
-        const voicePlayer = document.getElementById('voicePlayer');
-        const locationModal = document.getElementById('locationModal');
-        const closeLocationModal = document.getElementById('closeLocationModal');
-        const sendLocationBtn = document.getElementById('sendLocationBtn');
-        const cancelLocationBtn = document.getElementById('cancelLocationBtn');
-        const locationMap = document.getElementById('locationMap');
-        const locationInfo = document.getElementById('locationInfo');
-        
-        // Check authentication on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-        });
-        
-        // Authentication check
-        function checkAuth() {
-            const userData = localStorage.getItem('zynapse_user');
-            
-            if (!userData) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            currentUser = JSON.parse(userData);
-            
-            // Verify with Firebase
-            firebase.auth().onAuthStateChanged((user) => {
-                if (!user) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-                
-                if (user.uid !== currentUser.uid) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-                
-                // User is authenticated, load app
-                initializeApp();
-            });
-        }
-        
-        // Initialize application
-        function initializeApp() {
-            // Update user info in header
-            userName.textContent = currentUser.name;
-            userIdDisplay.textContent = currentUser.userId;
-            profilePic.src = currentUser.profileUrl || 'https://via.placeholder.com/150/cccccc/969696?text=Z';
-            
-            // Set up real-time database listeners
-            setupDatabaseListeners();
-            
-            // Hide loading screen
-            setTimeout(() => {
-                loadingScreen.classList.remove('active');
-                loadChats();
-                loadContacts();
-                loadZynes();
-                loadGroups();
-                loadChatRequests();
-            }, 1000);
-            
-            // Update user's last seen
-            updateLastSeen();
-            setInterval(updateLastSeen, 60000); // Update every minute
-            
-            // Set up event listeners
-            setupEventListeners();
-        }
-        
-        // Update user's last seen timestamp
-        function updateLastSeen() {
-            if (!currentUser) return;
-            
-            const db = firebase.database();
-            db.ref('users/' + currentUser.uid).update({
-                lastSeen: Date.now()
-            });
-        }
-        
-        // Set up database listeners
-        function setupDatabaseListeners() {
-            const db = firebase.database();
-            const userId = currentUser.uid;
-            
-            // Listen for new chat requests
-            db.ref('users/' + userId + '/chatRequests').on('value', (snapshot) => {
-                const requests = snapshot.val() || {};
-                const requestCount = Object.keys(requests).length;
-                
-                const requestBadge = document.getElementById('requestBadge');
-                if (requestCount > 0) {
-                    requestBadge.textContent = requestCount;
-                    requestBadge.classList.remove('hidden');
-                } else {
-                    requestBadge.classList.add('hidden');
-                }
-                
-                loadChatRequests();
-            });
-            
-            // Listen for new messages in active chats
-            if (currentUser.contacts) {
-                Object.keys(currentUser.contacts).forEach(contactId => {
-                    listenToChat(contactId);
-                });
-            }
-            
-            // Listen for new zynes from contacts
-            db.ref('zynes').orderByChild('timestamp').startAt(Date.now() - 24 * 60 * 60 * 1000).on('value', (snapshot) => {
-                loadZynes();
-            });
-        }
-        
-        // Set up all event listeners
-        function setupEventListeners() {
-            // Navigation
+        // Home page specific JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize navigation
+            const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
-                item.addEventListener('click', (e) => {
+                item.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const page = item.getAttribute('data-page');
-                    
-                    // Update active state
-                    navItems.forEach(nav => nav.classList.remove('active'));
-                    item.classList.add('active');
-                    
-                    // Show selected page
-                    pages.forEach(p => p.classList.remove('active'));
-                    document.getElementById(page + 'Page').classList.add('active');
-                    
-                    // Update badge counts
-                    updateBadgeCounts();
+                    const page = this.getAttribute('data-page');
+                    switchPage(page);
                 });
             });
-            
-            // Profile dropdown
-            profileBtn.addEventListener('click', () => {
-                profileDropdown.classList.toggle('show');
+
+            // Initialize profile dropdown
+            document.getElementById('profileBtn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.getElementById('profileDropdown').classList.toggle('show');
             });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
-                    profileDropdown.classList.remove('show');
-                }
-                if (!attachBtn.contains(e.target) && !attachmentOptions.contains(e.target)) {
-                    attachmentOptions.classList.remove('show');
-                }
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function() {
+                document.getElementById('profileDropdown').classList.remove('show');
+                document.getElementById('chatMenu').classList.remove('show');
+                document.getElementById('attachmentOptions').classList.remove('show');
             });
-            
-            // Start chat button
-            startChatBtn.addEventListener('click', () => {
-                startChatModal.classList.add('active');
-                searchUserId.focus();
+
+            // Initialize attach button
+            document.getElementById('attachBtn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.getElementById('attachmentOptions').classList.toggle('show');
             });
-            
-            closeStartChatModal.addEventListener('click', () => {
-                startChatModal.classList.remove('active');
-                searchResult.innerHTML = '';
-                searchUserId.value = '';
+
+            // Initialize chat menu
+            document.getElementById('chatMenuBtn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.getElementById('chatMenu').classList.toggle('show');
             });
-            
-            // Search for user by ID
-            searchUserId.addEventListener('input', debounce(searchUser, 300));
-            
-            // Chat interface
-            backToHome.addEventListener('click', () => {
-                chatPage.classList.add('hidden');
-                document.getElementById('homePage').classList.add('active');
-                stopChatListener();
-                currentChat = null;
-            });
-            
-            // Message input
+
+            // Auto-resize message input
+            const messageInput = document.getElementById('messageInput');
             messageInput.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
             });
-            
-            messageInput.addEventListener('keypress', (e) => {
+
+            // Send message on Enter (without Shift)
+            messageInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     sendMessage();
                 }
             });
-            
-            sendMessageBtn.addEventListener('click', sendMessage);
-            
-            // Attachment button
-            attachBtn.addEventListener('click', () => {
-                attachmentOptions.classList.toggle('show');
-            });
-            
-            // Attachment options
-            attachmentBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const type = btn.getAttribute('data-type');
-                    handleAttachment(type);
-                    attachmentOptions.classList.remove('show');
-                });
-            });
-            
-            // File inputs
-            photoInput.addEventListener('change', handlePhotoUpload);
-            videoInput.addEventListener('change', handleVideoUpload);
-            documentInput.addEventListener('change', handleDocumentUpload);
-            
-            // Voice recording
-            stopRecordingBtn.addEventListener('click', stopRecording);
-            
-            // Create group
-            createGroupBtn.addEventListener('click', () => {
-                createGroupModal.classList.add('active');
-                loadContactsForGroup();
-            });
-            
-            closeGroupModal.addEventListener('click', () => {
-                createGroupModal.classList.remove('active');
-            });
-            
-            cancelGroupBtn.addEventListener('click', () => {
-                createGroupModal.classList.remove('active');
-            });
-            
-            createGroupSubmitBtn.addEventListener('click', createGroup);
-            
-            // Logout
-            logoutBtn.addEventListener('click', handleLogout);
-            
-            // View profile
-            document.getElementById('viewProfileBtn').addEventListener('click', () => {
-                showProfileModal(currentUser);
-            });
-            
-            // Location modal
-            closeLocationModal.addEventListener('click', () => {
-                locationModal.classList.remove('active');
-            });
-            
-            cancelLocationBtn.addEventListener('click', () => {
-                locationModal.classList.remove('active');
-            });
-            
-            sendLocationBtn.addEventListener('click', sendLocation);
-            
-            // Play notification sound when receiving message
-            notificationSound.addEventListener('ended', () => {
-                notificationSound.currentTime = 0;
-            });
-        }
-        
-        // Debounce function for search
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-        
-        // Search for user by ID
-        function searchUser() {
-            const query = searchUserId.value.trim().toUpperCase();
-            
-            if (!query.startsWith('ZYN-') || query.length !== 8) {
-                searchResult.innerHTML = '';
-                return;
-            }
-            
-            const db = firebase.database();
-            db.ref('user_ids/' + query).once('value')
-                .then(snapshot => {
-                    if (snapshot.exists()) {
-                        const userId = snapshot.val();
-                        return db.ref('users/' + userId).once('value');
+
+            // Search user as typing
+            const searchInput = document.getElementById('searchUserId');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const userId = this.value.trim().toUpperCase();
+                    if (userId.startsWith('ZYN-') && userId.length === 8) {
+                        searchUser(userId);
                     } else {
-                        searchResult.innerHTML = '<div class="no-result">User not found</div>';
-                        return null;
+                        clearSearchResult();
                     }
-                })
-                .then(userSnapshot => {
-                    if (userSnapshot && userSnapshot.exists()) {
-                        const userData = userSnapshot.val();
-                        displaySearchResult(userData);
-                    }
-                })
-                .catch(error => {
-                    console.error('Search error:', error);
-                    searchResult.innerHTML = '<div class="no-result">Error searching user</div>';
-                });
-        }
-        
-        // Display search result
-        function displaySearchResult(userData) {
-            const isContact = currentUser.contacts && currentUser.contacts[userData.userId];
-            
-            searchResult.innerHTML = `
-                <div class="user-found">
-                    <img src="${userData.profileUrl || 'https://via.placeholder.com/150/cccccc/969696?text=U'}" 
-                         alt="${userData.name}" class="user-found-avatar">
-                    <div class="user-found-info">
-                        <h4>${userData.name}</h4>
-                        <p>${userData.userId}</p>
-                        <p>${userData.status || 'Hey there! I am using Zynapse'}</p>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    ${isContact ? 
-                        `<button class="action-btn btn-primary" id="openChatBtn">Open Chat</button>` : 
-                        `<button class="action-btn btn-primary" id="sendRequestBtn">Send Chat Request</button>`
-                    }
-                </div>
-            `;
-            
-            if (isContact) {
-                document.getElementById('openChatBtn').addEventListener('click', () => {
-                    startChatModal.classList.remove('active');
-                    openChat(userData);
-                });
-            } else {
-                document.getElementById('sendRequestBtn').addEventListener('click', () => {
-                    sendChatRequest(userData);
                 });
             }
-        }
-        
-        // Send chat request
-        function sendChatRequest(userData) {
-            const db = firebase.database();
-            const requestId = generateId();
-            const timestamp = Date.now();
-            
-            const requestData = {
-                fromUserId: currentUser.userId,
-                fromUserName: currentUser.name,
-                fromUserProfile: currentUser.profileUrl,
-                toUserId: userData.userId,
-                timestamp: timestamp,
-                status: 'pending'
-            };
-            
-            // Get the receiver's Firebase UID
-            db.ref('user_ids/' + userData.userId).once('value')
-                .then(snapshot => {
-                    if (snapshot.exists()) {
-                        const receiverUid = snapshot.val();
-                        
-                        // Add request to receiver's chat requests
-                        const updates = {};
-                        updates['users/' + receiverUid + '/chatRequests/' + requestId] = {
-                            fromUserId: currentUser.userId,
-                            fromUserName: currentUser.name,
-                            fromUserProfile: currentUser.profileUrl,
-                            timestamp: timestamp
-                        };
-                        
-                        // Also store the request in a separate node for tracking
-                        updates['chat_requests/' + requestId] = requestData;
-                        
-                        return db.ref().update(updates);
-                    } else {
-                        throw new Error('User not found');
-                    }
-                })
-                .then(() => {
-                    showToast('Chat request sent successfully', 'success');
-                    startChatModal.classList.remove('active');
-                    searchResult.innerHTML = '';
-                    searchUserId.value = '';
-                })
-                .catch(error => {
-                    console.error('Error sending request:', error);
-                    showToast('Failed to send request', 'error');
-                });
-        }
-        
-        // Load chat requests
-        function loadChatRequests() {
-            const db = firebase.database();
-            const requestsList = document.getElementById('requestsList');
-            
-            db.ref('users/' + currentUser.uid + '/chatRequests').once('value')
-                .then(snapshot => {
-                    const requests = snapshot.val() || {};
-                    const requestIds = Object.keys(requests);
-                    
-                    if (requestIds.length === 0) {
-                        requestsList.innerHTML = `
-                            <div class="empty-state">
-                                <i class="fas fa-user-plus"></i>
-                                <h3>No chat requests</h3>
-                                <p>When someone sends you a chat request, it will appear here</p>
-                            </div>
-                        `;
-                        return;
-                    }
-                    
-                    let html = '';
-                    requestIds.forEach(requestId => {
-                        const request = requests[requestId];
-                        html += `
-                            <div class="request-card" data-request-id="${requestId}" data-from-id="${request.fromUserId}">
-                                <div class="request-header">
-                                    <img src="${request.fromUserProfile || 'https://via.placeholder.com/150/cccccc/969696?text=U'}" 
-                                         alt="${request.fromUserName}" class="request-avatar">
-                                    <div class="request-info">
-                                        <h4>${request.fromUserName}</h4>
-                                        <p class="request-user-id">${request.fromUserId}</p>
-                                        <p class="request-time">${formatTime(request.timestamp)}</p>
-                                    </div>
-                                </div>
-                                <div class="request-actions">
-                                    <button class="action-btn accept-btn" data-action="accept">Accept</button>
-                                    <button class="action-btn reject-btn" data-action="reject">Reject</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    requestsList.innerHTML = html;
-                    
-                    // Add event listeners to action buttons
-                    requestsList.querySelectorAll('[data-action="accept"]').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const card = this.closest('.request-card');
-                            const requestId = card.getAttribute('data-request-id');
-                            const fromUserId = card.getAttribute('data-from-id');
-                            acceptChatRequest(requestId, fromUserId);
-                        });
-                    });
-                    
-                    requestsList.querySelectorAll('[data-action="reject"]').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const card = this.closest('.request-card');
-                            const requestId = card.getAttribute('data-request-id');
-                            const fromUserId = card.getAttribute('data-from-id');
-                            rejectChatRequest(requestId, fromUserId);
-                        });
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading requests:', error);
-                });
-        }
-        
-        // Accept chat request
-        function acceptChatRequest(requestId, fromUserId) {
-            const db = firebase.database();
-            
-            // First, get the sender's user data
-            db.ref('user_ids/' + fromUserId).once('value')
-                .then(snapshot => {
-                    if (snapshot.exists()) {
-                        const senderUid = snapshot.val();
-                        return db.ref('users/' + senderUid).once('value');
-                    } else {
-                        throw new Error('Sender not found');
-                    }
-                })
-                .then(senderSnapshot => {
-                    const senderData = senderSnapshot.val();
-                    
-                    // Add each other to contacts
-                    const updates = {};
-                    
-                    // Add sender to current user's contacts
-                    updates['users/' + currentUser.uid + '/contacts/' + senderData.userId] = {
-                        name: senderData.name,
-                        profileUrl: senderData.profileUrl,
-        userId: senderData.userId,
-        addedAt: Date.now()
-    };
-    
-    // Add current user to sender's contacts
-    updates['users/' + senderData.uid + '/contacts/' + currentUser.userId] = {
-        name: currentUser.name,
-        profileUrl: currentUser.profileUrl,
-        userId: currentUser.userId,
-        addedAt: Date.now()
-    };
-    
-    // Remove the request
-    updates['users/' + currentUser.uid + '/chatRequests/' + requestId] = null;
-    updates['chat_requests/' + requestId] = null;
-    
-    // Create a chat between them
-    const chatId = generateChatId(currentUser.userId, senderData.userId);
-    updates['chats/' + chatId] = {
-        participants: [currentUser.userId, senderData.userId],
-        createdAt: Date.now(),
-        lastMessage: "You are now connected on Zynapse!",
-        lastMessageTime: Date.now(),
-        unreadCount: {
-            [currentUser.userId]: 0,
-            [senderData.userId]: 0
-        }
-    };
-    
-    return db.ref().update(updates);
-})
-.then(() => {
-    showToast('Chat request accepted', 'success');
-    loadChatRequests();
-    loadContacts();
-    
-    // Open chat with the new contact
-    db.ref('user_ids/' + fromUserId).once('value')
-        .then(snapshot => {
-            if (snapshot.exists()) {
-                const senderUid = snapshot.val();
-                return db.ref('users/' + senderUid).once('value');
-            }
-        })
-        .then(senderSnapshot => {
-            if (senderSnapshot && senderSnapshot.exists()) {
-                const senderData = senderSnapshot.val();
-                openChat(senderData);
-            }
+
+            // Load user data
+            loadUserData();
         });
-})
-.catch(error => {
-    console.error('Error accepting request:', error);
-    showToast('Failed to accept request', 'error');
-});
-}
 
-// Reject chat request
-function rejectChatRequest(requestId, fromUserId) {
-const db = firebase.database();
-
-const updates = {};
-updates['users/' + currentUser.uid + '/chatRequests/' + requestId] = null;
-updates['chat_requests/' + requestId + '/status'] = 'rejected';
-
-db.ref().update(updates)
-    .then(() => {
-        showToast('Chat request rejected', 'success');
-        loadChatRequests();
-    })
-    .catch(error => {
-        console.error('Error rejecting request:', error);
-        showToast('Failed to reject request', 'error');
-    });
-}
-
-// Load user's chats
-function loadChats() {
-const db = firebase.database();
-const chatsList = document.getElementById('chatsList');
-
-// Get all chats where user is a participant
-db.ref('chats').orderByChild('lastMessageTime').once('value')
-    .then(snapshot => {
-        const chats = snapshot.val() || {};
-        const userChats = [];
-        
-        Object.keys(chats).forEach(chatId => {
-            const chat = chats[chatId];
-            if (chat.participants && chat.participants.includes(currentUser.userId)) {
-                userChats.push({ id: chatId, ...chat });
-            }
-        });
-        
-        // Sort by last message time (newest first)
-        userChats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
-        
-        if (userChats.length === 0) {
-            chatsList.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-comments"></i>
-                    <h3>No chats yet</h3>
-                    <p>Start a new chat by tapping the button below</p>
-                </div>
-            `;
-            return;
-        }
-        
-        let html = '';
-        userChats.forEach(chat => {
-            // Get the other participant
-            const otherUserId = chat.participants.find(p => p !== currentUser.userId);
-            
-            // Get user info from contacts
-            const contactInfo = currentUser.contacts && currentUser.contacts[otherUserId];
-            const userName = contactInfo ? contactInfo.name : otherUserId;
-            const profileUrl = contactInfo ? contactInfo.profileUrl : 'https://via.placeholder.com/150/cccccc/969696?text=U';
-            const unreadCount = chat.unreadCount && chat.unreadCount[currentUser.userId] || 0;
-            
-            html += `
-                <div class="chat-item" data-chat-id="${chat.id}" data-user-id="${otherUserId}">
-                    <img src="${profileUrl}" alt="${userName}" class="chat-avatar">
-                    <div class="chat-info">
-                        <h3>${userName}</h3>
-                        <p class="chat-preview">${chat.lastMessage || 'No messages yet'}</p>
-                    </div>
-                    <div class="chat-meta">
-                        <span class="chat-time">${formatTime(chat.lastMessageTime)}</span>
-                        ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}
-                    </div>
-                </div>
-            `;
-        });
-        
-        chatsList.innerHTML = html;
-        
-        // Add click event to open chats
-        chatsList.querySelectorAll('.chat-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const chatId = this.getAttribute('data-chat-id');
-                const otherUserId = this.getAttribute('data-user-id');
-                openChatByUserId(otherUserId);
+        function switchPage(page) {
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
             });
-        });
-    })
-    .catch(error => {
-        console.error('Error loading chats:', error);
-    });
-}
+            document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
 
-// Load contacts
-function loadContacts() {
-const db = firebase.database();
-const contactsList = document.getElementById('contactsList');
+            // Show selected page
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('active');
+            });
+            document.getElementById(`${page}Page`).classList.add('active');
 
-if (!currentUser.contacts || Object.keys(currentUser.contacts).length === 0) {
-    contactsList.innerHTML = `
-        <div class="empty-state">
-            <i class="fas fa-address-book"></i>
-            <h3>No contacts yet</h3>
-            <p>Add contacts by sending them a chat request</p>
-        </div>
-    `;
-    return;
-}
-
-let html = '';
-Object.keys(currentUser.contacts).forEach(contactId => {
-    const contact = currentUser.contacts[contactId];
-    
-    // Get online status from user data
-    db.ref('users').orderByChild('userId').equalTo(contactId).once('value')
-        .then(snapshot => {
-            if (snapshot.exists()) {
-                const userData = snapshot.val();
-                const userId = Object.keys(userData)[0];
-                const user = userData[userId];
-                
-                const isOnline = (Date.now() - user.lastSeen) < 300000; // 5 minutes
-                
-                return `
-                    <div class="contact-card" data-user-id="${contactId}">
-                        <img src="${contact.profileUrl || 'https://via.placeholder.com/150/cccccc/969696?text=U'}" 
-                             alt="${contact.name}" class="contact-avatar">
-                        <div class="contact-info">
-                            <h3>${contact.name}</h3>
-                            <div class="contact-status">
-                                <span class="status-dot ${isOnline ? 'online' : 'offline'}"></span>
-                                <span>${isOnline ? 'Online' : 'Offline'}</span>
-                            </div>
-                        </div>
-                        <div class="contact-actions">
-                            <button class="icon-btn start-chat-btn" title="Start Chat">
-                                <i class="fas fa-comment"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
+            // Load page-specific data
+            switch(page) {
+                case 'home':
+                    loadChats();
+                    break;
+                case 'zynes':
+                    loadZynes();
+                    break;
+                case 'groups':
+                    loadGroups();
+                    break;
+                case 'requests':
+                    loadChatRequests();
+                    break;
+                case 'contacts':
+                    loadContacts();
+                    break;
             }
-        })
-        .then(contactHtml => {
-            if (contactHtml) {
-                html += contactHtml;
-                contactsList.innerHTML = html;
-                
-                // Add event listeners
-                contactsList.querySelectorAll('.start-chat-btn').forEach((btn, index) => {
-                    btn.addEventListener('click', function() {
-                        const card = this.closest('.contact-card');
-                        const contactId = card.getAttribute('data-user-id');
-                        openChatByUserId(contactId);
-                    });
-                });
-            }
-        });
-});
-}
-
-// Load contacts for group creation
-function loadContactsForGroup() {
-const membersList = document.getElementById('membersList');
-const selectedMembers = new Set();
-
-if (!currentUser.contacts || Object.keys(currentUser.contacts).length === 0) {
-    membersList.innerHTML = '<p class="text-gray-500">No contacts available</p>';
-    return;
-}
-
-let html = '';
-Object.keys(currentUser.contacts).forEach(contactId => {
-    const contact = currentUser.contacts[contactId];
-    html += `
-        <div class="member-item" data-user-id="${contactId}">
-            <div class="member-info">
-                <img src="${contact.profileUrl || 'https://via.placeholder.com/150/cccccc/969696?text=U'}" 
-                     alt="${contact.name}" class="member-avatar">
-                <span class="member-name">${contact.name}</span>
-            </div>
-            <div class="member-checkbox" data-selected="false"></div>
-        </div>
-    `;
-});
-
-membersList.innerHTML = html;
-
-// Add click event to select members
-membersList.querySelectorAll('.member-item').forEach(item => {
-    item.addEventListener('click', function() {
-        const checkbox = this.querySelector('.member-checkbox');
-        const userId = this.getAttribute('data-user-id');
-        const isSelected = checkbox.getAttribute('data-selected') === 'true';
-        
-        if (isSelected) {
-            checkbox.classList.remove('checked');
-            checkbox.setAttribute('data-selected', 'false');
-            selectedMembers.delete(userId);
-        } else {
-            checkbox.classList.add('checked');
-            checkbox.setAttribute('data-selected', 'true');
-            selectedMembers.add(userId);
         }
-    });
-});
-}
 
-// Load Zynes
-function loadZynes() {
-const db = firebase.database();
-const zynesList = document.getElementById('zynesList');
-
-// Get zynes from last 24 hours
-const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
-
-db.ref('zynes').orderByChild('timestamp').startAt(twentyFourHoursAgo).once('value')
-    .then(snapshot => {
-        const zynes = snapshot.val() || {};
-        const zyneArray = Object.keys(zynes).map(id => ({ id, ...zynes[id] }));
-        
-        // Filter zynes from contacts or self
-        const filteredZynes = zyneArray.filter(zyne => {
-            return zyne.userId === currentUser.userId || 
-                   (currentUser.contacts && currentUser.contacts[zyne.userId]);
-        });
-        
-        // Sort by timestamp (newest first)
-        filteredZynes.sort((a, b) => b.timestamp - a.timestamp);
-        
-        if (filteredZynes.length === 0) {
-            zynesList.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-bolt"></i>
-                    <h3>No Zynes yet</h3>
-                    <p>Post a Zyne or wait for your contacts to post something</p>
-                </div>
-            `;
-            return;
-        }
-        
-        let html = '';
-        filteredZynes.forEach(zyne => {
-            const isOwnZyne = zyne.userId === currentUser.userId;
-            const contactInfo = currentUser.contacts && currentUser.contacts[zyne.userId];
-            const userName = isOwnZyne ? 'You' : (contactInfo ? contactInfo.name : zyne.userName);
-            const profileUrl = isOwnZyne ? currentUser.profileUrl : (contactInfo ? contactInfo.profileUrl : 'https://via.placeholder.com/150/cccccc/969696?text=U');
-            
-            let mediaHtml = '';
-            if (zyne.mediaUrl) {
-                if (zyne.mediaType === 'image') {
-                    mediaHtml = `<img src="${zyne.mediaUrl}" alt="Zyne Media" class="zyne-media">`;
-                } else if (zyne.mediaType === 'video') {
-                    mediaHtml = `<video src="${zyne.mediaUrl}" controls class="zyne-media"></video>`;
-                }
-            }
-            
-            html += `
-                <div class="zyne-card" data-zyne-id="${zyne.id}">
-                    <div class="zyne-header">
-                        <img src="${profileUrl}" alt="${userName}" class="zyne-avatar">
-                        <div class="zyne-user-info">
-                            <h4>${userName}</h4>
-                            <span class="zyne-time">${formatTime(zyne.timestamp)}</span>
-                        </div>
-                        ${isOwnZyne ? 
-                            `<button class="icon-btn delete-zyne-btn" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>` : ''
-                        }
-                    </div>
-                    <div class="zyne-content">
-                        ${zyne.text ? `<p class="zyne-text">${zyne.text}</p>` : ''}
-                        ${mediaHtml}
-                    </div>
-                    <div class="zyne-actions">
-                        <button class="zyne-action-btn like-btn ${zyne.likes && zyne.likes[currentUser.userId] ? 'liked' : ''}">
-                            <i class="fas fa-heart"></i>
-                            <span>${zyne.likes ? Object.keys(zyne.likes).length : 0}</span>
-                        </button>
-                        <button class="zyne-action-btn comment-btn">
-                            <i class="fas fa-comment"></i>
-                            <span>${zyne.comments ? Object.keys(zyne.comments).length : 0}</span>
-                        </button>
-                    </div>
-                    ${zyne.comments ? `
-                        <div class="zyne-comments">
-                            <div class="comment-list">
-                                ${Object.keys(zyne.comments).slice(0, 2).map(commentId => {
-                                    const comment = zyne.comments[commentId];
-                                    const commenterName = comment.userId === currentUser.userId ? 'You' : 
-                                                         (currentUser.contacts && currentUser.contacts[comment.userId] ? 
-                                                          currentUser.contacts[comment.userId].name : comment.userId);
-                                    return `
-                                        <div class="comment-item">
-                                            <span class="comment-text">${commenterName}: ${comment.text}</span>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                            <input type="text" class="comment-input" placeholder="Add a comment..." data-zyne-id="${zyne.id}">
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        });
-        
-        zynesList.innerHTML = html;
-        
-        // Add event listeners
-        zynesList.querySelectorAll('.like-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const card = this.closest('.zyne-card');
-                const zyneId = card.getAttribute('data-zyne-id');
-                toggleZyneLike(zyneId);
-            });
-        });
-        
-        zynesList.querySelectorAll('.comment-input').forEach(input => {
-            input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && this.value.trim()) {
-                    const zyneId = this.getAttribute('data-zyne-id');
-                    addComment(zyneId, this.value.trim());
-                    this.value = '';
-                }
-            });
-        });
-        
-        zynesList.querySelectorAll('.delete-zyne-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const card = this.closest('.zyne-card');
-                const zyneId = card.getAttribute('data-zyne-id');
-                deleteZyne(zyneId);
-            });
-        });
-    })
-    .catch(error => {
-        console.error('Error loading zynes:', error);
-    });
-}
-
-// Load groups
-function loadGroups() {
-const db = firebase.database();
-const groupsList = document.getElementById('groupsList');
-
-// Get groups where user is a member
-db.ref('groups').orderByChild('members/' + currentUser.userId).equalTo(true).once('value')
-    .then(snapshot => {
-        const groups = snapshot.val() || {};
-        const groupArray = Object.keys(groups).map(id => ({ id, ...groups[id] }));
-        
-        // Sort by last activity
-        groupArray.sort((a, b) => (b.lastActivity || 0) - (a.lastActivity || 0));
-        
-        if (groupArray.length === 0) {
-            groupsList.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-users"></i>
-                    <h3>No groups yet</h3>
-                    <p>Create a new group or wait to be added to one</p>
-                </div>
-            `;
-            return;
-        }
-        
-        let html = '';
-        groupArray.forEach(group => {
-            const memberCount = group.members ? Object.keys(group.members).length : 0;
-            const lastMessage = group.lastMessage || 'No messages yet';
-            
-            html += `
-                <div class="group-card" data-group-id="${group.id}">
-                    <img src="${group.profileUrl || 'https://via.placeholder.com/150/cccccc/969696?text=G'}" 
-                         alt="${group.name}" class="group-avatar">
-                    <div class="group-info">
-                        <h3>${group.name}</h3>
-                        <p class="group-preview">${lastMessage}</p>
-                        <div class="group-members">
-                            <i class="fas fa-user-friends"></i>
-                            <span>${memberCount} members</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        groupsList.innerHTML = html;
-        
-        // Add click event to open groups
-        groupsList.querySelectorAll('.group-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const groupId = this.getAttribute('data-group-id');
-                openGroup(groupId);
-            });
-        });
-    })
-    .catch(error => {
-        console.error('Error loading groups:', error);
-    });
-}
-
-// Create new group
-function createGroup() {
-const groupName = document.getElementById('groupName').value.trim();
-const selectedMembers = Array.from(document.querySelectorAll('.member-checkbox.checked'))
-    .map(checkbox => checkbox.closest('.member-item').getAttribute('data-user-id'));
-    
-if (!groupName) {
-    showToast('Please enter a group name', 'error');
-    return;
-}
-
-if (selectedMembers.length === 0) {
-    showToast('Please select at least one member', 'error');
-    return;
-}
-
-const db = firebase.database();
-const groupId = generateId();
-const timestamp = Date.now();
-
-// Include current user in members
-const allMembers = [currentUser.userId, ...selectedMembers];
-const membersObj = {};
-allMembers.forEach(memberId => {
-    membersObj[memberId] = true;
-});
-
-const groupData = {
-    id: groupId,
-    name: groupName,
-    createdBy: currentUser.userId,
-    createdAt: timestamp,
-    lastActivity: timestamp,
-    members: membersObj,
-    profileUrl: document.querySelector('#groupProfilePreview img')?.src || null
-};
-
-// Create group chat
-const chatId = generateId();
-const chatData = {
-    id: chatId,
-    groupId: groupId,
-    type: 'group',
-    name: groupName,
-    participants: allMembers,
-    createdAt: timestamp,
-    lastMessage: `Group "${groupName}" was created`,
-    lastMessageTime: timestamp,
-    unreadCount: {}
-};
-
-allMembers.forEach(memberId => {
-    chatData.unreadCount[memberId] = 0;
-});
-
-const updates = {};
-updates['groups/' + groupId] = groupData;
-updates['chats/' + chatId] = chatData;
-
-// Add group to each member's groups list
-allMembers.forEach(memberId => {
-    // Get member's Firebase UID
-    db.ref('user_ids/' + memberId).once('value')
-        .then(snapshot => {
-            if (snapshot.exists()) {
-                const memberUid = snapshot.val();
-                updates['users/' + memberUid + '/groups/' + groupId] = true;
-            }
-        });
-});
-
-db.ref().update(updates)
-    .then(() => {
-        showToast('Group created successfully', 'success');
-        createGroupModal.classList.remove('active');
-        document.getElementById('groupName').value = '';
-        document.getElementById('groupProfilePreview').innerHTML = `
-            <div class="preview-placeholder">
-                <i class="fas fa-users"></i>
-                <span>No image</span>
-            </div>
-        `;
-        loadGroups();
-    })
-    .catch(error => {
-        console.error('Error creating group:', error);
-        showToast('Failed to create group', 'error');
-    });
-}
-
-// Open chat with user
-function openChat(userData) {
-currentChat = {
-    userId: userData.userId,
-    name: userData.name,
-    profileUrl: userData.profileUrl,
-    type: 'individual'
-};
-
-// Update chat header
-document.getElementById('chatUserName').textContent = userData.name;
-document.getElementById('chatUserAvatar').src = userData.profileUrl || 'https://via.placeholder.com/150/cccccc/969696?text=U';
-
-// Show chat interface
-chatPage.classList.remove('hidden');
-document.querySelector('.page.active').classList.remove('active');
-
-// Load messages
-loadChatMessages(userData.userId);
-
-// Start listening for new messages
-listenToChat(userData.userId);
-
-// Mark messages as read
-markMessagesAsRead(userData.userId);
-}
-
-// Open chat by user ID
-function openChatByUserId(userId) {
-const db = firebase.database();
-
-// Find user by ID
-db.ref('user_ids/' + userId).once('value')
-    .then(snapshot => {
-        if (snapshot.exists()) {
-            const userUid = snapshot.val();
-            return db.ref('users/' + userUid).once('value');
-        } else {
-            throw new Error('User not found');
-        }
-    })
-    .then(snapshot => {
-        if (snapshot.exists()) {
-            const userData = snapshot.val();
-            openChat(userData);
-        }
-    })
-    .catch(error => {
-        console.error('Error opening chat:', error);
-        showToast('Failed to open chat', 'error');
-    });
-}
-
-// Load chat messages
-function loadChatMessages(otherUserId) {
-const db = firebase.database();
-const chatId = generateChatId(currentUser.userId, otherUserId);
-
-chatMessages.innerHTML = '';
-
-db.ref('messages/' + chatId).orderByChild('timestamp').limitToLast(50).once('value')
-    .then(snapshot => {
-        const messages = snapshot.val() || {};
-        const messageArray = Object.keys(messages).map(id => ({ id, ...messages[id] }));
-        
-        // Sort by timestamp
-        messageArray.sort((a, b) => a.timestamp - b.timestamp);
-        
-        let lastDate = null;
-        messageArray.forEach(message => {
-            // Add date separator if needed
-            const messageDate = new Date(message.timestamp).toDateString();
-            if (messageDate !== lastDate) {
-                lastDate = messageDate;
-                const dateElement = document.createElement('div');
-                dateElement.className = 'message-date';
-                dateElement.innerHTML = `<span class="date-label">${formatDate(message.timestamp)}</span>`;
-                chatMessages.appendChild(dateElement);
-            }
-            
-            // Add message
-            const messageElement = createMessageElement(message);
-            chatMessages.appendChild(messageElement);
-        });
-        
-        // Scroll to bottom
-        setTimeout(() => {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 100);
-    })
-    .catch(error => {
-        console.error('Error loading messages:', error);
-    });
-}
-
-// Listen to chat for new messages
-function listenToChat(otherUserId) {
-const db = firebase.database();
-const chatId = generateChatId(currentUser.userId, otherUserId);
-
-// Remove previous listener if exists
-if (chatListeners[chatId]) {
-    chatListeners[chatId]();
-}
-
-// Set up new listener
-chatListeners[chatId] = db.ref('messages/' + chatId).orderByChild('timestamp').limitToLast(1).on('child_added', (snapshot) => {
-    const message = snapshot.val();
-    message.id = snapshot.key;
-    
-    // Only show if it's a new message
-    if (message.timestamp > Date.now() - 1000) {
-        // Check if we need to add date separator
-        const messages = chatMessages.querySelectorAll('.message');
-        let lastDate = null;
-        if (messages.length > 0) {
-            const lastMessage = messages[messages.length - 1];
-            const lastTimestamp = parseInt(lastMessage.getAttribute('data-timestamp'));
-            lastDate = new Date(lastTimestamp).toDateString();
-        }
-        
-        const messageDate = new Date(message.timestamp).toDateString();
-        if (messageDate !== lastDate) {
-            const dateElement = document.createElement('div');
-            dateElement.className = 'message-date';
-            dateElement.innerHTML = `<span class="date-label">${formatDate(message.timestamp)}</span>`;
-            chatMessages.appendChild(dateElement);
-        }
-        
-        // Add new message
-        const messageElement = createMessageElement(message);
-        chatMessages.appendChild(messageElement);
-        
-        // Scroll to bottom
-        setTimeout(() => {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 100);
-        
-        // Play notification sound if message is from other user
-        if (message.senderId !== currentUser.userId && notificationsEnabled) {
-            notificationSound.play().catch(e => console.log('Notification sound error:', e));
-            
-            // Update chat list badge
-            updateChatBadge(otherUserId);
-        }
-    }
-});
-}
-
-// Stop chat listener
-function stopChatListener() {
-Object.keys(chatListeners).forEach(chatId => {
-    if (chatListeners[chatId]) {
-        chatListeners[chatId]();
-    }
-});
-chatListeners = {};
-}
-
-// Create message element
-function createMessageElement(message) {
-const isSent = message.senderId === currentUser.userId;
-const messageDiv = document.createElement('div');
-messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
-messageDiv.setAttribute('data-timestamp', message.timestamp);
-messageDiv.setAttribute('data-message-id', message.id);
-
-let content = '';
-if (message.type === 'text') {
-    content = `
-        <div class="message-bubble">
-            <div class="message-text">${message.text}</div>
-            <span class="message-time">${formatMessageTime(message.timestamp)}</span>
-        </div>
-    `;
-} else if (message.type === 'image') {
-    content = `
-        <div class="message-bubble">
-            <div class="media-message">
-                <img src="${message.url}" alt="Image" class="chat-media">
-                ${message.caption ? `<div class="message-text">${message.caption}</div>` : ''}
-                <span class="message-time">${formatMessageTime(message.timestamp)}</span>
-            </div>
-        </div>
-    `;
-} else if (message.type === 'video') {
-    content = `
-        <div class="message-bubble">
-            <div class="media-message">
-                <video src="${message.url}" controls class="chat-media"></video>
-                ${message.caption ? `<div class="message-text">${message.caption}</div>` : ''}
-                <span class="message-time">${formatMessageTime(message.timestamp)}</span>
-            </div>
-        </div>
-    `;
-} else if (message.type === 'document') {
-    const fileName = message.fileName || 'Document';
-    const fileSize = message.fileSize ? `(${formatFileSize(message.fileSize)})` : '';
-    content = `
-        <div class="message-bubble">
-            <div class="document-message">
-                <div class="document-icon">
-                    <i class="fas fa-file"></i>
-                </div>
-                <div class="document-info">
-                    <div class="document-name">${fileName}</div>
-                    <div class="document-size">${fileSize}</div>
-                </div>
-                <a href="${message.url}" download class="icon-btn">
-                    <i class="fas fa-download"></i>
-                </a>
-                <span class="message-time">${formatMessageTime(message.timestamp)}</span>
-            </div>
-        </div>
-    `;
-} else if (message.type === 'location') {
-    content = `
-        <div class="message-bubble">
-            <div class="location-message">
-                <div class="location-map">
-                    <i class="fas fa-map-marker-alt"></i>
-                </div>
-                <div class="location-info">
-                    <div class="location-address">${message.address || 'Location'}</div>
-                    <div class="location-details">
-                        <span>${message.area || ''}</span>
-                        <span>${message.city || ''}</span>
-                    </div>
-                </div>
-                <span class="message-time">${formatMessageTime(message.timestamp)}</span>
-            </div>
-        </div>
-    `;
-} else if (message.type === 'voice') {
-    content = `
-        <div class="message-bubble">
-            <div class="voice-message">
-                <button class="voice-play-btn" data-audio-url="${message.url}">
-                    <i class="fas fa-play"></i>
-                </button>
-                <div class="voice-waveform"></div>
-                <span class="voice-duration">${message.duration || '0:00'}</span>
-                <span class="message-time">${formatMessageTime(message.timestamp)}</span>
-            </div>
-        </div>
-    `;
-}
-
-messageDiv.innerHTML = content;
-
-// Add click event for voice messages
-const playBtn = messageDiv.querySelector('.voice-play-btn');
-if (playBtn) {
-    playBtn.addEventListener('click', function() {
-        const audioUrl = this.getAttribute('data-audio-url');
-        playVoiceMessage(audioUrl);
-    });
-}
-
-return messageDiv;
-}
-
-// Send message
-function sendMessage() {
-const text = messageInput.value.trim();
-if (!text && !currentChat) return;
-
-if (!currentChat) {
-    showToast('Please select a chat first', 'error');
-    return;
-}
-
-const db = firebase.database();
-const messageId = generateId();
-const timestamp = Date.now();
-const chatId = generateChatId(currentUser.userId, currentChat.userId);
-
-const messageData = {
-    id: messageId,
-    senderId: currentUser.userId,
-    senderName: currentUser.name,
-    text: text,
-    type: 'text',
-    timestamp: timestamp,
-    status: 'sent'
-};
-
-// Save message
-const updates = {};
-updates['messages/' + chatId + '/' + messageId] = messageData;
-
-// Update chat last message
-updates['chats/' + chatId + '/lastMessage'] = text;
-updates['chats/' + chatId + '/lastMessageTime'] = timestamp;
-updates['chats/' + chatId + '/unreadCount/' + currentChat.userId] = 
-    firebase.database.ServerValue.increment(1);
-
-db.ref().update(updates)
-    .then(() => {
-        messageInput.value = '';
-        messageInput.style.height = 'auto';
-        
-        // Update local chat list
-        loadChats();
-    })
-    .catch(error => {
-        console.error('Error sending message:', error);
-        showToast('Failed to send message', 'error');
-    });
-}
-
-// Handle attachment
-function handleAttachment(type) {
-switch(type) {
-    case 'photo':
-        photoInput.click();
-        break;
-    case 'video':
-        videoInput.click();
-        break;
-    case 'document':
-        documentInput.click();
-        break;
-    case 'location':
-        getLocation();
-        break;
-    case 'viewonce':
-        showToast('View Once feature coming soon', 'info');
-        break;
-    case 'voice':
-        startRecording();
-        break;
-}
-}
-
-// Handle photo upload
-function handlePhotoUpload(e) {
-const file = e.target.files[0];
-if (!file || !currentChat) return;
-
-// Validate file
-if (!file.type.startsWith('image/')) {
-    showToast('Please select an image file', 'error');
-    return;
-}
-
-if (file.size > 50 * 1024 * 1024) {
-    showToast('File size exceeds 50MB limit', 'error');
-    return;
-}
-
-uploadToCloudinary(file, 'image')
-    .then(result => {
-        sendMediaMessage(result.url, 'image', file.name, result.size);
-    })
-    .catch(error => {
-        console.error('Upload error:', error);
-        showToast('Failed to upload image', 'error');
-    });
-}
-
-// Handle video upload
-function handleVideoUpload(e) {
-const file = e.target.files[0];
-if (!file || !currentChat) return;
-
-// Validate file
-if (!file.type.startsWith('video/')) {
-    showToast('Please select a video file', 'error');
-    return;
-}
-
-if (file.size > 50 * 1024 * 1024) {
-    showToast('File size exceeds 50MB limit', 'error');
-    return;
-}
-
-uploadToCloudinary(file, 'video')
-    .then(result => {
-        sendMediaMessage(result.url, 'video', file.name, result.size);
-    })
-    .catch(error => {
-        console.error('Upload error:', error);
-        showToast('Failed to upload video', 'error');
-    });
-}
-
-// Handle document upload
-function handleDocumentUpload(e) {
-const file = e.target.files[0];
-if (!file || !currentChat) return;
-
-// Validate file size
-if (file.size > 50 * 1024 * 1024) {
-    showToast('File size exceeds 50MB limit', 'error');
-    return;
-}
-
-uploadToCloudinary(file, 'raw')
-    .then(result => {
-        sendMediaMessage(result.url, 'document', file.name, result.size);
-    })
-    .catch(error => {
-        console.error('Upload error:', error);
-        showToast('Failed to upload document', 'error');
-    });
-}
-
-// Upload to Cloudinary
-function uploadToCloudinary(file, resourceType) {
-return new Promise((resolve, reject) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-    formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
-    formData.append('folder', CLOUDINARY_CONFIG.folder);
-    
-    const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`;
-    
-    fetch(endpoint, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.secure_url) {
-            resolve({
-                url: data.secure_url,
-                size: data.bytes,
-                format: data.format
-            });
-        } else {
-            reject('Upload failed');
-        }
-    })
-    .catch(error => reject(error));
-});
-}
-
-// Send media message
-function sendMediaMessage(url, type, fileName, fileSize) {
-if (!currentChat) return;
-
-const db = firebase.database();
-const messageId = generateId();
-const timestamp = Date.now();
-const chatId = generateChatId(currentUser.userId, currentChat.userId);
-
-const messageData = {
-    id: messageId,
-    senderId: currentUser.userId,
-    senderName: currentUser.name,
-    url: url,
-    type: type,
-    fileName: fileName,
-    fileSize: fileSize,
-    timestamp: timestamp,
-    status: 'sent'
-};
-
-const updates = {};
-updates['messages/' + chatId + '/' + messageId] = messageData;
-
-// Update chat last message
-let lastMessage = '';
-switch(type) {
-    case 'image': lastMessage = '📷 Photo'; break;
-    case 'video': lastMessage = '🎬 Video'; break;
-    case 'document': lastMessage = '📄 Document'; break;
-}
-
-updates['chats/' + chatId + '/lastMessage'] = lastMessage;
-updates['chats/' + chatId + '/lastMessageTime'] = timestamp;
-updates['chats/' + chatId + '/unreadCount/' + currentChat.userId] = 
-    firebase.database.ServerValue.increment(1);
-
-db.ref().update(updates)
-    .then(() => {
-        showToast('Media sent successfully', 'success');
-        loadChats();
-    })
-    .catch(error => {
-        console.error('Error sending media:', error);
-        showToast('Failed to send media', 'error');
-    });
-}
-
-// Get location
-function getLocation() {
-if (!navigator.geolocation) {
-    showToast('Geolocation is not supported by your browser', 'error');
-    return;
-}
-
-locationModal.classList.add('active');
-locationMap.innerHTML = '<i class="fas fa-spinner fa-spin"></i><p>Getting your location...</p>';
-
-navigator.geolocation.getCurrentPosition(
-    (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        
-        // Display map (using OpenStreetMap as example)
-        locationMap.innerHTML = `
-            <iframe 
-                src="https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}"
-                style="width:100%;height:120px;border:none;border-radius:var(--radius-md);"
-                loading="lazy">
-            </iframe>
-        `;
-        
-        // Get address using reverse geocoding (using Nominatim)
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-            .then(response => response.json())
-            .then(data => {
-                const address = data.display_name || 'Unknown location';
-                const parts = address.split(',');
-                
-                document.getElementById('locationInfo').innerHTML = `
-                    <p class="location-address">${parts[0] || 'Location'}</p>
-                    <div class="location-details">
-                        <span>${parts[1] || ''}</span>
-                        <span>${parts[parts.length-3] || ''}</span>
-                        <span>${parts[parts.length-2] || ''}</span>
-                    </div>
-                `;
-                
-                // Store location data for sending
-                window.currentLocation = {
-                    lat: lat,
-                    lng: lng,
-                    address: address,
-                    street: parts[0] || '',
-                    area: parts[1] || '',
-                    city: parts[parts.length-3] || '',
-                    country: parts[parts.length-1] || ''
-                };
-            })
-            .catch(error => {
-                console.error('Geocoding error:', error);
-                document.getElementById('locationInfo').innerHTML = `
-                    <p class="location-address">Location</p>
-                    <div class="location-details">
-                        <span>Lat: ${lat.toFixed(4)}</span>
-                        <span>Lng: ${lng.toFixed(4)}</span>
-                    </div>
-                `;
-                
-                window.currentLocation = {
-                    lat: lat,
-                    lng: lng,
-                    address: `Latitude: ${lat}, Longitude: ${lng}`
-                };
-            });
-    },
-    (error) => {
-        console.error('Geolocation error:', error);
-        locationMap.innerHTML = '<i class="fas fa-exclamation-triangle"></i><p>Unable to get location</p>';
-        showToast('Failed to get location', 'error');
-    },
-    {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-    }
-);
-}
-
-// Send location
-function sendLocation() {
-if (!currentChat || !window.currentLocation) return;
-
-const db = firebase.database();
-const messageId = generateId();
-const timestamp = Date.now();
-const chatId = generateChatId(currentUser.userId, currentChat.userId);
-
-const messageData = {
-    id: messageId,
-    senderId: currentUser.userId,
-    senderName: currentUser.name,
-    type: 'location',
-    latitude: window.currentLocation.lat,
-    longitude: window.currentLocation.lng,
-    address: window.currentLocation.address,
-    street: window.currentLocation.street,
-    area: window.currentLocation.area,
-    city: window.currentLocation.city,
-    timestamp: timestamp,
-    status: 'sent'
-};
-
-const updates = {};
-updates['messages/' + chatId + '/' + messageId] = messageData;
-updates['chats/' + chatId + '/lastMessage'] = '📍 Location';
-updates['chats/' + chatId + '/lastMessageTime'] = timestamp;
-updates['chats/' + chatId + '/unreadCount/' + currentChat.userId] = 
-    firebase.database.ServerValue.increment(1);
-
-db.ref().update(updates)
-    .then(() => {
-        showToast('Location sent successfully', 'success');
-        locationModal.classList.remove('active');
-        loadChats();
-    })
-    .catch(error => {
-        console.error('Error sending location:', error);
-        showToast('Failed to send location', 'error');
-    });
-}
-
-// Voice recording
-function startRecording() {
-if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    showToast('Voice recording not supported', 'error');
-    return;
-}
-
-navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
-        
-        mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
-        };
-        
-        mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-            sendVoiceMessage(audioBlob);
-            
-            // Stop all tracks
-            stream.getTracks().forEach(track => track.stop());
-        };
-        
-        mediaRecorder.start();
-        recordingStartTime = Date.now();
-        
-        // Show recording interface
-        voiceRecorder.classList.remove('hidden');
-        attachmentOptions.classList.remove('show');
-        
-        // Start timer
-        recordingTimer = setInterval(() => {
-            const elapsed = Date.now() - recordingStartTime;
-            const minutes = Math.floor(elapsed / 60000);
-            const seconds = Math.floor((elapsed % 60000) / 1000);
-            voiceDuration.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            
-            // Visual feedback
-            const intensity = Math.random() * 0.5 + 0.5;
-            voiceWaveform.style.background = `linear-gradient(90deg, var(--blue) ${intensity * 100}%, rgba(0, 122, 255, 0.2) 100%)`;
-        }, 100);
-    })
-    .catch(error => {
-        console.error('Recording error:', error);
-        showToast('Microphone access denied', 'error');
-    });
-}
-
-function stopRecording() {
-if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop();
-    clearInterval(recordingTimer);
-    voiceRecorder.classList.add('hidden');
-}
-}
-
-function sendVoiceMessage(audioBlob) {
-if (!currentChat) return;
-
-// Upload to Cloudinary
-const formData = new FormData();
-formData.append('file', audioBlob, 'voice-message.mp3');
-formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
-formData.append('folder', CLOUDINARY_CONFIG.folder + '/voice');
-formData.append('resource_type', 'video'); // Cloudinary treats audio as video
-
-fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
-    method: 'POST',
-    body: formData
-})
-.then(response => response.json())
-.then(data => {
-    if (data.secure_url) {
-        const duration = Math.round((Date.now() - recordingStartTime) / 1000);
-        
-        const db = firebase.database();
-        const messageId = generateId();
-        const timestamp = Date.now();
-        const chatId = generateChatId(currentUser.userId, currentChat.userId);
-        
-        const messageData = {
-            id: messageId,
-            senderId: currentUser.userId,
-            senderName: currentUser.name,
-            url: data.secure_url,
-            type: 'voice',
-            duration: duration,
-            timestamp: timestamp,
-            status: 'sent'
-        };
-        
-        const updates = {};
-        updates['messages/' + chatId + '/' + messageId] = messageData;
-        updates['chats/' + chatId + '/lastMessage'] = '🎤 Voice message';
-        updates['chats/' + chatId + '/lastMessageTime'] = timestamp;
-        updates['chats/' + chatId + '/unreadCount/' + currentChat.userId] = 
-            firebase.database.ServerValue.increment(1);
-        
-        return db.ref().update(updates);
-    } else {
-        throw new Error('Upload failed');
-    }
-})
-.then(() => {
-    showToast('Voice message sent', 'success');
-    loadChats();
-})
-.catch(error => {
-    console.error('Error sending voice message:', error);
-    showToast('Failed to send voice message', 'error');
-});
-}
-
-// Play voice message
-function playVoiceMessage(url) {
-voicePlayer.src = url;
-voicePlayer.play().catch(e => console.log('Play error:', e));
-}
-
-// Post Zyne
-document.getElementById('postZyneBtn').addEventListener('click', () => {
-const zyneText = document.getElementById('zyneText').value.trim();
-const mediaPreview = document.getElementById('zyneMediaPreview');
-const mediaFile = mediaPreview.querySelector('img, video')?.src || 
-                 mediaPreview.querySelector('input[type="file"]')?.files[0];
-
-if (!zyneText && !mediaFile) {
-    showToast('Please add text or media to post', 'error');
-    return;
-}
-
-const db = firebase.database();
-const zyneId = generateId();
-const timestamp = Date.now();
-
-const zyneData = {
-    id: zyneId,
-    userId: currentUser.userId,
-    userName: currentUser.name,
-    userProfile: currentUser.profileUrl,
-    text: zyneText,
-    timestamp: timestamp,
-    likes: {},
-    comments: {},
-    expiresAt: timestamp + 24 * 60 * 60 * 1000 // 24 hours
-};
-
-// Upload media if exists
-if (mediaFile && mediaFile instanceof File) {
-    uploadToCloudinary(mediaFile, mediaFile.type.startsWith('image') ? 'image' : 'video')
-        .then(result => {
-            zyneData.mediaUrl = result.url;
-            zyneData.mediaType = mediaFile.type.startsWith('image') ? 'image' : 'video';
-            saveZyne(zyneId, zyneData);
-        })
-        .catch(error => {
-            console.error('Media upload error:', error);
-            saveZyne(zyneId, zyneData);
-        });
-} else if (mediaFile) {
-    // If it's already a URL (from preview)
-    zyneData.mediaUrl = mediaFile;
-    zyneData.mediaType = mediaFile.includes('image') ? 'image' : 'video';
-    saveZyne(zyneId, zyneData);
-} else {
-    saveZyne(zyneId, zyneData);
-}
-});
-
-function saveZyne(zyneId, zyneData) {
-const db = firebase.database();
-
-db.ref('zynes/' + zyneId).set(zyneData)
-    .then(() => {
-        showToast('Zyne posted successfully', 'success');
-        document.getElementById('zyneText').value = '';
-        document.getElementById('zyneMediaPreview').innerHTML = '';
-        loadZynes();
-    })
-    .catch(error => {
-        console.error('Error posting zyne:', error);
-        showToast('Failed to post zyne', 'error');
-    });
-}
-
-// Toggle Zyne like
-function toggleZyneLike(zyneId) {
-const db = firebase.database();
-const zyneRef = db.ref('zynes/' + zyneId + '/likes/' + currentUser.userId);
-
-zyneRef.once('value')
-    .then(snapshot => {
-        if (snapshot.exists()) {
-            // Unlike
-            return zyneRef.remove();
-        } else {
-            // Like
-            return zyneRef.set({
-                userId: currentUser.userId,
-                userName: currentUser.name,
-                timestamp: Date.now()
+        function copyUserId() {
+            const userId = document.getElementById('userId').textContent;
+            navigator.clipboard.writeText(userId).then(() => {
+                showToast('User ID copied to clipboard', 'success');
             });
         }
-    })
-    .then(() => {
-        loadZynes();
-    })
-    .catch(error => {
-        console.error('Error toggling like:', error);
-    });
-}
 
-// Add comment to Zyne
-function addComment(zyneId, text) {
-const db = firebase.database();
-const commentId = generateId();
-const timestamp = Date.now();
-
-const commentData = {
-    id: commentId,
-    zyneId: zyneId,
-    userId: currentUser.userId,
-    userName: currentUser.name,
-    text: text,
-    timestamp: timestamp
-};
-
-db.ref('zynes/' + zyneId + '/comments/' + commentId).set(commentData)
-    .then(() => {
-        loadZynes();
-    })
-    .catch(error => {
-        console.error('Error adding comment:', error);
-        showToast('Failed to add comment', 'error');
-    });
-}
-
-// Delete Zyne
-function deleteZyne(zyneId) {
-const db = firebase.database();
-
-db.ref('zynes/' + zyneId).remove()
-    .then(() => {
-        showToast('Zyne deleted', 'success');
-        loadZynes();
-    })
-    .catch(error => {
-        console.error('Error deleting zyne:', error);
-        showToast('Failed to delete zyne', 'error');
-    });
-}
-
-// Open group
-function openGroup(groupId) {
-const db = firebase.database();
-
-db.ref('groups/' + groupId).once('value')
-    .then(snapshot => {
-        if (snapshot.exists()) {
-            const group = snapshot.val();
-            currentGroup = group;
-            
-            // TODO: Implement group chat interface
-            showToast(`Opening group: ${group.name}`, 'info');
+        function closeChat() {
+            document.getElementById('chatPage').classList.add('hidden');
+            document.getElementById('appMain').classList.remove('hidden');
         }
-    })
-    .catch(error => {
-        console.error('Error opening group:', error);
-        showToast('Failed to open group', 'error');
-    });
-}
 
-// Mark messages as read
-function markMessagesAsRead(otherUserId) {
-const db = firebase.database();
-const chatId = generateChatId(currentUser.userId, otherUserId);
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
 
-db.ref('chats/' + chatId + '/unreadCount/' + currentUser.userId).set(0)
-    .then(() => {
-        loadChats();
-    })
-    .catch(error => {
-        console.error('Error marking as read:', error);
-    });
-}
+        function showStartChatModal() {
+            document.getElementById('startChatModal').classList.add('active');
+            document.getElementById('searchUserId').focus();
+        }
 
-// Update chat badge
-function updateChatBadge(otherUserId) {
-// This would update the badge count for the chat in the list
-loadChats();
-}
+        function showCreateGroupModal() {
+            document.getElementById('createGroupModal').classList.add('active');
+            loadContactsForGroup();
+        }
 
-// Update badge counts
-function updateBadgeCounts() {
-// Implementation for updating all badge counts
-}
-
-// Show profile modal
-function showProfileModal(userData) {
-document.getElementById('viewProfileImage').src = userData.profileUrl || 'https://via.placeholder.com/150/cccccc/969696?text=Z';
-document.getElementById('viewProfileName').textContent = userData.name;
-document.getElementById('viewProfileId').textContent = userData.userId;
-document.getElementById('viewProfileStatus').textContent = userData.status || 'Hey there! I am using Zynapse';
-
-const modal = document.getElementById('viewProfileModal');
-modal.classList.add('active');
-
-// Set up close button
-document.getElementById('closeProfileModal').addEventListener('click', () => {
-    modal.classList.remove('active');
-}, { once: true });
-
-// Set up start chat button
-document.getElementById('startChatFromProfile').addEventListener('click', () => {
-    modal.classList.remove('active');
-    openChat(userData);
-}, { once: true });
-}
-
-// Handle logout
-function handleLogout() {
-firebase.auth().signOut()
-    .then(() => {
-        localStorage.removeItem('zynapse_user');
-        window.location.href = 'index.html';
-    })
-    .catch(error => {
-        console.error('Logout error:', error);
-        showToast('Logout failed', 'error');
-    });
-}
-
-// Utility functions
-function generateId() {
-return Date.now().toString(36) + Math.random().toString(36).substr(2);
-}
-
-function generateChatId(userId1, userId2) {
-const sorted = [userId1, userId2].sort();
-return sorted.join('_');
-}
-
-function formatTime(timestamp) {
-const now = Date.now();
-const diff = now - timestamp;
-const date = new Date(timestamp);
-    
-if (diff < 60000) return 'Just now';
-if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
-if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
-if (diff < 604800000) return Math.floor(diff / 86400000) + 'd ago';
-    
-return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric',
-    year: diff < 31536000000 ? undefined : 'numeric'
-});
-}
-
-function formatDate(timestamp) {
-const date = new Date(timestamp);
-const today = new Date();
-const yesterday = new Date(today);
-yesterday.setDate(yesterday.getDate() - 1);
-    
-if (date.toDateString() === today.toDateString()) return 'Today';
-if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-    
-return date.toLocaleDateString('en-US', { 
-    weekday: 'long',
-    month: 'short', 
-    day: 'numeric'
-});
-}
-
-function formatMessageTime(timestamp) {
-const date = new Date(timestamp);
-return date.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit',
-    hour12: true 
-}).toLowerCase();
-}
-
-function formatFileSize(bytes) {
-if (bytes < 1024) return bytes + ' B';
-if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-return (bytes / 1048576).toFixed(1) + ' MB';
-}
-
-// Toast notification function
-function showToast(message, type = 'info') {
-const toastContainer = document.querySelector('.toast-container');
-if (!toastContainer) {
-    const container = document.createElement('div');
-    container.className = 'toast-container';
-    document.body.appendChild(container);
-}
-
-const toast = document.createElement('div');
-toast.className = `toast ${type}`;
-
-let icon = 'info-circle';
-switch(type) {
-    case 'success': icon = 'check-circle'; break;
-    case 'error': icon = 'exclamation-circle'; break;
-    case 'warning': icon = 'exclamation-triangle'; break;
-}
-
-toast.innerHTML = `
-    <i class="fas fa-${icon}"></i>
-    <span>${message}</span>
-`;
-
-toastContainer.appendChild(toast);
-
-// Remove toast after 3 seconds
-setTimeout(() => {
-    toast.style.animation = 'fadeOut 0.3s ease forwards';
-    setTimeout(() => toast.remove(), 300);
-}, 3000);
-}
-
-// Initialize zyne media upload
-document.getElementById('addZynePhoto').addEventListener('click', () => {
-document.getElementById('zynePhotoInput').click();
-});
-
-document.getElementById('addZyneVideo').addEventListener('click', () => {
-document.getElementById('zyneVideoInput').click();
-});
-
-document.getElementById('zynePhotoInput').addEventListener('change', function(e) {
-if (this.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const preview = document.getElementById('zyneMediaPreview');
-        preview.innerHTML = `<img src="${e.target.result}" style="width:60px;height:60px;object-fit:cover;border-radius:var(--radius-md);">`;
-    };
-    reader.readAsDataURL(this.files[0]);
-}
-});
-
-document.getElementById('zyneVideoInput').addEventListener('change', function(e) {
-if (this.files[0]) {
-    const preview = document.getElementById('zyneMediaPreview');
-    preview.innerHTML = `<video src="${URL.createObjectURL(this.files[0])}" style="width:60px;height:60px;object-fit:cover;border-radius:var(--radius-md);"></video>`;
-}
-});
-
-// Group photo upload
-document.getElementById('uploadGroupPhotoBtn').addEventListener('click', () => {
-document.getElementById('groupPhotoInput').click();
-});
-
-document.getElementById('groupPhotoInput').addEventListener('change', function(e) {
-if (this.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const preview = document.getElementById('groupProfilePreview');
-        preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
-    };
-    reader.readAsDataURL(this.files[0]);
-}
-});
+        // Additional home page functions will be in app.js
     </script>
 </body>
 </html>
