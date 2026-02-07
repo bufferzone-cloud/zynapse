@@ -2,27 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zynapse - Chat</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="zynaps.png">
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="zynaps.png" type="image/png">
 </head>
 <body>
     <div class="chat-page" id="chatPage">
+        <!-- Loading Screen -->
+        <div class="loading-screen" id="loadingScreen">
+            <div class="loading-content">
+                <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
+                <div class="spinner-large"></div>
+                <p>Loading chat...</p>
+            </div>
+        </div>
+
         <!-- Chat Header -->
-        <header class="chat-header safe-area-top">
-            <button class="back-btn" onclick="goBack()">
+        <header class="chat-header">
+            <button class="back-btn" id="backBtn">
                 <i class="fas fa-arrow-left"></i>
             </button>
+            
             <div class="chat-user-info">
-                <img src="" alt="Contact" class="chat-user-avatar" id="chatUserAvatar">
+                <img src="" alt="User" class="chat-user-avatar" id="chatUserAvatar">
                 <div class="chat-user-details">
                     <h3 id="chatUserName">Loading...</h3>
                     <div class="chat-status">
@@ -31,56 +35,32 @@
                     </div>
                 </div>
             </div>
+
             <div class="chat-actions">
-                <button class="icon-btn" onclick="toggleChatMenu()" title="Chat Options">
+                <button class="icon-btn" id="videoCallBtn">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button class="icon-btn" id="voiceCallBtn">
+                    <i class="fas fa-phone"></i>
+                </button>
+                <button class="icon-btn" id="chatMenuBtn">
                     <i class="fas fa-ellipsis-v"></i>
                 </button>
             </div>
-            
-            <!-- Chat Menu Dropdown -->
-            <div class="dropdown">
-                <div class="dropdown-content" id="chatMenu">
-                    <button class="dropdown-item" onclick="viewChatProfile()">
-                        <i class="fas fa-user"></i>
-                        View Profile
-                    </button>
-                    <button class="dropdown-item" onclick="addNickname()">
-                        <i class="fas fa-tag"></i>
-                        Add Nickname
-                    </button>
-                    <button class="dropdown-item" onclick="addToFavorites()">
-                        <i class="fas fa-star"></i>
-                        <span id="favoriteText">Add to Favorites</span>
-                    </button>
-                    <button class="dropdown-item" onclick="toggleBlockUser()">
-                        <i class="fas fa-ban"></i>
-                        <span id="blockText">Block User</span>
-                    </button>
-                    <div class="dropdown-divider"></div>
-                    <button class="dropdown-item" onclick="clearChat()">
-                        <i class="fas fa-trash"></i>
-                        Clear Chat
-                    </button>
-                    <button class="dropdown-item danger" onclick="deleteChat()">
-                        <i class="fas fa-times-circle"></i>
-                        Delete Chat
-                    </button>
-                </div>
-            </div>
         </header>
 
-        <!-- Chat Messages Area -->
+        <!-- Chat Messages -->
         <div class="chat-messages" id="chatMessages">
-            <!-- Messages will be loaded here -->
+            <!-- Messages will be dynamically loaded here -->
             <div class="empty-state">
-                <i class="fas fa-comment"></i>
-                <h3>Start a Conversation</h3>
-                <p>Send a message to begin chatting</p>
+                <i class="far fa-comments"></i>
+                <h3>No messages yet</h3>
+                <p>Send a message to start the conversation</p>
             </div>
         </div>
 
         <!-- Typing Indicator -->
-        <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-indicator hidden" id="typingIndicator">
             <div class="typing-bubble">
                 <div class="typing-dots">
                     <div class="typing-dot"></div>
@@ -91,71 +71,86 @@
             </div>
         </div>
 
-        <!-- Message Input Area -->
-        <div class="message-input-area safe-area-bottom">
-            <button class="attach-btn" onclick="toggleAttachmentOptions()" title="Attach">
-                <i class="fas fa-plus"></i>
-            </button>
-            
-            <!-- Attachment Options -->
-            <div class="attachment-options" id="attachmentOptions">
-                <button class="attachment-btn" onclick="attachImage()">
-                    <i class="fas fa-image"></i>
-                    <span>Photo</span>
-                </button>
-                <button class="attachment-btn" onclick="attachVideo()">
-                    <i class="fas fa-video"></i>
-                    <span>Video</span>
-                </button>
-                <button class="attachment-btn" onclick="attachDocument()">
-                    <i class="fas fa-file"></i>
-                    <span>Document</span>
-                </button>
-                <button class="attachment-btn" onclick="attachLocation()">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>Location</span>
-                </button>
-                <button class="attachment-btn" onclick="attachViewOnce()">
-                    <i class="fas fa-eye"></i>
-                    <span>View Once</span>
-                </button>
-                <button class="attachment-btn" onclick="startVoiceNote()">
-                    <i class="fas fa-microphone"></i>
-                    <span>Voice</span>
-                </button>
-            </div>
-            
+        <!-- Message Input -->
+        <div class="message-input-area">
             <div class="message-input-container">
-                <textarea class="message-input" id="messageInput" placeholder="Message" 
-                          oninput="handleTyping()" onkeydown="handleKeyDown(event)"></textarea>
-            </div>
-            <button class="send-btn" onclick="sendMessage()" id="sendBtn" disabled>
-                <i class="fas fa-paper-plane"></i>
-            </button>
-            
-            <!-- Voice Recording UI -->
-            <div class="voice-recording-ui" id="voiceRecordingUI" style="display: none;">
-                <div class="voice-waveform" id="voiceWaveform"></div>
-                <span class="voice-duration" id="voiceDuration">0:00</span>
-                <button class="icon-btn" onclick="cancelVoiceRecording()" title="Cancel">
-                    <i class="fas fa-times"></i>
+                <button class="attach-btn" id="attachBtn">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <textarea class="message-input" id="messageInput" placeholder="iMessage" rows="1"></textarea>
+                <button class="send-btn" id="sendBtn">
+                    <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Media Previews -->
-        <div class="media-previews" id="mediaPreviews"></div>
-
-        <!-- Hidden File Inputs -->
-        <input type="file" id="imageUpload" accept="image/*" multiple style="display: none;" onchange="handleMediaUpload(event, 'image')">
-        <input type="file" id="videoUpload" accept="video/*" multiple style="display: none;" onchange="handleMediaUpload(event, 'video')">
-        <input type="file" id="documentUpload" accept=".pdf,.doc,.docx,.txt,.xlsx,.xls" style="display: none;" onchange="handleDocumentUpload(event)">
-        <input type="file" id="viewOnceUpload" accept="image/*,video/*" style="display: none;" onchange="handleViewOnceUpload(event)">
-        
-        <!-- Toast Container -->
-        <div class="toast-container"></div>
+        <!-- Attachment Options -->
+        <div class="attachment-options" id="attachmentOptions">
+            <button class="attachment-btn" data-type="photo">
+                <i class="fas fa-image"></i>
+                <span>Photo</span>
+            </button>
+            <button class="attachment-btn" data-type="video">
+                <i class="fas fa-video"></i>
+                <span>Video</span>
+            </button>
+            <button class="attachment-btn" data-type="document">
+                <i class="fas fa-file"></i>
+                <span>Document</span>
+            </button>
+            <button class="attachment-btn" data-type="location">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Location</span>
+            </button>
+            <button class="attachment-btn" data-type="viewOnce">
+                <i class="fas fa-eye"></i>
+                <span>View Once</span>
+            </button>
+            <button class="attachment-btn" data-type="voice">
+                <i class="fas fa-microphone"></i>
+                <span>Voice Note</span>
+            </button>
+        </div>
     </div>
 
+    <!-- Chat Menu Dropdown -->
+    <div class="dropdown">
+        <div class="dropdown-content" id="chatMenuDropdown">
+            <button class="dropdown-item" id="addNicknameBtn">
+                <i class="fas fa-tag"></i> Add Nickname
+            </button>
+            <button class="dropdown-item" id="viewProfileChatBtn">
+                <i class="fas fa-user"></i> View Profile
+            </button>
+            <button class="dropdown-item" id="blockUserBtn">
+                <i class="fas fa-ban"></i> Block User
+            </button>
+            <button class="dropdown-item" id="addToFavoritesBtn">
+                <i class="fas fa-star"></i> Add to Favorites
+            </button>
+            <button class="dropdown-item danger" id="deleteChatBtn">
+                <i class="fas fa-trash"></i> Delete Chat
+            </button>
+        </div>
+    </div>
+
+    <!-- File Inputs (hidden) -->
+    <input type="file" id="photoInput" accept="image/*" hidden>
+    <input type="file" id="videoInput" accept="video/*" hidden>
+    <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt" hidden>
+    <input type="file" id="audioInput" accept="audio/*" hidden>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Audio for notifications -->
+    <audio id="notificationSound" src="notification.mp3" preload="auto"></audio>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://unpkg.com/cloudinary-core@2.11.4/cloudinary-core-shrinkwrap.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
