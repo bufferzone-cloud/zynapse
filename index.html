@@ -3,13 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zynapse - Connect Securely</title>
+    <title>Zynapse - Sign Up & Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
-    <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
     <style>
         /* ==================== ZYNAPSE iOS THEMED CHAT APP - PRODUCTION CSS ==================== */
         /* Reset & Base Styles - Compact iOS Style */
@@ -603,63 +598,78 @@
             text-decoration: none;
         }
 
-        /* ==================== ANIMATIONS ==================== */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        /* Modal & Toast */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 16px;
+            animation: fadeIn 0.3s ease;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .modal-overlay.active {
+            display: flex;
         }
 
-        @keyframes modalSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+        .modal-content {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 400px;
+            max-height: 85vh;
+            overflow: hidden;
+            animation: modalSlideUp 0.4s var(--transition-spring);
+            box-shadow: var(--shadow-float);
+            position: relative;
+            margin: auto;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--gray-150);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
-        @keyframes gentlePulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.9; }
+        .modal-header h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--black);
         }
 
-        /* Utility Classes */
-        .hidden {
-            display: none !important;
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: var(--radius-circle);
+            transition: all var(--transition-normal);
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .text-center {
-            text-align: center;
+        .modal-body {
+            padding: 20px;
+            max-height: calc(85vh - 60px);
+            overflow-y: auto;
         }
 
-        .mt-1 { margin-top: var(--space-1); }
-        .mt-2 { margin-top: var(--space-2); }
-        .mt-3 { margin-top: var(--space-3); }
-        .mt-4 { margin-top: var(--space-4); }
-
-        .mb-1 { margin-bottom: var(--space-1); }
-        .mb-2 { margin-bottom: var(--space-2); }
-        .mb-3 { margin-bottom: var(--space-3); }
-        .mb-4 { margin-bottom: var(--space-4); }
-
-        /* Toast Notifications */
         .toast-container {
             position: fixed;
             top: 20px;
@@ -724,6 +734,45 @@
             line-height: 1.3;
         }
 
+        /* ==================== ANIMATIONS ==================== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @keyframes slideInRight {
             from {
                 transform: translateX(100%);
@@ -747,8 +796,165 @@
             to { width: 0%; }
         }
 
-        /* Responsive */
-        @media (max-width: 480px) {
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes gentlePulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes dropdownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .text-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flex-between {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .flex-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .gap-1 { gap: var(--space-1); }
+        .gap-2 { gap: var(--space-2); }
+        .gap-3 { gap: var(--space-3); }
+        .gap-4 { gap: var(--space-4); }
+
+        .mt-1 { margin-top: var(--space-1); }
+        .mt-2 { margin-top: var(--space-2); }
+        .mt-3 { margin-top: var(--space-3); }
+        .mt-4 { margin-top: var(--space-4); }
+
+        .mb-1 { margin-bottom: var(--space-1); }
+        .mb-2 { margin-bottom: var(--space-2); }
+        .mb-3 { margin-bottom: var(--space-3); }
+        .mb-4 { margin-bottom: var(--space-4); }
+
+        .p-1 { padding: var(--space-1); }
+        .p-2 { padding: var(--space-2); }
+        .p-3 { padding: var(--space-3); }
+        .p-4 { padding: var(--space-4); }
+
+        .text-sm { font-size: 12px; }
+        .text-base { font-size: 14px; }
+        .text-lg { font-size: 16px; }
+
+        .font-normal { font-weight: 400; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+
+        .text-gray-500 { color: var(--gray-500); }
+        .text-gray-600 { color: var(--gray-600); }
+        .text-gray-700 { color: var(--gray-700); }
+        .text-blue { color: var(--blue); }
+        .text-red { color: var(--red); }
+        .text-green { color: var(--green); }
+
+        .bg-white { background: var(--white); }
+        .bg-gray-50 { background: var(--gray-50); }
+        .bg-gray-100 { background: var(--gray-100); }
+        .bg-blue { background: var(--blue); }
+
+        .rounded-sm { border-radius: var(--radius-sm); }
+        .rounded-md { border-radius: var(--radius-md); }
+        .rounded-lg { border-radius: var(--radius-lg); }
+        .rounded-full { border-radius: var(--radius-circle); }
+
+        .shadow-sm { box-shadow: var(--shadow-subtle); }
+        .shadow-md { box-shadow: var(--shadow-light); }
+        .shadow-lg { box-shadow: var(--shadow-medium); }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 10;
+            border-radius: inherit;
+            backdrop-filter: blur(2px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+            
+            .modal-content {
+                max-width: 90vw;
+                max-height: 85vh;
+            }
+            
             .auth-container {
                 padding: var(--space-4);
             }
@@ -756,184 +962,239 @@
             .auth-form {
                 padding: var(--space-5);
             }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 13.5px;
+            }
             
-            .toast-container {
-                left: 12px;
-                right: 12px;
-                max-width: none;
-                top: 12px;
+            .modal-content {
+                width: 100vw;
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+                max-width: 100%;
+            }
+            
+            .modal-body {
+                padding: 16px;
+            }
+        }
+
+        /* iOS Safari specific */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+            
+            input, textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            
+            .modal-overlay {
+                -webkit-overflow-scrolling: touch;
             }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Loading Screen -->
-        <div class="loading-screen" id="loadingScreen">
-            <div class="loading-content">
-                <div class="spinner-large"></div>
-                <p>Initializing Zynapse...</p>
-            </div>
-        </div>
-
-        <!-- Auth Page Container -->
-        <div class="auth-page hidden" id="authPage">
-            <div class="auth-container">
-                <!-- Welcome Screen -->
-                <div class="welcome-screen" id="welcomeScreen">
-                    <img src="zynaps.png" alt="Zynapse Logo" class="logo-large">
-                    <h1>Zynapse</h1>
-                    <p class="tagline">Secure, private messaging with end-to-end encryption. Connect instantly with friends and colleagues.</p>
-                    <p class="powered-by">Powered by Buffer Zone</p>
-                    
-                    <div class="welcome-actions">
-                        <button class="btn-primary" id="getStartedBtn">
-                            <i class="fas fa-rocket"></i> Get Started
-                        </button>
-                        <button class="btn-secondary" id="loginBtn">
-                            <i class="fas fa-sign-in-alt"></i> Log In
-                        </button>
-                    </div>
-                    
-                    <div class="welcome-footer">
-                        By continuing, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a>
-                    </div>
-                </div>
-
-                <!-- Sign Up Form -->
-                <div class="auth-form hidden" id="signupForm">
-                    <div class="auth-header">
-                        <button class="back-btn" id="backToWelcome">
-                            <i class="fas fa-arrow-left"></i>
-                        </button>
-                        <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                        <h2>Create Account</h2>
-                        <p>Join Zynapse securely</p>
-                    </div>
-
-                    <form id="signupFormContent" class="auth-form-content">
-                        <div class="input-group">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="fullName" placeholder="Full Name" required>
-                        </div>
-
-                        <div class="input-group">
-                            <i class="fas fa-phone"></i>
-                            <input type="tel" id="phoneNumber" placeholder="Phone Number" required>
-                        </div>
-
-                        <div class="input-group">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" id="email" placeholder="Email Address" required>
-                        </div>
-
-                        <div class="input-group">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="password" placeholder="Password (min 6 characters)" required>
-                            <i class="fas fa-eye toggle-password"></i>
-                        </div>
-
-                        <div class="input-group">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
-                            <i class="fas fa-eye toggle-password"></i>
-                        </div>
-
-                        <!-- Profile Upload Section -->
-                        <div class="profile-upload-section">
-                            <label class="upload-label">Profile Picture</label>
-                            <div class="profile-upload-container">
-                                <div class="upload-preview" id="uploadPreview">
-                                    <div class="preview-placeholder">
-                                        <i class="fas fa-user-circle"></i>
-                                        <span>No image</span>
-                                    </div>
-                                </div>
-                                <div class="upload-buttons">
-                                    <button type="button" class="btn-upload" id="uploadBtn">
-                                        <i class="fas fa-upload"></i> Upload
-                                    </button>
-                                    <button type="button" class="btn-remove hidden" id="removeBtn">
-                                        <i class="fas fa-trash"></i> Remove
-                                    </button>
-                                </div>
-                            </div>
-                            <p class="upload-hint">JPG, PNG, or GIF. Max 5MB</p>
-                            <input type="file" id="profileUpload" accept="image/*" hidden>
-                        </div>
-
-                        <div class="terms-agreement">
-                            <input type="checkbox" id="termsAgreement" required>
-                            <label for="termsAgreement">I agree to the Terms of Service and Privacy Policy</label>
-                        </div>
-
-                        <button type="submit" class="btn-primary" id="registerBtn">
-                            <i class="fas fa-user-plus"></i> Create Account
-                        </button>
-
-                        <div class="auth-divider">
-                            <span>Or continue with</span>
-                        </div>
-
-                        <button type="button" class="btn-google">
-                            <i class="fab fa-google"></i> Google
-                        </button>
-                    </form>
-
-                    <div class="auth-switch">
-                        Already have an account? <a href="#" class="link" id="switchToLogin">Log In</a>
-                    </div>
-                </div>
-
-                <!-- Login Form -->
-                <div class="auth-form hidden" id="loginForm">
-                    <div class="auth-header">
-                        <button class="back-btn" id="backToWelcome2">
-                            <i class="fas fa-arrow-left"></i>
-                        </button>
-                        <img src="zynaps.png" alt="Zynapse Logo" class="logo-small">
-                        <h2>Welcome Back</h2>
-                        <p>Sign in to your account</p>
-                    </div>
-
-                    <form id="loginFormContent" class="auth-form-content">
-                        <div class="input-group">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" id="loginEmail" placeholder="Email Address" required>
-                        </div>
-
-                        <div class="input-group">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="loginPassword" placeholder="Password" required>
-                            <i class="fas fa-eye toggle-password"></i>
-                        </div>
-
-                        <button type="submit" class="btn-primary" id="signInBtn">
-                            <i class="fas fa-sign-in-alt"></i> Sign In
-                        </button>
-
-                        <div class="auth-divider">
-                            <span>Or continue with</span>
-                        </div>
-
-                        <button type="button" class="btn-google">
-                            <i class="fab fa-google"></i> Google
-                        </button>
-                    </form>
-
-                    <div class="auth-switch">
-                        Don't have an account? <a href="#" class="link" id="switchToSignup">Sign Up</a>
-                    </div>
-                </div>
-            </div>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="spinner-large"></div>
+            <p>Loading Zynapse...</p>
         </div>
     </div>
 
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- Welcome Screen -->
+    <div class="auth-page" id="welcomeScreen">
+        <div class="auth-container">
+            <div class="welcome-screen">
+                <!-- Logo will be loaded dynamically -->
+                <div class="logo-large" id="logoLarge">Z</div>
+                <h1>Zynapse</h1>
+                <p class="tagline">Connect instantly with secure, private messaging. Share moments, chat in groups, and stay connected with your circle.</p>
+                <p class="powered-by">Powered by Buffer Zone</p>
+                
+                <div class="welcome-actions">
+                    <button class="btn-primary" id="signupBtn">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                    <button class="btn-secondary" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </button>
+                </div>
+                
+                <div class="welcome-footer">
+                    <p>By continuing, you agree to our <a href="#" class="link">Terms</a> and <a href="#" class="link">Privacy Policy</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign Up Form -->
+    <div class="auth-page hidden" id="signupPage">
+        <div class="auth-container">
+            <div class="auth-form">
+                <div class="auth-header">
+                    <button class="back-btn" id="backToWelcomeFromSignup">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="logo-small" id="logoSmallSignup">Z</div>
+                    <h2>Create Account</h2>
+                    <p>Join Zynapse today</p>
+                </div>
+                
+                <div class="auth-form-content">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="signupName" placeholder="Full Name" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-phone"></i>
+                        <input type="tel" id="signupPhone" placeholder="Phone Number" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="signupEmail" placeholder="Email Address" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupPassword" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password" id="toggleSignupPassword"></i>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
+                        <i class="fas fa-eye toggle-password" id="toggleSignupConfirmPassword"></i>
+                    </div>
+                    
+                    <!-- Profile Upload Section -->
+                    <div class="profile-upload-section">
+                        <label class="upload-label">Profile Picture</label>
+                        <div class="profile-upload-container">
+                            <div class="upload-preview" id="profilePreview">
+                                <div class="preview-placeholder">
+                                    <i class="fas fa-user"></i>
+                                    <span>No image</span>
+                                </div>
+                            </div>
+                            <div class="upload-buttons">
+                                <button class="btn-upload" id="uploadProfileBtn">
+                                    <i class="fas fa-upload"></i> Upload
+                                </button>
+                                <button class="btn-remove hidden" id="removeProfileBtn">
+                                    <i class="fas fa-trash"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                        <p class="upload-hint">Max 5MB. JPG, PNG or GIF</p>
+                        <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <div class="terms-agreement">
+                        <input type="checkbox" id="agreeTerms" style="margin-right: 8px;">
+                        <label for="agreeTerms">I agree to the Terms of Service and Privacy Policy</label>
+                    </div>
+                    
+                    <button class="btn-primary" id="registerBtn">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                    
+                    <div class="auth-divider">
+                        <span>Or continue with</span>
+                    </div>
+                    
+                    <button class="btn-google">
+                        <i class="fab fa-google"></i> Google
+                    </button>
+                    
+                    <div class="auth-switch">
+                        Already have an account? <a href="#" class="link" id="switchToLogin">Sign In</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Form -->
+    <div class="auth-page hidden" id="loginPage">
+        <div class="auth-container">
+            <div class="auth-form">
+                <div class="auth-header">
+                    <button class="back-btn" id="backToWelcomeFromLogin">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="logo-small" id="logoSmallLogin">Z</div>
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to your Zynapse account</p>
+                </div>
+                
+                <div class="auth-form-content">
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="loginEmail" placeholder="Email Address" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                        <i class="fas fa-eye toggle-password" id="toggleLoginPassword"></i>
+                    </div>
+                    
+                    <button class="btn-primary" id="signinBtn">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </button>
+                    
+                    <div class="auth-divider">
+                        <span>Or continue with</span>
+                    </div>
+                    
+                    <button class="btn-google">
+                        <i class="fab fa-google"></i> Google
+                    </button>
+                    
+                    <div class="auth-switch">
+                        Don't have an account? <a href="#" class="link" id="switchToSignup">Create Account</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Terms -->
+    <div class="modal-overlay" id="termsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Terms of Service</h3>
+                <button class="close-modal" id="closeTermsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>By using Zynapse, you agree to our Terms of Service and Privacy Policy. This includes:</p>
+                <ul style="margin: 10px 0 10px 20px;">
+                    <li>Respecting other users' privacy</li>
+                    <li>Not sharing inappropriate content</li>
+                    <li>Keeping your account secure</li>
+                    <li>Accepting that messages are end-to-end encrypted</li>
+                </ul>
+                <p>Zynapse reserves the right to terminate accounts that violate these terms.</p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // ===== FIREBASE CONFIGURATION =====
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
             authDomain: "zynapse-68181.firebaseapp.com",
@@ -945,7 +1206,7 @@
             measurementId: "G-4764XLL6WS"
         };
 
-        // ===== CLOUDINARY CONFIGURATION =====
+        // Cloudinary Configuration
         const CLOUDINARY_CONFIG = {
             cloudName: 'dd3lcymrk',
             apiKey: '489857926297197',
@@ -953,39 +1214,23 @@
             folder: 'zynapse/profiles'
         };
 
-        // ===== APPLICATION STATE =====
+        // Global Variables
         let currentUser = null;
-        let profileImageUrl = null;
         let profileImageFile = null;
+        let profileImageUrl = null;
 
-        // ===== INITIALIZE FIREBASE =====
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
-
-        // ===== UI ELEMENTS =====
+        // DOM Elements
         const loadingScreen = document.getElementById('loadingScreen');
-        const authPage = document.getElementById('authPage');
         const welcomeScreen = document.getElementById('welcomeScreen');
-        const signupForm = document.getElementById('signupForm');
-        const loginForm = document.getElementById('loginForm');
-        const getStartedBtn = document.getElementById('getStartedBtn');
-        const loginBtn = document.getElementById('loginBtn');
-        const backToWelcome = document.getElementById('backToWelcome');
-        const backToWelcome2 = document.getElementById('backToWelcome2');
-        const switchToLogin = document.getElementById('switchToLogin');
-        const switchToSignup = document.getElementById('switchToSignup');
-        const signupFormContent = document.getElementById('signupFormContent');
-        const loginFormContent = document.getElementById('loginFormContent');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const removeBtn = document.getElementById('removeBtn');
-        const uploadPreview = document.getElementById('uploadPreview');
-        const profileUpload = document.getElementById('profileUpload');
-        const registerBtn = document.getElementById('registerBtn');
-        const signInBtn = document.getElementById('signInBtn');
+        const signupPage = document.getElementById('signupPage');
+        const loginPage = document.getElementById('loginPage');
         const toastContainer = document.getElementById('toastContainer');
-
-        // ===== UTILITY FUNCTIONS =====
+        const termsModal = document.getElementById('termsModal');
+        
+        // Initialize Firebase
+        let firebaseApp, auth, database;
+        
+        // Show Toast Notification
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -1004,165 +1249,243 @@
             }, 3000);
         }
 
-        function showLoading(show) {
-            if (show) {
-                registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
-                registerBtn.disabled = true;
-            } else {
-                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
-                registerBtn.disabled = false;
+        // Initialize App
+        async function initializeApp() {
+            try {
+                // Check if Firebase is already loaded
+                if (typeof firebase === 'undefined') {
+                    // Load Firebase SDK dynamically
+                    await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
+                    await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js');
+                    await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js');
+                }
+                
+                // Initialize Firebase
+                firebaseApp = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                database = firebase.database();
+                
+                // Check for existing session
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        // User is signed in, redirect to home
+                        redirectToHome(user.uid);
+                    } else {
+                        // User is signed out, show welcome screen
+                        setTimeout(() => {
+                            loadingScreen.classList.add('hidden');
+                            welcomeScreen.classList.remove('hidden');
+                        }, 500);
+                    }
+                });
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showToast('Failed to initialize app. Please refresh.', 'error');
+                loadingScreen.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
             }
         }
 
-        function showLoginLoading(show) {
-            if (show) {
-                signInBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
-                signInBtn.disabled = true;
-            } else {
-                signInBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
-                signInBtn.disabled = false;
-            }
-        }
-
-        function generateUserID() {
-            const randomNum = Math.floor(1000 + Math.random() * 9000);
-            return `ZYN-${randomNum}`;
-        }
-
-        // ===== CLOUDINARY UPLOAD =====
-        function uploadToCloudinary(file) {
+        // Load script dynamically
+        function loadScript(src) {
             return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Navigation buttons
+            document.getElementById('signupBtn').addEventListener('click', () => {
+                welcomeScreen.classList.add('hidden');
+                signupPage.classList.remove('hidden');
+            });
+            
+            document.getElementById('loginBtn').addEventListener('click', () => {
+                welcomeScreen.classList.add('hidden');
+                loginPage.classList.remove('hidden');
+            });
+            
+            document.getElementById('backToWelcomeFromSignup').addEventListener('click', () => {
+                signupPage.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
+            });
+            
+            document.getElementById('backToWelcomeFromLogin').addEventListener('click', () => {
+                loginPage.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
+            });
+            
+            document.getElementById('switchToLogin').addEventListener('click', (e) => {
+                e.preventDefault();
+                signupPage.classList.add('hidden');
+                loginPage.classList.remove('hidden');
+            });
+            
+            document.getElementById('switchToSignup').addEventListener('click', (e) => {
+                e.preventDefault();
+                loginPage.classList.add('hidden');
+                signupPage.classList.remove('hidden');
+            });
+            
+            // Password toggle
+            document.getElementById('toggleSignupPassword').addEventListener('click', function() {
+                const passwordInput = document.getElementById('signupPassword');
+                const type = passwordInput.type === 'password' ? 'text' : 'password';
+                passwordInput.type = type;
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+            
+            document.getElementById('toggleSignupConfirmPassword').addEventListener('click', function() {
+                const passwordInput = document.getElementById('signupConfirmPassword');
+                const type = passwordInput.type === 'password' ? 'text' : 'password';
+                passwordInput.type = type;
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+            
+            document.getElementById('toggleLoginPassword').addEventListener('click', function() {
+                const passwordInput = document.getElementById('loginPassword');
+                const type = passwordInput.type === 'password' ? 'text' : 'password';
+                passwordInput.type = type;
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+            
+            // Profile image upload
+            document.getElementById('uploadProfileBtn').addEventListener('click', () => {
+                document.getElementById('profileImageInput').click();
+            });
+            
+            document.getElementById('removeProfileBtn').addEventListener('click', () => {
+                profileImageFile = null;
+                profileImageUrl = null;
+                document.getElementById('profilePreview').innerHTML = `
+                    <div class="preview-placeholder">
+                        <i class="fas fa-user"></i>
+                        <span>No image</span>
+                    </div>
+                `;
+                document.getElementById('removeProfileBtn').classList.add('hidden');
+            });
+            
+            document.getElementById('profileImageInput').addEventListener('change', handleProfileImageUpload);
+            
+            // Register button
+            document.getElementById('registerBtn').addEventListener('click', handleRegistration);
+            
+            // Login button
+            document.getElementById('signinBtn').addEventListener('click', handleLogin);
+            
+            // Terms modal
+            document.querySelectorAll('.link').forEach(link => {
+                if (link.textContent.includes('Terms')) {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        termsModal.classList.add('active');
+                    });
+                }
+            });
+            
+            document.getElementById('closeTermsModal').addEventListener('click', () => {
+                termsModal.classList.remove('active');
+            });
+            
+            termsModal.addEventListener('click', (e) => {
+                if (e.target === termsModal) {
+                    termsModal.classList.remove('active');
+                }
+            });
+            
+            // Enter key for forms
+            document.getElementById('signupPassword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleRegistration();
+            });
+            
+            document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+        }
+
+        // Handle Profile Image Upload
+        async function handleProfileImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Image size should be less than 5MB', 'error');
+                return;
+            }
+            
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                showToast('Please upload JPG, PNG or GIF images only', 'error');
+                return;
+            }
+            
+            profileImageFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('profilePreview');
+                preview.innerHTML = `<img src="${e.target.result}" alt="Profile Preview" style="width:100%;height:100%;object-fit:cover;">`;
+                document.getElementById('removeProfileBtn').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Upload image to Cloudinary
+        async function uploadToCloudinary(file) {
+            try {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
                 formData.append('folder', CLOUDINARY_CONFIG.folder);
-                formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
-
-                fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
+                
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
                     method: 'POST',
                     body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.secure_url) {
-                        resolve(data.secure_url);
-                    } else {
-                        reject(new Error('Upload failed'));
-                    }
-                })
-                .catch(error => {
-                    reject(error);
                 });
-            });
+                
+                const data = await response.json();
+                return data.secure_url;
+            } catch (error) {
+                console.error('Cloudinary upload error:', error);
+                throw new Error('Failed to upload image');
+            }
         }
 
-        // ===== EVENT LISTENERS =====
-        // Navigation between screens
-        getStartedBtn.addEventListener('click', () => {
-            welcomeScreen.classList.add('hidden');
-            signupForm.classList.remove('hidden');
-        });
+        // Generate User ID
+        function generateUserId() {
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            return `ZYN-${randomNum}`;
+        }
 
-        loginBtn.addEventListener('click', () => {
-            welcomeScreen.classList.add('hidden');
-            loginForm.classList.remove('hidden');
-        });
-
-        backToWelcome.addEventListener('click', () => {
-            signupForm.classList.add('hidden');
-            welcomeScreen.classList.remove('hidden');
-        });
-
-        backToWelcome2.addEventListener('click', () => {
-            loginForm.classList.add('hidden');
-            welcomeScreen.classList.remove('hidden');
-        });
-
-        switchToLogin.addEventListener('click', (e) => {
-            e.preventDefault();
-            signupForm.classList.add('hidden');
-            loginForm.classList.remove('hidden');
-        });
-
-        switchToSignup.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginForm.classList.add('hidden');
-            signupForm.classList.remove('hidden');
-        });
-
-        // Profile image upload
-        uploadBtn.addEventListener('click', () => {
-            profileUpload.click();
-        });
-
-        removeBtn.addEventListener('click', () => {
-            profileImageUrl = null;
-            profileImageFile = null;
-            uploadPreview.innerHTML = `
-                <div class="preview-placeholder">
-                    <i class="fas fa-user-circle"></i>
-                    <span>No image</span>
-                </div>
-            `;
-            removeBtn.classList.add('hidden');
-        });
-
-        profileUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                // Validate file size (5MB max)
-                if (file.size > 5 * 1024 * 1024) {
-                    showToast('File size must be less than 5MB', 'error');
-                    return;
-                }
-
-                profileImageFile = file;
-                
-                // Show preview
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    uploadPreview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width:100%;height:100%;object-fit:cover;">`;
-                    removeBtn.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Password toggle visibility
-        document.querySelectorAll('.toggle-password').forEach(icon => {
-            icon.addEventListener('click', function() {
-                const input = this.parentElement.querySelector('input');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    this.classList.remove('fa-eye');
-                    this.classList.add('fa-eye-slash');
-                } else {
-                    input.type = 'password';
-                    this.classList.remove('fa-eye-slash');
-                    this.classList.add('fa-eye');
-                }
-            });
-        });
-
-        // ===== FORM SUBMISSIONS =====
-        // Sign Up Form Submission
-        signupFormContent.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const fullName = document.getElementById('fullName').value.trim();
-            const phoneNumber = document.getElementById('phoneNumber').value.trim();
-            const email = document.getElementById('email').value.trim().toLowerCase();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+        // Handle Registration
+        async function handleRegistration() {
+            // Get form values
+            const name = document.getElementById('signupName').value.trim();
+            const phone = document.getElementById('signupPhone').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
             
             // Validation
-            if (!fullName || !phoneNumber || !email || !password) {
+            if (!name || !phone || !email || !password || !confirmPassword) {
                 showToast('Please fill in all fields', 'error');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showToast('Password must be at least 6 characters', 'error');
                 return;
             }
             
@@ -1171,23 +1494,46 @@
                 return;
             }
             
-            if (!document.getElementById('termsAgreement').checked) {
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            if (!agreeTerms) {
                 showToast('Please agree to the terms and conditions', 'error');
                 return;
             }
             
-            showLoading(true);
+            // Validate phone number
+            const phoneRegex = /^\+?[\d\s-]{10,}$/;
+            if (!phoneRegex.test(phone)) {
+                showToast('Please enter a valid phone number', 'error');
+                return;
+            }
+            
+            // Validate email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showToast('Please enter a valid email address', 'error');
+                return;
+            }
             
             try {
-                // Upload profile image to Cloudinary if exists
-                let profileUrl = null;
+                // Show loading
+                const registerBtn = document.getElementById('registerBtn');
+                const originalText = registerBtn.innerHTML;
+                registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+                registerBtn.disabled = true;
+                
+                // Upload profile image if exists
+                let profileUrl = '';
                 if (profileImageFile) {
                     try {
                         profileUrl = await uploadToCloudinary(profileImageFile);
-                    } catch (uploadError) {
-                        console.error('Upload error:', uploadError);
+                    } catch (error) {
                         showToast('Failed to upload profile image', 'error');
-                        showLoading(false);
+                        registerBtn.innerHTML = originalText;
+                        registerBtn.disabled = false;
                         return;
                     }
                 }
@@ -1197,189 +1543,129 @@
                 const user = userCredential.user;
                 
                 // Generate user ID
-                const userID = generateUserID();
+                const userId = generateUserId();
                 
-                // Prepare user data
+                // Create user data object
                 const userData = {
-                    uid: user.uid,
-                    userID: userID,
-                    fullName: fullName,
-                    phoneNumber: phoneNumber,
+                    name: name,
+                    phone: phone,
                     email: email,
-                    profileUrl: profileUrl || 'https://via.placeholder.com/150',
-                    createdAt: Date.now(),
-                    lastSeen: Date.now(),
-                    status: 'Hey there! I am using Zynapse.',
-                    isOnline: true
+                    userId: userId,
+                    profilePicture: profileUrl,
+                    createdAt: new Date().toISOString(),
+                    lastSeen: new Date().toISOString(),
+                    status: 'online',
+                    contacts: {},
+                    chatRequests: {},
+                    groups: {}
                 };
                 
-                // Save user data to Realtime Database
+                // Save user data to Firebase Database
                 await database.ref('users/' + user.uid).set(userData);
                 
-                // Also create a reference by userID for quick lookups
-                await database.ref('userIDs/' + userID).set({
-                    uid: user.uid,
-                    email: email
-                });
+                // Create user reference by userId
+                await database.ref('userIds/' + userId).set(user.uid);
                 
-                // Create user's contacts node
-                await database.ref('contacts/' + user.uid).set({});
-                
-                // Create user's chat requests node
-                await database.ref('chatRequests/' + user.uid).set({});
-                
-                // Create user's zynes node
-                await database.ref('zynes/' + user.uid).set({});
-                
+                // Show success message
                 showToast('Account created successfully!', 'success');
                 
-                // Play success sound
-                const audio = new Audio('notification.mp3');
-                audio.play().catch(e => console.log('Audio play failed:', e));
-                
-                // Show user ID with animation
+                // Auto login after a short delay
                 setTimeout(() => {
-                    showToast(`Your User ID: ${userID} (Copied to clipboard)`, 'success');
-                    
-                    // Copy to clipboard
-                    navigator.clipboard.writeText(userID).then(() => {
-                        console.log('User ID copied to clipboard');
-                    });
-                    
-                    // Redirect to home page after 2 seconds
-                    setTimeout(() => {
-                        // Pass user data to home.html
-                        const userDataString = encodeURIComponent(JSON.stringify({
-                            uid: user.uid,
-                            userID: userID,
-                            fullName: fullName,
-                            profileUrl: profileUrl || 'https://via.placeholder.com/150'
-                        }));
-                        
-                        window.location.href = `home.html?user=${userDataString}`;
-                    }, 2000);
-                }, 1000);
+                    redirectToHome(user.uid);
+                }, 1500);
                 
             } catch (error) {
                 console.error('Registration error:', error);
                 
                 let errorMessage = 'Registration failed. Please try again.';
-                
                 if (error.code === 'auth/email-already-in-use') {
                     errorMessage = 'Email already in use. Please use a different email.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password is too weak. Please use a stronger password.';
                 } else if (error.code === 'auth/invalid-email') {
                     errorMessage = 'Invalid email address.';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = 'Password is too weak.';
                 }
                 
                 showToast(errorMessage, 'error');
-                showLoading(false);
+                
+                // Reset button
+                const registerBtn = document.getElementById('registerBtn');
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                registerBtn.disabled = false;
             }
-        });
+        }
 
-        // Login Form Submission
-        loginFormContent.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+        // Handle Login
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
             
+            // Validation
             if (!email || !password) {
                 showToast('Please fill in all fields', 'error');
                 return;
             }
             
-            showLoginLoading(true);
-            
             try {
+                // Show loading
+                const signinBtn = document.getElementById('signinBtn');
+                const originalText = signinBtn.innerHTML;
+                signinBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
+                signinBtn.disabled = true;
+                
+                // Sign in with Firebase Auth
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 const user = userCredential.user;
                 
-                // Get user data from database
-                const userSnapshot = await database.ref('users/' + user.uid).once('value');
-                const userData = userSnapshot.val();
+                // Update last seen
+                await database.ref('users/' + user.uid + '/lastSeen').set(new Date().toISOString());
+                await database.ref('users/' + user.uid + '/status').set('online');
                 
-                if (!userData) {
-                    throw new Error('User data not found');
-                }
+                // Show success message
+                showToast('Welcome back!', 'success');
                 
-                // Update last seen and online status
-                await database.ref('users/' + user.uid).update({
-                    lastSeen: Date.now(),
-                    isOnline: true
-                });
-                
-                showToast('Login successful!', 'success');
-                
-                // Play success sound
-                const audio = new Audio('notification.mp3');
-                audio.play().catch(e => console.log('Audio play failed:', e));
-                
-                // Redirect to home page after 1 second
+                // Redirect after a short delay
                 setTimeout(() => {
-                    const userDataString = encodeURIComponent(JSON.stringify({
-                        uid: user.uid,
-                        userID: userData.userID,
-                        fullName: userData.fullName,
-                        profileUrl: userData.profileUrl
-                    }));
-                    
-                    window.location.href = `home.html?user=${userDataString}`;
+                    redirectToHome(user.uid);
                 }, 1000);
                 
             } catch (error) {
                 console.error('Login error:', error);
                 
                 let errorMessage = 'Login failed. Please try again.';
-                
-                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    errorMessage = 'Invalid email or password.';
-                } else if (error.code === 'auth/too-many-requests') {
-                    errorMessage = 'Too many failed attempts. Please try again later.';
-                } else if (error.code === 'auth/user-disabled') {
-                    errorMessage = 'This account has been disabled.';
+                if (error.code === 'auth/user-not-found') {
+                    errorMessage = 'No account found with this email.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Incorrect password.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid email address.';
                 }
                 
                 showToast(errorMessage, 'error');
-                showLoginLoading(false);
+                
+                // Reset button
+                const signinBtn = document.getElementById('signinBtn');
+                signinBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+                signinBtn.disabled = false;
             }
-        });
+        }
 
-        // ===== CHECK AUTH STATE =====
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // User is signed in, redirect to home page
-                database.ref('users/' + user.uid).once('value').then((snapshot) => {
-                    const userData = snapshot.val();
-                    if (userData) {
-                        const userDataString = encodeURIComponent(JSON.stringify({
-                            uid: user.uid,
-                            userID: userData.userID,
-                            fullName: userData.fullName,
-                            profileUrl: userData.profileUrl
-                        }));
-                        
-                        window.location.href = `home.html?user=${userDataString}`;
-                    }
-                });
-            } else {
-                // User is not signed in, show auth page
-                setTimeout(() => {
-                    loadingScreen.classList.add('hidden');
-                    authPage.classList.remove('hidden');
-                }, 1000);
-            }
-        });
+        // Redirect to Home Page
+        function redirectToHome(uid) {
+            // Store user ID in sessionStorage for home.html
+            sessionStorage.setItem('zynapse_userId', uid);
+            
+            // Add transition effect
+            document.body.style.opacity = '0.8';
+            document.body.style.transition = 'opacity 0.3s';
+            
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 300);
+        }
 
-        // ===== INITIAL LOAD =====
-        // Hide loading screen after 1.5 seconds (if not already redirected)
-        setTimeout(() => {
-            if (!auth.currentUser) {
-                loadingScreen.classList.add('hidden');
-                authPage.classList.remove('hidden');
-            }
-        }, 1500);
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeApp);
     </script>
 </body>
 </html>
