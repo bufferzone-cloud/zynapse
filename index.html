@@ -6,10 +6,6 @@
     <title>Zynapse - Secure Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="zynaps.png">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <!-- Cloudinary Upload Widget -->
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <style>
@@ -1036,8 +1032,7 @@
                                 <img id="profileImage" class="hidden" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
                             <div class="upload-buttons">
-                                <!-- Fixed: Using proper Cloudinary widget initialization -->
-                                <button class="btn-upload" id="uploadPhotoBtn">
+                                <button class="btn-upload" onclick="openCloudinaryUploader()">
                                     <i class="fas fa-upload"></i> Upload
                                 </button>
                                 <button class="btn-remove" onclick="removeProfileImage()">
@@ -1130,50 +1125,41 @@
         // Cloudinary Configuration
         const CLOUDINARY_CONFIG = {
             cloudName: 'dd3lcymrk',
+            apiKey: '489857926297197',
+            apiSecret: 'RHDQG1YP6jqvn4UADq3nJWHIeHQ',
             uploadPreset: 'h3eyhc2o',
-            folder: 'zynapse/profiles'
+            folder: 'zynapse/profiles',
+            environmentVariable: 'CLOUDINARY_URL=cloudinary://489857926297197:RHDQG1YP6jqvn4UADq3nJWHIeHQ@dd3lcymrk'
         };
 
         // Global variables
         let currentUser = null;
         let profileImageUrl = '';
         let cloudinaryWidget = null;
-        let auth = null;
-        let database = null;
 
         // Initialize Firebase
         document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                // Initialize Firebase
-                const app = firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                database = firebase.database();
-                
-                console.log("Firebase initialized successfully");
-            } catch (error) {
-                console.error("Firebase initialization error:", error);
-                showToast('Firebase initialization failed. Please refresh.', 'error');
-            }
-
-            // Hide loading screen
+            // Hide loading screen after 1.5 seconds
             setTimeout(() => {
                 document.getElementById('loadingScreen').classList.add('hidden');
             }, 1500);
 
             // Check if user is already logged in
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    // User is signed in
-                    currentUser = user;
-                    showToast('Welcome back!', 'success');
-                    setTimeout(() => {
-                        redirectToHomeWithCredentials(user);
-                    }, 1000);
+            const savedUser = localStorage.getItem('zynapse_user');
+            if (savedUser) {
+                try {
+                    const user = JSON.parse(savedUser);
+                    if (user && user.uid) {
+                        // Auto-login
+                        showToast('Welcome back!', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'home.html';
+                        }, 1000);
+                    }
+                } catch (e) {
+                    localStorage.removeItem('zynapse_user');
                 }
-            });
-
-            // Initialize Cloudinary Upload Widget
-            initializeCloudinaryWidget();
+            }
         });
 
         // Show/Hide Forms
@@ -1209,9 +1195,9 @@
             }
         }
 
-        // Initialize Cloudinary Upload Widget
-        function initializeCloudinaryWidget() {
-            try {
+        // Cloudinary Uploader
+        function openCloudinaryUploader() {
+            if (!cloudinaryWidget) {
                 cloudinaryWidget = cloudinary.createUploadWidget({
                     cloudName: CLOUDINARY_CONFIG.cloudName,
                     uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
@@ -1222,7 +1208,7 @@
                     cropping: true,
                     croppingAspectRatio: 1,
                     croppingDefaultSelectionRatio: 0.9,
-                    showAdvancedOptions: false,
+                    showAdvancedOptions: true,
                     styles: {
                         palette: {
                             window: "#FFFFFF",
@@ -1243,36 +1229,17 @@
                 }, (error, result) => {
                     if (!error && result && result.event === "success") {
                         profileImageUrl = result.info.secure_url;
-                        updateProfilePreview(profileImageUrl);
+                        document.getElementById('profileImage').src = profileImageUrl;
+                        document.getElementById('profileImage').classList.remove('hidden');
+                        document.getElementById('previewPlaceholder').classList.add('hidden');
                         showToast('Profile picture uploaded successfully!', 'success');
                     } else if (error) {
                         showToast('Upload failed: ' + error.message, 'error');
                     }
                 });
-
-                // Attach click event to upload button
-                document.getElementById('uploadPhotoBtn').addEventListener('click', function() {
-                    if (cloudinaryWidget) {
-                        cloudinaryWidget.open();
-                    } else {
-                        showToast('Upload service not initialized. Please refresh.', 'error');
-                    }
-                });
-
-                console.log("Cloudinary widget initialized");
-            } catch (error) {
-                console.error("Cloudinary initialization error:", error);
-                showToast('Photo upload service failed to load.', 'error');
             }
-        }
-
-        function updateProfilePreview(imageUrl) {
-            const profileImage = document.getElementById('profileImage');
-            const previewPlaceholder = document.getElementById('previewPlaceholder');
             
-            profileImage.src = imageUrl;
-            profileImage.classList.remove('hidden');
-            previewPlaceholder.classList.add('hidden');
+            cloudinaryWidget.open();
         }
 
         function removeProfileImage() {
@@ -1315,6 +1282,135 @@
             }, 3000);
         }
 
+        // Firebase Simulation (for demo purposes)
+        // In production, you would initialize Firebase like:
+        // firebase.initializeApp(firebaseConfig);
+        // const auth = firebase.auth();
+        // const database = firebase.database();
+
+        // Simulate Firebase operations
+        class FirebaseSimulator {
+            constructor() {
+                this.users = JSON.parse(localStorage.getItem('zynapse_users') || '{}');
+                this.sessions = JSON.parse(localStorage.getItem('zynapse_sessions') || '{}');
+            }
+
+            createUserWithEmailAndPassword(email, password) {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        if (this.users[email]) {
+                            reject(new Error('Email already exists'));
+                            return;
+                        }
+
+                        const userId = 'user_' + Date.now();
+                        const user = {
+                            uid: userId,
+                            email: email,
+                            createdAt: new Date().toISOString()
+                        };
+
+                        this.users[email] = {
+                            ...user,
+                            password: btoa(password) // In production, use proper hashing
+                        };
+
+                        localStorage.setItem('zynapse_users', JSON.stringify(this.users));
+                        resolve({ user });
+                    }, 800);
+                });
+            }
+
+            signInWithEmailAndPassword(email, password) {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        const userData = this.users[email];
+                        if (!userData || btoa(password) !== userData.password) {
+                            reject(new Error('Invalid email or password'));
+                            return;
+                        }
+
+                        const user = {
+                            uid: userData.uid,
+                            email: userData.email,
+                            displayName: userData.displayName,
+                            photoURL: userData.photoURL,
+                            phoneNumber: userData.phoneNumber,
+                            userId: userData.userId
+                        };
+
+                        // Create session
+                        const sessionId = 'session_' + Date.now();
+                        this.sessions[sessionId] = {
+                            userId: user.uid,
+                            createdAt: new Date().toISOString()
+                        };
+                        localStorage.setItem('zynapse_sessions', JSON.stringify(this.sessions));
+
+                        resolve({ user });
+                    }, 800);
+                });
+            }
+
+            signInWithGoogle() {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        const userId = 'user_' + Date.now();
+                        const user = {
+                            uid: userId,
+                            email: `google_user_${Date.now()}@example.com`,
+                            displayName: 'Google User',
+                            photoURL: 'https://via.placeholder.com/150',
+                            createdAt: new Date().toISOString()
+                        };
+
+                        // Create session
+                        const sessionId = 'session_' + Date.now();
+                        this.sessions[sessionId] = {
+                            userId: user.uid,
+                            createdAt: new Date().toISOString()
+                        };
+                        localStorage.setItem('zynapse_sessions', JSON.stringify(this.sessions));
+
+                        resolve({ user });
+                    }, 800);
+                });
+            }
+
+            updateUserProfile(userId, profileData) {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        // Find user by email
+                        for (const email in this.users) {
+                            if (this.users[email].uid === userId) {
+                                this.users[email] = {
+                                    ...this.users[email],
+                                    ...profileData
+                                };
+                                break;
+                            }
+                        }
+                        localStorage.setItem('zynapse_users', JSON.stringify(this.users));
+                        resolve();
+                    }, 500);
+                });
+            }
+
+            writeUserData(userId, userData) {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        // Store user data in database simulation
+                        const dbData = JSON.parse(localStorage.getItem('zynapse_database') || '{}');
+                        dbData[userId] = userData;
+                        localStorage.setItem('zynapse_database', JSON.stringify(dbData));
+                        resolve();
+                    }, 500);
+                });
+            }
+        }
+
+        const firebaseSim = new FirebaseSimulator();
+
         // Sign Up Function
         async function signUp() {
             const name = document.getElementById('signupName').value.trim();
@@ -1351,80 +1447,65 @@
             }
 
             const signupBtn = document.getElementById('signupBtn');
-            const originalText = signupBtn.innerHTML;
             signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
             signupBtn.disabled = true;
 
             try {
-                // Create user with Firebase Authentication
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
+                // Create user with email/password
+                const result = await firebaseSim.createUserWithEmailAndPassword(email, password);
+                const user = result.user;
+
                 // Generate ZYN-XXXX ID
                 const zynapseId = generateZynapseId();
-                
+
                 // Update user profile
-                await user.updateProfile({
+                await firebaseSim.updateUserProfile(user.uid, {
                     displayName: name,
-                    photoURL: profileImageUrl
+                    phoneNumber: phone,
+                    photoURL: profileImageUrl,
+                    userId: zynapseId
                 });
-                
-                // Prepare user data for database
-                const userData = {
+
+                // Write user data to database
+                await firebaseSim.writeUserData(user.uid, {
                     name: name,
                     phone: phone,
                     email: email,
                     profilePicture: profileImageUrl,
                     userId: zynapseId,
-                    uid: user.uid,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP,
-                    lastSeen: firebase.database.ServerValue.TIMESTAMP,
-                    status: 'online'
-                };
-                
-                // Save user data to Firebase Realtime Database
-                await database.ref('users/' + user.uid).set(userData);
-                
-                showToast('Account created successfully! Your ZYN-ID: ' + zynapseId, 'success');
-                
-                // Store user data locally
-                localStorage.setItem('zynapse_user', JSON.stringify({
+                    createdAt: new Date().toISOString(),
+                    lastSeen: new Date().toISOString(),
+                    status: 'online',
+                    contacts: [],
+                    chatRequests: [],
+                    zynes: []
+                });
+
+                // Store user in localStorage for auto-login
+                const userData = {
                     uid: user.uid,
                     name: name,
                     email: email,
                     phone: phone,
                     profilePicture: profileImageUrl,
-                    userId: zynapseId
-                }));
-                
+                    userId: zynapseId,
+                    lastSeen: new Date().toISOString()
+                };
+                localStorage.setItem('zynapse_user', JSON.stringify(userData));
+
+                showToast('Account created successfully! Generating your ZYN-ID: ' + zynapseId, 'success');
+
                 // Play notification sound
                 playNotificationSound();
-                
+
                 // Redirect to home page after delay
                 setTimeout(() => {
-                    redirectToHomeWithCredentials(user);
+                    window.location.href = 'home.html';
                 }, 2000);
 
             } catch (error) {
-                console.error("Signup error:", error);
-                let errorMessage = 'Sign up failed. ';
-                
-                switch(error.code) {
-                    case 'auth/email-already-in-use':
-                        errorMessage += 'Email already registered.';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage += 'Invalid email address.';
-                        break;
-                    case 'auth/weak-password':
-                        errorMessage += 'Password is too weak.';
-                        break;
-                    default:
-                        errorMessage += error.message;
-                }
-                
-                showToast(errorMessage, 'error');
-                signupBtn.innerHTML = originalText;
+                showToast(error.message, 'error');
+                signupBtn.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
                 signupBtn.disabled = false;
             }
         }
@@ -1440,70 +1521,46 @@
             }
 
             const loginBtn = document.getElementById('loginBtn');
-            const originalText = loginBtn.innerHTML;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
             loginBtn.disabled = true;
 
             try {
-                // Sign in with Firebase Authentication
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
+                // Sign in user
+                const result = await firebaseSim.signInWithEmailAndPassword(email, password);
+                const user = result.user;
+
                 // Get user data from database
-                const userSnapshot = await database.ref('users/' + user.uid).once('value');
-                const userData = userSnapshot.val();
-                
+                const dbData = JSON.parse(localStorage.getItem('zynapse_database') || '{}');
+                const userData = dbData[user.uid];
+
                 if (!userData) {
                     throw new Error('User data not found');
                 }
-                
-                // Store user in localStorage
+
+                // Store user in localStorage for auto-login
                 localStorage.setItem('zynapse_user', JSON.stringify({
                     uid: user.uid,
                     name: userData.name,
                     email: user.email,
                     phone: userData.phone,
                     profilePicture: userData.profilePicture,
-                    userId: userData.userId
+                    userId: userData.userId,
+                    lastSeen: new Date().toISOString()
                 }));
-                
-                // Update last seen
-                await database.ref('users/' + user.uid).update({
-                    lastSeen: firebase.database.ServerValue.TIMESTAMP,
-                    status: 'online'
-                });
-                
+
                 showToast('Welcome back, ' + userData.name + '!', 'success');
-                
+
                 // Play notification sound
                 playNotificationSound();
-                
+
                 // Redirect to home page after delay
                 setTimeout(() => {
-                    redirectToHomeWithCredentials(user);
+                    window.location.href = 'home.html';
                 }, 1500);
 
             } catch (error) {
-                console.error("Login error:", error);
-                let errorMessage = 'Sign in failed. ';
-                
-                switch(error.code) {
-                    case 'auth/user-not-found':
-                    case 'auth/wrong-password':
-                        errorMessage += 'Invalid email or password.';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage += 'Invalid email address.';
-                        break;
-                    case 'auth/user-disabled':
-                        errorMessage += 'Account has been disabled.';
-                        break;
-                    default:
-                        errorMessage += error.message;
-                }
-                
-                showToast(errorMessage, 'error');
-                loginBtn.innerHTML = originalText;
+                showToast(error.message, 'error');
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
                 loginBtn.disabled = false;
             }
         }
@@ -1513,121 +1570,57 @@
             showToast('Signing in with Google...', 'info');
             
             try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                provider.addScope('profile');
-                provider.addScope('email');
-                
-                const userCredential = await auth.signInWithPopup(provider);
-                const user = userCredential.user;
-                
-                // Check if user exists in database
-                const userSnapshot = await database.ref('users/' + user.uid).once('value');
-                
-                if (!userSnapshot.exists()) {
-                    // New user - create database entry
-                    const zynapseId = generateZynapseId();
-                    
-                    const userData = {
-                        name: user.displayName || 'Google User',
-                        email: user.email,
-                        profilePicture: user.photoURL || profileImageUrl,
-                        userId: zynapseId,
-                        uid: user.uid,
-                        createdAt: firebase.database.ServerValue.TIMESTAMP,
-                        lastSeen: firebase.database.ServerValue.TIMESTAMP,
-                        status: 'online'
-                    };
-                    
-                    await database.ref('users/' + user.uid).set(userData);
-                    
-                    // Store user in localStorage
-                    localStorage.setItem('zynapse_user', JSON.stringify({
-                        uid: user.uid,
-                        name: userData.name,
-                        email: user.email,
-                        profilePicture: userData.profilePicture,
-                        userId: zynapseId
-                    }));
-                    
-                    showToast('Welcome to Zynapse! Your ZYN-ID: ' + zynapseId, 'success');
-                } else {
-                    // Existing user
-                    const userData = userSnapshot.val();
-                    
-                    // Update last seen
-                    await database.ref('users/' + user.uid).update({
-                        lastSeen: firebase.database.ServerValue.TIMESTAMP,
-                        status: 'online'
-                    });
-                    
-                    // Store user in localStorage
-                    localStorage.setItem('zynapse_user', JSON.stringify({
-                        uid: user.uid,
-                        name: userData.name,
-                        email: user.email,
-                        profilePicture: userData.profilePicture,
-                        userId: userData.userId
-                    }));
-                    
-                    showToast('Welcome back, ' + userData.name + '!', 'success');
-                }
-                
+                const result = await firebaseSim.signInWithGoogle();
+                const user = result.user;
+
+                // Generate ZYN-XXXX ID
+                const zynapseId = generateZynapseId();
+
+                // Write user data to database
+                await firebaseSim.writeUserData(user.uid, {
+                    name: user.displayName,
+                    email: user.email,
+                    profilePicture: user.photoURL,
+                    userId: zynapseId,
+                    createdAt: new Date().toISOString(),
+                    lastSeen: new Date().toISOString(),
+                    status: 'online',
+                    contacts: [],
+                    chatRequests: [],
+                    zynes: []
+                });
+
+                // Store user in localStorage for auto-login
+                localStorage.setItem('zynapse_user', JSON.stringify({
+                    uid: user.uid,
+                    name: user.displayName,
+                    email: user.email,
+                    profilePicture: user.photoURL,
+                    userId: zynapseId,
+                    lastSeen: new Date().toISOString()
+                }));
+
+                showToast('Welcome to Zynapse! Your ZYN-ID: ' + zynapseId, 'success');
+
                 // Play notification sound
                 playNotificationSound();
-                
+
                 // Redirect to home page after delay
                 setTimeout(() => {
-                    redirectToHomeWithCredentials(user);
-                }, 1500);
+                    window.location.href = 'home.html';
+                }, 2000);
 
             } catch (error) {
-                console.error("Google sign in error:", error);
                 showToast('Google sign in failed: ' + error.message, 'error');
             }
-        }
-
-        // Redirect to home with credentials
-        function redirectToHomeWithCredentials(user) {
-            // Get user data from localStorage
-            const userData = JSON.parse(localStorage.getItem('zynapse_user') || '{}');
-            
-            // Create session data
-            const sessionData = {
-                uid: user.uid,
-                email: user.email,
-                name: userData.name || user.displayName,
-                profilePicture: userData.profilePicture || user.photoURL,
-                userId: userData.userId,
-                timestamp: Date.now()
-            };
-            
-            // Store session
-            sessionStorage.setItem('zynapse_session', JSON.stringify(sessionData));
-            
-            // Redirect to home page
-            window.location.href = 'home.html';
         }
 
         // Notification Sound
         function playNotificationSound() {
             try {
-                // Create a simple notification sound using Web Audio API
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-                
-                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.2);
-                
+                const audio = new Audio('notification.mp3');
+                audio.volume = 0.3;
+                audio.play().catch(e => console.log('Audio play failed:', e));
             } catch (e) {
                 console.log('Notification sound error:', e);
             }
