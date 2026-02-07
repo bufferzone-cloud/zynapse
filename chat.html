@@ -2,1845 +2,349 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zynapse - Chat</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Chat-specific CSS from your provided code */
-        /* Reset & Base Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        :root {
-            --white: #ffffff;
-            --black: #000000;
-            --gray-50: #f9f9f9;
-            --gray-100: #f2f2f2;
-            --gray-200: #e9e9e9;
-            --gray-300: #d9d9d9;
-            --gray-400: #b0b0b0;
-            --gray-500: #8e8e93;
-            --gray-600: #6d6d72;
-            --gray-700: #3a3a3c;
-            --blue: #007aff;
-            --blue-light: #5ac8fa;
-            --blue-dark: #0056cc;
-            --green: #34c759;
-            --green-light: #4cd964;
-            --red: #ff3b30;
-            --red-light: #ff5757;
-            --red-dark: #d70015;
-            --orange: #ff9500;
-            --purple: #af52de;
-            --yellow: #ffcc00;
-            --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.05);
-            --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.08);
-            --shadow-heavy: 0 8px 30px rgba(0, 0, 0, 0.12);
-            --border-radius-small: 10px;
-            --border-radius-medium: 16px;
-            --border-radius-large: 20px;
-            --border-radius-circle: 50%;
-            --font-sf-pro: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            --transition-fast: 0.2s ease;
-            --transition-normal: 0.3s ease;
-            --transition-slow: 0.4s ease;
-        }
-
-        body {
-            font-family: var(--font-sf-pro);
-            background: var(--white);
-            color: var(--black);
-            line-height: 1.4;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* Loading Screen */
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--white);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity var(--transition-slow);
-        }
-
-        .loading-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .loading-content {
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading-logo {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 30px;
-            border-radius: var(--border-radius-large);
-            object-fit: cover;
-            animation: pulse 2s infinite;
-        }
-
-        .spinner-large {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(0, 122, 255, 0.1);
-            border-top-color: var(--blue);
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            animation: spin 1s linear infinite;
-        }
-
-        .loading-content p {
-            color: var(--gray-600);
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        /* Chat Page */
-        .chat-page {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            background: var(--white);
-            position: relative;
-        }
-
-        .chat-header {
-            background: var(--white);
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--gray-200);
-            box-shadow: var(--shadow-light);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            color: var(--blue);
-            font-size: 20px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: var(--border-radius-circle);
-            transition: background var(--transition-normal);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-        }
-
-        .back-btn:hover {
-            background: var(--gray-100);
-        }
-
-        .chat-user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .chat-user-details {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-
-        .chat-user-details h3 {
-            font-size: 17px;
-            font-weight: 700;
-            color: var(--black);
-            margin-bottom: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .chat-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            color: var(--gray-600);
-            font-weight: 500;
-        }
-
-        .chat-status .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: var(--border-radius-circle);
-        }
-
-        .chat-status .status-dot.online {
-            background: var(--green);
-        }
-
-        .chat-status .status-dot.offline {
-            background: var(--gray-400);
-        }
-
-        .icon-btn {
-            background: none;
-            border: none;
-            color: var(--gray-600);
-            font-size: 18px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: var(--border-radius-circle);
-            transition: all var(--transition-normal);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-        }
-
-        .icon-btn:hover {
-            background: var(--gray-100);
-            color: var(--black);
-        }
-
-        /* Chat Messages Area */
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: var(--white);
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            position: relative;
-        }
-
-        /* Custom Scrollbar */
-        .chat-messages::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .chat-messages::-webkit-scrollbar-track {
-            background: var(--gray-100);
-            border-radius: 3px;
-        }
-
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: var(--gray-400);
-            border-radius: 3px;
-        }
-
-        .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: var(--gray-500);
-        }
-
-        /* Empty Chat */
-        .empty-chat {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--gray-500);
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .empty-chat i {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .empty-chat h3 {
-            font-size: 20px;
-            margin-bottom: 8px;
-            color: var(--gray-600);
-        }
-
-        .empty-chat p {
-            font-size: 16px;
-            max-width: 300px;
-            margin: 0 auto;
-        }
-
-        /* Message Date */
-        .message-date {
-            text-align: center;
-            color: var(--gray-500);
-            font-size: 13px;
-            font-weight: 600;
-            margin: 20px 0;
-            padding: 8px 16px;
-            background: var(--gray-100);
-            border-radius: var(--border-radius-large);
-            align-self: center;
-            letter-spacing: 0.3px;
-        }
-
-        /* Message Bubbles */
-        .message {
-            display: flex;
-            margin-bottom: 8px;
-            animation: messageSlide 0.3s ease;
-        }
-
-        .message.sent {
-            justify-content: flex-end;
-        }
-
-        .message.received {
-            justify-content: flex-start;
-        }
-
-        .message-bubble {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: var(--border-radius-large);
-            position: relative;
-            word-wrap: break-word;
-            line-height: 1.4;
-            box-shadow: var(--shadow-light);
-        }
-
-        .message.sent .message-bubble {
-            background: var(--blue);
-            color: var(--white);
-            border-bottom-right-radius: var(--border-radius-small);
-            margin-left: auto;
-        }
-
-        .message.received .message-bubble {
-            background: var(--gray-100);
-            color: var(--black);
-            border-bottom-left-radius: var(--border-radius-small);
-            margin-right: auto;
-        }
-
-        .message-bubble p {
-            font-size: 17px;
-            margin-bottom: 4px;
-            line-height: 1.4;
-        }
-
-        .message-time {
-            font-size: 11px;
-            opacity: 0.7;
-            display: block;
-            text-align: right;
-            margin-top: 4px;
-            font-weight: 500;
-            letter-spacing: 0.2px;
-        }
-
-        .message.sent .message-time {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .message.received .message-time {
-            color: var(--gray-600);
-        }
-
-        .message-status {
-            font-size: 11px;
-            margin-left: 4px;
-        }
-
-        /* Media Messages */
-        .media-message {
-            max-width: 250px;
-        }
-
-        .chat-media {
-            width: 100%;
-            border-radius: var(--border-radius-medium);
-            margin-bottom: 8px;
-            box-shadow: var(--shadow-light);
-            cursor: pointer;
-            transition: transform var(--transition-normal);
-        }
-
-        .chat-media:hover {
-            transform: scale(1.02);
-        }
-
-        /* Typing Indicator */
-        .typing-indicator {
-            display: none;
-            align-items: center;
-            margin-bottom: 8px;
-            padding-left: 16px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .typing-bubble {
-            background: var(--gray-100);
-            border-radius: var(--border-radius-large);
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .typing-dots {
-            display: flex;
-            gap: 4px;
-        }
-
-        .typing-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--gray-500);
-            border-radius: var(--border-radius-circle);
-            animation: typing 1.4s infinite;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        .typing-text {
-            font-size: 13px;
-            color: var(--gray-600);
-            font-weight: 500;
-        }
-
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-8px); }
-        }
-
-        /* Message Input Area */
-        .message-input-area {
-            background: var(--white);
-            padding: 12px 20px;
-            border-top: 1px solid var(--gray-200);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: sticky;
-            bottom: 0;
-            z-index: 100;
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-        }
-
-        .message-input-container {
-            flex: 1;
-            background: var(--gray-100);
-            border-radius: var(--border-radius-large);
-            padding: 0 16px;
-            display: flex;
-            align-items: center;
-            transition: all var(--transition-normal);
-        }
-
-        .message-input-container:focus-within {
-            background: var(--white);
-            box-shadow: 0 0 0 2px var(--blue-light);
-        }
-
-        .message-input-container input {
-            flex: 1;
-            background: none;
-            border: none;
-            padding: 14px 0;
-            font-size: 17px;
-            color: var(--black);
-            font-family: var(--font-sf-pro);
-        }
-
-        .message-input-container input:focus {
-            outline: none;
-        }
-
-        .message-input-container input::placeholder {
-            color: var(--gray-500);
-        }
-
-        .send-btn {
-            background: var(--blue);
-            color: var(--white);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: var(--border-radius-circle);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all var(--transition-normal);
-        }
-
-        .send-btn:hover:not(:disabled) {
-            background: var(--blue-dark);
-            transform: scale(1.05);
-        }
-
-        .send-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Attachment Options */
-        .attachment-options {
-            position: absolute;
-            bottom: 70px;
-            left: 20px;
-            background: var(--white);
-            border-radius: var(--border-radius-medium);
-            box-shadow: var(--shadow-heavy);
-            padding: 12px;
-            display: none;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            z-index: 1000;
-            border: 1px solid var(--gray-200);
-            animation: slideUp 0.3s ease;
-        }
-
-        .attachment-options.show {
-            display: grid;
-        }
-
-        .attachment-btn {
-            background: none;
-            border: none;
-            padding: 12px 8px;
-            border-radius: var(--border-radius-medium);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all var(--transition-normal);
-            color: var(--black);
-            font-size: 13px;
-            min-width: 80px;
-        }
-
-        .attachment-btn:hover {
-            background: var(--gray-100);
-            color: var(--blue);
-            transform: translateY(-2px);
-        }
-
-        .attachment-btn i {
-            font-size: 20px;
-        }
-
-        /* Modals */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            z-index: 2000;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: var(--white);
-            border-radius: var(--border-radius-large);
-            padding: 0;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: var(--shadow-heavy);
-            animation: modalSlideUp 0.4s ease;
-        }
-
-        .modal-header {
-            padding: 24px;
-            border-bottom: 1px solid var(--gray-200);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            background: var(--white);
-            border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-            z-index: 1;
-        }
-
-        .modal-header h3 {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--black);
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: var(--gray-500);
-            cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: var(--border-radius-circle);
-            transition: all var(--transition-normal);
-        }
-
-        .close-modal:hover {
-            background: var(--gray-100);
-            color: var(--black);
-        }
-
-        .modal-body {
-            padding: 24px;
-        }
-
-        /* Toast Notifications Container */
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 350px;
-        }
-
-        /* Toast Notifications */
-        .toast {
-            background: var(--black);
-            color: var(--white);
-            padding: 16px 20px;
-            border-radius: var(--border-radius-medium);
-            box-shadow: var(--shadow-heavy);
-            animation: slideInRight 0.3s ease, fadeOut 0.3s ease 2.7s;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative;
-            overflow: hidden;
-            max-width: 100%;
-        }
-
-        .toast::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.3);
-            animation: toastProgress 3s linear forwards;
-        }
-
-        .toast.success {
-            background: var(--green);
-        }
-
-        .toast.error {
-            background: var(--red);
-        }
-
-        .toast.warning {
-            background: var(--orange);
-        }
-
-        .toast.info {
-            background: var(--blue);
-        }
-
-        .toast i {
-            font-size: 20px;
-        }
-
-        .toast span {
-            flex: 1;
-            font-size: 15px;
-            line-height: 1.4;
-        }
-
-        /* Dropdowns */
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background: var(--white);
-            min-width: 220px;
-            border-radius: var(--border-radius-medium);
-            box-shadow: var(--shadow-heavy);
-            z-index: 1000;
-            border: 1px solid var(--gray-200);
-            animation: dropdownFade 0.2s ease;
-            margin-top: 8px;
-        }
-
-        .dropdown-content.show {
-            display: block;
-        }
-
-        .dropdown-content a {
-            color: var(--black);
-            padding: 12px 16px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 15px;
-            transition: all var(--transition-normal);
-            border-bottom: 1px solid var(--gray-100);
-        }
-
-        .dropdown-content a:last-child {
-            border-bottom: none;
-        }
-
-        .dropdown-content a:hover {
-            background: var(--gray-100);
-            color: var(--blue);
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes modalSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes messageSlide {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes dropdownFade {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeOut {
-            to {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-        }
-
-        @keyframes toastProgress {
-            from { width: 100%; }
-            to { width: 0%; }
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .attachment-options {
-                grid-template-columns: repeat(2, 1fr);
-                left: 10px;
-                right: 10px;
-                justify-content: center;
-            }
-            
-            .toast-container {
-                left: 20px;
-                right: 20px;
-                max-width: none;
-            }
-            
-            .toast {
-                max-width: 100%;
-            }
-            
-            .message-bubble {
-                max-width: 85%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .chat-messages {
-                padding: 16px;
-            }
-            
-            .message-input-area {
-                padding: 12px 16px;
-            }
-            
-            .chat-header {
-                padding: 12px 16px;
-            }
-            
-            .modal-content {
-                width: 100%;
-                height: 100%;
-                max-height: 100vh;
-                border-radius: 0;
-            }
-            
-            .modal-body {
-                padding: 20px;
-            }
-            
-            .modal-header {
-                padding: 20px;
-            }
-        }
-    </style>
+    <link rel="icon" href="zynaps.png">
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-content">
-            <div class="spinner-large"></div>
-            <p>Loading Chat...</p>
-        </div>
-    </div>
-
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Chat Page -->
-    <div class="chat-page" id="chatPage" style="display: none;">
+    <div class="chat-page" id="chatPage">
         <!-- Chat Header -->
         <header class="chat-header">
-            <button class="back-btn" onclick="goBack()">
+            <button class="back-btn" id="backToHomeBtn">
                 <i class="fas fa-arrow-left"></i>
             </button>
-            
+
             <div class="chat-user-info">
-                <img src="zynaps.png" alt="Profile" class="profile-pic-small" id="chatUserPic">
+                <img src="" alt="Contact" class="profile-pic-small" id="chatProfilePic">
                 <div class="chat-user-details">
-                    <h3 id="chatUserName">Loading...</h3>
+                    <h3 id="chatContactName">Loading...</h3>
                     <div class="chat-status">
                         <div class="status-dot" id="chatStatusDot"></div>
                         <span id="chatStatusText">Loading...</span>
                     </div>
                 </div>
             </div>
-            
-            <div class="dropdown">
-                <button class="icon-btn" onclick="toggleChatDropdown()">
-                    <i class="fas fa-ellipsis-v"></i>
+
+            <div class="chat-header-actions">
+                <button class="icon-btn" id="voiceCallBtn">
+                    <i class="fas fa-phone"></i>
                 </button>
-                <div class="dropdown-content" id="chatDropdown">
-                    <a href="#" onclick="showProfileInfo()"><i class="fas fa-info-circle"></i> Profile Info</a>
-                    <a href="#" onclick="addNickname()"><i class="fas fa-tag"></i> Add Nickname</a>
-                    <a href="#" onclick="addToFavorites()"><i class="fas fa-star"></i> Add to Favorites</a>
-                    <a href="#" onclick="blockUser()"><i class="fas fa-ban"></i> Block User</a>
-                    <a href="#" onclick="reportUser()"><i class="fas fa-flag"></i> Report</a>
-                    <a href="#" class="logout-link" onclick="clearChat()"><i class="fas fa-trash"></i> Clear Chat</a>
+                <button class="icon-btn" id="videoCallBtn">
+                    <i class="fas fa-video"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="icon-btn" id="chatMenuBtn">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-content" id="chatDropdown">
+                        <a href="#" id="viewProfileBtn"><i class="fas fa-user"></i> View Profile</a>
+                        <a href="#" id="addNicknameBtn"><i class="fas fa-tag"></i> Add Nickname</a>
+                        <a href="#" id="addToFavoritesBtn"><i class="fas fa-star"></i> Add to Favorites</a>
+                        <a href="#" id="muteChatBtn"><i class="fas fa-bell-slash"></i> Mute Notifications</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" id="clearChatBtn"><i class="fas fa-broom"></i> Clear Chat</a>
+                        <a href="#" id="reportUserBtn"><i class="fas fa-flag"></i> Report User</a>
+                        <a href="#" id="blockUserBtn"><i class="fas fa-ban"></i> Block User</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" id="deleteChatBtn" class="logout-link"><i class="fas fa-trash"></i> Delete Chat</a>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <!-- Chat Messages -->
+        <!-- Chat Messages Area -->
         <div class="chat-messages" id="chatMessages">
-            <div class="empty-chat" id="emptyChat">
+            <!-- Messages will be loaded here -->
+            <div class="empty-chat">
                 <i class="fas fa-comments"></i>
                 <h3>No messages yet</h3>
-                <p>Send your first message to start the conversation</p>
+                <p>Say hello to start the conversation!</p>
             </div>
-        </div>
 
-        <!-- Typing Indicator -->
-        <div class="typing-indicator" id="typingIndicator">
-            <div class="typing-bubble">
-                <div class="typing-dots">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
+            <!-- Typing Indicator -->
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-bubble">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span class="typing-text" id="typingText">typing...</span>
                 </div>
-                <span class="typing-text">typing...</span>
             </div>
         </div>
 
         <!-- Message Input Area -->
         <div class="message-input-area">
-            <button class="icon-btn" onclick="toggleAttachmentOptions()">
+            <button class="icon-btn" id="attachmentBtn">
                 <i class="fas fa-plus"></i>
             </button>
-            
+
             <div class="message-input-container">
-                <input type="text" id="messageInput" placeholder="iMessage" onkeypress="handleKeyPress(event)" autocomplete="off">
+                <input type="text" id="messageInput" placeholder="iMessage" autocomplete="off">
+                <button class="icon-btn" id="emojiBtn">
+                    <i class="far fa-smile"></i>
+                </button>
             </div>
-            
-            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+
+            <button class="send-btn" id="sendMessageBtn">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </div>
 
         <!-- Attachment Options -->
         <div class="attachment-options" id="attachmentOptions">
-            <button class="attachment-btn" onclick="attachMedia('photo')">
+            <button class="attachment-btn" id="attachPhotoBtn">
                 <i class="fas fa-image"></i>
                 <span>Photo</span>
             </button>
-            <button class="attachment-btn" onclick="attachMedia('video')">
+            <button class="attachment-btn" id="attachVideoBtn">
                 <i class="fas fa-video"></i>
                 <span>Video</span>
             </button>
-            <button class="attachment-btn" onclick="attachMedia('file')">
+            <button class="attachment-btn" id="attachDocumentBtn">
                 <i class="fas fa-file"></i>
-                <span>File</span>
+                <span>Document</span>
             </button>
+            <button class="attachment-btn" id="attachAudioBtn">
+                <i class="fas fa-microphone"></i>
+                <span>Voice</span>
+            </button>
+            <button class="attachment-btn" id="attachLocationBtn">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Location</span>
+            </button>
+            <button class="attachment-btn" id="attachContactBtn">
+                <i class="fas fa-user-plus"></i>
+                <span>Contact</span>
+            </button>
+        </div>
+
+        <!-- Hidden Inputs -->
+        <input type="file" id="photoUpload" accept="image/*" style="display: none;" multiple>
+        <input type="file" id="videoUpload" accept="video/*" style="display: none;">
+        <input type="file" id="documentUpload" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx" style="display: none;">
+        <input type="file" id="audioUpload" accept="audio/*" style="display: none;">
+
+        <!-- Audio Recorder -->
+        <div class="audio-recorder" id="audioRecorder" style="display: none;">
+            <div class="recorder-controls">
+                <button class="icon-btn" id="cancelRecordingBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="recording-timer" id="recordingTimer">0:00</div>
+                <button class="icon-btn" id="sendRecordingBtn">
+                    <i class="fas fa-check"></i>
+                </button>
+            </div>
+            <div class="recording-visualizer" id="recordingVisualizer"></div>
         </div>
     </div>
 
-    <!-- Media Input -->
-    <input type="file" id="mediaInput" accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display: none;" onchange="handleMediaUpload(event)">
-
     <!-- Modals -->
     <div class="modal-overlay" id="modalOverlay">
-        <!-- Profile Info Modal -->
-        <div class="modal-content" id="profileInfoModal" style="display: none;">
+        <!-- View Profile Modal -->
+        <div class="modal-content" id="viewProfileModal">
             <div class="modal-header">
-                <h3>Profile Info</h3>
-                <button class="close-modal" onclick="closeModal()">×</button>
+                <h3>Profile</h3>
+                <button class="close-modal" id="closeViewProfileModal">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
-                <div style="text-align: center; margin-bottom: 24px;">
-                    <img src="" alt="Profile" style="width: 100px; height: 100px; border-radius: var(--border-radius-circle); object-fit: cover; margin-bottom: 16px;" id="modalProfilePic">
-                    <h3 id="modalProfileName">User Name</h3>
-                    <p id="modalProfileId">ZYN-0000</p>
+                <div class="profile-display">
+                    <img src="" alt="Profile" class="profile-large" id="viewProfilePic">
+                    <h3 id="viewProfileName">Loading...</h3>
+                    <p class="user-id-display" id="viewProfileID">ZYN-0000</p>
+                    <p class="user-bio" id="viewProfileBio">No bio yet</p>
+                    
+                    <div class="profile-info-grid">
+                        <div class="info-item">
+                            <i class="fas fa-phone"></i>
+                            <span id="viewProfilePhone">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-envelope"></i>
+                            <span id="viewProfileEmail">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-calendar"></i>
+                            <span id="viewProfileJoined">Loading...</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-circle"></i>
+                            <span id="viewProfileStatus">Loading...</span>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="input-group" style="margin-bottom: 16px;">
-                    <i class="fas fa-phone"></i>
-                    <input type="text" id="modalProfilePhone" readonly>
-                </div>
-                
-                <div class="input-group" style="margin-bottom: 16px;">
-                    <i class="fas fa-envelope"></i>
-                    <input type="text" id="modalProfileEmail" readonly>
-                </div>
-                
+
                 <div class="modal-actions">
-                    <button class="btn-primary" onclick="closeModal()">Close</button>
+                    <button class="btn-secondary" id="startCallFromProfileBtn">
+                        <i class="fas fa-phone"></i> Call
+                    </button>
+                    <button class="btn-primary" id="messageFromProfileBtn">
+                        <i class="fas fa-comment"></i> Message
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Add Nickname Modal -->
-        <div class="modal-content" id="nicknameModal" style="display: none;">
+        <div class="modal-content" id="nicknameModal">
             <div class="modal-header">
                 <h3>Add Nickname</h3>
-                <button class="close-modal" onclick="closeModal()">×</button>
+                <button class="close-modal" id="closeNicknameModal">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="input-group">
                     <i class="fas fa-tag"></i>
-                    <input type="text" id="nicknameInput" placeholder="Enter nickname" maxlength="20">
+                    <input type="text" id="nicknameInput" placeholder="Enter nickname">
                 </div>
                 <div class="modal-actions">
-                    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button class="btn-primary" onclick="saveNickname()">Save</button>
+                    <button class="btn-primary" id="saveNicknameBtn">
+                        <i class="fas fa-save"></i> Save Nickname
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Block User Modal -->
-        <div class="modal-content" id="blockModal" style="display: none;">
+        <!-- Location Picker Modal -->
+        <div class="modal-content" id="locationModal">
             <div class="modal-header">
-                <h3>Block User</h3>
-                <button class="close-modal" onclick="closeModal()">×</button>
+                <h3>Share Location</h3>
+                <button class="close-modal" id="closeLocationModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="location-map" id="locationMap">
+                    <!-- Map will be loaded here -->
+                    <div class="map-placeholder">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <p>Loading map...</p>
+                    </div>
+                </div>
+                <div class="location-details" id="locationDetails">
+                    <h4>Current Location</h4>
+                    <p id="locationAddress">Fetching address...</p>
+                    <p id="locationCoordinates">Fetching coordinates...</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-primary" id="shareLocationBtn">
+                        <i class="fas fa-share"></i> Share Location
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Media Viewer Modal -->
+        <div class="modal-content" id="mediaViewerModal">
+            <div class="modal-header">
+                <h3 id="mediaViewerTitle">Media</h3>
+                <button class="close-modal" id="closeMediaViewerModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="media-viewer" id="mediaViewer">
+                    <!-- Media will be displayed here -->
+                </div>
+                <div class="media-info" id="mediaInfo">
+                    <p>Sent by <span id="mediaSender">Unknown</span></p>
+                    <p id="mediaTimestamp">Just now</p>
+                </div>
+                <div class="media-actions">
+                    <button class="btn-media" id="downloadMediaBtn">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="btn-media" id="shareMediaBtn">
+                        <i class="fas fa-share"></i>
+                    </button>
+                    <button class="btn-media" id="deleteMediaBtn">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report User Modal -->
+        <div class="modal-content" id="reportModal">
+            <div class="modal-header">
+                <h3>Report User</h3>
+                    <button class="close-modal" id="closeReportModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="report-form">
+                    <div class="input-group">
+                        <label>Reason for Report</label>
+                        <select id="reportReason">
+                            <option value="spam">Spam</option>
+                            <option value="harassment">Harassment</option>
+                            <option value="inappropriate">Inappropriate Content</option>
+                            <option value="impersonation">Impersonation</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Additional Details</label>
+                        <textarea id="reportDetails" placeholder="Please provide more details..." rows="4"></textarea>
+                    </div>
+                    <p class="form-hint">Your report will be reviewed within 24 hours. False reports may result in account suspension.</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-danger" id="submitReportBtn">
+                        <i class="fas fa-flag"></i> Submit Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div class="modal-content" id="confirmationModal">
+            <div class="modal-header">
+                <h3 id="confirmationTitle">Confirm Action</h3>
+                <button class="close-modal" id="closeConfirmationModal">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="confirmation-message">
-                    <div class="warning-icon">
-                        <i class="fas fa-ban"></i>
-                    </div>
-                    <h4>Block <span id="blockUserName">User</span>?</h4>
-                    <p>This user will no longer be able to send you messages or see your online status.</p>
+                    <i class="fas fa-exclamation-triangle warning-icon"></i>
+                    <h4 id="confirmationMessage">Are you sure you want to perform this action?</h4>
+                    <p id="confirmationDetails">This action cannot be undone.</p>
                 </div>
                 <div class="modal-actions">
-                    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button class="btn-danger" onclick="confirmBlock()">Block</button>
+                    <button class="btn-secondary" id="confirmCancelBtn">Cancel</button>
+                    <button class="btn-danger" id="confirmActionBtn">Confirm</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <!-- Audio for notifications -->
     <audio id="notificationSound" preload="auto">
         <source src="notification.mp3" type="audio/mpeg">
     </audio>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs&callback=initMap" async defer></script>
+    <script src="app.js"></script>
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
-            authDomain: "zynapse-68181.firebaseapp.com",
-            databaseURL: "https://zynapse-68181-default-rtdb.firebaseio.com",
-            projectId: "zynapse-68181",
-            storageBucket: "zynapse-68181.firebasestorage.app",
-            messagingSenderId: "841353050519",
-            appId: "1:841353050519:web:3b16d95d8f4cd3b9506cd2",
-            measurementId: "G-4764XLL6WS"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
-
-        // Cloudinary Configuration
-        const CLOUDINARY_CONFIG = {
-            cloudName: 'dd3lcymrk',
-            apiKey: '489857926297197',
-            uploadPreset: 'h3eyhc2o',
-            folder: 'zynapse/chats'
-        };
-
-        // Global Variables
-        let currentUser = null;
-        let userData = null;
-        let chatData = null;
-        let otherUser = null;
-        let groupData = null;
-        let chatType = null;
-        let chatId = null;
-        let typingTimeout = null;
-        let messages = [];
-        let mediaFiles = [];
-
-        // DOM Elements
-        const loadingScreen = document.getElementById('loadingScreen');
-        const chatPage = document.getElementById('chatPage');
-        const toastContainer = document.getElementById('toastContainer');
-        const modalOverlay = document.getElementById('modalOverlay');
-        const notificationSound = document.getElementById('notificationSound');
-        const chatMessages = document.getElementById('chatMessages');
-        const emptyChat = document.getElementById('emptyChat');
-        const typingIndicator = document.getElementById('typingIndicator');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const attachmentOptions = document.getElementById('attachmentOptions');
-        const mediaInput = document.getElementById('mediaInput');
-
-        // Get URL Parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        chatType = urlParams.get('type'); // 'user' or 'group'
-        const targetId = urlParams.get('id');
-
-        // Show Toast Notification
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-                <span>${message}</span>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Play notification sound for non-info messages
-            if (type !== 'info' && notificationSound) {
-                notificationSound.currentTime = 0;
-                notificationSound.play().catch(e => console.log('Audio play failed:', e));
-            }
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-
-        // Go Back
-        function goBack() {
-            window.history.back();
-        }
-
-        // Toggle Attachment Options
-        function toggleAttachmentOptions() {
-            attachmentOptions.classList.toggle('show');
-        }
-
-        // Close attachment options when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.attachment-options') && !e.target.closest('.icon-btn')) {
-                attachmentOptions.classList.remove('show');
-            }
+        // Chat page specific JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChatPage();
         });
-
-        // Attach Media
-        function attachMedia(type) {
-            attachmentOptions.classList.remove('show');
-            
-            if (type === 'photo') {
-                mediaInput.accept = 'image/*';
-            } else if (type === 'video') {
-                mediaInput.accept = 'video/*';
-            } else if (type === 'file') {
-                mediaInput.accept = '*/*';
-            }
-            
-            mediaInput.click();
-        }
-
-        // Handle Media Upload
-        async function handleMediaUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            // Check file size (50MB max)
-            if (file.size > 50 * 1024 * 1024) {
-                showToast('File size must be less than 50MB', 'error');
-                return;
-            }
-            
-            showToast('Uploading media...', 'info');
-            
-            try {
-                // Upload to Cloudinary
-                const mediaUrl = await uploadToCloudinary(file, 'chats');
-                
-                // Determine media type
-                let mediaType = 'file';
-                if (file.type.startsWith('image/')) {
-                    mediaType = 'image';
-                } else if (file.type.startsWith('video/')) {
-                    mediaType = 'video';
-                }
-                
-                // Send media message
-                await sendMessage(null, mediaType, mediaUrl, file.name);
-                
-                showToast('Media sent', 'success');
-                
-            } catch (error) {
-                console.error('Error uploading media:', error);
-                showToast('Failed to send media', 'error');
-            }
-            
-            mediaInput.value = '';
-        }
-
-        // Upload to Cloudinary
-        async function uploadToCloudinary(file, folder = 'chats') {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-            formData.append('folder', `${CLOUDINARY_CONFIG.folder}/${folder}`);
-            formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
-            
-            try {
-                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                return data.secure_url;
-            } catch (error) {
-                console.error('Cloudinary upload error:', error);
-                throw error;
-            }
-        }
-
-        // Handle Key Press
-        function handleKeyPress(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-            
-            // Typing indicator
-            clearTimeout(typingTimeout);
-            updateTypingStatus(true);
-            
-            typingTimeout = setTimeout(() => {
-                updateTypingStatus(false);
-            }, 2000);
-        }
-
-        // Update Typing Status
-        function updateTypingStatus(isTyping) {
-            if (!chatId || !chatData) return;
-            
-            const typingRef = database.ref(`chats/${chatId}/typing/${currentUser.uid}`);
-            typingRef.set(isTyping ? Date.now() : null);
-        }
-
-        // Send Message
-        async function sendMessage(text = null, type = 'text', mediaUrl = null, fileName = null) {
-            const messageText = text || messageInput.value.trim();
-            
-            if (!messageText && !mediaUrl) {
-                showToast('Please enter a message or attach media', 'warning');
-                return;
-            }
-            
-            // Clear typing status
-            updateTypingStatus(false);
-            
-            // Prepare message data
-            const messageId = database.ref().child('messages').push().key;
-            const messageData = {
-                id: messageId,
-                senderId: currentUser.uid,
-                type: type,
-                content: type === 'text' ? messageText : mediaUrl,
-                fileName: fileName,
-                timestamp: Date.now(),
-                status: 'sent'
-            };
-            
-            // Add message to chat
-            try {
-                await database.ref(`chats/${chatId}/messages/${messageId}`).set(messageData);
-                
-                // Update chat last message
-                await database.ref(`chats/${chatId}`).update({
-                    lastMessage: type === 'text' ? messageText : `📎 ${type}`,
-                    lastMessageTime: Date.now(),
-                    updatedAt: Date.now()
-                });
-                
-                // Update unread counts for other participants
-                if (chatData.participants) {
-                    chatData.participants.forEach(participantId => {
-                        if (participantId !== currentUser.uid) {
-                            database.ref(`chats/${chatId}/unreadCount/${participantId}`).transaction(count => (count || 0) + 1);
-                        }
-                    });
-                }
-                
-                // Clear input if text message
-                if (type === 'text') {
-                    messageInput.value = '';
-                }
-                
-                showToast('Message sent', 'success');
-                
-            } catch (error) {
-                console.error('Error sending message:', error);
-                showToast('Failed to send message', 'error');
-            }
-        }
-
-        // Load Chat Data
-        async function loadChatData() {
-            try {
-                if (chatType === 'user') {
-                    // Find chat with this user
-                    const chatsSnapshot = await database.ref('users/' + currentUser.uid + '/chats').once('value');
-                    if (!chatsSnapshot.exists()) {
-                        showToast('Chat not found', 'error');
-                        setTimeout(goBack, 2000);
-                        return;
-                    }
-                    
-                    let foundChatId = null;
-                    const chatPromises = [];
-                    
-                    chatsSnapshot.forEach(chatSnap => {
-                        chatPromises.push(
-                            database.ref('chats/' + chatSnap.key).once('value').then(chatDataSnap => {
-                                if (chatDataSnap.exists()) {
-                                    const chat = chatDataSnap.val();
-                                    if (chat.type === 'private' && chat.participants.includes(targetId)) {
-                                        foundChatId = chatSnap.key;
-                                        chatData = chat;
-                                    }
-                                }
-                            })
-                        );
-                    });
-                    
-                    await Promise.all(chatPromises);
-                    
-                    if (!foundChatId) {
-                        // Create new chat
-                        await createNewChat(targetId);
-                    } else {
-                        chatId = foundChatId;
-                    }
-                    
-                    // Load other user data
-                    const userSnapshot = await database.ref('users').orderByChild('userId').equalTo(targetId).once('value');
-                    if (userSnapshot.exists()) {
-                        userSnapshot.forEach(childSnapshot => {
-                            otherUser = childSnapshot.val();
-                            otherUser.firebaseId = childSnapshot.key;
-                        });
-                    }
-                    
-                } else if (chatType === 'group') {
-                    // Load group chat
-                    chatId = targetId;
-                    const chatSnapshot = await database.ref('chats/' + chatId).once('value');
-                    if (!chatSnapshot.exists()) {
-                        showToast('Group chat not found', 'error');
-                        setTimeout(goBack, 2000);
-                        return;
-                    }
-                    
-                    chatData = chatSnapshot.val();
-                    
-                    // Load group data
-                    const groupSnapshot = await database.ref('groups/' + chatData.groupId).once('value');
-                    if (groupSnapshot.exists()) {
-                        groupData = groupSnapshot.val();
-                    }
-                }
-                
-                if (!chatData) {
-                    showToast('Chat not found', 'error');
-                    setTimeout(goBack, 2000);
-                    return;
-                }
-                
-                // Update UI
-                updateChatHeader();
-                
-                // Load messages
-                await loadMessages();
-                
-                // Setup real-time listeners
-                setupRealtimeListeners();
-                
-                // Mark as read
-                markAsRead();
-                
-            } catch (error) {
-                console.error('Error loading chat data:', error);
-                showToast('Error loading chat', 'error');
-            }
-        }
-
-        // Create New Chat
-        async function createNewChat(targetUserId) {
-            try {
-                // Get target user data
-                const userSnapshot = await database.ref('users').orderByChild('userId').equalTo(targetUserId).once('value');
-                if (!userSnapshot.exists()) {
-                    throw new Error('User not found');
-                }
-                
-                let targetFirebaseId = null;
-                userSnapshot.forEach(childSnapshot => {
-                    targetFirebaseId = childSnapshot.key;
-                });
-                
-                // Create new chat
-                chatId = database.ref().child('chats').push().key;
-                chatData = {
-                    id: chatId,
-                    type: 'private',
-                    participants: [currentUser.uid, targetFirebaseId],
-                    createdAt: Date.now(),
-                    messages: {},
-                    unreadCount: {
-                        [currentUser.uid]: 0,
-                        [targetFirebaseId]: 0
-                    }
-                };
-                
-                await database.ref('chats/' + chatId).set(chatData);
-                
-                // Add chat to both users
-                await database.ref('users/' + currentUser.uid + '/chats/' + chatId).set(true);
-                await database.ref('users/' + targetFirebaseId + '/chats/' + chatId).set(true);
-                
-                showToast('New chat created', 'success');
-                
-            } catch (error) {
-                console.error('Error creating chat:', error);
-                throw error;
-            }
-        }
-
-        // Update Chat Header
-        function updateChatHeader() {
-            if (chatType === 'user' && otherUser) {
-                document.getElementById('chatUserName').textContent = otherUser.fullName;
-                document.getElementById('chatUserPic').src = otherUser.profileImage || 'zynaps.png';
-                document.getElementById('chatStatusText').textContent = otherUser.status === 'online' ? 'Online' : getTimeAgo(otherUser.lastSeen);
-                document.getElementById('chatStatusDot').className = `status-dot ${otherUser.status}`;
-                
-                // Update modal info
-                document.getElementById('modalProfileName').textContent = otherUser.fullName;
-                document.getElementById('modalProfileId').textContent = otherUser.userId;
-                document.getElementById('modalProfilePic').src = otherUser.profileImage || 'zynaps.png';
-                document.getElementById('modalProfilePhone').value = otherUser.phoneNumber;
-                document.getElementById('modalProfileEmail').value = otherUser.email;
-                document.getElementById('blockUserName').textContent = otherUser.fullName;
-                
-            } else if (chatType === 'group' && groupData) {
-                document.getElementById('chatUserName').textContent = groupData.groupName;
-                document.getElementById('chatUserPic').src = groupData.groupImage || 'zynaps.png';
-                document.getElementById('chatStatusText').textContent = `${Object.keys(groupData.members || {}).length} members`;
-                document.getElementById('chatStatusDot').className = 'status-dot offline';
-            }
-        }
-
-        // Load Messages
-        async function loadMessages() {
-            try {
-                const messagesSnapshot = await database.ref(`chats/${chatId}/messages`).orderByChild('timestamp').once('value');
-                
-                if (!messagesSnapshot.exists()) {
-                    emptyChat.style.display = 'flex';
-                    return;
-                }
-                
-                emptyChat.style.display = 'none';
-                messages = [];
-                
-                messagesSnapshot.forEach(childSnapshot => {
-                    const message = childSnapshot.val();
-                    messages.push(message);
-                });
-                
-                renderMessages();
-                
-            } catch (error) {
-                console.error('Error loading messages:', error);
-                showToast('Error loading messages', 'error');
-            }
-        }
-
-        // Render Messages
-        function renderMessages() {
-            chatMessages.innerHTML = '';
-            let lastDate = null;
-            
-            messages.forEach(message => {
-                const messageDate = new Date(message.timestamp);
-                const dateString = messageDate.toLocaleDateString();
-                
-                // Add date separator if needed
-                if (dateString !== lastDate) {
-                    const dateDiv = document.createElement('div');
-                    dateDiv.className = 'message-date';
-                    dateDiv.textContent = formatDate(message.timestamp);
-                    chatMessages.appendChild(dateDiv);
-                    lastDate = dateString;
-                }
-                
-                const isSent = message.senderId === currentUser.uid;
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
-                
-                let messageContent = '';
-                if (message.type === 'text') {
-                    messageContent = `<p>${escapeHtml(message.content)}</p>`;
-                } else if (message.type === 'image') {
-                    messageContent = `
-                        <div class="media-message">
-                            <img src="${message.content}" alt="Image" class="chat-media" onclick="viewMedia('${message.content}', 'image')">
-                            <p>${message.fileName || 'Image'}</p>
-                        </div>
-                    `;
-                } else if (message.type === 'video') {
-                    messageContent = `
-                        <div class="media-message">
-                            <video src="${message.content}" controls class="chat-media" onclick="viewMedia('${message.content}', 'video')"></video>
-                            <p>${message.fileName || 'Video'}</p>
-                        </div>
-                    `;
-                } else {
-                    messageContent = `
-                        <div class="media-message">
-                            <div style="padding: 12px; background: var(--gray-100); border-radius: var(--border-radius-medium);">
-                                <i class="fas fa-file" style="font-size: 24px; margin-bottom: 8px;"></i>
-                                <p>${message.fileName || 'File'}</p>
-                                <a href="${message.content}" target="_blank" style="color: var(--blue); text-decoration: none; font-size: 14px;">Download</a>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                const timeString = formatTime(message.timestamp);
-                const statusIcon = isSent ? getStatusIcon(message.status) : '';
-                
-                messageDiv.innerHTML = `
-                    <div class="message-bubble">
-                        ${messageContent}
-                        <span class="message-time">
-                            ${timeString}
-                            <span class="message-status">${statusIcon}</span>
-                        </span>
-                    </div>
-                `;
-                
-                chatMessages.appendChild(messageDiv);
-            });
-            
-            // Scroll to bottom
-            scrollToBottom();
-        }
-
-        // Format Date
-        function formatDate(timestamp) {
-            const date = new Date(timestamp);
-            const today = new Date();
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1);
-            
-            if (date.toDateString() === today.toDateString()) {
-                return 'Today';
-            } else if (date.toDateString() === yesterday.toDateString()) {
-                return 'Yesterday';
-            } else {
-                return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-            }
-        }
-
-        // Format Time
-        function formatTime(timestamp) {
-            return new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        // Get Status Icon
-        function getStatusIcon(status) {
-            switch(status) {
-                case 'sent': return '✓';
-                case 'delivered': return '✓✓';
-                case 'read': return '✓✓';
-                default: return '';
-            }
-        }
-
-        // Escape HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // View Media
-        function viewMedia(url, type) {
-            if (type === 'image') {
-                window.open(url, '_blank');
-            } else if (type === 'video') {
-                const videoWindow = window.open('', '_blank');
-                videoWindow.document.write(`
-                    <html>
-                        <head><title>Video Player</title></head>
-                        <body style="margin: 0; background: black;">
-                            <video src="${url}" controls autoplay style="width: 100vw; height: 100vh;"></video>
-                        </body>
-                    </html>
-                `);
-            }
-        }
-
-        // Scroll to Bottom
-        function scrollToBottom() {
-            setTimeout(() => {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 100);
-        }
-
-        // Setup Realtime Listeners
-        function setupRealtimeListeners() {
-            // Listen for new messages
-            database.ref(`chats/${chatId}/messages`).on('child_added', (snapshot) => {
-                const message = snapshot.val();
-                
-                // Check if message already exists
-                if (!messages.some(m => m.id === message.id)) {
-                    messages.push(message);
-                    renderMessages();
-                    markAsRead();
-                    
-                    // Play notification sound for received messages
-                    if (message.senderId !== currentUser.uid) {
-                        notificationSound.currentTime = 0;
-                        notificationSound.play().catch(e => console.log('Audio play failed:', e));
-                    }
-                }
-            });
-            
-            // Listen for typing status
-            database.ref(`chats/${chatId}/typing`).on('value', (snapshot) => {
-                const typingData = snapshot.val();
-                
-                if (!typingData) {
-                    typingIndicator.style.display = 'none';
-                    return;
-                }
-                
-                // Check if someone else is typing
-                const typingUsers = Object.keys(typingData).filter(userId => 
-                    userId !== currentUser.uid && (Date.now() - typingData[userId]) < 3000
-                );
-                
-                if (typingUsers.length > 0) {
-                    typingIndicator.style.display = 'flex';
-                } else {
-                    typingIndicator.style.display = 'none';
-                }
-            });
-            
-            // Listen for user status updates
-            if (chatType === 'user' && otherUser) {
-                database.ref(`users/${otherUser.firebaseId}`).on('value', (snapshot) => {
-                    if (snapshot.exists()) {
-                        otherUser = snapshot.val();
-                        updateChatHeader();
-                    }
-                });
-            }
-        }
-
-        // Mark as Read
-        function markAsRead() {
-            if (!chatId || !chatData) return;
-            
-            // Update unread count for current user
-            database.ref(`chats/${chatId}/unreadCount/${currentUser.uid}`).set(0);
-            
-            // Update message status for sent messages
-            messages.forEach(message => {
-                if (message.senderId !== currentUser.uid && message.status === 'delivered') {
-                    database.ref(`chats/${chatId}/messages/${message.id}/status`).set('read');
-                } else if (message.senderId === currentUser.uid && message.status === 'sent') {
-                    database.ref(`chats/${chatId}/messages/${message.id}/status`).set('delivered');
-                }
-            });
-        }
-
-        // Get Time Ago
-        function getTimeAgo(timestamp) {
-            const seconds = Math.floor((Date.now() - timestamp) / 1000);
-            
-            if (seconds < 60) return 'just now';
-            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-            
-            return new Date(timestamp).toLocaleDateString();
-        }
-
-        // Modal Functions
-        function showModal(modalId) {
-            modalOverlay.classList.add('active');
-            document.getElementById(modalId).style.display = 'block';
-        }
-
-        function closeModal() {
-            modalOverlay.classList.remove('active');
-            document.querySelectorAll('.modal-content').forEach(modal => {
-                modal.style.display = 'none';
-            });
-        }
-
-        // Toggle Chat Dropdown
-        function toggleChatDropdown() {
-            const dropdown = document.getElementById('chatDropdown');
-            dropdown.classList.toggle('show');
-        }
-
-        // Close dropdowns when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-content').forEach(dropdown => {
-                    dropdown.classList.remove('show');
-                });
-            }
-        });
-
-        // Show Profile Info
-        function showProfileInfo() {
-            toggleChatDropdown();
-            showModal('profileInfoModal');
-        }
-
-        // Add Nickname
-        function addNickname() {
-            toggleChatDropdown();
-            showModal('nicknameModal');
-        }
-
-        function saveNickname() {
-            const nickname = document.getElementById('nicknameInput').value.trim();
-            if (!nickname) {
-                showToast('Please enter a nickname', 'error');
-                return;
-            }
-            
-            // Save nickname to user's contacts
-            if (chatType === 'user' && otherUser) {
-                database.ref(`users/${currentUser.uid}/contacts/${otherUser.userId}/nickname`).set(nickname);
-                showToast('Nickname saved', 'success');
-                closeModal();
-            }
-        }
-
-        // Add to Favorites
-        function addToFavorites() {
-            toggleChatDropdown();
-            
-            if (chatType === 'user' && otherUser) {
-                database.ref(`users/${currentUser.uid}/favorites/${otherUser.userId}`).set(true);
-                showToast('Added to favorites', 'success');
-            }
-        }
-
-        // Block User
-        function blockUser() {
-            toggleChatDropdown();
-            showModal('blockModal');
-        }
-
-        function confirmBlock() {
-            if (chatType === 'user' && otherUser) {
-                database.ref(`users/${currentUser.uid}/blockedUsers/${otherUser.userId}`).set(true);
-                showToast('User blocked', 'success');
-                closeModal();
-                setTimeout(goBack, 1000);
-            }
-        }
-
-        // Report User
-        function reportUser() {
-            toggleChatDropdown();
-            showToast('Report feature coming soon', 'info');
-        }
-
-        // Clear Chat
-        function clearChat() {
-            toggleChatDropdown();
-            
-            if (confirm('Are you sure you want to clear this chat? This action cannot be undone.')) {
-                // Remove chat from user's chat list
-                database.ref(`users/${currentUser.uid}/chats/${chatId}`).remove();
-                showToast('Chat cleared', 'success');
-                setTimeout(goBack, 1000);
-            }
-        }
-
-        // Initialize App
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                currentUser = user;
-                loadingScreen.style.display = 'flex';
-                chatPage.style.display = 'none';
-                
-                // Load user data
-                const userSnapshot = await database.ref('users/' + currentUser.uid).once('value');
-                userData = userSnapshot.val();
-                
-                if (!userData) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-                
-                await loadChatData();
-                
-                loadingScreen.classList.add('hidden');
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                    chatPage.style.display = 'flex';
-                }, 500);
-                
-            } else {
-                window.location.href = 'index.html';
-            }
-        });
-
-        // Initialize
-        setTimeout(() => {
-            if (!currentUser) {
-                loadingScreen.classList.add('hidden');
-            }
-        }, 2000);
     </script>
 </body>
 </html>
