@@ -2,41 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zynapse - Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zynapse</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="zynaps.png" type="image/png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recordrtc/5.6.2/RecordRTC.min.js"></script>
 </head>
 <body>
-    <div class="app-container" id="appContainer">
-        <!-- Loading Screen -->
-        <div class="loading-screen" id="loadingScreen">
-            <div class="loading-content">
-                <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
-                <div class="spinner-large"></div>
-                <p>Loading Zynapse...</p>
-            </div>
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <img src="zynaps.png" alt="Zynapse Logo" class="loading-logo">
+            <div class="spinner-large"></div>
+            <p>Loading Zynapse...</p>
         </div>
+    </div>
 
-        <!-- Header -->
+    <div id="appContainer" class="app-home" style="display: none;">
+        <!-- Header Section -->
         <header class="app-header">
             <div class="header-left">
                 <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
                 <div class="user-info">
-                    <h2 id="userName">Loading...</h2>
+                    <h2 id="userNameDisplay">Loading...</h2>
                     <div class="user-id-container">
-                        <span class="user-id" id="userId">ZYN-0000</span>
-                        <button class="copy-btn" id="copyUserId" title="Copy ID">
+                        <span id="userIdDisplay" class="user-id">ZYN-0000</span>
+                        <button id="copyUserIdBtn" class="copy-btn" title="Copy ID">
                             <i class="far fa-copy"></i>
                         </button>
                     </div>
                 </div>
             </div>
-            <button class="profile-btn" id="profileBtn">
-                <img src="" alt="Profile" class="profile-pic-small" id="profilePicSmall">
-                <i class="fas fa-chevron-down"></i>
-            </button>
+            
+            <div class="dropdown">
+                <button id="profileBtn" class="profile-btn">
+                    <img id="userProfilePic" src="" alt="Profile" class="profile-pic-small">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div id="profileDropdown" class="dropdown-content">
+                    <button class="dropdown-item" id="viewProfileBtn">
+                        <i class="fas fa-user"></i> View Profile
+                    </button>
+                    <button class="dropdown-item" id="editProfileBtn">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item" id="settingsBtn">
+                        <i class="fas fa-cog"></i> Settings
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item danger" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
         </header>
 
         <!-- Navigation -->
@@ -44,180 +64,410 @@
             <a href="#" class="nav-item active" data-page="home">
                 <i class="fas fa-home"></i>
                 <span>HOME</span>
-                <span class="badge hidden" id="homeBadge">0</span>
+                <span id="homeBadge" class="badge" style="display: none;">0</span>
             </a>
             <a href="#" class="nav-item" data-page="zynes">
                 <i class="fas fa-bolt"></i>
                 <span>ZYNES</span>
-                <span class="badge hidden" id="zynesBadge">0</span>
+                <span id="zynesBadge" class="badge" style="display: none;">0</span>
             </a>
             <a href="#" class="nav-item" data-page="groups">
                 <i class="fas fa-users"></i>
                 <span>GROUPS</span>
-                <span class="badge hidden" id="groupsBadge">0</span>
+                <span id="groupsBadge" class="badge" style="display: none;">0</span>
             </a>
             <a href="#" class="nav-item" data-page="requests">
                 <i class="fas fa-user-plus"></i>
                 <span>REQUESTS</span>
-                <span class="badge" id="requestsBadge">0</span>
+                <span id="requestsBadge" class="badge" style="display: none;">0</span>
             </a>
             <a href="#" class="nav-item" data-page="contacts">
                 <i class="fas fa-address-book"></i>
                 <span>CONTACTS</span>
+                <span id="contactsBadge" class="badge" style="display: none;">0</span>
             </a>
         </nav>
 
-        <!-- Main Content -->
-        <main class="app-main" id="appMain">
-            <!-- Home Page -->
-            <div class="page active" id="homePage">
-                <div class="home-page">
-                    <div class="chats-header">
-                        <h2>Chats</h2>
-                    </div>
-                    <div class="chats-list" id="chatsList">
-                        <!-- Chats will be dynamically loaded here -->
-                        <div class="empty-state">
-                            <i class="far fa-comments"></i>
-                            <h3>No chats yet</h3>
-                            <p>Start a new chat by tapping the button below</p>
-                        </div>
-                    </div>
+        <!-- Main Content Area -->
+        <main class="app-main">
+            <!-- Home Page (Chats) -->
+            <div id="homePage" class="page active">
+                <div class="chats-header">
+                    <h2>Chats</h2>
+                </div>
+                <div id="chatsList" class="chats-list">
+                    <!-- Chats will be dynamically populated -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyChatsState" class="empty-state" style="display: flex;">
+                    <i class="fas fa-comments"></i>
+                    <h3>No chats yet</h3>
+                    <p>Start a new conversation by tapping the button below</p>
                 </div>
             </div>
 
             <!-- Zynes Page -->
-            <div class="page" id="zynesPage">
-                <div class="zynes-page">
-                    <div class="zynes-header">
-                        <h2>Zynes</h2>
-                    </div>
-                    <div class="create-zyne">
-                        <textarea class="create-input" id="zyneInput" placeholder="What's happening?"></textarea>
-                        <div class="media-preview" id="zyneMediaPreview"></div>
-                        <div class="create-actions">
-                            <div class="attachment-options" id="zyneAttachOptions">
-                                <button class="attachment-btn" data-type="photo">
-                                    <i class="fas fa-image"></i>
-                                    <span>Photo</span>
-                                </button>
-                                <button class="attachment-btn" data-type="video">
-                                    <i class="fas fa-video"></i>
-                                    <span>Video</span>
-                                </button>
-                                <button class="attachment-btn" data-type="text">
-                                    <i class="fas fa-font"></i>
-                                    <span>Text Only</span>
-                                </button>
-                            </div>
-                            <button class="btn-primary" id="postZyneBtn">
-                                <i class="fas fa-paper-plane"></i> Post
-                            </button>
-                        </div>
-                    </div>
-                    <div class="zynes-list" id="zynesList">
-                        <!-- Zynes will be dynamically loaded here -->
-                        <div class="empty-state">
-                            <i class="fas fa-bolt"></i>
-                            <h3>No Zynes yet</h3>
-                            <p>Share updates with your contacts</p>
-                        </div>
-                    </div>
+            <div id="zynesPage" class="page">
+                <div class="zynes-header">
+                    <h2>Zynes</h2>
                 </div>
+                <div class="zynes-list" id="zynesList">
+                    <!-- Zynes will be dynamically populated -->
+                </div>
+                <button id="createZyneBtn" class="floating-btn" style="right: 16px; bottom: 80px;">
+                    <i class="fas fa-plus"></i>
+                    <span>NEW</span>
+                </button>
             </div>
 
             <!-- Groups Page -->
-            <div class="page" id="groupsPage">
-                <div class="groups-page">
-                    <div class="groups-header">
-                        <h2>Groups</h2>
-                        <button class="create-group-btn" id="createGroupBtn">
-                            <i class="fas fa-plus"></i> New Group
-                        </button>
-                    </div>
-                    <div class="groups-list" id="groupsList">
-                        <!-- Groups will be dynamically loaded here -->
-                        <div class="empty-state">
-                            <i class="fas fa-users"></i>
-                            <h3>No groups yet</h3>
-                            <p>Create a group to chat with multiple people</p>
-                        </div>
-                    </div>
+            <div id="groupsPage" class="page">
+                <div class="groups-header">
+                    <h2>Groups</h2>
+                    <button id="createGroupBtn" class="create-group-btn">
+                        <i class="fas fa-plus"></i> New Group
+                    </button>
+                </div>
+                <div class="groups-list" id="groupsList">
+                    <!-- Groups will be dynamically populated -->
                 </div>
             </div>
 
             <!-- Chat Requests Page -->
-            <div class="page" id="requestsPage">
-                <div class="requests-page">
-                    <div class="requests-header">
-                        <h2>Chat Requests</h2>
-                    </div>
-                    <div class="requests-list" id="requestsList">
-                        <!-- Requests will be dynamically loaded here -->
-                        <div class="empty-state">
-                            <i class="fas fa-user-plus"></i>
-                            <h3>No pending requests</h3>
-                            <p>When someone sends you a chat request, it will appear here</p>
-                        </div>
-                    </div>
+            <div id="requestsPage" class="page">
+                <div class="requests-header">
+                    <h2>Chat Requests</h2>
+                </div>
+                <div class="requests-list" id="requestsList">
+                    <!-- Requests will be dynamically populated -->
                 </div>
             </div>
 
             <!-- Contacts Page -->
-            <div class="page" id="contactsPage">
-                <div class="contacts-page">
-                    <div class="contacts-header">
-                        <h2>Contacts</h2>
-                    </div>
-                    <div class="contacts-list" id="contactsList">
-                        <!-- Contacts will be dynamically loaded here -->
-                        <div class="empty-state">
-                            <i class="fas fa-address-book"></i>
-                            <h3>No contacts yet</h3>
-                            <p>Add contacts by accepting chat requests</p>
+            <div id="contactsPage" class="page">
+                <div class="contacts-header">
+                    <h2>Contacts</h2>
+                </div>
+                <div class="contacts-list" id="contactsList">
+                    <!-- Contacts will be dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Individual Chat Page -->
+            <div id="chatPage" class="page chat-page">
+                <div class="chat-header">
+                    <button id="backToHomeBtn" class="back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="chat-user-info">
+                        <img id="chatUserAvatar" src="" alt="" class="chat-user-avatar">
+                        <div class="chat-user-details">
+                            <h3 id="chatUserName">Loading...</h3>
+                            <div class="chat-status">
+                                <span class="status-dot" id="chatUserStatus"></span>
+                                <span id="chatStatusText">offline</span>
+                            </div>
                         </div>
                     </div>
+                    <div class="chat-actions">
+                        <button id="chatMenuBtn" class="icon-btn">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Messages will be dynamically populated -->
+                </div>
+
+                <div class="message-input-area">
+                    <button id="attachBtn" class="attach-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    
+                    <div class="message-input-container">
+                        <textarea id="messageInput" class="message-input" placeholder="iMessage" rows="1"></textarea>
+                    </div>
+                    
+                    <button id="sendMessageBtn" class="send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+
+                <!-- Attachment Options -->
+                <div id="attachmentOptions" class="attachment-options">
+                    <button class="attachment-btn" data-type="photo">
+                        <i class="fas fa-image"></i>
+                        <span>Photo</span>
+                    </button>
+                    <button class="attachment-btn" data-type="video">
+                        <i class="fas fa-video"></i>
+                        <span>Video</span>
+                    </button>
+                    <button class="attachment-btn" data-type="document">
+                        <i class="fas fa-file"></i>
+                        <span>Document</span>
+                    </button>
+                    <button class="attachment-btn" data-type="location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Location</span>
+                    </button>
+                    <button class="attachment-btn" data-type="viewOnce">
+                        <i class="fas fa-eye"></i>
+                        <span>View Once</span>
+                    </button>
+                    <button class="attachment-btn" data-type="voice">
+                        <i class="fas fa-microphone"></i>
+                        <span>Voice</span>
+                    </button>
                 </div>
             </div>
         </main>
 
-        <!-- Floating Chat Button -->
-        <button class="floating-btn" id="startChatBtn">
-            <i class="fas fa-comment-alt"></i>
+        <!-- Floating Start Chat Button -->
+        <button id="startChatBtn" class="floating-btn">
+            <i class="fas fa-comment"></i>
             <span>CHAT</span>
         </button>
-
-        <!-- Profile Dropdown -->
-        <div class="dropdown">
-            <div class="dropdown-content" id="profileDropdown">
-                <button class="dropdown-item" id="viewProfileBtn">
-                    <i class="fas fa-user"></i> View Profile
-                </button>
-                <button class="dropdown-item" id="settingsBtn">
-                    <i class="fas fa-cog"></i> Settings
-                </button>
-                <button class="dropdown-item" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> Log Out
-                </button>
-            </div>
-        </div>
     </div>
 
     <!-- Modals -->
-    <div class="modal-overlay" id="modalOverlay">
+    <div id="startChatModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle">Start New Chat</h3>
-                <button class="close-modal" id="closeModal">&times;</button>
+                <h3>Start New Chat</h3>
+                <button class="close-modal" data-modal="startChatModal">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Modal content will be dynamically loaded here -->
+            <div class="modal-body">
+                <div class="search-input-group">
+                    <input type="text" id="searchUserIdInput" placeholder="Enter User ID (ZYN-XXXX)" maxlength="8">
+                </div>
+                <div id="searchResult" class="search-result" style="display: none;">
+                    <div class="user-found">
+                        <img id="foundUserAvatar" src="" alt="" class="user-found-avatar">
+                        <div class="user-found-info">
+                            <h4 id="foundUserName">John Doe</h4>
+                            <p id="foundUserId">ZYN-1234</p>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="sendRequestBtn" class="action-btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Send Chat Request
+                        </button>
+                    </div>
+                </div>
+                <div id="userNotFound" style="display: none; text-align: center; padding: 20px; color: var(--gray-500);">
+                    <i class="fas fa-user-slash fa-2x" style="margin-bottom: 10px;"></i>
+                    <p>User not found. Please check the User ID.</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
+    <div id="createZyneModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Zyne</h3>
+                <button class="close-modal" data-modal="createZyneModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="create-zyne">
+                    <textarea id="zyneTextInput" class="create-input" placeholder="What's on your mind?" maxlength="500"></textarea>
+                    <div id="zyneMediaPreview" class="media-preview"></div>
+                    <div class="create-actions">
+                        <div>
+                            <button id="addZynePhotoBtn" class="icon-btn">
+                                <i class="fas fa-image"></i>
+                            </button>
+                            <button id="addZyneVideoBtn" class="icon-btn">
+                                <i class="fas fa-video"></i>
+                            </button>
+                        </div>
+                        <button id="postZyneBtn" class="btn-primary">
+                            <i class="fas fa-paper-plane"></i> Post
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="createGroupModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Group</h3>
+                <button class="close-modal" data-modal="createGroupModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <i class="fas fa-users"></i>
+                    <input type="text" id="groupNameInput" placeholder="Group Name" required>
+                </div>
+                <div class="profile-upload-section">
+                    <label class="upload-label">Group Photo</label>
+                    <div class="profile-upload-container">
+                        <div id="groupPhotoPreview" class="upload-preview">
+                            <div class="preview-placeholder">
+                                <i class="fas fa-users"></i>
+                                <span>No image</span>
+                            </div>
+                        </div>
+                        <div class="upload-buttons">
+                            <button type="button" id="uploadGroupPhotoBtn" class="btn-upload">
+                                <i class="fas fa-upload"></i> Upload
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="groupPhotoInput" accept="image/*" style="display: none;">
+                </div>
+                <div class="member-search-input">
+                    <input type="text" id="searchMemberInput" placeholder="Search contacts to add...">
+                </div>
+                <div class="members-list" id="membersSelectionList">
+                    <!-- Members will be dynamically populated -->
+                </div>
+                <div class="modal-actions">
+                    <button id="createGroupSubmitBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Create Group
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewProfileModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Profile</h3>
+                <button class="close-modal" data-modal="viewProfileModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; padding: 20px;">
+                    <img id="viewProfilePic" src="" alt="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 15px;">
+                    <h3 id="viewProfileName" style="margin-bottom: 5px;"></h3>
+                    <p id="viewProfileId" style="color: var(--gray-600); margin-bottom: 10px;"></p>
+                    <p id="viewProfileEmail" style="color: var(--gray-600); margin-bottom: 10px;"></p>
+                    <p id="viewProfilePhone" style="color: var(--gray-600); margin-bottom: 20px;"></p>
+                    <p id="viewProfileStatus" style="color: var(--gray-500); font-size: 12px;">
+                        <i class="fas fa-circle" style="color: var(--gray-400);"></i> Last seen recently
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mediaViewerModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 90vw; max-height: 90vh;">
+            <div class="modal-header">
+                <h3 id="mediaViewerTitle"></h3>
+                <button class="close-modal" data-modal="mediaViewerModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 0; display: flex; align-items: center; justify-content: center; min-height: 300px;">
+                <img id="mediaViewerImage" src="" alt="" style="max-width: 100%; max-height: 70vh; object-fit: contain; display: none;">
+                <video id="mediaViewerVideo" controls style="max-width: 100%; max-height: 70vh; display: none;"></video>
+                <div id="locationViewer" style="width: 100%; height: 300px; display: none;"></div>
+                <div id="documentViewer" style="padding: 20px; text-align: center; display: none;">
+                    <i class="fas fa-file fa-4x" style="color: var(--gray-400); margin-bottom: 15px;"></i>
+                    <h4 id="documentName"></h4>
+                    <p id="documentSize"></p>
+                    <button id="downloadDocumentBtn" class="btn-primary mt-4">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="voiceRecorderModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Voice Message</h3>
+                <button class="close-modal" data-modal="voiceRecorderModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 30px;">
+                <div id="voiceVisualizer" style="width: 100%; height: 60px; background: var(--gray-100); border-radius: var(--radius-md); margin-bottom: 20px; display: flex; align-items: center; justify-content: center;">
+                    <div id="voiceLevel" style="width: 80%; height: 30px; background: var(--blue); border-radius: 15px; transform: scaleX(0); transform-origin: left; transition: transform 0.1s;"></div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <span id="recordingTime">00:00</span>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 20px;">
+                    <button id="startRecordingBtn" class="btn-danger" style="width: 60px; height: 60px; border-radius: 50%;">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button id="stopRecordingBtn" class="btn-primary" style="width: 60px; height: 60px; border-radius: 50%; display: none;">
+                        <i class="fas fa-stop"></i>
+                    </button>
+                    <button id="playRecordingBtn" class="btn-secondary" style="width: 60px; height: 60px; border-radius: 50%; display: none;">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button id="sendRecordingBtn" class="btn-primary" style="width: 60px; height: 60px; border-radius: 50%; display: none;">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div id="recordingStatus" style="margin-top: 15px; color: var(--gray-600);">
+                    Tap and hold to record
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="locationPickerModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 90vw; height: 80vh;">
+            <div class="modal-header">
+                <h3>Share Location</h3>
+                <button class="close-modal" data-modal="locationPickerModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 0; height: calc(80vh - 60px);">
+                <div id="locationPickerMap" style="width: 100%; height: 70%;"></div>
+                <div style="padding: 15px;">
+                    <div id="selectedLocationInfo" style="margin-bottom: 15px;">
+                        <h4 id="selectedLocationName">Getting location...</h4>
+                        <p id="selectedLocationAddress" style="color: var(--gray-600); font-size: 13px;"></p>
+                    </div>
+                    <button id="sendLocationBtn" class="btn-primary" style="width: 100%;">
+                        <i class="fas fa-paper-plane"></i> Send Location
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="chatMenuDropdown" class="dropdown-content" style="position: fixed; top: 60px; right: 16px; display: none;">
+        <button class="dropdown-item" id="addNicknameBtn">
+            <i class="fas fa-tag"></i> Add Nickname
+        </button>
+        <button class="dropdown-item" id="viewChatProfileBtn">
+            <i class="fas fa-user"></i> View Profile
+        </button>
+        <button class="dropdown-item" id="blockUserBtn">
+            <i class="fas fa-ban"></i> Block User
+        </button>
+        <button class="dropdown-item" id="addToFavoritesBtn">
+            <i class="fas fa-star"></i> Add to Favorites
+        </button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item danger" id="deleteChatBtn">
+            <i class="fas fa-trash"></i> Delete Chat
+        </button>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
