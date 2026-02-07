@@ -6,8 +6,14 @@
     <title>Zynapse - Secure Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="zynaps.png">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <!-- Cloudinary Upload Widget -->
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
     <style>
         /* ==================== ZYNAPSE iOS THEMED CHAT APP - PRODUCTION CSS ==================== */
         /* Reset & Base Styles - Compact iOS Style */
@@ -91,6 +97,33 @@
             --transition-spring: 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        /* Dark Mode Variables */
+        .dark-mode {
+            --white: #000000;
+            --white-98: #0a0a0a;
+            --white-95: #121212;
+            --gray-50: #1c1c1e;
+            --gray-100: #2c2c2e;
+            --gray-150: #3a3a3c;
+            --gray-200: #48484a;
+            --gray-300: #636366;
+            --gray-400: #8e8e93;
+            --gray-500: #aeaeb2;
+            --gray-600: #c7c7cc;
+            --gray-700: #d1d1d6;
+            --gray-800: #e0e0e0;
+            --gray-900: #f2f2f2;
+            --black: #ffffff;
+            
+            --blue: #0a84ff;
+            --blue-light: rgba(10, 132, 255, 0.1);
+            --green: #30d158;
+            --red: #ff453a;
+            --orange: #ff9f0a;
+            --purple: #bf5af2;
+            --yellow: #ffd60a;
+        }
+
         /* Base Styles */
         html {
             font-size: 15px;
@@ -110,6 +143,7 @@
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
+            transition: background-color var(--transition-normal);
         }
 
         /* Safe Area Insets for Notch Devices */
@@ -214,6 +248,11 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             background: rgba(255, 255, 255, 0.92);
+            transition: all var(--transition-normal);
+        }
+
+        .dark-mode .app-header {
+            background: rgba(28, 28, 30, 0.92);
         }
 
         .header-left {
@@ -230,6 +269,7 @@
             border-radius: var(--radius-sm);
             object-fit: contain;
             flex-shrink: 0;
+            cursor: pointer;
         }
 
         .user-info {
@@ -322,6 +362,11 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             background: rgba(255, 255, 255, 0.92);
+            transition: all var(--transition-normal);
+        }
+
+        .dark-mode .app-nav {
+            background: rgba(28, 28, 30, 0.92);
         }
 
         .nav-item {
@@ -397,6 +442,7 @@
             justify-content: center;
             padding: 0 4px;
             border: 1.5px solid var(--white);
+            animation: badgePulse 2s infinite;
         }
 
         /* Main Content */
@@ -407,6 +453,7 @@
             background: var(--white);
             position: relative;
             -webkit-overflow-scrolling: touch;
+            transition: background-color var(--transition-normal);
         }
 
         .page {
@@ -419,7 +466,7 @@
             display: flex;
         }
 
-        /* Home Page - Empty Chat List */
+        /* Home Page - Chat List */
         .home-page {
             display: flex;
             flex-direction: column;
@@ -436,6 +483,11 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             background: rgba(255, 255, 255, 0.92);
+            transition: all var(--transition-normal);
+        }
+
+        .dark-mode .chats-header {
+            background: rgba(28, 28, 30, 0.92);
         }
 
         .chats-header h2 {
@@ -457,7 +509,7 @@
             border-bottom: 1px solid var(--gray-100);
             background: var(--white);
             cursor: pointer;
-            transition: background var(--transition-fast);
+            transition: all var(--transition-fast);
             position: relative;
         }
 
@@ -476,6 +528,18 @@
             object-fit: cover;
             margin-right: 12px;
             flex-shrink: 0;
+            position: relative;
+        }
+
+        .online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            background: var(--green);
+            border: 2px solid var(--white);
+            border-radius: var(--radius-circle);
         }
 
         .chat-info {
@@ -582,6 +646,11 @@
             transition: all var(--transition-spring);
             z-index: 1000;
             touch-action: manipulation;
+            cursor: grab;
+        }
+
+        .floating-btn:active {
+            cursor: grabbing;
         }
 
         .floating-btn i {
@@ -695,6 +764,12 @@
             background: var(--white);
             color: var(--black);
             font-family: var(--font-sf);
+            transition: all var(--transition-normal);
+        }
+
+        .search-input-group input:focus {
+            outline: none;
+            border-color: var(--blue);
         }
 
         .search-result {
@@ -762,6 +837,24 @@
             gap: 6px;
         }
 
+        .btn-primary {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #0066d6;
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-200);
+        }
+
         /* ==================== CHAT PAGE STYLES ==================== */
         .chat-page {
             display: flex;
@@ -786,6 +879,11 @@
             -webkit-backdrop-filter: blur(20px);
             background: rgba(255, 255, 255, 0.92);
             flex-shrink: 0;
+            transition: all var(--transition-normal);
+        }
+
+        .dark-mode .chat-header {
+            background: rgba(28, 28, 30, 0.92);
         }
 
         .back-btn {
@@ -854,6 +952,7 @@
 
         .status-dot.online {
             background: var(--green);
+            animation: pulse 2s infinite;
         }
 
         .chat-actions {
@@ -894,6 +993,7 @@
             gap: 12px;
             position: relative;
             -webkit-overflow-scrolling: touch;
+            transition: background-color var(--transition-normal);
         }
 
         /* Custom Scrollbar */
@@ -951,6 +1051,7 @@
             font-size: 15px;
             box-shadow: var(--shadow-subtle);
             max-width: 100%;
+            transition: background-color var(--transition-normal);
         }
 
         .message.received .message-bubble {
@@ -977,6 +1078,21 @@
             white-space: pre-wrap;
         }
 
+        .message-status {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 4px;
+            font-size: 10px;
+        }
+
+        .message.sent .message-status {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .message.received .message-status {
+            color: var(--gray-600);
+        }
+
         .message-time {
             display: block;
             text-align: right;
@@ -995,6 +1111,33 @@
 
         .message.received .message-time {
             color: var(--gray-600);
+        }
+
+        /* Message Reactions */
+        .message-reactions {
+            position: absolute;
+            bottom: -8px;
+            right: 8px;
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 2px 6px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            box-shadow: var(--shadow-subtle);
+            z-index: 1;
+        }
+
+        .message.sent .message-reactions {
+            right: auto;
+            left: 8px;
+        }
+
+        .reaction {
+            font-size: 12px;
+            cursor: pointer;
+            padding: 2px;
         }
 
         /* Media Messages */
@@ -1085,6 +1228,11 @@
             -webkit-backdrop-filter: blur(20px);
             background: rgba(255, 255, 255, 0.92);
             flex-shrink: 0;
+            transition: all var(--transition-normal);
+        }
+
+        .dark-mode .message-input-area {
+            background: rgba(28, 28, 30, 0.92);
         }
 
         .message-input-container {
@@ -1115,9 +1263,6 @@
             resize: none;
             max-height: 100px;
             line-height: 1.3;
-        }
-
-        .message-input:focus {
             outline: none;
         }
 
@@ -1170,6 +1315,31 @@
         .send-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        /* Voice Recording */
+        .voice-recording {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: var(--red);
+            color: white;
+            border-radius: var(--radius-lg);
+            animation: pulse 1.5s infinite;
+        }
+
+        .recording-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: var(--radius-circle);
+            animation: blink 1s infinite;
+        }
+
+        .recording-timer {
+            font-size: 14px;
+            font-weight: 600;
         }
 
         /* Attachment Options */
@@ -1239,6 +1409,11 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             background: rgba(255, 255, 255, 0.92);
+            transition: all var(--transition-normal);
+        }
+
+        .dark-mode .zynes-header {
+            background: rgba(28, 28, 30, 0.92);
         }
 
         .zynes-header h2 {
@@ -1251,6 +1426,7 @@
             padding: 16px;
             border-bottom: 1px solid var(--gray-150);
             background: var(--white);
+            transition: background-color var(--transition-normal);
         }
 
         .create-input {
@@ -1264,6 +1440,9 @@
             min-height: 60px;
             margin-bottom: 12px;
             background: var(--white);
+            color: var(--black);
+            outline: none;
+            transition: all var(--transition-normal);
         }
 
         .create-input:focus {
@@ -1329,6 +1508,7 @@
             margin-bottom: 16px;
             overflow: hidden;
             animation: fadeIn 0.3s ease;
+            transition: all var(--transition-normal);
         }
 
         .zyne-header {
@@ -1435,6 +1615,8 @@
             font-size: 14px;
             margin-bottom: 8px;
             background: var(--white);
+            color: var(--black);
+            outline: none;
         }
 
         .comment-list {
@@ -1498,6 +1680,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: all var(--transition-normal);
+        }
+
+        .dark-mode .groups-header {
+            background: rgba(28, 28, 30, 0.92);
         }
 
         .groups-header h2 {
@@ -1518,6 +1705,11 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            transition: all var(--transition-normal);
+        }
+
+        .create-group-btn:hover {
+            background: #0066d6;
         }
 
         .groups-list {
@@ -1600,6 +1792,11 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             background: rgba(255, 255, 255, 0.92);
+            transition: all var(--transition-normal);
+        }
+
+        .dark-mode .contacts-header {
+            background: rgba(28, 28, 30, 0.92);
         }
 
         .contacts-header h2 {
@@ -1664,20 +1861,6 @@
             gap: 4px;
         }
 
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: var(--radius-circle);
-        }
-
-        .status-dot.online {
-            background: var(--green);
-        }
-
-        .status-dot.offline {
-            background: var(--gray-400);
-        }
-
         .contact-actions {
             display: flex;
             gap: 6px;
@@ -1699,6 +1882,11 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             background: rgba(255, 255, 255, 0.92);
+            transition: all var(--transition-normal);
+        }
+
+        .dark-mode .requests-header {
+            background: rgba(28, 28, 30, 0.92);
         }
 
         .requests-header h2 {
@@ -1720,6 +1908,7 @@
             border: 1px solid var(--gray-150);
             margin-bottom: 12px;
             animation: fadeIn 0.3s ease;
+            transition: background-color var(--transition-normal);
         }
 
         .request-header {
@@ -2019,6 +2208,16 @@
             50% { transform: scale(1.1); }
         }
 
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
         /* ==================== RESPONSIVE DESIGN ==================== */
         @media (max-width: 768px) {
             html {
@@ -2295,10 +2494,13 @@
             color: var(--gray-500);
             font-size: 24px;
             position: relative;
+            overflow: hidden;
         }
 
-        .location-map i {
-            position: absolute;
+        .location-map img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .location-info {
@@ -2371,6 +2573,11 @@
             justify-content: center;
             cursor: pointer;
             flex-shrink: 0;
+            transition: all var(--transition-normal);
+        }
+
+        .voice-play-btn:hover {
+            background: #0066d6;
         }
 
         .voice-waveform {
@@ -2496,6 +2703,191 @@
                 -webkit-overflow-scrolling: touch;
             }
         }
+
+        /* Create Group Modal Styles */
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .input-group i {
+            color: var(--gray-500);
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            background: var(--white);
+            color: var(--black);
+            font-size: 15px;
+            outline: none;
+        }
+
+        .profile-upload-section {
+            margin-bottom: 20px;
+        }
+
+        .upload-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        .profile-upload-container {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .upload-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-circle);
+            overflow: hidden;
+            border: 2px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gray-50);
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: var(--gray-500);
+        }
+
+        .preview-placeholder i {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .preview-placeholder span {
+            font-size: 12px;
+            display: block;
+        }
+
+        .upload-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-upload, .btn-remove {
+            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all var(--transition-normal);
+        }
+
+        .btn-upload {
+            background: var(--blue);
+            color: white;
+        }
+
+        .btn-upload:hover {
+            background: #0066d6;
+        }
+
+        .btn-remove {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .btn-remove:hover {
+            background: var(--gray-200);
+        }
+
+        .member-search-input {
+            margin-bottom: 16px;
+        }
+
+        .member-search-input input {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            background: var(--white);
+            color: var(--black);
+            outline: none;
+        }
+
+        .members-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            transition: background-color var(--transition-normal);
+        }
+
+        .member-item:hover {
+            background: var(--gray-50);
+        }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .member-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-circle);
+            object-fit: cover;
+        }
+
+        .member-name {
+            font-size: 14px;
+            color: var(--black);
+            font-weight: 500;
+        }
+
+        .member-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .member-checkbox.checked {
+            background: var(--blue);
+            border-color: var(--blue);
+            position: relative;
+        }
+
+        .member-checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -2514,9 +2906,9 @@
     <!-- Main App Container -->
     <div class="app-home" id="appHome">
         <!-- App Header -->
-        <header class="app-header">
+        <header class="app-header safe-area-top">
             <div class="header-left">
-                <img src="zynaps.png" alt="Zynapse Logo" class="header-logo">
+                <img src="zynaps.png" alt="Zynapse Logo" class="header-logo" onclick="switchPage('home')">
                 <div class="user-info">
                     <h2 id="userName">Loading...</h2>
                     <div class="user-id-container">
@@ -2535,11 +2927,17 @@
                     <i class="fas fa-chevron-down"></i>
                 </button>
                 <div class="dropdown-content" id="profileDropdown">
-                    <button class="dropdown-item" onclick="viewProfile()">
-                        <i class="fas fa-user"></i> My Profile
+                    <button class="dropdown-item" onclick="openProfileModal()">
+                        <i class="fas fa-user"></i> View Profile
                     </button>
-                    <button class="dropdown-item" onclick="openSettings()">
-                        <i class="fas fa-cog"></i> Settings
+                    <button class="dropdown-item" onclick="openEditProfileModal()">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                    <button class="dropdown-item" onclick="openPrivacySettings()">
+                        <i class="fas fa-lock"></i> Privacy Settings
+                    </button>
+                    <button class="dropdown-item" onclick="openNotificationSettings()">
+                        <i class="fas fa-bell"></i> Notifications
                     </button>
                     <button class="dropdown-item" onclick="toggleTheme()">
                         <i class="fas fa-moon"></i> Dark Mode
@@ -2684,7 +3082,7 @@
         </main>
 
         <!-- Floating Start Chat Button -->
-        <button class="floating-btn" onclick="openStartChatModal()">
+        <button class="floating-btn safe-area-bottom" id="floatingBtn" onclick="openStartChatModal()">
             <i class="fas fa-plus"></i>
             <span>CHAT</span>
         </button>
@@ -2769,6 +3167,264 @@
         </div>
     </div>
 
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>My Profile</h3>
+                <button class="close-modal" onclick="closeProfileModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-display">
+                    <img src="https://via.placeholder.com/150" alt="Profile" id="profileModalImage" style="width: 100px; height: 100px; border-radius: var(--radius-circle); object-fit: cover; margin: 0 auto 20px; display: block;">
+                    <h3 style="text-align: center; margin-bottom: 8px;" id="profileModalName">Loading...</h3>
+                    <p style="text-align: center; color: var(--gray-600); margin-bottom: 20px;" id="profileModalId">ZYN-XXXX</p>
+                    <div class="profile-info">
+                        <div class="info-item">
+                            <span class="info-label">Status</span>
+                            <span class="info-value" id="profileModalStatus">Online</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Seen</span>
+                            <span class="info-value" id="profileModalLastSeen">Just now</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Member Since</span>
+                            <span class="info-value" id="profileModalMemberSince">2024</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Profile</h3>
+                <button class="close-modal" onclick="closeEditProfileModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-upload-section">
+                    <label class="upload-label">Profile Picture</label>
+                    <div class="profile-upload-container">
+                        <div class="upload-preview">
+                            <img src="https://via.placeholder.com/150" alt="Profile" id="editProfileImage" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div class="upload-buttons">
+                            <button class="btn-upload" onclick="openProfileImageUploader()">
+                                <i class="fas fa-upload"></i> Upload
+                            </button>
+                            <button class="btn-remove" onclick="removeProfileImage()">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="editName" placeholder="Full Name">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-info-circle"></i>
+                    <input type="text" id="editStatus" placeholder="Status">
+                </div>
+                <div class="modal-actions">
+                    <button class="action-btn btn-secondary" onclick="closeEditProfileModal()">
+                        Cancel
+                    </button>
+                    <button class="action-btn btn-primary" onclick="saveProfile()">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Settings Modal -->
+    <div class="modal-overlay" id="privacyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Privacy Settings</h3>
+                <button class="close-modal" onclick="closePrivacyModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="privacy-item">
+                    <div class="privacy-info">
+                        <h4>Last Seen & Online</h4>
+                        <p>Who can see your last seen and online status</p>
+                    </div>
+                    <select id="privacyLastSeen" class="privacy-select">
+                        <option value="everyone">Everyone</option>
+                        <option value="contacts">My Contacts</option>
+                        <option value="nobody">Nobody</option>
+                    </select>
+                </div>
+                <div class="privacy-item">
+                    <div class="privacy-info">
+                        <h4>Profile Photo</h4>
+                        <p>Who can see your profile photo</p>
+                    </div>
+                    <select id="privacyProfilePhoto" class="privacy-select">
+                        <option value="everyone">Everyone</option>
+                        <option value="contacts">My Contacts</option>
+                        <option value="nobody">Nobody</option>
+                    </select>
+                </div>
+                <div class="privacy-item">
+                    <div class="privacy-info">
+                        <h4>Status Updates</h4>
+                        <p>Who can see your status updates</p>
+                    </div>
+                    <select id="privacyStatus" class="privacy-select">
+                        <option value="everyone">Everyone</option>
+                        <option value="contacts">My Contacts</option>
+                        <option value="nobody">Nobody</option>
+                    </select>
+                </div>
+                <div class="privacy-item">
+                    <div class="privacy-info">
+                        <h4>Read Receipts</h4>
+                        <p>Send and receive read receipts</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="privacyReadReceipts" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button class="action-btn btn-secondary" onclick="closePrivacyModal()">
+                        Cancel
+                    </button>
+                    <button class="action-btn btn-primary" onclick="savePrivacySettings()">
+                        Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Settings Modal -->
+    <div class="modal-overlay" id="notificationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Notification Settings</h3>
+                <button class="close-modal" onclick="closeNotificationModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="notification-item">
+                    <div class="notification-info">
+                        <h4>Message Notifications</h4>
+                        <p>Receive notifications for new messages</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="notifyMessages" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <div class="notification-info">
+                        <h4>Group Notifications</h4>
+                        <p>Receive notifications for group messages</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="notifyGroups" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <div class="notification-info">
+                        <h4>Zyne Notifications</h4>
+                        <p>Receive notifications for Zyne updates</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="notifyZynes" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <div class="notification-info">
+                        <h4>Request Notifications</h4>
+                        <p>Receive notifications for chat requests</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="notifyRequests" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <div class="notification-info">
+                        <h4>Sound</h4>
+                        <p>Play sound for notifications</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="notifySound" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <div class="notification-info">
+                        <h4>Vibration</h4>
+                        <p>Vibrate for notifications</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="notifyVibration" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button class="action-btn btn-secondary" onclick="closeNotificationModal()">
+                        Cancel
+                    </button>
+                    <button class="action-btn btn-primary" onclick="saveNotificationSettings()">
+                        Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Options Modal -->
+    <div class="modal-overlay" id="chatOptionsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Chat Options</h3>
+                <button class="close-modal" onclick="closeChatOptionsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <button class="dropdown-item" onclick="viewContactProfileFromChat()">
+                    <i class="fas fa-user"></i> View Profile
+                </button>
+                <button class="dropdown-item" onclick="addNickname()">
+                    <i class="fas fa-tag"></i> Add Nickname
+                </button>
+                <button class="dropdown-item" onclick="toggleFavorite()">
+                    <i class="fas fa-star"></i> Add to Favorites
+                </button>
+                <button class="dropdown-item danger" onclick="blockUser()">
+                    <i class="fas fa-ban"></i> Block User
+                </button>
+                <button class="dropdown-item danger" onclick="reportUser()">
+                    <i class="fas fa-flag"></i> Report
+                </button>
+                <button class="dropdown-item danger" onclick="deleteChat()">
+                    <i class="fas fa-trash"></i> Delete Chat
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Attachment Options Modal -->
     <div class="attachment-options" id="attachmentOptions">
         <button class="attachment-btn" onclick="attachPhoto()">
@@ -2797,6 +3453,164 @@
         </button>
     </div>
 
+    <!-- Add nickname modal -->
+    <div class="modal-overlay" id="nicknameModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Nickname</h3>
+                <button class="close-modal" onclick="closeNicknameModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <i class="fas fa-tag"></i>
+                    <input type="text" id="nicknameInput" placeholder="Enter nickname">
+                </div>
+                <div class="modal-actions">
+                    <button class="action-btn btn-secondary" onclick="closeNicknameModal()">
+                        Cancel
+                    </button>
+                    <button class="action-btn btn-primary" onclick="saveNickname()">
+                        Save Nickname
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report user modal -->
+    <div class="modal-overlay" id="reportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Report User</h3>
+                <button class="close-modal" onclick="closeReportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <i class="fas fa-flag"></i>
+                    <select id="reportReason">
+                        <option value="spam">Spam</option>
+                        <option value="harassment">Harassment</option>
+                        <option value="inappropriate">Inappropriate Content</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-comment"></i>
+                    <textarea id="reportDetails" placeholder="Additional details (optional)" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="action-btn btn-secondary" onclick="closeReportModal()">
+                        Cancel
+                    </button>
+                    <button class="action-btn btn-primary" onclick="submitReport()">
+                        Submit Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Switch styles for dark/light mode -->
+    <style>
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--gray-300);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--blue);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .privacy-item, .notification-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-150);
+        }
+
+        .privacy-info, .notification-info {
+            flex: 1;
+        }
+
+        .privacy-info h4, .notification-info h4 {
+            font-size: 15px;
+            color: var(--black);
+            margin-bottom: 4px;
+        }
+
+        .privacy-info p, .notification-info p {
+            font-size: 13px;
+            color: var(--gray-600);
+        }
+
+        .privacy-select {
+            padding: 8px 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            background: var(--white);
+            color: var(--black);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-150);
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .info-value {
+            color: var(--black);
+        }
+    </style>
+
     <script>
         // Firebase Configuration
         const firebaseConfig = {
@@ -2814,29 +3628,59 @@
         const CLOUDINARY_CONFIG = {
             cloudName: 'dd3lcymrk',
             apiKey: '489857926297197',
-            apiSecret: 'RHDQG1YP6jqvn4UADq3nJWHIeHQ',
             uploadPreset: 'h3eyhc2o',
-            folder: 'zynapse',
-            environmentVariable: 'CLOUDINARY_URL=cloudinary://489857926297197:RHDQG1YP6jqvn4UADq3nJWHIeHQ@dd3lcymrk'
+            folder: 'zynapse'
         };
+
+        // Initialize Firebase
+        let firebaseApp, auth, database, storage;
+        try {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            database = firebase.database();
+            storage = firebase.storage();
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+        }
 
         // Global variables
         let currentUser = null;
         let currentChat = null;
+        let currentGroup = null;
         let contacts = [];
         let chatRequests = [];
         let groups = [];
         let zynes = [];
         let chats = [];
+        let unreadCounts = {
+            home: 0,
+            requests: 0,
+            zynes: 0,
+            groups: 0,
+            contacts: 0
+        };
         let cloudinaryWidget = null;
         let groupImageUrl = '';
         let zyneMediaUrls = [];
         let isRecording = false;
         let mediaRecorder = null;
         let audioChunks = [];
+        let recordingTimer = null;
+        let recordingStartTime = null;
+        let typingTimeout = null;
+        let onlineStatusInterval = null;
+        let lastSeenUpdate = null;
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        let userPresenceRef = null;
+        let userStatusRef = null;
 
         // Initialize application
         document.addEventListener('DOMContentLoaded', async function() {
+            // Set dark mode if enabled
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+            }
+
             // Check if user is logged in
             const savedUser = localStorage.getItem('zynapse_user');
             if (!savedUser) {
@@ -2847,10 +3691,13 @@
             try {
                 currentUser = JSON.parse(savedUser);
                 
+                // Initialize Firebase user
+                if (auth.currentUser) {
+                    await setupUserPresence();
+                }
+                
                 // Update UI with user data
-                document.getElementById('userName').textContent = currentUser.name || 'User';
-                document.getElementById('userId').textContent = currentUser.userId || 'ZYN-XXXX';
-                document.getElementById('profilePic').src = currentUser.profilePicture || 'https://via.placeholder.com/150';
+                updateUserUI();
                 
                 // Hide loading screen
                 setTimeout(() => {
@@ -2865,8 +3712,11 @@
                 await loadZynes();
                 await loadChats();
                 
-                // Start real-time updates simulation
-                simulateRealtimeUpdates();
+                // Start real-time listeners
+                setupRealtimeListeners();
+                
+                // Setup floating button drag
+                setupFloatingButtonDrag();
                 
                 showToast('Welcome back to Zynapse!', 'success');
                 
@@ -2882,385 +3732,290 @@
             }
         });
 
-        // Firebase Simulation
-        class FirebaseDatabase {
-            constructor() {
-                this.db = JSON.parse(localStorage.getItem('zynapse_database') || '{}');
-                this.messages = JSON.parse(localStorage.getItem('zynapse_messages') || '{}');
-                this.groups = JSON.parse(localStorage.getItem('zynapse_groups') || '{}');
-                this.contacts = JSON.parse(localStorage.getItem('zynapse_contacts') || '{}');
-                this.zynes = JSON.parse(localStorage.getItem('zynapse_zynes') || '{}');
-                this.requests = JSON.parse(localStorage.getItem('zynapse_requests') || '{}');
-            }
+        // Setup user presence in Firebase
+        async function setupUserPresence() {
+            if (!auth.currentUser) return;
+            
+            const uid = auth.currentUser.uid;
+            userPresenceRef = database.ref(`users/${uid}/presence`);
+            userStatusRef = database.ref(`users/${uid}/status`);
+            
+            // Set user as online
+            await userPresenceRef.set({
+                online: true,
+                lastSeen: null
+            });
+            
+            // Update status
+            await userStatusRef.set({
+                status: 'online',
+                lastUpdated: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Setup disconnect handler
+            userPresenceRef.onDisconnect().set({
+                online: false,
+                lastSeen: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Update last seen periodically
+            onlineStatusInterval = setInterval(async () => {
+                if (userPresenceRef) {
+                    await userPresenceRef.update({
+                        lastSeen: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }
+            }, 30000); // Every 30 seconds
+        }
 
-            // User operations
-            getUser(userId) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        // Find user by ZYN-ID
-                        for (const uid in this.db) {
-                            if (this.db[uid].userId === userId) {
-                                resolve({ ...this.db[uid], uid });
-                                return;
-                            }
-                        }
-                        resolve(null);
-                    }, 300);
-                });
+        // Update user UI
+        function updateUserUI() {
+            document.getElementById('userName').textContent = currentUser.name || 'User';
+            document.getElementById('userId').textContent = currentUser.userId || 'ZYN-XXXX';
+            document.getElementById('profilePic').src = currentUser.profilePicture || 'https://via.placeholder.com/150';
+            
+            // Update profile modal if open
+            const profileModalImage = document.getElementById('profileModalImage');
+            const profileModalName = document.getElementById('profileModalName');
+            const profileModalId = document.getElementById('profileModalId');
+            if (profileModalImage) {
+                profileModalImage.src = currentUser.profilePicture || 'https://via.placeholder.com/150';
+                profileModalName.textContent = currentUser.name || 'User';
+                profileModalId.textContent = currentUser.userId || 'ZYN-XXXX';
             }
-
-            getUserByUid(uid) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve(this.db[uid] || null);
-                    }, 200);
-                });
-            }
-
-            updateUser(uid, updates) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        if (this.db[uid]) {
-                            this.db[uid] = { ...this.db[uid], ...updates };
-                            localStorage.setItem('zynapse_database', JSON.stringify(this.db));
-                        }
-                        resolve();
-                    }, 300);
-                });
-            }
-
-            // Chat operations
-            getChats(userId) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const userChats = [];
-                        for (const chatId in this.messages) {
-                            if (chatId.includes(userId)) {
-                                const chat = this.messages[chatId];
-                                const lastMessage = chat.messages && chat.messages.length > 0 
-                                    ? chat.messages[chat.messages.length - 1]
-                                    : null;
-                                
-                                userChats.push({
-                                    id: chatId,
-                                    userId: chat.userId,
-                                    userName: chat.userName,
-                                    userAvatar: chat.userAvatar,
-                                    lastMessage: lastMessage ? lastMessage.text : 'No messages yet',
-                                    timestamp: lastMessage ? lastMessage.timestamp : new Date().toISOString(),
-                                    unread: chat.unread || 0
-                                });
-                            }
-                        }
-                        resolve(userChats);
-                    }, 400);
-                });
-            }
-
-            getMessages(chatId) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const chat = this.messages[chatId];
-                        resolve(chat ? chat.messages || [] : []);
-                    }, 300);
-                });
-            }
-
-            sendMessage(chatId, message) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        if (!this.messages[chatId]) {
-                            this.messages[chatId] = {
-                                messages: [],
-                                unread: 0
-                            };
-                        }
-                        
-                        this.messages[chatId].messages.push(message);
-                        localStorage.setItem('zynapse_messages', JSON.stringify(this.messages));
-                        resolve(message);
-                    }, 300);
-                });
-            }
-
-            markAsRead(chatId, userId) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        if (this.messages[chatId]) {
-                            this.messages[chatId].unread = 0;
-                            localStorage.setItem('zynapse_messages', JSON.stringify(this.messages));
-                        }
-                        resolve();
-                    }, 200);
-                });
-            }
-
-            // Contact operations
-            getContacts(userId) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const userContacts = this.contacts[userId] || [];
-                        resolve(userContacts);
-                    }, 300);
-                });
-            }
-
-            addContact(userId, contact) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        if (!this.contacts[userId]) {
-                            this.contacts[userId] = [];
-                        }
-                        
-                        // Check if contact already exists
-                        const exists = this.contacts[userId].some(c => c.userId === contact.userId);
-                        if (!exists) {
-                            this.contacts[userId].push(contact);
-                            localStorage.setItem('zynapse_contacts', JSON.stringify(this.contacts));
-                        }
-                        resolve();
-                    }, 300);
-                });
-            }
-
-            removeContact(userId, contactId) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        if (this.contacts[userId]) {
-                            this.contacts[userId] = this.contacts[userId].filter(c => c.userId !== contactId);
-                            localStorage.setItem('zynapse_contacts', JSON.stringify(this.contacts));
-                        }
-                        resolve();
-                    }, 300);
-                });
-            }
-
-            // Request operations
-            getRequests(userId) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const userRequests = this.requests[userId] || [];
-                        resolve(userRequests);
-                    }, 300);
-                });
-            }
-
-            sendRequest(senderId, receiverId, requestData) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        if (!this.requests[receiverId]) {
-                            this.requests[receiverId] = [];
-                        }
-                        
-                        this.requests[receiverId].push({
-                            ...requestData,
-                            senderId,
-                            timestamp: new Date().toISOString(),
-                            status: 'pending'
-                        });
-                        
-                        localStorage.setItem('zynapse_requests', JSON.stringify(this.requests));
-                        resolve();
-                    }, 300);
-                });
-            }
-
-            updateRequestStatus(receiverId, senderId, status) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        if (this.requests[receiverId]) {
-                            const request = this.requests[receiverId].find(r => r.senderId === senderId);
-                            if (request) {
-                                request.status = status;
-                                localStorage.setItem('zynapse_requests', JSON.stringify(this.requests));
-                            }
-                        }
-                        resolve();
-                    }, 300);
-                });
-            }
-
-            // Group operations
-            getGroups(userId) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const userGroups = [];
-                        for (const groupId in this.groups) {
-                            const group = this.groups[groupId];
-                            if (group.members.includes(userId)) {
-                                userGroups.push({
-                                    id: groupId,
-                                    ...group
-                                });
-                            }
-                        }
-                        resolve(userGroups);
-                    }, 400);
-                });
-            }
-
-            createGroup(groupData) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const groupId = 'group_' + Date.now();
-                        this.groups[groupId] = {
-                            ...groupData,
-                            createdAt: new Date().toISOString(),
-                            messages: []
-                        };
-                        localStorage.setItem('zynapse_groups', JSON.stringify(this.groups));
-                        resolve(groupId);
-                    }, 500);
-                });
-            }
-
-            // Zyne operations
-            getZynes(userId) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        const userZynes = this.zynes[userId] || [];
-                        resolve(userZynes);
-                    }, 300);
-                });
-            }
-
-            createZyne(userId, zyneData) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        if (!this.zynes[userId]) {
-                            this.zynes[userId] = [];
-                        }
-                        
-                        const zyne = {
-                            id: 'zyne_' + Date.now(),
-                            ...zyneData,
-                            timestamp: new Date().toISOString(),
-                            likes: [],
-                            comments: [],
-                            views: []
-                        };
-                        
-                        this.zynes[userId].unshift(zyne);
-                        localStorage.setItem('zynapse_zynes', JSON.stringify(this.zynes));
-                        resolve(zyne);
-                    }, 400);
-                });
-            }
-
-            likeZyne(userId, zyneId, likerId) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        if (this.zynes[userId]) {
-                            const zyne = this.zynes[userId].find(z => z.id === zyneId);
-                            if (zyne) {
-                                if (!zyne.likes.includes(likerId)) {
-                                    zyne.likes.push(likerId);
-                                    localStorage.setItem('zynapse_zynes', JSON.stringify(this.zynes));
-                                }
-                            }
-                        }
-                        resolve();
-                    }, 300);
-                });
-            }
-
-            addComment(userId, zyneId, comment) {
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        if (this.zynes[userId]) {
-                            const zyne = this.zynes[userId].find(z => z.id === zyneId);
-                            if (zyne) {
-                                zyne.comments.push(comment);
-                                localStorage.setItem('zynapse_zynes', JSON.stringify(this.zynes));
-                            }
-                        }
-                        resolve();
-                    }, 300);
-                });
+            
+            // Update edit profile modal
+            const editProfileImage = document.getElementById('editProfileImage');
+            const editName = document.getElementById('editName');
+            const editStatus = document.getElementById('editStatus');
+            if (editProfileImage) {
+                editProfileImage.src = currentUser.profilePicture || 'https://via.placeholder.com/150';
+                editName.value = currentUser.name || '';
+                editStatus.value = currentUser.status || '';
             }
         }
 
-        const db = new FirebaseDatabase();
-
-        // Load user data
+        // Load user data from Firebase
         async function loadUserData() {
             try {
-                const userData = await db.getUserByUid(currentUser.uid);
-                if (userData) {
+                if (!auth.currentUser) return;
+                
+                const userRef = database.ref(`users/${auth.currentUser.uid}`);
+                const snapshot = await userRef.once('value');
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
                     currentUser = { ...currentUser, ...userData };
                     localStorage.setItem('zynapse_user', JSON.stringify(currentUser));
+                    
+                    // Update privacy settings
+                    if (userData.privacy) {
+                        document.getElementById('privacyLastSeen').value = userData.privacy.lastSeen || 'everyone';
+                        document.getElementById('privacyProfilePhoto').value = userData.privacy.profilePhoto || 'everyone';
+                        document.getElementById('privacyStatus').value = userData.privacy.status || 'everyone';
+                        document.getElementById('privacyReadReceipts').checked = userData.privacy.readReceipts !== false;
+                    }
+                    
+                    // Update notification settings
+                    if (userData.notifications) {
+                        document.getElementById('notifyMessages').checked = userData.notifications.messages !== false;
+                        document.getElementById('notifyGroups').checked = userData.notifications.groups !== false;
+                        document.getElementById('notifyZynes').checked = userData.notifications.zynes !== false;
+                        document.getElementById('notifyRequests').checked = userData.notifications.requests !== false;
+                        document.getElementById('notifySound').checked = userData.notifications.sound !== false;
+                        document.getElementById('notifyVibration').checked = userData.notifications.vibration !== false;
+                    }
                 }
             } catch (error) {
                 console.error('Error loading user data:', error);
             }
         }
 
-        // Load contacts
+        // Load contacts from Firebase
         async function loadContacts() {
             try {
-                contacts = await db.getContacts(currentUser.userId);
-                renderContacts();
+                if (!auth.currentUser) return;
+                
+                const contactsRef = database.ref(`users/${auth.currentUser.uid}/contacts`);
+                const snapshot = await contactsRef.once('value');
+                if (snapshot.exists()) {
+                    const contactsData = snapshot.val();
+                    contacts = Object.values(contactsData).filter(contact => contact.status !== 'blocked');
+                    renderContacts();
+                } else {
+                    contacts = [];
+                    renderContacts();
+                }
             } catch (error) {
                 console.error('Error loading contacts:', error);
             }
         }
 
-        // Load chat requests
+        // Load chat requests from Firebase
         async function loadChatRequests() {
             try {
-                chatRequests = await db.getRequests(currentUser.userId);
-                renderChatRequests();
-                updateBadge('requests', chatRequests.filter(r => r.status === 'pending').length);
+                if (!auth.currentUser) return;
+                
+                const requestsRef = database.ref(`users/${auth.currentUser.uid}/requests`);
+                const snapshot = await requestsRef.once('value');
+                if (snapshot.exists()) {
+                    const requestsData = snapshot.val();
+                    chatRequests = Object.values(requestsData).filter(request => request.status === 'pending');
+                    renderChatRequests();
+                    updateBadge('requests', chatRequests.length);
+                } else {
+                    chatRequests = [];
+                    renderChatRequests();
+                    updateBadge('requests', 0);
+                }
             } catch (error) {
                 console.error('Error loading chat requests:', error);
             }
         }
 
-        // Load groups
+        // Load groups from Firebase
         async function loadGroups() {
             try {
-                groups = await db.getGroups(currentUser.userId);
-                renderGroups();
+                if (!auth.currentUser) return;
+                
+                const groupsRef = database.ref('groups');
+                const snapshot = await groupsRef.once('value');
+                if (snapshot.exists()) {
+                    const groupsData = snapshot.val();
+                    groups = Object.entries(groupsData)
+                        .filter(([groupId, group]) => group.members && group.members[currentUser.userId])
+                        .map(([groupId, group]) => ({
+                            id: groupId,
+                            ...group
+                        }));
+                    renderGroups();
+                } else {
+                    groups = [];
+                    renderGroups();
+                }
             } catch (error) {
                 console.error('Error loading groups:', error);
             }
         }
 
-        // Load zynes
+        // Load zynes from Firebase
         async function loadZynes() {
             try {
-                // Load own zynes
-                const ownZynes = await db.getZynes(currentUser.userId);
+                if (!auth.currentUser) return;
                 
                 // Load zynes from contacts
-                let contactZynes = [];
-                for (const contact of contacts) {
-                    const zynes = await db.getZynes(contact.userId);
-                    contactZynes = [...contactZynes, ...zynes];
+                let allZynes = [];
+                
+                // Get current user's zynes
+                const userZynesRef = database.ref(`zynes/${currentUser.userId}`);
+                const userSnapshot = await userZynesRef.once('value');
+                if (userSnapshot.exists()) {
+                    const userZynes = userSnapshot.val();
+                    Object.values(userZynes).forEach(zyne => {
+                        allZynes.push({
+                            ...zyne,
+                            userId: currentUser.userId,
+                            userName: currentUser.name,
+                            userAvatar: currentUser.profilePicture
+                        });
+                    });
                 }
                 
-                zynes = [...ownZynes, ...contactZynes].sort((a, b) => 
-                    new Date(b.timestamp) - new Date(a.timestamp)
-                );
+                // Get zynes from contacts
+                for (const contact of contacts) {
+                    const contactZynesRef = database.ref(`zynes/${contact.userId}`);
+                    const contactSnapshot = await contactZynesRef.once('value');
+                    if (contactSnapshot.exists()) {
+                        const contactZynes = contactSnapshot.val();
+                        Object.values(contactZynes).forEach(zyne => {
+                            allZynes.push({
+                                ...zyne,
+                                userId: contact.userId,
+                                userName: contact.name,
+                                userAvatar: contact.profilePicture
+                            });
+                        });
+                    }
+                }
                 
+                // Sort by timestamp
+                zynes = allZynes.sort((a, b) => b.timestamp - a.timestamp);
                 renderZynes();
+                
             } catch (error) {
                 console.error('Error loading zynes:', error);
             }
         }
 
-        // Load chats
+        // Load chats from Firebase
         async function loadChats() {
             try {
-                chats = await db.getChats(currentUser.userId);
-                renderChats();
+                if (!auth.currentUser) return;
                 
-                // Calculate total unread messages
-                const totalUnread = chats.reduce((sum, chat) => sum + (chat.unread || 0), 0);
-                updateBadge('home', totalUnread);
+                const chatsRef = database.ref(`users/${auth.currentUser.uid}/chats`);
+                const snapshot = await chatsRef.once('value');
+                if (snapshot.exists()) {
+                    const chatsData = snapshot.val();
+                    chats = Object.values(chatsData)
+                        .sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+                    
+                    // Calculate unread count
+                    let totalUnread = 0;
+                    chats.forEach(chat => {
+                        if (chat.unreadCount) {
+                            totalUnread += chat.unreadCount;
+                        }
+                    });
+                    
+                    unreadCounts.home = totalUnread;
+                    updateBadge('home', totalUnread);
+                    renderChats();
+                } else {
+                    chats = [];
+                    renderChats();
+                    updateBadge('home', 0);
+                }
             } catch (error) {
                 console.error('Error loading chats:', error);
             }
+        }
+
+        // Setup real-time listeners
+        function setupRealtimeListeners() {
+            if (!auth.currentUser) return;
+            
+            const uid = auth.currentUser.uid;
+            
+            // Listen for new messages
+            database.ref(`users/${uid}/chats`).on('child_changed', async (snapshot) => {
+                await loadChats();
+            });
+            
+            // Listen for new chat requests
+            database.ref(`users/${uid}/requests`).on('child_added', async (snapshot) => {
+                await loadChatRequests();
+                if (snapshot.val().status === 'pending') {
+                    playNotificationSound();
+                    showToast('New chat request received!', 'info');
+                }
+            });
+            
+            // Listen for contact updates
+            database.ref(`users/${uid}/contacts`).on('value', async (snapshot) => {
+                await loadContacts();
+            });
+            
+            // Listen for group updates
+            database.ref('groups').on('value', async (snapshot) => {
+                await loadGroups();
+            });
+            
+            // Listen for zyne updates from contacts
+            contacts.forEach(contact => {
+                database.ref(`zynes/${contact.userId}`).on('child_added', async (snapshot) => {
+                    await loadZynes();
+                    showToast(`${contact.name} posted a new Zyne!`, 'info');
+                });
+            });
         }
 
         // Render contacts
@@ -3282,10 +4037,10 @@
                 <div class="contact-card" onclick="openChat('${contact.userId}')">
                     <div class="contact-avatar">
                         <img src="${contact.profilePicture || 'https://via.placeholder.com/150'}" alt="${contact.name}">
-                        <div class="status-dot ${contact.status || 'offline'}"></div>
+                        <div class="status-dot ${contact.online ? 'online' : 'offline'}"></div>
                     </div>
                     <div class="contact-info">
-                        <h3>${contact.name}</h3>
+                        <h3>${contact.nickname || contact.name}</h3>
                         <div class="contact-status">
                             <span>${contact.userId}</span>
                         </div>
@@ -3328,10 +4083,10 @@
                         </div>
                     </div>
                     <div class="request-actions">
-                        <button class="action-btn accept-btn" onclick="acceptRequest('${request.senderId}', '${request.userId}')">
+                        <button class="action-btn accept-btn" onclick="acceptRequest('${request.senderId}')">
                             <i class="fas fa-check"></i> Accept
                         </button>
-                        <button class="action-btn reject-btn" onclick="rejectRequest('${request.senderId}', '${request.userId}')">
+                        <button class="action-btn reject-btn" onclick="rejectRequest('${request.senderId}')">
                             <i class="fas fa-times"></i> Reject
                         </button>
                     </div>
@@ -3362,7 +4117,7 @@
                         <p>${group.lastMessage || 'No messages yet'}</p>
                         <div class="group-members">
                             <i class="fas fa-user-friends"></i>
-                            <span>${group.members ? group.members.length : 0} members</span>
+                            <span>${group.members ? Object.keys(group.members).length : 0} members</span>
                         </div>
                     </div>
                 </div>
@@ -3403,11 +4158,11 @@
                         ` : ''}
                     </div>
                     <div class="zyne-stats">
-                        <span>${zyne.likes ? zyne.likes.length : 0} likes</span>
-                        <span>${zyne.comments ? zyne.comments.length : 0} comments</span>
+                        <span>${zyne.likes ? Object.keys(zyne.likes).length : 0} likes</span>
+                        <span>${zyne.comments ? Object.keys(zyne.comments).length : 0} comments</span>
                     </div>
                     <div class="zyne-actions">
-                        <button class="zyne-action-btn ${zyne.likes && zyne.likes.includes(currentUser.userId) ? 'liked' : ''}" 
+                        <button class="zyne-action-btn ${zyne.likes && zyne.likes[currentUser.userId] ? 'liked' : ''}" 
                                 onclick="likeZyne('${zyne.id}', '${zyne.userId}')">
                             <i class="fas fa-heart"></i> Like
                         </button>
@@ -3436,19 +4191,27 @@
             }
             
             emptyChats.classList.add('hidden');
-            chatsList.innerHTML = chats.map(chat => `
-                <div class="chat-item" onclick="openChat('${chat.userId}')">
-                    <img src="${chat.userAvatar || 'https://via.placeholder.com/150'}" alt="${chat.userName}" class="chat-avatar">
-                    <div class="chat-info">
-                        <h3>${chat.userName}</h3>
-                        <p class="chat-preview">${chat.lastMessage || 'No messages yet'}</p>
+            chatsList.innerHTML = chats.map(chat => {
+                const contact = contacts.find(c => c.userId === chat.userId);
+                if (!contact) return '';
+                
+                return `
+                    <div class="chat-item" onclick="openChat('${chat.userId}')">
+                        <div class="chat-avatar">
+                            <img src="${contact.profilePicture || 'https://via.placeholder.com/150'}" alt="${contact.name}">
+                            ${contact.online ? '<div class="online-dot"></div>' : ''}
+                        </div>
+                        <div class="chat-info">
+                            <h3>${contact.nickname || contact.name}</h3>
+                            <p class="chat-preview">${chat.lastMessage || 'No messages yet'}</p>
+                        </div>
+                        <div class="chat-meta">
+                            <span class="chat-time">${formatTime(chat.lastMessageTime)}</span>
+                            ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : ''}
+                        </div>
                     </div>
-                    <div class="chat-meta">
-                        <span class="chat-time">${formatTime(chat.timestamp)}</span>
-                        ${chat.unread > 0 ? `<div class="unread-badge">${chat.unread}</div>` : ''}
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Page navigation
@@ -3472,6 +4235,9 @@
             
             // Update page title
             document.title = `Zynapse - ${page.charAt(0).toUpperCase() + page.slice(1)}`;
+            
+            // Scroll to top
+            document.querySelector('.app-main').scrollTop = 0;
         }
 
         // Copy user ID
@@ -3483,6 +4249,79 @@
                 console.error('Failed to copy: ', err);
                 showToast('Failed to copy ID', 'error');
             });
+        }
+
+        // Setup floating button drag
+        function setupFloatingButtonDrag() {
+            const floatingBtn = document.getElementById('floatingBtn');
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+            
+            floatingBtn.addEventListener('mousedown', startDrag);
+            floatingBtn.addEventListener('touchstart', startDrag);
+            
+            function startDrag(e) {
+                isDragging = true;
+                const rect = floatingBtn.getBoundingClientRect();
+                startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+                startY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
+                startLeft = rect.left;
+                startTop = rect.top;
+                
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', drag);
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchend', stopDrag);
+                
+                e.preventDefault();
+            }
+            
+            function drag(e) {
+                if (!isDragging) return;
+                
+                const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+                const clientY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
+                
+                const deltaX = clientX - startX;
+                const deltaY = clientY - startY;
+                
+                let newLeft = startLeft + deltaX;
+                let newTop = startTop + deltaY;
+                
+                // Constrain within window bounds
+                const maxX = window.innerWidth - floatingBtn.offsetWidth - 16;
+                const maxY = window.innerHeight - floatingBtn.offsetHeight - 16;
+                
+                newLeft = Math.max(16, Math.min(newLeft, maxX));
+                newTop = Math.max(16, Math.min(newTop, maxY));
+                
+                floatingBtn.style.left = `${newLeft}px`;
+                floatingBtn.style.top = `${newTop}px`;
+                floatingBtn.style.right = 'auto';
+                floatingBtn.style.bottom = 'auto';
+                floatingBtn.style.transform = 'none';
+            }
+            
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('touchmove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchend', stopDrag);
+                
+                // Reset to bottom-right if near edges
+                const rect = floatingBtn.getBoundingClientRect();
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                
+                if (rect.left > windowWidth * 0.7 || rect.top < windowHeight * 0.3) {
+                    floatingBtn.style.left = '';
+                    floatingBtn.style.top = '';
+                    floatingBtn.style.right = '16px';
+                    floatingBtn.style.bottom = '20px';
+                    floatingBtn.style.transform = '';
+                }
+            }
         }
 
         // Start chat modal
@@ -3549,10 +4388,16 @@
                 return;
             }
             
-            // Search for user
+            // Search for user in Firebase
             try {
-                const user = await db.getUser(userId);
-                if (user) {
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.orderByChild('userId').equalTo(userId).once('value');
+                
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    const userIdKey = Object.keys(userData)[0];
+                    const user = userData[userIdKey];
+                    
                     searchResult.innerHTML = `
                         <div class="user-found">
                             <img src="${user.profilePicture || 'https://via.placeholder.com/150'}" 
@@ -3560,6 +4405,9 @@
                             <div class="user-found-info">
                                 <h4>${user.name}</h4>
                                 <p>${user.userId}</p>
+                                <p style="font-size: 12px; color: var(--gray-500); margin-top: 4px;">
+                                    ${user.status || 'Hey there! I am using Zynapse.'}
+                                </p>
                             </div>
                         </div>
                     `;
@@ -3567,7 +4415,7 @@
                         <button class="action-btn btn-secondary" onclick="closeStartChatModal()">
                             Cancel
                         </button>
-                        <button class="action-btn btn-primary" onclick="sendChatRequest('${user.uid}', '${user.userId}', '${user.name}', '${user.profilePicture}')">
+                        <button class="action-btn btn-primary" onclick="sendChatRequest('${userIdKey}', '${user.userId}', '${user.name}', '${user.profilePicture}')">
                             Send Request
                         </button>
                     `;
@@ -3601,20 +4449,27 @@
         async function sendChatRequest(senderId, receiverUserId, receiverName, receiverProfile) {
             try {
                 const requestData = {
-                    name: receiverName,
-                    userId: receiverUserId,
-                    profilePicture: receiverProfile
+                    senderId: auth.currentUser.uid,
+                    senderUserId: currentUser.userId,
+                    senderName: currentUser.name,
+                    senderProfile: currentUser.profilePicture,
+                    receiverId: senderId,
+                    receiverUserId: receiverUserId,
+                    status: 'pending',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
                 };
                 
-                await db.sendRequest(currentUser.uid, senderId, requestData);
+                // Add to receiver's requests
+                const receiverRequestRef = database.ref(`users/${senderId}/requests`).push();
+                await receiverRequestRef.set({
+                    ...requestData,
+                    id: receiverRequestRef.key
+                });
                 
                 showToast(`Chat request sent to ${receiverName}!`, 'success');
                 playNotificationSound();
                 
                 closeStartChatModal();
-                
-                // Reload requests
-                await loadChatRequests();
                 
             } catch (error) {
                 console.error('Error sending chat request:', error);
@@ -3623,39 +4478,63 @@
         }
 
         // Accept chat request
-        async function acceptRequest(senderId, senderUserId) {
+        async function acceptRequest(requestId) {
             try {
-                // Update request status
-                await db.updateRequestStatus(currentUser.userId, senderId, 'accepted');
+                // Find the request
+                const request = chatRequests.find(r => r.id === requestId);
+                if (!request) return;
                 
-                // Add to contacts
-                const request = chatRequests.find(r => r.senderId === senderId);
-                if (request) {
-                    await db.addContact(currentUser.userId, {
-                        userId: request.userId,
-                        name: request.name,
-                        profilePicture: request.profilePicture,
-                        status: 'online'
-                    });
-                    
-                    // Also add current user to sender's contacts
-                    await db.addContact(senderUserId, {
-                        userId: currentUser.userId,
-                        name: currentUser.name,
-                        profilePicture: currentUser.profilePicture,
-                        status: 'online'
-                    });
-                }
+                // Update request status
+                const requestRef = database.ref(`users/${auth.currentUser.uid}/requests/${requestId}`);
+                await requestRef.update({ status: 'accepted' });
+                
+                // Add to contacts for both users
+                const contactData = {
+                    userId: request.senderUserId,
+                    name: request.senderName,
+                    profilePicture: request.senderProfile,
+                    addedAt: firebase.database.ServerValue.TIMESTAMP,
+                    online: false
+                };
+                
+                // Add to current user's contacts
+                await database.ref(`users/${auth.currentUser.uid}/contacts/${request.senderUserId}`).set(contactData);
+                
+                // Add current user to sender's contacts
+                const senderContactData = {
+                    userId: currentUser.userId,
+                    name: currentUser.name,
+                    profilePicture: currentUser.profilePicture,
+                    addedAt: firebase.database.ServerValue.TIMESTAMP,
+                    online: true
+                };
+                
+                await database.ref(`users/${request.senderId}/contacts/${currentUser.userId}`).set(senderContactData);
+                
+                // Create chat entry for both users
+                const chatData = {
+                    userId: request.senderUserId,
+                    lastMessage: 'You are now connected!',
+                    lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
+                    unreadCount: 0
+                };
+                
+                await database.ref(`users/${auth.currentUser.uid}/chats/${request.senderUserId}`).set(chatData);
+                
+                const senderChatData = {
+                    userId: currentUser.userId,
+                    lastMessage: 'You are now connected!',
+                    lastMessageTime: firebase.database.ServerValue.TIMESTAMP,
+                    unreadCount: 0
+                };
+                
+                await database.ref(`users/${request.senderId}/chats/${currentUser.userId}`).set(senderChatData);
                 
                 showToast('Contact added successfully!', 'success');
                 playNotificationSound();
                 
-                // Reload contacts and requests
-                await loadContacts();
-                await loadChatRequests();
-                
                 // Open chat with new contact
-                openChat(senderUserId);
+                openChat(request.senderUserId);
                 
             } catch (error) {
                 console.error('Error accepting request:', error);
@@ -3664,14 +4543,12 @@
         }
 
         // Reject chat request
-        async function rejectRequest(senderId, senderUserId) {
+        async function rejectRequest(requestId) {
             try {
-                await db.updateRequestStatus(currentUser.userId, senderId, 'rejected');
+                const requestRef = database.ref(`users/${auth.currentUser.uid}/requests/${requestId}`);
+                await requestRef.update({ status: 'rejected' });
                 
                 showToast('Chat request rejected', 'info');
-                
-                // Reload requests
-                await loadChatRequests();
                 
             } catch (error) {
                 console.error('Error rejecting request:', error);
@@ -3692,8 +4569,9 @@
                 currentChat = {
                     type: 'private',
                     userId: contact.userId,
-                    userName: contact.name,
-                    userAvatar: contact.profilePicture
+                    userName: contact.nickname || contact.name,
+                    userAvatar: contact.profilePicture,
+                    contactId: contact.contactId || contact.userId
                 };
                 
                 // Render chat interface
@@ -3702,14 +4580,16 @@
                 // Load messages
                 await loadMessages();
                 
+                // Mark as read
+                await markChatAsRead();
+                
                 // Switch to chat page
                 switchPage('chat');
                 document.getElementById('chatPage').classList.remove('hidden');
                 document.getElementById('homePage').classList.remove('active');
                 
-                // Mark as read
-                await db.markAsRead(`${currentUser.userId}_${userId}`, currentUser.userId);
-                await loadChats();
+                // Setup typing listener
+                setupTypingListener();
                 
             } catch (error) {
                 console.error('Error opening chat:', error);
@@ -3726,19 +4606,19 @@
                     <button class="back-btn" onclick="closeChat()">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <div class="chat-user-info">
+                    <div class="chat-user-info" onclick="showChatOptionsModal()">
                         <img src="${currentChat.userAvatar || 'https://via.placeholder.com/150'}" 
                              alt="${currentChat.userName}" class="chat-user-avatar">
                         <div class="chat-user-details">
                             <h3>${currentChat.userName}</h3>
                             <div class="chat-status">
-                                <div class="status-dot online"></div>
-                                <span>Online</span>
+                                <div class="status-dot online" id="chatStatusDot"></div>
+                                <span id="chatStatusText">Online</span>
                             </div>
                         </div>
                     </div>
                     <div class="chat-actions">
-                        <button class="icon-btn" onclick="showChatOptions()">
+                        <button class="icon-btn" onclick="showChatOptionsModal()">
                             <i class="fas fa-ellipsis-v"></i>
                         </button>
                     </div>
@@ -3762,7 +4642,7 @@
                         <div class="typing-dots"></div>
                         <div class="typing-dots"></div>
                         <div class="typing-dots"></div>
-                        <span class="typing-text">typing</span>
+                        <span class="typing-text">${currentChat.userName} is typing...</span>
                     </div>
                 </div>
             `;
@@ -3772,6 +4652,9 @@
             messageInput.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
+                
+                // Send typing indicator
+                sendTypingIndicator();
             });
             
             messageInput.addEventListener('keydown', function(e) {
@@ -3780,18 +4663,95 @@
                     sendMessage();
                 }
             });
+            
+            // Load contact status
+            loadContactStatus();
+        }
+
+        // Load contact status
+        async function loadContactStatus() {
+            try {
+                const contact = contacts.find(c => c.userId === currentChat.userId);
+                if (!contact) return;
+                
+                // Get user data from Firebase
+                const userRef = database.ref('users').orderByChild('userId').equalTo(currentChat.userId);
+                const snapshot = await userRef.once('value');
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    const userIdKey = Object.keys(userData)[0];
+                    const user = userData[userIdKey];
+                    
+                    const statusDot = document.getElementById('chatStatusDot');
+                    const statusText = document.getElementById('chatStatusText');
+                    
+                    if (user.presence && user.presence.online) {
+                        statusDot.classList.add('online');
+                        statusText.textContent = 'Online';
+                    } else {
+                        statusDot.classList.remove('online');
+                        statusText.textContent = user.presence && user.presence.lastSeen 
+                            ? `Last seen ${formatTime(user.presence.lastSeen)}`
+                            : 'Offline';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading contact status:', error);
+            }
+        }
+
+        // Setup typing listener
+        function setupTypingListener() {
+            if (!currentChat || !currentChat.contactId) return;
+            
+            const typingRef = database.ref(`typing/${currentChat.contactId}_${auth.currentUser.uid}`);
+            typingRef.on('value', (snapshot) => {
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (snapshot.exists() && snapshot.val().typing) {
+                    typingIndicator.style.display = 'flex';
+                } else {
+                    typingIndicator.style.display = 'none';
+                }
+            });
+        }
+
+        // Send typing indicator
+        function sendTypingIndicator() {
+            if (!currentChat || !currentChat.contactId || !auth.currentUser) return;
+            
+            const typingRef = database.ref(`typing/${auth.currentUser.uid}_${currentChat.contactId}`);
+            
+            // Set typing to true
+            typingRef.set({
+                typing: true,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Clear previous timeout
+            if (typingTimeout) {
+                clearTimeout(typingTimeout);
+            }
+            
+            // Set timeout to remove typing indicator after 3 seconds
+            typingTimeout = setTimeout(() => {
+                typingRef.set({
+                    typing: false,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+            }, 3000);
         }
 
         // Load messages
         async function loadMessages() {
             try {
-                const chatId = `${currentUser.userId}_${currentChat.userId}`;
-                const messages = await db.getMessages(chatId);
+                const chatId = [auth.currentUser.uid, currentChat.contactId].sort().join('_');
+                const messagesRef = database.ref(`chats/${chatId}/messages`).orderByChild('timestamp').limitToLast(50);
+                const snapshot = await messagesRef.once('value');
                 
                 const chatMessages = document.getElementById('chatMessages');
                 chatMessages.innerHTML = '';
                 
-                if (messages.length === 0) {
+                if (!snapshot.exists()) {
                     chatMessages.innerHTML = `
                         <div class="empty-state">
                             <i class="fas fa-comments"></i>
@@ -3801,6 +4761,17 @@
                     `;
                     return;
                 }
+                
+                const messages = [];
+                snapshot.forEach((childSnapshot) => {
+                    messages.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                
+                // Sort by timestamp
+                messages.sort((a, b) => a.timestamp - b.timestamp);
                 
                 // Group messages by date
                 const groupedMessages = {};
@@ -3821,7 +4792,7 @@
                     `;
                     
                     groupedMessages[date].forEach(message => {
-                        const isSent = message.senderId === currentUser.userId;
+                        const isSent = message.senderId === auth.currentUser.uid;
                         const messageElement = createMessageElement(message, isSent);
                         chatMessages.appendChild(messageElement);
                     });
@@ -3829,6 +4800,46 @@
                 
                 // Scroll to bottom
                 chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Setup real-time listener for new messages
+                messagesRef.on('child_added', (snapshot) => {
+                    const message = {
+                        id: snapshot.key,
+                        ...snapshot.val()
+                    };
+                    
+                    // Check if message already exists
+                    if (!document.getElementById(`message-${message.id}`)) {
+                        const isSent = message.senderId === auth.currentUser.uid;
+                        const messageElement = createMessageElement(message, isSent);
+                        
+                        // Check if we need to add date separator
+                        const messageDate = new Date(message.timestamp).toDateString();
+                        const lastDateElement = chatMessages.querySelector('.message-date:last-child');
+                        
+                        if (!lastDateElement || lastDateElement.querySelector('.date-label').textContent !== formatDate(messageDate)) {
+                            const dateDiv = document.createElement('div');
+                            dateDiv.className = 'message-date';
+                            dateDiv.innerHTML = `<span class="date-label">${formatDate(messageDate)}</span>`;
+                            chatMessages.appendChild(dateDiv);
+                        }
+                        
+                        chatMessages.appendChild(messageElement);
+                        
+                        // Scroll to bottom if user is near bottom
+                        const isNearBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 100;
+                        if (isNearBottom) {
+                            setTimeout(() => {
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            }, 100);
+                        }
+                        
+                        // Play notification sound for received messages
+                        if (!isSent && document.hidden) {
+                            playNotificationSound();
+                        }
+                    }
+                });
                 
             } catch (error) {
                 console.error('Error loading messages:', error);
@@ -3839,35 +4850,65 @@
         function createMessageElement(message, isSent) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+            messageDiv.id = `message-${message.id}`;
             
             let messageContent = '';
+            let statusIcon = '✓';
+            
+            // Determine status icon
+            if (message.status === 'sent') statusIcon = '✓';
+            else if (message.status === 'delivered') statusIcon = '✓✓';
+            else if (message.status === 'read') statusIcon = '✓✓';
             
             switch (message.type) {
                 case 'text':
                     messageContent = `
                         <div class="message-bubble">
-                            <div class="message-text">${message.text}</div>
-                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                            <div class="message-text">${escapeHtml(message.text)}</div>
+                            <span class="message-time">
+                                ${formatTime(message.timestamp)}
+                                ${isSent ? `<span class="message-status">${statusIcon}</span>` : ''}
+                            </span>
                         </div>
                     `;
                     break;
                     
                 case 'image':
                     messageContent = `
-                        <div class="message-bubble media-message">
-                            <img src="${message.mediaUrl}" alt="Photo" class="chat-media">
+                        <div class="message-bubble media-message ${message.viewOnce ? 'view-once-message' : ''}">
+                            <img src="${message.mediaUrl}" alt="Photo" class="chat-media" 
+                                 onclick="${message.viewOnce ? `viewOnceMedia('${message.id}')` : ''}">
+                            ${message.viewOnce ? `
+                                <div class="view-once-overlay">
+                                    <i class="fas fa-eye"></i>
+                                    <span>View Once</span>
+                                </div>
+                            ` : ''}
                             ${message.text ? `<div class="message-text">${message.text}</div>` : ''}
-                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                            <span class="message-time">
+                                ${formatTime(message.timestamp)}
+                                ${isSent ? `<span class="message-status">${statusIcon}</span>` : ''}
+                            </span>
                         </div>
                     `;
                     break;
                     
                 case 'video':
                     messageContent = `
-                        <div class="message-bubble media-message">
-                            <video src="${message.mediaUrl}" controls class="chat-media"></video>
+                        <div class="message-bubble media-message ${message.viewOnce ? 'view-once-message' : ''}">
+                            <video src="${message.mediaUrl}" controls class="chat-media" 
+                                   onclick="${message.viewOnce ? `viewOnceMedia('${message.id}')` : ''}"></video>
+                            ${message.viewOnce ? `
+                                <div class="view-once-overlay">
+                                    <i class="fas fa-eye"></i>
+                                    <span>View Once</span>
+                                </div>
+                            ` : ''}
                             ${message.text ? `<div class="message-text">${message.text}</div>` : ''}
-                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                            <span class="message-time">
+                                ${formatTime(message.timestamp)}
+                                ${isSent ? `<span class="message-status">${statusIcon}</span>` : ''}
+                            </span>
                         </div>
                     `;
                     break;
@@ -3876,17 +4917,21 @@
                     messageContent = `
                         <div class="message-bubble location-message">
                             <div class="location-map">
-                                <i class="fas fa-map-marker-alt"></i>
+                                <img src="https://maps.googleapis.com/maps/api/staticmap?center=${message.latitude},${message.longitude}&zoom=15&size=400x200&markers=color:red%7C${message.latitude},${message.longitude}&key=YOUR_GOOGLE_MAPS_API_KEY" 
+                                     alt="Location Map">
                             </div>
                             <div class="location-info">
-                                <div class="location-address">${message.location.address}</div>
+                                <div class="location-address">${message.address}</div>
                                 <div class="location-details">
-                                    <span>${message.location.city}</span>
+                                    <span>${message.city}</span>
                                     <span>•</span>
-                                    <span>${message.location.country}</span>
+                                    <span>${message.country}</span>
                                 </div>
                             </div>
-                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                            <span class="message-time">
+                                ${formatTime(message.timestamp)}
+                                ${isSent ? `<span class="message-status">${statusIcon}</span>` : ''}
+                            </span>
                         </div>
                     `;
                     break;
@@ -3895,13 +4940,16 @@
                     messageContent = `
                         <div class="message-bubble">
                             <div class="voice-message">
-                                <button class="voice-play-btn" onclick="playVoiceMessage('${message.mediaUrl}')">
+                                <button class="voice-play-btn" onclick="playVoiceMessage('${message.mediaUrl}', ${message.duration})">
                                     <i class="fas fa-play"></i>
                                 </button>
                                 <div class="voice-waveform"></div>
-                                <span class="voice-duration">${message.duration || '0:00'}</span>
+                                <span class="voice-duration">${formatDuration(message.duration)}</span>
                             </div>
-                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                            <span class="message-time">
+                                ${formatTime(message.timestamp)}
+                                ${isSent ? `<span class="message-status">${statusIcon}</span>` : ''}
+                            </span>
                         </div>
                     `;
                     break;
@@ -3921,7 +4969,10 @@
                                     <i class="fas fa-download"></i>
                                 </button>
                             </div>
-                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                            <span class="message-time">
+                                ${formatTime(message.timestamp)}
+                                ${isSent ? `<span class="message-status">${statusIcon}</span>` : ''}
+                            </span>
                         </div>
                     `;
                     break;
@@ -3929,8 +4980,11 @@
                 default:
                     messageContent = `
                         <div class="message-bubble">
-                            <div class="message-text">${message.text}</div>
-                            <span class="message-time">${formatTime(message.timestamp)}</span>
+                            <div class="message-text">${escapeHtml(message.text)}</div>
+                            <span class="message-time">
+                                ${formatTime(message.timestamp)}
+                                ${isSent ? `<span class="message-status">${statusIcon}</span>` : ''}
+                            </span>
                         </div>
                     `;
             }
@@ -3947,35 +5001,89 @@
             if (!text) return;
             
             try {
+                const messageId = database.ref().child('messages').push().key;
+                const timestamp = Date.now();
+                
                 const message = {
-                    id: 'msg_' + Date.now(),
+                    id: messageId,
                     text: text,
-                    senderId: currentUser.userId,
+                    senderId: auth.currentUser.uid,
                     senderName: currentUser.name,
-                    timestamp: new Date().toISOString(),
+                    timestamp: timestamp,
                     type: 'text',
                     status: 'sent'
                 };
                 
-                const chatId = `${currentUser.userId}_${currentChat.userId}`;
-                await db.sendMessage(chatId, message);
+                const chatId = [auth.currentUser.uid, currentChat.contactId].sort().join('_');
+                
+                // Save message to chat
+                await database.ref(`chats/${chatId}/messages/${messageId}`).set(message);
+                
+                // Update chat list for both users
+                const chatUpdate = {
+                    userId: currentChat.userId,
+                    lastMessage: text,
+                    lastMessageTime: timestamp,
+                    unreadCount: 0
+                };
+                
+                await database.ref(`users/${auth.currentUser.uid}/chats/${currentChat.userId}`).update(chatUpdate);
+                
+                const otherUserChatUpdate = {
+                    userId: currentUser.userId,
+                    lastMessage: text,
+                    lastMessageTime: timestamp,
+                    unreadCount: 1
+                };
+                
+                // Find the other user's UID
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.orderByChild('userId').equalTo(currentChat.userId).once('value');
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    const otherUserId = Object.keys(userData)[0];
+                    
+                    await database.ref(`users/${otherUserId}/chats/${currentUser.userId}`).update(otherUserChatUpdate);
+                    
+                    // Update message status to delivered
+                    await database.ref(`chats/${chatId}/messages/${messageId}/status`).set('delivered');
+                    
+                    // Listen for read status
+                    const chatRef = database.ref(`users/${otherUserId}/chats/${currentUser.userId}`);
+                    chatRef.on('value', (snapshot) => {
+                        if (snapshot.exists() && snapshot.val().lastSeen && snapshot.val().lastSeen >= timestamp) {
+                            database.ref(`chats/${chatId}/messages/${messageId}/status`).set('read');
+                            chatRef.off('value');
+                        }
+                    });
+                }
                 
                 // Clear input
                 messageInput.value = '';
                 messageInput.style.height = 'auto';
                 
-                // Reload messages
-                await loadMessages();
-                
                 // Play sent sound
                 playSentSound();
-                
-                // Reload chats list
-                await loadChats();
                 
             } catch (error) {
                 console.error('Error sending message:', error);
                 showToast('Failed to send message', 'error');
+            }
+        }
+
+        // Mark chat as read
+        async function markChatAsRead() {
+            try {
+                if (!currentChat || !currentChat.userId) return;
+                
+                const chatRef = database.ref(`users/${auth.currentUser.uid}/chats/${currentChat.userId}`);
+                await chatRef.update({
+                    unreadCount: 0,
+                    lastSeen: Date.now()
+                });
+                
+            } catch (error) {
+                console.error('Error marking chat as read:', error);
             }
         }
 
@@ -3991,6 +5099,19 @@
         function toggleAttachmentOptions() {
             const options = document.getElementById('attachmentOptions');
             options.classList.toggle('show');
+            
+            // Close on click outside
+            setTimeout(() => {
+                document.addEventListener('click', closeAttachmentOptions);
+            }, 100);
+        }
+
+        function closeAttachmentOptions(e) {
+            const options = document.getElementById('attachmentOptions');
+            if (!options.contains(e.target) && !e.target.closest('.attach-btn')) {
+                options.classList.remove('show');
+                document.removeEventListener('click', closeAttachmentOptions);
+            }
         }
 
         // Attachment functions
@@ -4004,8 +5125,79 @@
             toggleAttachmentOptions();
         }
 
-        function attachDocument() {
-            openFileUploader();
+        async function attachDocument() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx';
+            
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                if (file.size > 50000000) {
+                    showToast('File size must be less than 50MB', 'error');
+                    return;
+                }
+                
+                showToast('Uploading file...', 'info');
+                
+                try {
+                    // Upload to Firebase Storage
+                    const storageRef = storage.ref(`documents/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
+                    const uploadTask = storageRef.put(file);
+                    
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            console.log(`Upload is ${progress}% done`);
+                        },
+                        (error) => {
+                            console.error('Upload error:', error);
+                            showToast('Failed to upload file', 'error');
+                        },
+                        async () => {
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            
+                            const messageId = database.ref().child('messages').push().key;
+                            const timestamp = Date.now();
+                            
+                            const message = {
+                                id: messageId,
+                                type: 'document',
+                                mediaUrl: downloadURL,
+                                fileName: file.name,
+                                fileSize: file.size,
+                                senderId: auth.currentUser.uid,
+                                senderName: currentUser.name,
+                                timestamp: timestamp,
+                                status: 'sent'
+                            };
+                            
+                            const chatId = [auth.currentUser.uid, currentChat.contactId].sort().join('_');
+                            await database.ref(`chats/${chatId}/messages/${messageId}`).set(message);
+                            
+                            // Update chat list
+                            const chatUpdate = {
+                                userId: currentChat.userId,
+                                lastMessage: `Document: ${file.name}`,
+                                lastMessageTime: timestamp,
+                                unreadCount: 0
+                            };
+                            
+                            await database.ref(`users/${auth.currentUser.uid}/chats/${currentChat.userId}`).update(chatUpdate);
+                            
+                            showToast('File sent', 'success');
+                            playSentSound();
+                        }
+                    );
+                    
+                } catch (error) {
+                    console.error('Error attaching document:', error);
+                    showToast('Failed to send file', 'error');
+                }
+            };
+            
+            input.click();
             toggleAttachmentOptions();
         }
 
@@ -4021,32 +5213,82 @@
                 navigator.geolocation.getCurrentPosition(async (position) => {
                     const { latitude, longitude } = position.coords;
                     
-                    // Simulate reverse geocoding
-                    const locationData = {
-                        address: '123 Main Street',
-                        city: 'San Francisco',
-                        country: 'USA',
-                        latitude: latitude,
-                        longitude: longitude
-                    };
-                    
-                    const message = {
-                        id: 'msg_' + Date.now(),
-                        type: 'location',
-                        location: locationData,
-                        senderId: currentUser.userId,
-                        senderName: currentUser.name,
-                        timestamp: new Date().toISOString(),
-                        status: 'sent'
-                    };
-                    
-                    const chatId = `${currentUser.userId}_${currentChat.userId}`;
-                    await db.sendMessage(chatId, message);
-                    
-                    await loadMessages();
-                    playSentSound();
-                    
-                    showToast('Location sent', 'success');
+                    // Use Google Maps Geocoding API (you need to enable this in Google Cloud)
+                    try {
+                        const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=YOUR_GOOGLE_MAPS_API_KEY`);
+                        const data = await response.json();
+                        
+                        if (data.results && data.results[0]) {
+                            const address = data.results[0].formatted_address;
+                            const addressComponents = data.results[0].address_components;
+                            
+                            let city = '', country = '';
+                            addressComponents.forEach(component => {
+                                if (component.types.includes('locality')) {
+                                    city = component.long_name;
+                                }
+                                if (component.types.includes('country')) {
+                                    country = component.long_name;
+                                }
+                            });
+                            
+                            const messageId = database.ref().child('messages').push().key;
+                            const timestamp = Date.now();
+                            
+                            const message = {
+                                id: messageId,
+                                type: 'location',
+                                latitude: latitude,
+                                longitude: longitude,
+                                address: address,
+                                city: city,
+                                country: country,
+                                senderId: auth.currentUser.uid,
+                                senderName: currentUser.name,
+                                timestamp: timestamp,
+                                status: 'sent'
+                            };
+                            
+                            const chatId = [auth.currentUser.uid, currentChat.contactId].sort().join('_');
+                            await database.ref(`chats/${chatId}/messages/${messageId}`).set(message);
+                            
+                            // Update chat list
+                            const chatUpdate = {
+                                userId: currentChat.userId,
+                                lastMessage: 'Location shared',
+                                lastMessageTime: timestamp,
+                                unreadCount: 0
+                            };
+                            
+                            await database.ref(`users/${auth.currentUser.uid}/chats/${currentChat.userId}`).update(chatUpdate);
+                            
+                            showToast('Location sent', 'success');
+                            playSentSound();
+                        }
+                    } catch (error) {
+                        console.error('Geocoding error:', error);
+                        // Send with just coordinates if geocoding fails
+                        const messageId = database.ref().child('messages').push().key;
+                        const timestamp = Date.now();
+                        
+                        const message = {
+                            id: messageId,
+                            type: 'location',
+                            latitude: latitude,
+                            longitude: longitude,
+                            address: 'Location shared',
+                            senderId: auth.currentUser.uid,
+                            senderName: currentUser.name,
+                            timestamp: timestamp,
+                            status: 'sent'
+                        };
+                        
+                        const chatId = [auth.currentUser.uid, currentChat.contactId].sort().join('_');
+                        await database.ref(`chats/${chatId}/messages/${messageId}`).set(message);
+                        
+                        showToast('Location sent', 'success');
+                        playSentSound();
+                    }
                     
                 }, (error) => {
                     console.error('Error getting location:', error);
@@ -4057,6 +5299,8 @@
                 console.error('Error attaching location:', error);
                 showToast('Failed to send location', 'error');
             }
+            
+            toggleAttachmentOptions();
         }
 
         function attachViewOnce() {
@@ -4090,36 +5334,93 @@
                     };
                     
                     mediaRecorder.onstop = async () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const duration = Math.floor((Date.now() - recordingStartTime) / 1000);
                         
-                        // In production, upload to Cloudinary
-                        // For demo, we'll simulate
-                        const audioUrl = URL.createObjectURL(audioBlob);
-                        const duration = Math.floor(audioBlob.size / 16000); // Rough estimate
+                        showToast('Uploading voice message...', 'info');
                         
-                        const message = {
-                            id: 'msg_' + Date.now(),
-                            type: 'voice',
-                            mediaUrl: audioUrl,
-                            duration: formatDuration(duration),
-                            senderId: currentUser.userId,
-                            senderName: currentUser.name,
-                            timestamp: new Date().toISOString(),
-                            status: 'sent'
-                        };
-                        
-                        const chatId = `${currentUser.userId}_${currentChat.userId}`;
-                        await db.sendMessage(chatId, message);
-                        
-                        await loadMessages();
-                        playSentSound();
-                        
-                        showToast('Voice message sent', 'success');
+                        try {
+                            // Upload to Firebase Storage
+                            const storageRef = storage.ref(`voice_messages/${auth.currentUser.uid}/${Date.now()}.webm`);
+                            const uploadTask = storageRef.put(audioBlob);
+                            
+                            uploadTask.on('state_changed',
+                                (snapshot) => {
+                                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                                    console.log(`Upload is ${progress}% done`);
+                                },
+                                (error) => {
+                                    console.error('Upload error:', error);
+                                    showToast('Failed to upload voice message', 'error');
+                                },
+                                async () => {
+                                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                                    
+                                    const messageId = database.ref().child('messages').push().key;
+                                    const timestamp = Date.now();
+                                    
+                                    const message = {
+                                        id: messageId,
+                                        type: 'voice',
+                                        mediaUrl: downloadURL,
+                                        duration: duration,
+                                        senderId: auth.currentUser.uid,
+                                        senderName: currentUser.name,
+                                        timestamp: timestamp,
+                                        status: 'sent'
+                                    };
+                                    
+                                    const chatId = [auth.currentUser.uid, currentChat.contactId].sort().join('_');
+                                    await database.ref(`chats/${chatId}/messages/${messageId}`).set(message);
+                                    
+                                    // Update chat list
+                                    const chatUpdate = {
+                                        userId: currentChat.userId,
+                                        lastMessage: 'Voice message',
+                                        lastMessageTime: timestamp,
+                                        unreadCount: 0
+                                    };
+                                    
+                                    await database.ref(`users/${auth.currentUser.uid}/chats/${currentChat.userId}`).update(chatUpdate);
+                                    
+                                    showToast('Voice message sent', 'success');
+                                    playSentSound();
+                                }
+                            );
+                            
+                        } catch (error) {
+                            console.error('Error sending voice message:', error);
+                            showToast('Failed to send voice message', 'error');
+                        }
                     };
                     
                     mediaRecorder.start();
                     isRecording = true;
-                    showToast('Recording... Click again to stop', 'info');
+                    recordingStartTime = Date.now();
+                    
+                    // Show recording UI
+                    const messageInputArea = document.querySelector('.message-input-area');
+                    const recordingUI = document.createElement('div');
+                    recordingUI.className = 'voice-recording';
+                    recordingUI.innerHTML = `
+                        <div class="recording-dot"></div>
+                        <div class="recording-timer">0:00</div>
+                        <button class="icon-btn" onclick="stopVoiceRecording()" style="color: white;">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    `;
+                    
+                    messageInputArea.parentNode.insertBefore(recordingUI, messageInputArea);
+                    
+                    // Start timer
+                    let seconds = 0;
+                    recordingTimer = setInterval(() => {
+                        seconds++;
+                        const minutes = Math.floor(seconds / 60);
+                        const remainingSeconds = seconds % 60;
+                        recordingUI.querySelector('.recording-timer').textContent = 
+                            `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+                    }, 1000);
                     
                 })
                 .catch(error => {
@@ -4133,8 +5434,22 @@
                 mediaRecorder.stop();
                 isRecording = false;
                 
+                // Clear timer
+                if (recordingTimer) {
+                    clearInterval(recordingTimer);
+                    recordingTimer = null;
+                }
+                
+                // Remove recording UI
+                const recordingUI = document.querySelector('.voice-recording');
+                if (recordingUI) {
+                    recordingUI.remove();
+                }
+                
                 // Stop all tracks
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                if (mediaRecorder.stream) {
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                }
             }
         }
 
@@ -4171,28 +5486,39 @@
                     if (!error && result && result.event === "success") {
                         const mediaUrl = result.info.secure_url;
                         
+                        const messageId = database.ref().child('messages').push().key;
+                        const timestamp = Date.now();
+                        
                         const message = {
-                            id: 'msg_' + Date.now(),
+                            id: messageId,
                             type: type,
                             mediaUrl: mediaUrl,
-                            senderId: currentUser.userId,
+                            senderId: auth.currentUser.uid,
                             senderName: currentUser.name,
-                            timestamp: new Date().toISOString(),
+                            timestamp: timestamp,
                             status: 'sent',
-                            isViewOnce: isViewOnce
+                            viewOnce: isViewOnce
                         };
                         
                         if (isViewOnce) {
                             message.text = 'View once photo';
                         }
                         
-                        const chatId = `${currentUser.userId}_${currentChat.userId}`;
-                        await db.sendMessage(chatId, message);
+                        const chatId = [auth.currentUser.uid, currentChat.contactId].sort().join('_');
+                        await database.ref(`chats/${chatId}/messages/${messageId}`).set(message);
                         
-                        await loadMessages();
-                        playSentSound();
+                        // Update chat list
+                        const chatUpdate = {
+                            userId: currentChat.userId,
+                            lastMessage: type === 'image' ? 'Photo' : 'Video',
+                            lastMessageTime: timestamp,
+                            unreadCount: 0
+                        };
+                        
+                        await database.ref(`users/${auth.currentUser.uid}/chats/${currentChat.userId}`).update(chatUpdate);
                         
                         showToast(`${type === 'image' ? 'Photo' : 'Video'} sent`, 'success');
+                        playSentSound();
                     } else if (error) {
                         showToast('Upload failed: ' + error.message, 'error');
                     }
@@ -4202,48 +5528,42 @@
             cloudinaryWidget.open();
         }
 
-        function openFileUploader() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.pdf,.doc,.docx,.txt,.xls,.xlsx';
-            
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                if (file.size > 50000000) {
-                    showToast('File size must be less than 50MB', 'error');
-                    return;
+        // View once media
+        function viewOnceMedia(messageId) {
+            const messageElement = document.getElementById(`message-${messageId}`);
+            if (messageElement) {
+                const overlay = messageElement.querySelector('.view-once-overlay');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                    
+                    // Delete message after viewing
+                    setTimeout(async () => {
+                        try {
+                            const chatId = [auth.currentUser.uid, currentChat.contactId].sort().join('_');
+                            await database.ref(`chats/${chatId}/messages/${messageId}`).remove();
+                            messageElement.remove();
+                        } catch (error) {
+                            console.error('Error deleting view once message:', error);
+                        }
+                    }, 5000); // Delete after 5 seconds
                 }
-                
-                showToast('Uploading file...', 'info');
-                
-                // In production, upload to Cloudinary
-                // For demo, we'll simulate
-                const fileUrl = URL.createObjectURL(file);
-                
-                const message = {
-                    id: 'msg_' + Date.now(),
-                    type: 'document',
-                    mediaUrl: fileUrl,
-                    fileName: file.name,
-                    fileSize: file.size,
-                    senderId: currentUser.userId,
-                    senderName: currentUser.name,
-                    timestamp: new Date().toISOString(),
-                    status: 'sent'
-                };
-                
-                const chatId = `${currentUser.userId}_${currentChat.userId}`;
-                await db.sendMessage(chatId, message);
-                
-                await loadMessages();
-                playSentSound();
-                
-                showToast('File sent', 'success');
-            };
-            
-            input.click();
+            }
+        }
+
+        // Play voice message
+        function playVoiceMessage(url, duration) {
+            const audio = new Audio(url);
+            audio.play().catch(e => console.error('Error playing audio:', e));
+        }
+
+        // Download file
+        function downloadFile(url, fileName) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         // Group creation
@@ -4258,6 +5578,8 @@
             groupImageUrl = '';
             document.getElementById('groupProfileImage').classList.add('hidden');
             document.getElementById('groupPreviewPlaceholder').classList.remove('hidden');
+            document.getElementById('membersList').innerHTML = '';
+            selectedMembers = [];
         }
 
         async function loadMembersForGroup() {
@@ -4279,7 +5601,7 @@
                     <div class="member-info">
                         <img src="${contact.profilePicture || 'https://via.placeholder.com/150'}" 
                              alt="${contact.name}" class="member-avatar">
-                        <div class="member-name">${contact.name}</div>
+                        <div class="member-name">${contact.nickname || contact.name}</div>
                     </div>
                     <div class="member-checkbox" onclick="toggleMemberSelection('${contact.userId}', this)"></div>
                 </div>
@@ -4345,23 +5667,56 @@
             }
             
             try {
-                const groupData = {
-                    name: groupName,
-                    groupPhoto: groupImageUrl,
-                    members: [currentUser.userId, ...selectedMembers],
-                    admin: currentUser.userId,
-                    createdAt: new Date().toISOString()
+                const groupId = database.ref().child('groups').push().key;
+                
+                // Create members object
+                const members = {};
+                members[currentUser.userId] = {
+                    uid: auth.currentUser.uid,
+                    role: 'admin',
+                    joinedAt: firebase.database.ServerValue.TIMESTAMP
                 };
                 
-                const groupId = await db.createGroup(groupData);
+                selectedMembers.forEach(userId => {
+                    members[userId] = {
+                        role: 'member',
+                        joinedAt: firebase.database.ServerValue.TIMESTAMP
+                    };
+                });
+                
+                const groupData = {
+                    id: groupId,
+                    name: groupName,
+                    groupPhoto: groupImageUrl,
+                    members: members,
+                    admin: currentUser.userId,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    lastMessage: null,
+                    lastMessageTime: null
+                };
+                
+                await database.ref(`groups/${groupId}`).set(groupData);
+                
+                // Add group to each member's groups list
+                const updates = {};
+                updates[`users/${auth.currentUser.uid}/groups/${groupId}`] = true;
+                
+                // Get UIDs for selected members
+                for (const userId of selectedMembers) {
+                    const userSnapshot = await database.ref('users').orderByChild('userId').equalTo(userId).once('value');
+                    if (userSnapshot.exists()) {
+                        const userData = userSnapshot.val();
+                        const userUid = Object.keys(userData)[0];
+                        updates[`users/${userUid}/groups/${groupId}`] = true;
+                    }
+                }
+                
+                await database.ref().update(updates);
                 
                 showToast('Group created successfully!', 'success');
                 playNotificationSound();
                 
                 closeCreateGroupModal();
-                
-                // Reload groups
-                await loadGroups();
                 
                 // Switch to groups page
                 switchPage('groups');
@@ -4369,6 +5724,253 @@
             } catch (error) {
                 console.error('Error creating group:', error);
                 showToast('Failed to create group', 'error');
+            }
+        }
+
+        // Open group chat
+        async function openGroupChat(groupId) {
+            try {
+                const groupRef = database.ref(`groups/${groupId}`);
+                const snapshot = await groupRef.once('value');
+                if (!snapshot.exists()) {
+                    showToast('Group not found', 'error');
+                    return;
+                }
+                
+                currentGroup = {
+                    id: groupId,
+                    ...snapshot.val()
+                };
+                
+                // Render group chat interface
+                renderGroupChatInterface();
+                
+                // Load group messages
+                await loadGroupMessages();
+                
+                // Switch to chat page
+                switchPage('chat');
+                document.getElementById('chatPage').classList.remove('hidden');
+                document.getElementById('homePage').classList.remove('active');
+                
+            } catch (error) {
+                console.error('Error opening group chat:', error);
+                showToast('Failed to open group chat', 'error');
+            }
+        }
+
+        function renderGroupChatInterface() {
+            const chatPage = document.getElementById('chatPage');
+            
+            chatPage.innerHTML = `
+                <div class="chat-header">
+                    <button class="back-btn" onclick="closeChat()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div class="chat-user-info" onclick="showGroupInfo()">
+                        <img src="${currentGroup.groupPhoto || 'https://via.placeholder.com/150'}" 
+                             alt="${currentGroup.name}" class="chat-user-avatar">
+                        <div class="chat-user-details">
+                            <h3>${currentGroup.name}</h3>
+                            <div class="chat-status">
+                                <span>${Object.keys(currentGroup.members).length} members</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <button class="icon-btn" onclick="showGroupOptions()">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Messages will be loaded here -->
+                </div>
+                <div class="message-input-area">
+                    <button class="attach-btn" onclick="toggleAttachmentOptions()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <div class="message-input-container">
+                        <textarea class="message-input" id="messageInput" placeholder="Message" rows="1"></textarea>
+                    </div>
+                    <button class="send-btn" id="sendBtn" onclick="sendGroupMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Setup message input
+            const messageInput = document.getElementById('messageInput');
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendGroupMessage();
+                }
+            });
+        }
+
+        async function loadGroupMessages() {
+            try {
+                const messagesRef = database.ref(`groupMessages/${currentGroup.id}`).orderByChild('timestamp').limitToLast(50);
+                const snapshot = await messagesRef.once('value');
+                
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    chatMessages.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-comments"></i>
+                            <h3>No messages yet</h3>
+                            <p>Send a message to start the conversation</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const messages = [];
+                snapshot.forEach((childSnapshot) => {
+                    messages.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                
+                // Sort by timestamp
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                
+                // Render messages
+                messages.forEach(message => {
+                    const isSent = message.senderId === auth.currentUser.uid;
+                    const messageElement = createGroupMessageElement(message, isSent);
+                    chatMessages.appendChild(messageElement);
+                });
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Setup real-time listener
+                messagesRef.on('child_added', (snapshot) => {
+                    const message = {
+                        id: snapshot.key,
+                        ...snapshot.val()
+                    };
+                    
+                    if (!document.getElementById(`message-${message.id}`)) {
+                        const isSent = message.senderId === auth.currentUser.uid;
+                        const messageElement = createGroupMessageElement(message, isSent);
+                        chatMessages.appendChild(messageElement);
+                        
+                        // Scroll to bottom if near bottom
+                        const isNearBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 100;
+                        if (isNearBottom) {
+                            setTimeout(() => {
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            }, 100);
+                        }
+                        
+                        // Play notification sound
+                        if (!isSent && document.hidden) {
+                            playNotificationSound();
+                        }
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error loading group messages:', error);
+            }
+        }
+
+        function createGroupMessageElement(message, isSent) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+            messageDiv.id = `message-${message.id}`;
+            
+            // Different color for each sender in group
+            const senderColors = [
+                '#007AFF', '#34C759', '#FF9500', '#5856D6', '#FF2D55', '#AF52DE', '#FFCC00'
+            ];
+            const senderIndex = parseInt(message.senderId, 36) % senderColors.length;
+            const senderColor = senderColors[senderIndex];
+            
+            let messageContent = '';
+            
+            switch (message.type) {
+                case 'text':
+                    messageContent = `
+                        <div class="message-bubble" style="${!isSent ? `background: ${senderColor}; color: white;` : ''}">
+                            <div style="font-size: 12px; margin-bottom: 4px; opacity: 0.8;">
+                                ${isSent ? 'You' : message.senderName}
+                            </div>
+                            <div class="message-text">${escapeHtml(message.text)}</div>
+                            <span class="message-time">
+                                ${formatTime(message.timestamp)}
+                            </span>
+                        </div>
+                    `;
+                    break;
+                    
+                default:
+                    messageContent = `
+                        <div class="message-bubble" style="${!isSent ? `background: ${senderColor}; color: white;` : ''}">
+                            <div style="font-size: 12px; margin-bottom: 4px; opacity: 0.8;">
+                                ${isSent ? 'You' : message.senderName}
+                            </div>
+                            <div class="message-text">${escapeHtml(message.text)}</div>
+                            <span class="message-time">
+                                ${formatTime(message.timestamp)}
+                            </span>
+                        </div>
+                    `;
+            }
+            
+            messageDiv.innerHTML = messageContent;
+            return messageDiv;
+        }
+
+        async function sendGroupMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const text = messageInput.value.trim();
+            
+            if (!text) return;
+            
+            try {
+                const messageId = database.ref().child('messages').push().key;
+                const timestamp = Date.now();
+                
+                const message = {
+                    id: messageId,
+                    text: text,
+                    senderId: auth.currentUser.uid,
+                    senderName: currentUser.name,
+                    timestamp: timestamp,
+                    type: 'text'
+                };
+                
+                // Save to group messages
+                await database.ref(`groupMessages/${currentGroup.id}/${messageId}`).set(message);
+                
+                // Update group last message
+                await database.ref(`groups/${currentGroup.id}`).update({
+                    lastMessage: text,
+                    lastMessageTime: timestamp
+                });
+                
+                // Clear input
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                
+                // Play sent sound
+                playSentSound();
+                
+            } catch (error) {
+                console.error('Error sending group message:', error);
+                showToast('Failed to send message', 'error');
             }
         }
 
@@ -4428,15 +6030,21 @@
             }
             
             try {
+                const zyneId = database.ref().child('zynes').push().key;
+                const timestamp = Date.now();
+                
                 const zyneData = {
+                    id: zyneId,
                     text: text,
                     media: zyneMediaUrls.length > 0 ? zyneMediaUrls[0] : null,
-                    userName: currentUser.name,
-                    userAvatar: currentUser.profilePicture,
-                    userId: currentUser.userId
+                    userId: currentUser.userId,
+                    timestamp: timestamp,
+                    likes: {},
+                    comments: {},
+                    views: {}
                 };
                 
-                const zyne = await db.createZyne(currentUser.userId, zyneData);
+                await database.ref(`zynes/${currentUser.userId}/${zyneId}`).set(zyneData);
                 
                 showToast('Zyne posted successfully!', 'success');
                 playNotificationSound();
@@ -4457,12 +6065,475 @@
 
         async function likeZyne(zyneId, ownerId) {
             try {
-                await db.likeZyne(ownerId, zyneId, currentUser.userId);
+                const likeRef = database.ref(`zynes/${ownerId}/${zyneId}/likes/${currentUser.userId}`);
+                const snapshot = await likeRef.once('value');
+                
+                if (snapshot.exists()) {
+                    await likeRef.remove();
+                    showToast('Like removed', 'info');
+                } else {
+                    await likeRef.set(true);
+                    showToast('Liked!', 'success');
+                }
+                
                 await loadZynes();
-                showToast('Liked!', 'success');
+                
             } catch (error) {
                 console.error('Error liking zyne:', error);
                 showToast('Failed to like zyne', 'error');
+            }
+        }
+
+        async function commentOnZyne(zyneId, ownerId) {
+            const comment = prompt('Enter your comment:');
+            if (!comment) return;
+            
+            try {
+                const commentId = database.ref().child('comments').push().key;
+                const timestamp = Date.now();
+                
+                const commentData = {
+                    id: commentId,
+                    text: comment,
+                    userId: currentUser.userId,
+                    userName: currentUser.name,
+                    userAvatar: currentUser.profilePicture,
+                    timestamp: timestamp
+                };
+                
+                await database.ref(`zynes/${ownerId}/${zyneId}/comments/${commentId}`).set(commentData);
+                
+                showToast('Comment added!', 'success');
+                await loadZynes();
+                
+            } catch (error) {
+                console.error('Error adding comment:', error);
+                showToast('Failed to add comment', 'error');
+            }
+        }
+
+        async function deleteZyne(zyneId) {
+            if (!confirm('Are you sure you want to delete this Zyne?')) return;
+            
+            try {
+                await database.ref(`zynes/${currentUser.userId}/${zyneId}`).remove();
+                showToast('Zyne deleted', 'success');
+                await loadZynes();
+            } catch (error) {
+                console.error('Error deleting zyne:', error);
+                showToast('Failed to delete zyne', 'error');
+            }
+        }
+
+        // Profile modals
+        function openProfileModal() {
+            document.getElementById('profileModal').classList.add('active');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('active');
+        }
+
+        function openEditProfileModal() {
+            document.getElementById('editProfileModal').classList.add('active');
+            closeProfileModal();
+        }
+
+        function closeEditProfileModal() {
+            document.getElementById('editProfileModal').classList.remove('active');
+        }
+
+        function openProfileImageUploader() {
+            if (!cloudinaryWidget) {
+                cloudinaryWidget = cloudinary.createUploadWidget({
+                    cloudName: CLOUDINARY_CONFIG.cloudName,
+                    uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+                    sources: ['local', 'camera', 'url'],
+                    multiple: false,
+                    maxFileSize: 50000000,
+                    folder: 'zynapse/profiles',
+                    cropping: true,
+                    croppingAspectRatio: 1,
+                    showAdvancedOptions: true
+                }, (error, result) => {
+                    if (!error && result && result.event === "success") {
+                        const profileUrl = result.info.secure_url;
+                        document.getElementById('editProfileImage').src = profileUrl;
+                        
+                        // Update current user
+                        currentUser.profilePicture = profileUrl;
+                        localStorage.setItem('zynapse_user', JSON.stringify(currentUser));
+                        
+                        // Update in Firebase
+                        if (auth.currentUser) {
+                            database.ref(`users/${auth.currentUser.uid}`).update({
+                                profilePicture: profileUrl
+                            });
+                        }
+                        
+                        updateUserUI();
+                    }
+                });
+            }
+            
+            cloudinaryWidget.open();
+        }
+
+        function removeProfileImage() {
+            const defaultImage = 'https://via.placeholder.com/150';
+            document.getElementById('editProfileImage').src = defaultImage;
+            
+            currentUser.profilePicture = defaultImage;
+            localStorage.setItem('zynapse_user', JSON.stringify(currentUser));
+            
+            if (auth.currentUser) {
+                database.ref(`users/${auth.currentUser.uid}`).update({
+                    profilePicture: defaultImage
+                });
+            }
+            
+            updateUserUI();
+        }
+
+        async function saveProfile() {
+            const name = document.getElementById('editName').value.trim();
+            const status = document.getElementById('editStatus').value.trim();
+            
+            if (!name) {
+                showToast('Please enter your name', 'error');
+                return;
+            }
+            
+            try {
+                currentUser.name = name;
+                currentUser.status = status;
+                localStorage.setItem('zynapse_user', JSON.stringify(currentUser));
+                
+                if (auth.currentUser) {
+                    await database.ref(`users/${auth.currentUser.uid}`).update({
+                        name: name,
+                        status: status
+                    });
+                }
+                
+                updateUserUI();
+                closeEditProfileModal();
+                showToast('Profile updated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                showToast('Failed to save profile', 'error');
+            }
+        }
+
+        // Privacy settings
+        function openPrivacySettings() {
+            document.getElementById('privacyModal').classList.add('active');
+        }
+
+        function closePrivacyModal() {
+            document.getElementById('privacyModal').classList.remove('active');
+        }
+
+        async function savePrivacySettings() {
+            try {
+                const privacySettings = {
+                    lastSeen: document.getElementById('privacyLastSeen').value,
+                    profilePhoto: document.getElementById('privacyProfilePhoto').value,
+                    status: document.getElementById('privacyStatus').value,
+                    readReceipts: document.getElementById('privacyReadReceipts').checked
+                };
+                
+                if (auth.currentUser) {
+                    await database.ref(`users/${auth.currentUser.uid}/privacy`).set(privacySettings);
+                }
+                
+                closePrivacyModal();
+                showToast('Privacy settings saved', 'success');
+                
+            } catch (error) {
+                console.error('Error saving privacy settings:', error);
+                showToast('Failed to save privacy settings', 'error');
+            }
+        }
+
+        // Notification settings
+        function openNotificationSettings() {
+            document.getElementById('notificationModal').classList.add('active');
+        }
+
+        function closeNotificationModal() {
+            document.getElementById('notificationModal').classList.remove('active');
+        }
+
+        async function saveNotificationSettings() {
+            try {
+                const notificationSettings = {
+                    messages: document.getElementById('notifyMessages').checked,
+                    groups: document.getElementById('notifyGroups').checked,
+                    zynes: document.getElementById('notifyZynes').checked,
+                    requests: document.getElementById('notifyRequests').checked,
+                    sound: document.getElementById('notifySound').checked,
+                    vibration: document.getElementById('notifyVibration').checked
+                };
+                
+                if (auth.currentUser) {
+                    await database.ref(`users/${auth.currentUser.uid}/notifications`).set(notificationSettings);
+                }
+                
+                closeNotificationModal();
+                showToast('Notification settings saved', 'success');
+                
+            } catch (error) {
+                console.error('Error saving notification settings:', error);
+                showToast('Failed to save notification settings', 'error');
+            }
+        }
+
+        // Chat options
+        function showChatOptionsModal() {
+            document.getElementById('chatOptionsModal').classList.add('active');
+        }
+
+        function closeChatOptionsModal() {
+            document.getElementById('chatOptionsModal').classList.remove('active');
+        }
+
+        function viewContactProfileFromChat() {
+            if (currentChat) {
+                viewContactProfile(currentChat.userId);
+            }
+            closeChatOptionsModal();
+        }
+
+        function addNickname() {
+            document.getElementById('nicknameModal').classList.add('active');
+            closeChatOptionsModal();
+        }
+
+        function closeNicknameModal() {
+            document.getElementById('nicknameModal').classList.remove('active');
+        }
+
+        async function saveNickname() {
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            if (!nickname) {
+                showToast('Please enter a nickname', 'error');
+                return;
+            }
+            
+            try {
+                if (currentChat && auth.currentUser) {
+                    await database.ref(`users/${auth.currentUser.uid}/contacts/${currentChat.userId}`).update({
+                        nickname: nickname
+                    });
+                    
+                    currentChat.userName = nickname;
+                    
+                    closeNicknameModal();
+                    showToast('Nickname saved', 'success');
+                    await loadContacts();
+                }
+            } catch (error) {
+                console.error('Error saving nickname:', error);
+                showToast('Failed to save nickname', 'error');
+            }
+        }
+
+        function toggleFavorite() {
+            showToast('Added to favorites', 'success');
+            closeChatOptionsModal();
+        }
+
+        async function blockUser() {
+            if (!confirm('Are you sure you want to block this user?')) return;
+            
+            try {
+                if (currentChat && auth.currentUser) {
+                    await database.ref(`users/${auth.currentUser.uid}/contacts/${currentChat.userId}`).update({
+                        status: 'blocked'
+                    });
+                    
+                    showToast('User blocked', 'success');
+                    closeChat();
+                    closeChatOptionsModal();
+                    await loadContacts();
+                }
+            } catch (error) {
+                console.error('Error blocking user:', error);
+                showToast('Failed to block user', 'error');
+            }
+        }
+
+        function reportUser() {
+            document.getElementById('reportModal').classList.add('active');
+            closeChatOptionsModal();
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.remove('active');
+        }
+
+        async function submitReport() {
+            const reason = document.getElementById('reportReason').value;
+            const details = document.getElementById('reportDetails').value.trim();
+            
+            try {
+                const reportId = database.ref().child('reports').push().key;
+                const timestamp = Date.now();
+                
+                const reportData = {
+                    id: reportId,
+                    reporterId: auth.currentUser.uid,
+                    reportedUserId: currentChat.userId,
+                    reason: reason,
+                    details: details,
+                    timestamp: timestamp,
+                    status: 'pending'
+                };
+                
+                await database.ref(`reports/${reportId}`).set(reportData);
+                
+                closeReportModal();
+                showToast('Report submitted successfully', 'success');
+                
+            } catch (error) {
+                console.error('Error submitting report:', error);
+                showToast('Failed to submit report', 'error');
+            }
+        }
+
+        async function deleteChat() {
+            if (!confirm('Are you sure you want to delete this chat? All messages will be removed.')) return;
+            
+            try {
+                if (currentChat && auth.currentUser) {
+                    // Remove from chats list
+                    await database.ref(`users/${auth.currentUser.uid}/chats/${currentChat.userId}`).remove();
+                    
+                    // Remove chat messages
+                    const chatId = [auth.currentUser.uid, currentChat.contactId].sort().join('_');
+                    await database.ref(`chats/${chatId}`).remove();
+                    
+                    showToast('Chat deleted', 'success');
+                    closeChat();
+                    closeChatOptionsModal();
+                    await loadChats();
+                }
+            } catch (error) {
+                console.error('Error deleting chat:', error);
+                showToast('Failed to delete chat', 'error');
+            }
+        }
+
+        // View contact profile
+        async function viewContactProfile(userId, event) {
+            if (event) event.stopPropagation();
+            
+            try {
+                const userRef = database.ref('users').orderByChild('userId').equalTo(userId);
+                const snapshot = await userRef.once('value');
+                
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    const userKey = Object.keys(userData)[0];
+                    const user = userData[userKey];
+                    
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay active';
+                    modal.innerHTML = `
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>${user.name}'s Profile</h3>
+                                <button class="close-modal" onclick="this.closest('.modal-overlay').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div style="text-align: center;">
+                                    <img src="${user.profilePicture || 'https://via.placeholder.com/150'}" 
+                                         alt="${user.name}" 
+                                         style="width: 100px; height: 100px; border-radius: var(--radius-circle); object-fit: cover; margin-bottom: 20px;">
+                                    <h3>${user.name}</h3>
+                                    <p style="color: var(--gray-600); margin-bottom: 10px;">${user.userId}</p>
+                                    <p style="color: var(--gray-500); margin-bottom: 20px;">${user.status || 'Hey there! I am using Zynapse.'}</p>
+                                    <div style="display: flex; gap: 10px; justify-content: center;">
+                                        <button class="action-btn btn-primary" onclick="openChat('${userId}')">
+                                            <i class="fas fa-comment"></i> Message
+                                        </button>
+                                        <button class="action-btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                }
+            } catch (error) {
+                console.error('Error viewing profile:', error);
+                showToast('Failed to load profile', 'error');
+            }
+        }
+
+        // Remove contact
+        async function removeContact(userId, event) {
+            if (event) event.stopPropagation();
+            
+            if (!confirm('Are you sure you want to remove this contact?')) return;
+            
+            try {
+                if (auth.currentUser) {
+                    await database.ref(`users/${auth.currentUser.uid}/contacts/${userId}`).remove();
+                    showToast('Contact removed', 'success');
+                    await loadContacts();
+                }
+            } catch (error) {
+                console.error('Error removing contact:', error);
+                showToast('Failed to remove contact', 'error');
+            }
+        }
+
+        // Toggle theme
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            localStorage.setItem('darkMode', isDarkMode);
+            showToast(`Dark mode ${isDarkMode ? 'enabled' : 'disabled'}`, 'success');
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear online status
+                if (userPresenceRef) {
+                    userPresenceRef.set({
+                        online: false,
+                        lastSeen: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }
+                
+                // Clear intervals
+                if (onlineStatusInterval) {
+                    clearInterval(onlineStatusInterval);
+                }
+                
+                if (typingTimeout) {
+                    clearTimeout(typingTimeout);
+                }
+                
+                // Sign out from Firebase
+                if (auth) {
+                    auth.signOut();
+                }
+                
+                // Clear local storage
+                localStorage.removeItem('zynapse_user');
+                
+                // Redirect to login
+                window.location.href = 'index.html';
             }
         }
 
@@ -4484,15 +6555,22 @@
             
             toastContainer.appendChild(toast);
             
+            // Remove after 3 seconds
             setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
+                toast.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
             }, 3000);
         }
 
         function playNotificationSound() {
             try {
+                // Check if notifications are enabled
+                if (currentUser.notifications && currentUser.notifications.sound === false) return;
+                
                 const audio = new Audio('notification.mp3');
                 audio.volume = 0.3;
                 audio.play().catch(e => console.log('Audio play failed:', e));
@@ -4512,6 +6590,8 @@
         }
 
         function formatTime(timestamp) {
+            if (!timestamp) return '';
+            
             const date = new Date(timestamp);
             const now = new Date();
             const diff = now - date;
@@ -4560,68 +6640,28 @@
             }
         }
 
-        // Simulate real-time updates
-        function simulateRealtimeUpdates() {
-            setInterval(async () => {
-                // Simulate new messages
-                if (Math.random() > 0.7 && contacts.length > 0) {
-                    const randomContact = contacts[Math.floor(Math.random() * contacts.length)];
-                    const messages = ['Hello!', 'How are you?', 'Check this out!', 'Are you there?'];
-                    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-                    
-                    const message = {
-                        id: 'msg_' + Date.now(),
-                        text: randomMessage,
-                        senderId: randomContact.userId,
-                        senderName: randomContact.name,
-                        timestamp: new Date().toISOString(),
-                        type: 'text',
-                        status: 'sent'
-                    };
-                    
-                    const chatId = `${currentUser.userId}_${randomContact.userId}`;
-                    await db.sendMessage(chatId, message);
-                    
-                    // Reload chats if on home page
-                    if (document.getElementById('homePage').classList.contains('active')) {
-                        await loadChats();
-                        playNotificationSound();
-                        showToast(`New message from ${randomContact.name}`, 'info');
-                    }
-                }
-                
-                // Simulate new zynes
-                if (Math.random() > 0.8 && contacts.length > 0) {
-                    const randomContact = contacts[Math.floor(Math.random() * contacts.length)];
-                    const zyneTexts = ['Beautiful day!', 'Check out my new post!', 'Having fun!'];
-                    const randomText = zyneTexts[Math.floor(Math.random() * zyneTexts.length)];
-                    
-                    const zyneData = {
-                        text: randomText,
-                        userName: randomContact.name,
-                        userAvatar: randomContact.profilePicture,
-                        userId: randomContact.userId,
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    // Add to contact's zynes
-                    if (!db.zynes[randomContact.userId]) {
-                        db.zynes[randomContact.userId] = [];
-                    }
-                    db.zynes[randomContact.userId].unshift({
-                        id: 'zyne_' + Date.now(),
-                        ...zyneData
-                    });
-                    localStorage.setItem('zynapse_zynes', JSON.stringify(db.zynes));
-                    
-                    // Reload zynes if on zynes page
-                    if (document.getElementById('zynesPage').classList.contains('active')) {
-                        await loadZynes();
-                    }
-                }
-                
-            }, 30000); // Every 30 seconds
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
+
+        // Handle visibility change for online status
+        document.addEventListener('visibilitychange', async () => {
+            if (userPresenceRef) {
+                if (document.hidden) {
+                    await userPresenceRef.update({
+                        online: false,
+                        lastSeen: firebase.database.ServerValue.TIMESTAMP
+                    });
+                } else {
+                    await userPresenceRef.update({
+                        online: true,
+                        lastSeen: null
+                    });
+                }
+            }
+        });
 
         // Profile dropdown
         document.getElementById('profileDropdownBtn').addEventListener('click', function(e) {
@@ -4633,22 +6673,108 @@
             document.getElementById('profileDropdown').classList.remove('show');
         });
 
-        function viewProfile() {
-            showToast('Profile view coming soon', 'info');
+        // View Zyne detail
+        async function viewZyneDetail(zyneId, ownerId) {
+            try {
+                const zyneRef = database.ref(`zynes/${ownerId}/${zyneId}`);
+                const snapshot = await zyneRef.once('value');
+                
+                if (snapshot.exists()) {
+                    const zyne = snapshot.val();
+                    const modal = document.createElement('div');
+                    modal.className = 'modal-overlay active';
+                    
+                    let commentsHtml = '';
+                    if (zyne.comments) {
+                        commentsHtml = Object.values(zyne.comments).map(comment => `
+                            <div class="comment-item">
+                                <img src="${comment.userAvatar || 'https://via.placeholder.com/150'}" 
+                                     alt="${comment.userName}" class="comment-avatar">
+                                <div class="comment-content">
+                                    <div class="comment-text">${comment.text}</div>
+                                    <div class="comment-info">
+                                        <span>${comment.userName}</span>
+                                        <span>${formatTime(comment.timestamp)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    modal.innerHTML = `
+                        <div class="modal-content" style="max-width: 500px;">
+                            <div class="modal-header">
+                                <h3>Zyne Details</h3>
+                                <button class="close-modal" onclick="this.closest('.modal-overlay').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="zyne-content">
+                                    ${zyne.text ? `<div class="zyne-text">${zyne.text}</div>` : ''}
+                                    ${zyne.media ? `
+                                        ${zyne.media.type === 'image' ? 
+                                            `<img src="${zyne.media.url}" alt="Zyne media" class="zyne-media" style="width: 100%;">` :
+                                            `<video src="${zyne.media.url}" controls class="zyne-media" style="width: 100%;"></video>`
+                                        }
+                                    ` : ''}
+                                </div>
+                                <div class="zyne-stats">
+                                    <span>${zyne.likes ? Object.keys(zyne.likes).length : 0} likes</span>
+                                    <span>${zyne.comments ? Object.keys(zyne.comments).length : 0} comments</span>
+                                </div>
+                                <div class="zyne-comments">
+                                    <h4 style="margin-bottom: 10px;">Comments</h4>
+                                    <div class="comment-list">
+                                        ${commentsHtml || '<p style="text-align: center; color: var(--gray-500);">No comments yet</p>'}
+                                    </div>
+                                    <input type="text" class="comment-input" placeholder="Add a comment..." 
+                                           onkeypress="if(event.key === 'Enter') addCommentToModal('${zyneId}', '${ownerId}', this)">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                }
+            } catch (error) {
+                console.error('Error viewing zyne detail:', error);
+                showToast('Failed to load zyne details', 'error');
+            }
         }
 
-        function openSettings() {
-            showToast('Settings coming soon', 'info');
-        }
-
-        function toggleTheme() {
-            showToast('Dark mode is disabled in this version', 'info');
-        }
-
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('zynapse_user');
-                window.location.href = 'index.html';
+        async function addCommentToModal(zyneId, ownerId, input) {
+            const comment = input.value.trim();
+            if (!comment) return;
+            
+            try {
+                const commentId = database.ref().child('comments').push().key;
+                const timestamp = Date.now();
+                
+                const commentData = {
+                    id: commentId,
+                    text: comment,
+                    userId: currentUser.userId,
+                    userName: currentUser.name,
+                    userAvatar: currentUser.profilePicture,
+                    timestamp: timestamp
+                };
+                
+                await database.ref(`zynes/${ownerId}/${zyneId}/comments/${commentId}`).set(commentData);
+                
+                input.value = '';
+                showToast('Comment added!', 'success');
+                
+                // Reload the modal
+                const modal = input.closest('.modal-overlay');
+                if (modal) {
+                    modal.remove();
+                    viewZyneDetail(zyneId, ownerId);
+                }
+                
+            } catch (error) {
+                console.error('Error adding comment:', error);
+                showToast('Failed to add comment', 'error');
             }
         }
 
@@ -4656,6 +6782,113 @@
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
         });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const floatingBtn = document.getElementById('floatingBtn');
+            const rect = floatingBtn.getBoundingClientRect();
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // Keep button within bounds
+            if (rect.right > windowWidth || rect.bottom > windowHeight) {
+                floatingBtn.style.left = '';
+                floatingBtn.style.top = '';
+                floatingBtn.style.right = '16px';
+                floatingBtn.style.bottom = '20px';
+                floatingBtn.style.transform = '';
+            }
+        });
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Handle app visibility for notifications
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(error => {
+                console.log('Service Worker registration failed:', error);
+            });
+        }
+
+        // Add vibration support
+        function vibrate(pattern = [100]) {
+            if ('vibrate' in navigator && currentUser.notifications && currentUser.notifications.vibration !== false) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        // Initialize notification sound
+        const notificationSound = new Audio('notification.mp3');
+        notificationSound.volume = 0.3;
+
+        // Export functions for HTML onclick
+        window.copyUserId = copyUserId;
+        window.switchPage = switchPage;
+        window.openStartChatModal = openStartChatModal;
+        window.closeStartChatModal = closeStartChatModal;
+        window.sendChatRequest = sendChatRequest;
+        window.acceptRequest = acceptRequest;
+        window.rejectRequest = rejectRequest;
+        window.openChat = openChat;
+        window.closeChat = closeChat;
+        window.toggleAttachmentOptions = toggleAttachmentOptions;
+        window.attachPhoto = attachPhoto;
+        window.attachVideo = attachVideo;
+        window.attachDocument = attachDocument;
+        window.attachLocation = attachLocation;
+        window.attachViewOnce = attachViewOnce;
+        window.attachVoiceNote = attachVoiceNote;
+        window.openCreateGroupModal = openCreateGroupModal;
+        window.closeCreateGroupModal = closeCreateGroupModal;
+        window.openGroupImageUploader = openGroupImageUploader;
+        window.removeGroupImage = removeGroupImage;
+        window.createGroup = createGroup;
+        window.toggleMemberSelection = toggleMemberSelection;
+        window.openZyneMediaUploader = openZyneMediaUploader;
+        window.removeZyneMedia = removeZyneMedia;
+        window.postZyne = postZyne;
+        window.likeZyne = likeZyne;
+        window.commentOnZyne = commentOnZyne;
+        window.deleteZyne = deleteZyne;
+        window.openProfileModal = openProfileModal;
+        window.closeProfileModal = closeProfileModal;
+        window.openEditProfileModal = openEditProfileModal;
+        window.closeEditProfileModal = closeEditProfileModal;
+        window.openProfileImageUploader = openProfileImageUploader;
+        window.removeProfileImage = removeProfileImage;
+        window.saveProfile = saveProfile;
+        window.openPrivacySettings = openPrivacySettings;
+        window.closePrivacyModal = closePrivacyModal;
+        window.savePrivacySettings = savePrivacySettings;
+        window.openNotificationSettings = openNotificationSettings;
+        window.closeNotificationModal = closeNotificationModal;
+        window.saveNotificationSettings = saveNotificationSettings;
+        window.showChatOptionsModal = showChatOptionsModal;
+        window.closeChatOptionsModal = closeChatOptionsModal;
+        window.viewContactProfileFromChat = viewContactProfileFromChat;
+        window.addNickname = addNickname;
+        window.closeNicknameModal = closeNicknameModal;
+        window.saveNickname = saveNickname;
+        window.toggleFavorite = toggleFavorite;
+        window.blockUser = blockUser;
+        window.reportUser = reportUser;
+        window.closeReportModal = closeReportModal;
+        window.submitReport = submitReport;
+        window.deleteChat = deleteChat;
+        window.viewContactProfile = viewContactProfile;
+        window.removeContact = removeContact;
+        window.toggleTheme = toggleTheme;
+        window.logout = logout;
+        window.viewZyneDetail = viewZyneDetail;
+        window.openGroupChat = openGroupChat;
+        window.sendMessage = sendMessage;
+        window.sendGroupMessage = sendGroupMessage;
+        window.viewOnceMedia = viewOnceMedia;
+        window.playVoiceMessage = playVoiceMessage;
+        window.downloadFile = downloadFile;
+        window.stopVoiceRecording = stopVoiceRecording;
     </script>
 </body>
 </html>
