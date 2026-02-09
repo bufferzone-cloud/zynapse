@@ -4,10 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zynapse - Secure Chat</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#007aff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Zynapse">
+    <link rel="apple-touch-icon" href="zynaps.png">
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="zynaps.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Cloudinary Upload Widget -->
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    
     <style>
         /* ==================== ZYNAPSE iOS THEMED CHAT APP - PRODUCTION CSS ==================== */
         /* Reset & Base Styles - Compact iOS Style */
@@ -110,6 +124,92 @@
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
+        }
+
+        /* PWA Install Prompt */
+        .pwa-install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gray-900);
+            color: var(--white);
+            padding: 12px 20px;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-heavy);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 99999;
+            animation: slideUp 0.3s var(--transition-spring);
+            max-width: 90%;
+            backdrop-filter: blur(10px);
+            background: rgba(44, 44, 46, 0.95);
+        }
+
+        .pwa-install-prompt.hidden {
+            display: none;
+        }
+
+        .pwa-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: var(--blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .pwa-content {
+            flex: 1;
+        }
+
+        .pwa-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .pwa-description {
+            font-size: 12px;
+            color: var(--gray-300);
+            opacity: 0.9;
+        }
+
+        .pwa-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pwa-btn {
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition-normal);
+            flex-shrink: 0;
+        }
+
+        .pwa-btn-install {
+            background: var(--blue);
+            color: var(--white);
+        }
+
+        .pwa-btn-install:hover {
+            background: #0066d6;
+        }
+
+        .pwa-btn-dismiss {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+        }
+
+        .pwa-btn-dismiss:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         /* Safe Area Insets for Notch Devices */
@@ -717,6 +817,20 @@
             .auth-form {
                 padding: var(--space-5);
             }
+            
+            .pwa-install-prompt {
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+            
+            .pwa-actions {
+                width: 100%;
+            }
+            
+            .pwa-btn {
+                flex: 1;
+            }
         }
 
         @media (max-width: 480px) {
@@ -954,6 +1068,21 @@
         </div>
     </div>
 
+    <!-- PWA Install Prompt -->
+    <div class="pwa-install-prompt hidden" id="pwaInstallPrompt">
+        <div class="pwa-icon">
+            <i class="fas fa-comments" style="color: white; font-size: 20px;"></i>
+        </div>
+        <div class="pwa-content">
+            <div class="pwa-title">Install Zynapse</div>
+            <div class="pwa-description">Add to home screen for better experience</div>
+        </div>
+        <div class="pwa-actions">
+            <button class="pwa-btn pwa-btn-install" onclick="installPWA()">Install</button>
+            <button class="pwa-btn pwa-btn-dismiss" onclick="dismissPWA()">Later</button>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
@@ -1143,6 +1272,8 @@
     let currentUser = null;
     let profileImageUrl = '';
     let cloudinaryWidget = null;
+    let deferredPrompt = null;
+    let isPWAInstalled = false;
 
     // Initialize application
     document.addEventListener('DOMContentLoaded', async function() {
@@ -1168,7 +1299,96 @@
                 console.log("No user signed in");
             }
         });
+
+        // Initialize PWA functionality
+        initializePWA();
     });
+
+    // PWA Functions
+    function initializePWA() {
+        // Check if app is already installed
+        if (window.matchMedia('(display-mode: standalone)').matches || 
+            window.navigator.standalone === true) {
+            isPWAInstalled = true;
+            return;
+        }
+
+        // Check for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show install prompt after a delay
+            setTimeout(showInstallPrompt, 3000);
+        });
+
+        // Check if app was successfully installed
+        window.addEventListener('appinstalled', () => {
+            isPWAInstalled = true;
+            hideInstallPrompt();
+            showToast('Zynapse installed successfully!', 'success');
+            console.log('PWA was installed');
+        });
+
+        // For iOS - check if in standalone mode
+        if (window.navigator.standalone === true) {
+            isPWAInstalled = true;
+        }
+    }
+
+    function showInstallPrompt() {
+        // Only show if not already installed and deferredPrompt exists
+        if (!isPWAInstalled && deferredPrompt) {
+            const prompt = document.getElementById('pwaInstallPrompt');
+            prompt.classList.remove('hidden');
+            
+            // Auto hide after 10 seconds
+            setTimeout(() => {
+                hideInstallPrompt();
+            }, 10000);
+        }
+    }
+
+    function hideInstallPrompt() {
+        const prompt = document.getElementById('pwaInstallPrompt');
+        prompt.classList.add('hidden');
+    }
+
+    function installPWA() {
+        if (!deferredPrompt) {
+            // For iOS, show instructions
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                showToast('Tap the Share button and then "Add to Home Screen"', 'info');
+            } else {
+                showToast('Use browser menu to install this app', 'info');
+            }
+            hideInstallPrompt();
+            return;
+        }
+
+        // Show the install prompt
+        deferredPrompt.prompt();
+        
+        // Wait for the user to respond to the prompt
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+                isPWAInstalled = true;
+            } else {
+                console.log('User dismissed the install prompt');
+            }
+            // Clear the saved prompt since it can't be used again
+            deferredPrompt = null;
+            hideInstallPrompt();
+        });
+    }
+
+    function dismissPWA() {
+        hideInstallPrompt();
+        // Store dismissal in localStorage to not show again today
+        localStorage.setItem('pwaPromptDismissed', Date.now());
+    }
 
     // Show/Hide Forms
     function showWelcomeScreen() {
@@ -1676,6 +1896,20 @@
     function validatePhoneNumber(phone) {
         const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
         return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
+    }
+</script>
+
+<!-- Service Worker Registration -->
+<script>
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        });
     }
 </script>
 </body>
