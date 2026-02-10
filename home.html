@@ -2664,6 +2664,46 @@
             font-weight: 500;
         }
 
+        /* Add to existing CSS */
+.zyne-media {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: block;
+    background: var(--gray-50);
+}
+
+.zyne-media.video {
+    background: var(--black);
+}
+
+.group-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-circle);
+    object-fit: cover;
+    border: 2px solid var(--blue);
+    flex-shrink: 0;
+}
+
+.message-location-map {
+    width: 100%;
+    height: 150px;
+    background: var(--gray-100);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.chat-list-item.unread {
+    background: var(--blue-light);
+}
+
+.chat-list-item.unread .chat-list-name {
+    font-weight: 700;
+}
+
         /* Chat Search */
         .chat-search-container {
             position: absolute;
@@ -5627,6 +5667,20 @@ async function loadChats() {
     }
 }
 
+
+async function markChatAsUnread(chatId, increment = true) {
+    try {
+        if (increment) {
+            await database.ref(`users/${currentUser.uid}/chats/${chatId}/unreadCount`).set(
+                firebase.database.ServerValue.increment(1)
+            );
+        } else {
+            await database.ref(`users/${currentUser.uid}/chats/${chatId}/unreadCount`).set(0);
+        }
+    } catch (error) {
+        console.error('Error marking chat as unread:', error);
+    }
+}
 async function loadBlockedUsers() {
     try {
         const snapshot = await database.ref(`users/${currentUser.uid}/blocked`).once('value');
@@ -5793,14 +5847,15 @@ function renderZynes() {
             </div>
             <div class="zyne-content">
                 ${zyne.text ? `<div class="zyne-text">${escapeHtml(zyne.text)}</div>` : ''}
-                ${zyne.mediaUrl ? `
-                    <div class="zyne-media-container">
-                        ${zyne.mediaType === 'image' ? 
-                            `<img src="${zyne.mediaUrl}" alt="Zyne media" class="zyne-media" onclick="viewMedia('${zyne.mediaUrl}')">` :
-                            `<video src="${zyne.mediaUrl}" controls class="zyne-media"></video>`
-                        }
-                    </div>
-                ` : ''}
+                // Find this section in renderZynes() and REPLACE it:
+${zyne.mediaUrl ? `
+    <div class="zyne-media-container">
+        ${zyne.mediaType === 'image' ? 
+            `<img src="${zyne.mediaUrl}" alt="Zyne media" class="zyne-media" onclick="viewMedia('${zyne.mediaUrl}')">` :
+            `<video src="${zyne.mediaUrl}" controls class="zyne-media"></video>`
+        }
+    </div>
+` : ''}
             </div>
             <div class="zyne-stats">
                 <div class="zyne-stat">
@@ -5907,8 +5962,9 @@ function renderGroups() {
     groupsList.innerHTML = groups.map(group => `
         <div class="group-card">
             <div onclick="openGroupChat('${group.id}')" style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                <img src="${group.groupPhoto || 'https://via.placeholder.com/150'}" 
-                     alt="${group.name}" class="group-avatar">
+               // Find this section in renderGroups() and UPDATE it:
+<img src="${group.groupPhoto || 'https://via.placeholder.com/150'}" 
+     alt="${group.name}" class="group-avatar">
                 <div class="group-info">
                     <div class="group-name">
                         ${group.name}
@@ -6921,7 +6977,10 @@ function addMessageToChat(message) {
     const messageElement = createMessageElement(message);
     chatMessages.appendChild(messageElement);
     
-    scrollToBottom();
+    // Auto-scroll to bottom
+    setTimeout(() => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 100);
     
     if (message.senderId !== currentUser.userId) {
         playNotificationSound();
@@ -7088,24 +7147,40 @@ function createDocumentMessage(message, isSent) {
 
 function createLocationMessage(message, isSent) {
     const showSenderName = currentChat.type === 'group' && !isSent;
+    const mapId = `map-${message.id}`;
+    
+    // Initialize map after element is added to DOM
+    setTimeout(() => {
+        if (document.getElementById(mapId)) {
+            const map = L.map(mapId).setView([message.location.latitude, message.location.longitude], 15);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            L.marker([message.location.latitude, message.location.longitude])
+                .addTo(map)
+                .bindPopup(message.location.address || 'Location')
+                .openPopup();
+        }
+    }, 100);
     
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
-            <div class="message-location" onclick="openLocation('${message.location.latitude}', '${message.location.longitude}')">
-                <div class="message-location-map">
-                    <i class="fas fa-map-marker-alt" style="font-size: 28px; color: var(--blue);"></i>
-                </div>
+            <div class="message-location" onclick="openLocationInMap('${message.location.latitude}', '${message.location.longitude}', '${message.location.address}')">
+                <div id="${mapId}" class="message-location-map" style="width: 100%; height: 150px; border-radius: var(--radius-sm);"></div>
             </div>
             <div class="message-location-info">
                 <div class="message-location-address">
-                    <i class="fas fa-map-pin"></i>
-                    ${message.location.address}
+                    <i class="fas fa-map-marker-alt"></i>
+                    ${message.location.address || 'Shared Location'}
                 </div>
                 <div class="message-location-details">
-                    <span>${message.location.city}</span>
+                    <span>Lat: ${message.location.latitude.toFixed(4)}</span>
                     <span>•</span>
-                    <span>${message.location.country}</span>
+                    <span>Lng: ${message.location.longitude.toFixed(4)}</span>
                 </div>
             </div>
             <span class="message-time">
@@ -7118,6 +7193,47 @@ function createLocationMessage(message, isSent) {
             </span>
         </div>
     `;
+}
+
+function openLocationInMap(lat, lng, address) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Location</h3>
+                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <div id="fullscreen-map" style="width: 100%; height: 400px;"></div>
+                <div style="padding: var(--space-3);">
+                    <div style="font-weight: 600; margin-bottom: 4px;">${address || 'Location'}</div>
+                    <div style="font-size: 12px; color: var(--gray-600);">
+                        <div>Latitude: ${lat}</div>
+                        <div>Longitude: ${lng}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    setTimeout(() => {
+        const map = L.map('fullscreen-map').setView([lat, lng], 15);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+        
+        L.marker([lat, lng])
+            .addTo(map)
+            .bindPopup(address || 'Location')
+            .openPopup();
+    }, 100);
 }
 
 function createVoiceMessage(message, isSent) {
@@ -7154,9 +7270,9 @@ function createViewOnceMessage(message, isSent) {
         return `
             <div class="message-bubble">
                 ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
-                <div class="message-view-once-viewed">
-                    <i class="fas fa-eye-slash"></i>
-                    <span>View once photo has been viewed</span>
+                <div class="message-view-once-viewed" style="text-align: center; padding: 20px; color: var(--gray-500);">
+                    <i class="fas fa-eye-slash" style="font-size: 24px; margin-bottom: 8px;"></i>
+                    <div>View once media has been viewed</div>
                 </div>
                 <span class="message-time">
                     ${formatTime(message.timestamp)}
@@ -7170,15 +7286,26 @@ function createViewOnceMessage(message, isSent) {
         `;
     }
     
+    const isImage = message.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+    const isVideo = message.mediaUrl.match(/\.(mp4|webm|ogg)$/i);
+    
     return `
         <div class="message-bubble message-view-once">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
             <div class="message-view-once-overlay" id="viewOnceOverlay-${message.id}" onclick="viewOnceMessage('${message.id}')">
                 <i class="fas fa-eye"></i>
                 <span>View Once</span>
-                <small>Tap to view • This media will be deleted after you view it</small>
+                <small>Tap to view • This media will disappear after viewing</small>
             </div>
-            <img src="${message.mediaUrl}" alt="View once photo" class="message-media" style="display: none;">
+            ${isImage ? 
+                `<img src="" alt="View once photo" class="message-media" style="display: none;">` :
+                isVideo ?
+                `<video controls class="message-media" style="display: none;"></video>` :
+                `<div class="message-media" style="display: none; text-align: center; padding: 20px;">
+                    <i class="fas fa-file"></i>
+                    <div>Media file</div>
+                </div>`
+            }
             <span class="message-time">
                 ${formatTime(message.timestamp)}
                 ${isSent && privacySettings.readReceipts ? `
@@ -7189,6 +7316,91 @@ function createViewOnceMessage(message, isSent) {
             </span>
         </div>
     `;
+}
+
+async function addMembersAsMember(groupId) {
+    try {
+        const groupSnapshot = await groupsRef.child(groupId).once('value');
+        const group = groupSnapshot.val();
+        
+        // Show modal to select contacts to add
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay active';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add Members to ${group.name}</h3>
+                    <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="group-members-list" style="max-height: 300px; overflow-y: auto;">
+                        ${contacts.filter(contact => !group.members[contact.uid]).map(contact => `
+                            <div class="group-member-item" onclick="addMemberToGroup('${groupId}', '${contact.uid}')">
+                                <img src="${contact.profilePicture || 'https://via.placeholder.com/150'}" 
+                                     alt="${contact.name}" class="group-member-avatar">
+                                <div class="group-member-info">
+                                    <div class="group-member-name">${contact.name}</div>
+                                    <div class="group-member-id">${contact.userId}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+    } catch (error) {
+        console.error('Error adding members:', error);
+        showToast('Failed to load contacts', 'error');
+    }
+}
+
+async function addMemberToGroup(groupId, userId) {
+    try {
+        const groupSnapshot = await groupsRef.child(groupId).once('value');
+        const group = groupSnapshot.val();
+        
+        // Add member to group
+        await groupsRef.child(groupId).update({
+            [`members/${userId}`]: true
+        });
+        
+        // Add group to member's groups
+        const userSnapshot = await usersRef.child(userId).once('value');
+        const user = userSnapshot.val();
+        
+        await database.ref(`users/${userId}/groups/${groupId}`).set({
+            id: groupId,
+            name: group.name,
+            groupPhoto: group.groupPhoto || '',
+            joinedAt: new Date().toISOString(),
+            unreadCount: 0
+        });
+        
+        // Add group chat to member's chats
+        await database.ref(`users/${userId}/chats/${groupId}`).set({
+            id: groupId,
+            type: 'group',
+            name: group.name,
+            profilePicture: group.groupPhoto || '',
+            lastMessage: '',
+            lastMessageTime: new Date().toISOString(),
+            unreadCount: 0
+        });
+        
+        showToast('Member added successfully', 'success');
+        
+        // Close modal
+        document.querySelector('.modal-overlay.active').remove();
+        
+    } catch (error) {
+        console.error('Error adding member:', error);
+        showToast('Failed to add member', 'error');
+    }
 }
 
 function addReactionsToMessage(messageDiv, messageId, reactions) {
@@ -7746,25 +7958,77 @@ async function sendViewOnceMessage(mediaUrl) {
 
 async function viewOnceMessage(messageId) {
     try {
+        // First, get the message to check if it's already viewed
+        const messageSnapshot = await messagesRef.child(currentChat.id).child(messageId).once('value');
+        const message = messageSnapshot.val();
+        
+        if (!message) {
+            showToast('Message not found', 'error');
+            return;
+        }
+        
+        // Check if already viewed
+        const viewedBy = message.viewedBy || [];
+        if (viewedBy.includes(currentUser.uid)) {
+            showToast('Already viewed', 'info');
+            return;
+        }
+        
         // Mark as viewed
         await messagesRef.child(currentChat.id).child(messageId).update({
-            viewedBy: firebase.database.ServerValue.arrayUnion(currentUser.uid)
+            viewedBy: firebase.database.ServerValue.arrayUnion(currentUser.uid),
+            status: 'read'
         });
         
         // Show the media
         const overlay = document.getElementById(`viewOnceOverlay-${messageId}`);
-        const media = document.querySelector(`#viewOnceOverlay-${messageId}`).parentNode.querySelector('.message-media');
+        const media = overlay.parentNode.querySelector('.message-media');
         
-        if (overlay) overlay.style.display = 'none';
-        if (media) media.style.display = 'block';
+        if (overlay) {
+            overlay.style.display = 'none';
+            overlay.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-eye-slash"></i><div>Viewed</div></div>';
+        }
         
-        // Schedule deletion after 24 hours
+        if (media) {
+            media.style.display = 'block';
+            
+            // For images, show immediately
+            if (media.tagName === 'IMG') {
+                media.src = message.mediaUrl;
+            }
+            
+            // For videos, create video element
+            if (media.tagName === 'VIDEO') {
+                const video = document.createElement('video');
+                video.src = message.mediaUrl;
+                video.controls = true;
+                video.className = 'message-media';
+                video.style.width = '100%';
+                media.parentNode.replaceChild(video, media);
+            }
+        }
+        
+        // Schedule deletion after viewing (immediate or after delay)
         setTimeout(async () => {
-            await messagesRef.child(currentChat.id).child(messageId).remove();
-        }, 24 * 60 * 60 * 1000);
+            try {
+                // Remove from Firebase
+                await messagesRef.child(currentChat.id).child(messageId).remove();
+                
+                // Remove from UI
+                const messageElement = document.querySelector(`.message-container[data-message-id="${messageId}"]`);
+                if (messageElement) {
+                    messageElement.remove();
+                }
+            } catch (error) {
+                console.error('Error deleting view once message:', error);
+            }
+        }, 5000); // Delete after 5 seconds of viewing
+        
+        showToast('View once message will disappear soon', 'info');
         
     } catch (error) {
         console.error('Error viewing once message:', error);
+        showToast('Failed to view message', 'error');
     }
 }
 
@@ -8383,8 +8647,53 @@ async function createGroup() {
 
 function showGroupOptions(event, groupId, isAdmin) {
     event.stopPropagation();
+    
+    // Close any open menus first
+    document.querySelectorAll('.group-admin-menu').forEach(menu => {
+        menu.classList.remove('show');
+    });
+    
     const menu = document.getElementById(`group-menu-${groupId}`);
-    menu.classList.toggle('show');
+    if (menu) {
+        // Update menu content based on admin status
+        menu.innerHTML = isAdmin ? `
+            <button class="group-menu-item" onclick="openGroupAdmin('${groupId}')">
+                <i class="fas fa-cog"></i> Manage Group
+            </button>
+            <button class="group-menu-item" onclick="editGroupInfo('${groupId}')">
+                <i class="fas fa-edit"></i> Edit Info
+            </button>
+            <button class="group-menu-item" onclick="addGroupMembers('${groupId}')">
+                <i class="fas fa-user-plus"></i> Add Members
+            </button>
+            <button class="group-menu-item danger" onclick="deleteGroup('${groupId}')">
+                <i class="fas fa-trash"></i> Delete Group
+            </button>
+        ` : `
+            <button class="group-menu-item" onclick="viewGroupInfo('${groupId}')">
+                <i class="fas fa-info-circle"></i> Group Info
+            </button>
+            <button class="group-menu-item" onclick="addMembersAsMember('${groupId}')">
+                <i class="fas fa-user-plus"></i> Add Members
+            </button>
+            <button class="group-menu-item danger" onclick="leaveGroup('${groupId}')">
+                <i class="fas fa-sign-out-alt"></i> Leave Group
+            </button>
+        `;
+        
+        menu.classList.toggle('show');
+    }
+    
+    // Close menu when clicking elsewhere
+    setTimeout(() => {
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target) && !e.target.closest(`#group-menu-${groupId}`)) {
+                menu.classList.remove('show');
+                document.removeEventListener('click', closeMenu);
+            }
+        };
+        document.addEventListener('click', closeMenu);
+    }, 0);
 }
 
 async function openGroupAdmin() {
@@ -9917,6 +10226,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
