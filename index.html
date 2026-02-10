@@ -6,17 +6,22 @@
     <title>Zynapse - Secure Chat</title>
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#007aff">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- iOS PWA Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Zynapse">
     <link rel="apple-touch-icon" href="zynaps.png">
     
+    <!-- PWA Theme Color -->
+    <meta name="theme-color" content="#007aff">
+    <meta name="msapplication-TileColor" content="#007aff">
+    
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="zynaps.png">
+    <link rel="shortcut icon" href="zynaps.png">
     
-    <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Cloudinary Upload Widget -->
@@ -124,92 +129,6 @@
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
-        }
-
-        /* PWA Install Prompt */
-        .pwa-install-prompt {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--gray-900);
-            color: var(--white);
-            padding: 12px 20px;
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-heavy);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 99999;
-            animation: slideUp 0.3s var(--transition-spring);
-            max-width: 90%;
-            backdrop-filter: blur(10px);
-            background: rgba(44, 44, 46, 0.95);
-        }
-
-        .pwa-install-prompt.hidden {
-            display: none;
-        }
-
-        .pwa-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: var(--radius-md);
-            background: var(--blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .pwa-content {
-            flex: 1;
-        }
-
-        .pwa-title {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 2px;
-        }
-
-        .pwa-description {
-            font-size: 12px;
-            color: var(--gray-300);
-            opacity: 0.9;
-        }
-
-        .pwa-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .pwa-btn {
-            padding: 8px 14px;
-            border-radius: var(--radius-md);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            transition: all var(--transition-normal);
-            flex-shrink: 0;
-        }
-
-        .pwa-btn-install {
-            background: var(--blue);
-            color: var(--white);
-        }
-
-        .pwa-btn-install:hover {
-            background: #0066d6;
-        }
-
-        .pwa-btn-dismiss {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--white);
-        }
-
-        .pwa-btn-dismiss:hover {
-            background: rgba(255, 255, 255, 0.2);
         }
 
         /* Safe Area Insets for Notch Devices */
@@ -372,6 +291,42 @@
             color: var(--blue);
             text-decoration: none;
             font-weight: 600;
+        }
+
+        /* Install App Button */
+        .install-app-btn {
+            background: var(--green);
+            color: var(--white);
+            border: none;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: var(--space-2);
+            animation: pulseInstall 2s infinite;
+        }
+
+        .install-app-btn:hover:not(:disabled) {
+            background: #2ab34a;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .install-app-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .install-app-btn.installed {
+            background: var(--gray-500);
+            animation: none;
         }
 
         /* Auth Forms */
@@ -804,6 +759,17 @@
             50% { transform: scale(1.1); }
         }
 
+        @keyframes pulseInstall {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7);
+            }
+            50% { 
+                transform: scale(1.02);
+                box-shadow: 0 0 0 10px rgba(52, 199, 89, 0);
+            }
+        }
+
         /* ==================== RESPONSIVE DESIGN ==================== */
         @media (max-width: 768px) {
             html {
@@ -816,20 +782,6 @@
             
             .auth-form {
                 padding: var(--space-5);
-            }
-            
-            .pwa-install-prompt {
-                flex-direction: column;
-                text-align: center;
-                gap: 8px;
-            }
-            
-            .pwa-actions {
-                width: 100%;
-            }
-            
-            .pwa-btn {
-                flex: 1;
             }
         }
 
@@ -864,6 +816,10 @@
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
+            }
+            
+            .install-app-btn {
+                animation: none !important;
             }
         }
 
@@ -1058,6 +1014,111 @@
             }
         }
     </style>
+    
+    <!-- PWA Manifest inline to avoid external file -->
+    <script type="application/manifest+json" id="manifest-data">
+    {
+        "name": "Zynapse",
+        "short_name": "Zynapse",
+        "description": "Secure, private messaging with end-to-end encryption",
+        "start_url": "https://bufferzone-cloud.github.io/zynapse/index.html",
+        "scope": "https://bufferzone-cloud.github.io/zynapse/",
+        "display": "standalone",
+        "display_override": ["standalone", "fullscreen", "minimal-ui"],
+        "orientation": "portrait",
+        "background_color": "#ffffff",
+        "theme_color": "#007aff",
+        "categories": ["social", "communication", "productivity"],
+        "icons": [
+            {
+                "src": "zynaps.png",
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": "zynaps.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": "zynaps.png",
+                "sizes": "180x180",
+                "type": "image/png",
+                "purpose": "apple touch icon"
+            },
+            {
+                "src": "zynaps.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "monochrome"
+            }
+        ],
+        "screenshots": [
+            {
+                "src": "https://bufferzone-cloud.github.io/zynapse/screenshot1.png",
+                "sizes": "1170x2532",
+                "type": "image/png",
+                "form_factor": "narrow",
+                "label": "Zynapse Chat Interface"
+            }
+        ],
+        "shortcuts": [
+            {
+                "name": "New Chat",
+                "short_name": "Chat",
+                "description": "Start a new chat",
+                "url": "https://bufferzone-cloud.github.io/zynapse/home.html?new_chat=true",
+                "icons": [
+                    {
+                        "src": "zynaps.png",
+                        "sizes": "96x96",
+                        "type": "image/png"
+                    }
+                ]
+            },
+            {
+                "name": "Contacts",
+                "short_name": "Contacts",
+                "description": "View your contacts",
+                "url": "https://bufferzone-cloud.github.io/zynapse/home.html?contacts=true",
+                "icons": [
+                    {
+                        "src": "zynaps.png",
+                        "sizes": "96x96",
+                        "type": "image/png"
+                    }
+                ]
+            }
+        ],
+        "protocol_handlers": [
+            {
+                "protocol": "web+zynapse",
+                "url": "https://bufferzone-cloud.github.io/zynapse/?link=%s"
+            }
+        ],
+        "share_target": {
+            "action": "https://bufferzone-cloud.github.io/zynapse/share.html",
+            "method": "GET",
+            "params": {
+                "title": "title",
+                "text": "text",
+                "url": "url"
+            }
+        },
+        "file_handlers": [
+            {
+                "action": "https://bufferzone-cloud.github.io/zynapse/upload.html",
+                "accept": {
+                    "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp"],
+                    "video/*": [".mp4", ".mov", ".avi", ".mkv"],
+                    "audio/*": [".mp3", ".wav", ".m4a"]
+                }
+            }
+        ]
+    }
+    </script>
 </head>
 <body>
     <!-- Loading Screen -->
@@ -1065,21 +1126,6 @@
         <div class="loading-content">
             <div class="spinner-large"></div>
             <p>Loading Zynapse...</p>
-        </div>
-    </div>
-
-    <!-- PWA Install Prompt -->
-    <div class="pwa-install-prompt hidden" id="pwaInstallPrompt">
-        <div class="pwa-icon">
-            <i class="fas fa-comments" style="color: white; font-size: 20px;"></i>
-        </div>
-        <div class="pwa-content">
-            <div class="pwa-title">Install Zynapse</div>
-            <div class="pwa-description">Add to home screen for better experience</div>
-        </div>
-        <div class="pwa-actions">
-            <button class="pwa-btn pwa-btn-install" onclick="installPWA()">Install</button>
-            <button class="pwa-btn pwa-btn-dismiss" onclick="dismissPWA()">Later</button>
         </div>
     </div>
 
@@ -1103,6 +1149,18 @@
                     <button class="btn-secondary" onclick="showAuthForm('login')">
                         <i class="fas fa-sign-in-alt"></i> Sign In
                     </button>
+                    
+                    <!-- Install App Button - Hidden by default, shown by JS -->
+                    <button class="install-app-btn hidden" id="installBtn" onclick="installPWA()">
+                        <i class="fas fa-download"></i> Install App
+                    </button>
+                    
+                    <!-- Already Installed Info -->
+                    <div class="already-installed hidden" id="alreadyInstalled">
+                        <p class="text-sm text-gray-500 mt-2">
+                            <i class="fas fa-check-circle text-green"></i> App installed
+                        </p>
+                    </div>
                 </div>
                 
                 <div class="welcome-footer">
@@ -1238,7 +1296,7 @@
         </div>
     </div>
 
-   // Firebase Configuration - Use these actual imports
+   <!-- Firebase Configuration - Use these actual imports -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -1272,8 +1330,11 @@
     let currentUser = null;
     let profileImageUrl = '';
     let cloudinaryWidget = null;
+    
+    // PWA Variables
     let deferredPrompt = null;
-    let isPWAInstalled = false;
+    let isAppInstalled = false;
+    let isStandalone = false;
 
     // Initialize application
     document.addEventListener('DOMContentLoaded', async function() {
@@ -1300,96 +1361,397 @@
             }
         });
 
-        // Initialize PWA functionality
+        // Initialize PWA
         initializePWA();
     });
 
-    // PWA Functions
+    // ==================== PWA SERVICE WORKER & INSTALLATION ====================
+    
+    // Initialize PWA functionality
     function initializePWA() {
-        // Check if app is already installed
-        if (window.matchMedia('(display-mode: standalone)').matches || 
-            window.navigator.standalone === true) {
-            isPWAInstalled = true;
-            return;
-        }
-
-        // Check for beforeinstallprompt event
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Stash the event so it can be triggered later
-            deferredPrompt = e;
-            // Show install prompt after a delay
-            setTimeout(showInstallPrompt, 3000);
-        });
-
-        // Check if app was successfully installed
-        window.addEventListener('appinstalled', () => {
-            isPWAInstalled = true;
-            hideInstallPrompt();
-            showToast('Zynapse installed successfully!', 'success');
-            console.log('PWA was installed');
-        });
-
-        // For iOS - check if in standalone mode
-        if (window.navigator.standalone === true) {
-            isPWAInstalled = true;
-        }
-    }
-
-    function showInstallPrompt() {
-        // Only show if not already installed and deferredPrompt exists
-        if (!isPWAInstalled && deferredPrompt) {
-            const prompt = document.getElementById('pwaInstallPrompt');
-            prompt.classList.remove('hidden');
-            
-            // Auto hide after 10 seconds
-            setTimeout(() => {
-                hideInstallPrompt();
-            }, 10000);
-        }
-    }
-
-    function hideInstallPrompt() {
-        const prompt = document.getElementById('pwaInstallPrompt');
-        prompt.classList.add('hidden');
-    }
-
-    function installPWA() {
-        if (!deferredPrompt) {
-            // For iOS, show instructions
-            if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-                showToast('Tap the Share button and then "Add to Home Screen"', 'info');
-            } else {
-                showToast('Use browser menu to install this app', 'info');
-            }
-            hideInstallPrompt();
-            return;
-        }
-
-        // Show the install prompt
-        deferredPrompt.prompt();
+        // Check if running in standalone mode
+        isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                      window.navigator.standalone ||
+                      document.referrer.includes('android-app://');
         
-        // Wait for the user to respond to the prompt
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
+        // Check if app is already installed
+        checkIfAppInstalled();
+        
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            registerServiceWorker();
+        }
+        
+        // Listen for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        
+        // Listen for app installed event
+        window.addEventListener('appinstalled', handleAppInstalled);
+        
+        // Update install button visibility
+        updateInstallButton();
+    }
+    
+    // Register Service Worker
+    async function registerServiceWorker() {
+        try {
+            const registration = await navigator.serviceWorker.register('sw.js', {
+                scope: '/zynapse/'
+            });
+            
+            console.log('Service Worker registered with scope:', registration.scope);
+            
+            // Check for updates
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                console.log('New service worker found:', newWorker);
+            });
+            
+        } catch (error) {
+            console.error('Service Worker registration failed:', error);
+            
+            // Fallback: Create inline service worker
+            createInlineServiceWorker();
+        }
+    }
+    
+    // Create inline service worker as fallback
+    function createInlineServiceWorker() {
+        if (!navigator.serviceWorker) return;
+        
+        const swCode = `
+            // Zynapse Service Worker
+            const CACHE_NAME = 'zynapse-v1.0.0';
+            const ASSETS_TO_CACHE = [
+                '/zynapse/index.html',
+                '/zynapse/home.html',
+                '/zynapse/',
+                'zynaps.png'
+            ];
+
+            // Install event
+            self.addEventListener('install', (event) => {
+                event.waitUntil(
+                    caches.open(CACHE_NAME)
+                        .then((cache) => {
+                            return cache.addAll(ASSETS_TO_CACHE);
+                        })
+                        .then(() => self.skipWaiting())
+                );
+            });
+
+            // Activate event
+            self.addEventListener('activate', (event) => {
+                event.waitUntil(
+                    caches.keys().then((cacheNames) => {
+                        return Promise.all(
+                            cacheNames.map((cacheName) => {
+                                if (cacheName !== CACHE_NAME) {
+                                    return caches.delete(cacheName);
+                                }
+                            })
+                        );
+                    }).then(() => self.clients.claim())
+                );
+            });
+
+            // Fetch event
+            self.addEventListener('fetch', (event) => {
+                // Skip cross-origin requests
+                if (!event.request.url.startsWith(self.location.origin)) {
+                    return;
+                }
+
+                event.respondWith(
+                    caches.match(event.request)
+                        .then((response) => {
+                            if (response) {
+                                return response;
+                            }
+                            
+                            return fetch(event.request)
+                                .then((response) => {
+                                    // Don't cache if not a valid response
+                                    if (!response || response.status !== 200 || response.type !== 'basic') {
+                                        return response;
+                                    }
+                                    
+                                    // Clone the response
+                                    const responseToCache = response.clone();
+                                    
+                                    caches.open(CACHE_NAME)
+                                        .then((cache) => {
+                                            cache.put(event.request, responseToCache);
+                                        });
+                                    
+                                    return response;
+                                });
+                        })
+                );
+            });
+
+            // Background sync for messages
+            self.addEventListener('sync', (event) => {
+                if (event.tag === 'sync-messages') {
+                    event.waitUntil(syncMessages());
+                }
+            });
+
+            // Push notifications
+            self.addEventListener('push', (event) => {
+                if (!event.data) return;
+                
+                const data = event.data.json();
+                const options = {
+                    body: data.body,
+                    icon: 'zynaps.png',
+                    badge: 'zynaps.png',
+                    vibrate: [200, 100, 200],
+                    data: {
+                        url: data.url || '/'
+                    },
+                    actions: [
+                        {
+                            action: 'open',
+                            title: 'Open Chat'
+                        },
+                        {
+                            action: 'dismiss',
+                            title: 'Dismiss'
+                        }
+                    ]
+                };
+                
+                event.waitUntil(
+                    self.registration.showNotification(data.title, options)
+                );
+            });
+
+            // Notification click handler
+            self.addEventListener('notificationclick', (event) => {
+                event.notification.close();
+                
+                if (event.action === 'open') {
+                    event.waitUntil(
+                        clients.openWindow(event.notification.data.url)
+                    );
+                } else if (event.action === 'dismiss') {
+                    // Do nothing
+                } else {
+                    event.waitUntil(
+                        clients.openWindow('/')
+                    );
+                }
+            });
+
+            // Background sync function
+            async function syncMessages() {
+                // Implement message synchronization
+                console.log('Syncing messages in background...');
+            }
+        `;
+        
+        try {
+            // Create blob URL for service worker
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swURL = URL.createObjectURL(blob);
+            
+            // Register the blob as service worker
+            navigator.serviceWorker.register(swURL, {
+                scope: '/zynapse/'
+            }).then(registration => {
+                console.log('Inline Service Worker registered:', registration);
+            }).catch(error => {
+                console.error('Inline Service Worker registration failed:', error);
+            });
+        } catch (error) {
+            console.error('Failed to create inline service worker:', error);
+        }
+    }
+    
+    // Handle before install prompt
+    function handleBeforeInstallPrompt(event) {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        event.preventDefault();
+        
+        // Stash the event so it can be triggered later
+        deferredPrompt = event;
+        
+        // Update UI to show install button
+        updateInstallButton();
+    }
+    
+    // Handle app installed event
+    function handleAppInstalled(event) {
+        console.log('App was installed');
+        isAppInstalled = true;
+        deferredPrompt = null;
+        
+        // Update UI
+        updateInstallButton();
+        
+        // Show success message
+        showToast('Zynapse app installed successfully!', 'success');
+    }
+    
+    // Check if app is already installed
+    function checkIfAppInstalled() {
+        // Check various installation indicators
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            isAppInstalled = true;
+        }
+        
+        if (window.navigator.standalone) {
+            isAppInstalled = true;
+        }
+        
+        // Check for other PWA indicators
+        if ('getInstalledRelatedApps' in window.navigator) {
+            window.navigator.getInstalledRelatedApps().then(apps => {
+                if (apps.length > 0) {
+                    isAppInstalled = true;
+                }
+                updateInstallButton();
+            });
+        }
+    }
+    
+    // Update install button visibility
+    function updateInstallButton() {
+        const installBtn = document.getElementById('installBtn');
+        const alreadyInstalled = document.getElementById('alreadyInstalled');
+        
+        if (!installBtn) return;
+        
+        // Show install button only if:
+        // 1. Not in standalone mode
+        // 2. Not already installed
+        // 3. Deferred prompt is available
+        // 4. Not on iOS (iOS has different installation flow)
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        
+        if (!isStandalone && !isAppInstalled && deferredPrompt && !isIOS) {
+            installBtn.classList.remove('hidden');
+            if (alreadyInstalled) alreadyInstalled.classList.add('hidden');
+        } else if (isStandalone || isAppInstalled) {
+            installBtn.classList.add('hidden');
+            if (alreadyInstalled) alreadyInstalled.classList.remove('hidden');
+        } else {
+            installBtn.classList.add('hidden');
+            if (alreadyInstalled) alreadyInstalled.classList.add('hidden');
+        }
+    }
+    
+    // Install PWA function
+    async function installPWA() {
+        if (!deferredPrompt) {
+            // Show iOS installation instructions
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                showIOSInstallInstructions();
+                return;
+            }
+            
+            showToast('App installation not available', 'info');
+            return;
+        }
+        
+        const installBtn = document.getElementById('installBtn');
+        const originalText = installBtn.innerHTML;
+        
+        try {
+            // Show the install prompt
+            deferredPrompt.prompt();
+            
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
                 console.log('User accepted the install prompt');
-                isPWAInstalled = true;
+                showToast('Installing Zynapse...', 'success');
+                installBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing...';
+                installBtn.disabled = true;
             } else {
                 console.log('User dismissed the install prompt');
+                showToast('Installation cancelled', 'info');
             }
-            // Clear the saved prompt since it can't be used again
+            
+            // Clear the saved prompt
             deferredPrompt = null;
-            hideInstallPrompt();
-        });
+            
+            // Update UI
+            updateInstallButton();
+            
+        } catch (error) {
+            console.error('Installation error:', error);
+            showToast('Installation failed: ' + error.message, 'error');
+            installBtn.innerHTML = originalText;
+            installBtn.disabled = false;
+        }
     }
-
-    function dismissPWA() {
-        hideInstallPrompt();
-        // Store dismissal in localStorage to not show again today
-        localStorage.setItem('pwaPromptDismissed', Date.now());
+    
+    // Show iOS installation instructions
+    function showIOSInstallInstructions() {
+        const message = `
+            <div style="text-align: left; padding: 10px;">
+                <h3 style="margin-bottom: 10px;">Install Zynapse on iOS</h3>
+                <ol style="padding-left: 20px; margin-bottom: 15px;">
+                    <li>Tap the <strong>Share</strong> button <i class="fas fa-share-square"></i></li>
+                    <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+                    <li>Tap <strong>"Add"</strong> in the top right corner</li>
+                </ol>
+                <p style="font-size: 12px; color: #666;">The app will install and appear on your home screen.</p>
+            </div>
+        `;
+        
+        // Create custom modal for iOS instructions
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        `;
+        
+        modal.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 20px; max-width: 400px; width: 100%;">
+                ${message}
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" 
+                            style="flex: 1; padding: 12px; background: #007aff; color: white; border: none; border-radius: 8px; font-weight: 600;">
+                        Got it
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
     }
-
+    
+    // Check for updates
+    function checkForUpdates() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.update();
+            });
+        }
+    }
+    
+    // Send message to service worker
+    function sendMessageToSW(message) {
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage(message);
+        }
+    }
+    
+    // ==================== EXISTING APPLICATION FUNCTIONS ====================
+    
     // Show/Hide Forms
     function showWelcomeScreen() {
         document.getElementById('welcomeScreen').classList.remove('hidden');
@@ -1897,20 +2259,16 @@
         const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
         return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
     }
-</script>
-
-<!-- Service Worker Registration -->
-<script>
-    // Register service worker for PWA
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js').then(function(registration) {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            }, function(err) {
-                console.log('ServiceWorker registration failed: ', err);
-            });
-        });
-    }
+    
+    // Periodic update check (once a day)
+    setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
+    
+    // Check for updates on page visibility change
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            checkForUpdates();
+        }
+    });
 </script>
 </body>
 </html>
