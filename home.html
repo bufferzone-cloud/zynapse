@@ -5847,7 +5847,6 @@ function renderZynes() {
             </div>
             <div class="zyne-content">
                 ${zyne.text ? `<div class="zyne-text">${escapeHtml(zyne.text)}</div>` : ''}
-                // Find this section in renderZynes() and REPLACE it:
 ${zyne.mediaUrl ? `
     <div class="zyne-media-container">
         ${zyne.mediaType === 'image' ? 
@@ -5962,7 +5961,6 @@ function renderGroups() {
     groupsList.innerHTML = groups.map(group => `
         <div class="group-card">
             <div onclick="openGroupChat('${group.id}')" style="display: flex; align-items: center; gap: 12px; flex: 1;">
-               // Find this section in renderGroups() and UPDATE it:
 <img src="${group.groupPhoto || 'https://via.placeholder.com/150'}" 
      alt="${group.name}" class="group-avatar">
                 <div class="group-info">
@@ -10226,6 +10224,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
