@@ -12,8 +12,8 @@
     
     <title>Zynapse - Secure Chat</title>
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
+    <!-- PWA Manifest (using GitHub Pages URL) -->
+    <link rel="manifest" href="/zynapse/manifest.json">
     
     <!-- Apple Touch Icons -->
     <link rel="apple-touch-icon" href="zynaps.png">
@@ -326,6 +326,44 @@
         .btn-install.installed:hover:not(:disabled) {
             background: var(--green-light);
             box-shadow: 0 6px 20px rgba(52, 199, 89, 0.35);
+        }
+
+        /* iOS Install Instructions */
+        .ios-install-guide {
+            background: var(--white-98);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-top: var(--space-4);
+            border: 1px solid var(--gray-200);
+            display: none;
+        }
+
+        .ios-install-guide h3 {
+            font-size: 14px;
+            color: var(--gray-800);
+            margin-bottom: var(--space-2);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .ios-install-guide ol {
+            padding-left: var(--space-4);
+            margin-bottom: var(--space-3);
+        }
+
+        .ios-install-guide li {
+            font-size: 13px;
+            color: var(--gray-700);
+            margin-bottom: var(--space-1);
+            line-height: 1.4;
+        }
+
+        .ios-install-guide .ios-icon {
+            color: var(--blue);
+            font-size: 14px;
+            width: 20px;
+            text-align: center;
         }
 
         /* Auth Forms */
@@ -1031,6 +1069,17 @@
                     <button class="btn-install" id="installButton">
                         <i class="fas fa-download"></i> Install App
                     </button>
+                    
+                    <!-- iOS Install Instructions -->
+                    <div class="ios-install-guide" id="iosInstallGuide">
+                        <h3><i class="fas fa-mobile-alt"></i> How to Install on iOS</h3>
+                        <ol>
+                            <li><span class="ios-icon">1.</span> Tap the <i class="fas fa-share"></i> Share button</li>
+                            <li><span class="ios-icon">2.</span> Scroll down and tap "Add to Home Screen"</li>
+                            <li><span class="ios-icon">3.</span> Tap "Add" in the top right corner</li>
+                            <li><span class="ios-icon">4.</span> Launch from your Home Screen</li>
+                        </ol>
+                    </div>
                 </div>
                 
                 <div class="welcome-footer">
@@ -1236,6 +1285,9 @@
 
             // Register Service Worker
             registerServiceWorker();
+
+            // Create manifest if needed
+            createDynamicManifest();
         });
 
         // Show/Hide Forms
@@ -1358,256 +1410,159 @@
 
         // ==================== PWA SERVICE WORKER FUNCTIONS ====================
 
+        // Check if on HTTPS
+        function isSecureContext() {
+            return window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+        }
+
         // Register Service Worker
         async function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
+            if ('serviceWorker' in navigator && isSecureContext()) {
                 try {
-                    const registration = await navigator.serviceWorker.register('service-worker.js');
-                    console.log('Service Worker registered successfully:', registration);
+                    // Use absolute path for GitHub Pages
+                    const swUrl = '/zynapse/sw.js';
+                    const registration = await navigator.serviceWorker.register(swUrl);
+                    console.log('Service Worker registered with scope:', registration.scope);
                     
                     // Check for updates
                     registration.addEventListener('updatefound', () => {
                         const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                showToast('New version available! Refresh to update.', 'info');
-                            }
-                        });
+                        console.log('New service worker found:', newWorker);
                     });
+                    
+                    return registration;
                 } catch (error) {
                     console.error('Service Worker registration failed:', error);
+                    return null;
                 }
+            } else {
+                console.log('Service Worker not supported or not in secure context');
+                return null;
             }
         }
 
-        // Create Service Worker file dynamically
-        function createServiceWorker() {
-            const serviceWorkerCode = `
-                // Zynapse PWA Service Worker
-                const CACHE_NAME = 'zynapse-v2.0.0';
-                const CACHE_URLS = [
-                    '/',
-                    '/index.html',
-                    '/home.html',
-                    'zynaps.png',
-                    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-                    'https://upload-widget.cloudinary.com/global/all.js',
-                    'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
-                    'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js',
-                    'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js'
-                ];
-
-                // Install event - cache assets
-                self.addEventListener('install', event => {
-                    console.log('Service Worker: Installing...');
-                    event.waitUntil(
-                        caches.open(CACHE_NAME)
-                            .then(cache => {
-                                console.log('Service Worker: Caching files');
-                                return cache.addAll(CACHE_URLS);
-                            })
-                            .then(() => self.skipWaiting())
-                    );
-                });
-
-                // Activate event - clean old caches
-                self.addEventListener('activate', event => {
-                    console.log('Service Worker: Activated');
-                    event.waitUntil(
-                        caches.keys().then(cacheNames => {
-                            return Promise.all(
-                                cacheNames.map(cache => {
-                                    if (cache !== CACHE_NAME) {
-                                        console.log('Service Worker: Clearing old cache:', cache);
-                                        return caches.delete(cache);
-                                    }
-                                })
-                            );
-                        })
-                    );
-                });
-
-                // Fetch event - serve from cache or network
-                self.addEventListener('fetch', event => {
-                    // Skip cross-origin requests
-                    if (!event.request.url.startsWith(self.location.origin)) {
-                        return;
+        // Create dynamic manifest
+        function createDynamicManifest() {
+            const manifest = {
+                "name": "Zynapse",
+                "short_name": "Zynapse",
+                "description": "Secure, private messaging with end-to-end encryption",
+                "start_url": "/zynapse/index.html",
+                "display": "standalone",
+                "background_color": "#ffffff",
+                "theme_color": "#007aff",
+                "orientation": "portrait",
+                "scope": "/zynapse/",
+                "icons": [
+                    {
+                        "src": "zynaps.png",
+                        "sizes": "192x192",
+                        "type": "image/png",
+                        "purpose": "any maskable"
+                    },
+                    {
+                        "src": "zynaps.png",
+                        "sizes": "512x512",
+                        "type": "image/png",
+                        "purpose": "any maskable"
                     }
+                ]
+            };
 
-                    event.respondWith(
-                        caches.match(event.request)
-                            .then(response => {
-                                // Return cached response if found
-                                if (response) {
-                                    return response;
-                                }
-
-                                // Clone the request
-                                const fetchRequest = event.request.clone();
-
-                                // Make network request
-                                return fetch(fetchRequest)
-                                    .then(response => {
-                                        // Check if valid response
-                                        if (!response || response.status !== 200 || response.type !== 'basic') {
-                                            return response;
-                                        }
-
-                                        // Clone the response
-                                        const responseToCache = response.clone();
-
-                                        // Cache the new response
-                                        caches.open(CACHE_NAME)
-                                            .then(cache => {
-                                                cache.put(event.request, responseToCache);
-                                            });
-
-                                        return response;
-                                    })
-                                    .catch(error => {
-                                        console.log('Fetch failed; returning offline page:', error);
-                                        // Return offline page for HTML requests
-                                        if (event.request.headers.get('accept').includes('text/html')) {
-                                            return caches.match('/index.html');
-                                        }
-                                    });
-                            })
-                    );
-                });
-
-                // Background sync for offline messages
-                self.addEventListener('sync', event => {
-                    if (event.tag === 'sync-messages') {
-                        event.waitUntil(syncMessages());
-                    }
-                });
-
-                // Push notification handler
-                self.addEventListener('push', event => {
-                    const data = event.data ? event.data.json() : {};
-                    const title = data.title || 'Zynapse';
-                    const options = {
-                        body: data.body || 'You have a new message',
-                        icon: 'zynaps.png',
-                        badge: 'zynaps.png',
-                        vibrate: [200, 100, 200],
-                        data: {
-                            url: data.url || '/'
-                        }
-                    };
-
-                    event.waitUntil(
-                        self.registration.showNotification(title, options)
-                    );
-                });
-
-                // Notification click handler
-                self.addEventListener('notificationclick', event => {
-                    event.notification.close();
-                    event.waitUntil(
-                        clients.matchAll({ type: 'window' })
-                            .then(clientList => {
-                                // If a window is already open, focus it
-                                for (const client of clientList) {
-                                    if (client.url === event.notification.data.url && 'focus' in client) {
-                                        return client.focus();
-                                    }
-                                }
-                                // Otherwise open a new window
-                                if (clients.openWindow) {
-                                    return clients.openWindow(event.notification.data.url);
-                                }
-                            })
-                    );
-                });
-
-                // Sync messages function
-                async function syncMessages() {
-                    console.log('Syncing messages in background...');
-                    // Implement your background sync logic here
-                }
-            `;
-
-            // Create a blob with the service worker code
-            const blob = new Blob([serviceWorkerCode], { type: 'application/javascript' });
-            const serviceWorkerUrl = URL.createObjectURL(blob);
-
-            // Create a link to download the service worker (for debugging)
-            const downloadLink = document.createElement('a');
-            downloadLink.href = serviceWorkerUrl;
-            downloadLink.download = 'service-worker.js';
-            downloadLink.style.display = 'none';
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-
-            return serviceWorkerUrl;
+            // Create manifest blob URL
+            const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], {type: 'application/json'});
+            const manifestUrl = URL.createObjectURL(manifestBlob);
+            
+            // Update manifest link
+            const manifestLink = document.querySelector('link[rel="manifest"]');
+            if (manifestLink) {
+                manifestLink.href = manifestUrl;
+            }
         }
 
         // ==================== PWA INSTALLATION FUNCTIONS ====================
 
         function setupPWAInstall() {
             const installButton = document.getElementById('installButton');
+            const iosGuide = document.getElementById('iosInstallGuide');
 
-            // Listen for beforeinstallprompt event
-            window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('beforeinstallprompt event fired');
-                // Prevent Chrome 76+ from automatically showing the prompt
-                e.preventDefault();
-                // Stash the event so it can be triggered later
-                deferredPrompt = e;
-                
-                // Update install button to show it can be installed
-                installButton.classList.remove('hidden');
-                installButton.innerHTML = '<i class="fas fa-download"></i> Install App';
-                installButton.classList.remove('installed');
-                
-                // Show toast notification
-                showToast('Zynapse can be installed as an app!', 'info');
-            });
+            // Detect iOS
+            const isIOS = () => {
+                return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            };
 
-            // Check if app is already installed
-            window.addEventListener('appinstalled', () => {
-                console.log('App was installed');
-                isInstalled = true;
-                installButton.innerHTML = '<i class="fas fa-check"></i> Installed';
-                installButton.classList.add('installed');
-                deferredPrompt = null;
-                showToast('Zynapse installed successfully!', 'success');
+            // Detect Safari
+            const isSafari = () => {
+                return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            };
+
+            // Check if we're on iOS Safari
+            const isIosSafari = isIOS() && isSafari();
+
+            if (isIosSafari) {
+                // iOS Safari - Show manual install instructions
+                installButton.innerHTML = '<i class="fas fa-plus-square"></i> Add to Home Screen';
+                installButton.addEventListener('click', () => {
+                    iosGuide.style.display = iosGuide.style.display === 'block' ? 'none' : 'block';
+                    showToast('Tap Share button, then "Add to Home Screen"', 'info');
+                });
                 
-                // Hide install button after 3 seconds
-                setTimeout(() => {
+                // Hide install button if already in standalone mode
+                if (window.navigator.standalone) {
                     installButton.classList.add('hidden');
-                }, 3000);
-            });
-
-            // Handle install button click
-            installButton.addEventListener('click', async () => {
-                if (isInstalled) {
-                    showToast('App is already installed!', 'info');
-                    return;
                 }
+            } else {
+                // Android/Desktop - Use beforeinstallprompt event
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    console.log('beforeinstallprompt event fired');
+                    // Prevent Chrome from automatically showing the prompt
+                    e.preventDefault();
+                    // Stash the event so it can be triggered later
+                    deferredPrompt = e;
+                    
+                    // Show install button
+                    installButton.classList.remove('hidden');
+                    installButton.innerHTML = '<i class="fas fa-download"></i> Install App';
+                    
+                    // Add click event
+                    installButton.addEventListener('click', async () => {
+                        if (deferredPrompt) {
+                            // Show the install prompt
+                            deferredPrompt.prompt();
+                            
+                            // Wait for the user to respond to the prompt
+                            const { outcome } = await deferredPrompt.userChoice;
+                            
+                            console.log(`User response: ${outcome}`);
+                            
+                            if (outcome === 'accepted') {
+                                showToast('Installing Zynapse...', 'success');
+                                installButton.innerHTML = '<i class="fas fa-check"></i> Installed';
+                                installButton.classList.add('installed');
+                                isInstalled = true;
+                            } else {
+                                showToast('Installation cancelled', 'info');
+                            }
+                            
+                            deferredPrompt = null;
+                        }
+                    });
+                });
 
-                if (deferredPrompt) {
-                    // Show the install prompt
-                    deferredPrompt.prompt();
-                    
-                    // Wait for the user to respond to the prompt
-                    const { outcome } = await deferredPrompt.userChoice;
-                    
-                    console.log(`User response to the install prompt: ${outcome}`);
-                    
-                    if (outcome === 'accepted') {
-                        showToast('Installing Zynapse...', 'success');
-                    } else {
-                        showToast('Installation cancelled', 'info');
-                    }
-                    
-                    // Clear the deferredPrompt variable
-                    deferredPrompt = null;
-                } else {
-                    showToast('Installation not available on this device/browser', 'warning');
-                }
+                // Listen for app installed event
+                window.addEventListener('appinstalled', () => {
+                    console.log('App was installed');
+                    isInstalled = true;
+                    installButton.innerHTML = '<i class="fas fa-check"></i> Installed';
+                    installButton.classList.add('installed');
+                    showToast('Zynapse installed successfully!', 'success');
+                });
+            }
+
+            // Handle click for all platforms
+            installButton.addEventListener('click', () => {
+                // Track install attempt
+                console.log('Install button clicked');
             });
         }
 
@@ -1615,36 +1570,14 @@
             const installButton = document.getElementById('installButton');
             
             // Check if running as standalone PWA
-            if (window.matchMedia('(display-mode: standalone)').matches || 
-                window.navigator.standalone === true ||
-                document.referrer.includes('android-app://')) {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            const isIOSStandalone = window.navigator.standalone;
+            
+            if (isStandalone || isIOSStandalone) {
                 isInstalled = true;
                 installButton.innerHTML = '<i class="fas fa-check"></i> Installed';
                 installButton.classList.add('installed');
                 console.log('App is running as PWA');
-            }
-            
-            // Check for iOS standalone mode
-            if ('standalone' in navigator && navigator.standalone) {
-                isInstalled = true;
-                installButton.innerHTML = '<i class="fas fa-check"></i> Installed';
-                installButton.classList.add('installed');
-                console.log('App is running as iOS PWA');
-            }
-
-            // Check for Android TWA
-            if (window.matchMedia('(display-mode: fullscreen)').matches) {
-                isInstalled = true;
-                installButton.innerHTML = '<i class="fas fa-check"></i> Installed';
-                installButton.classList.add('installed');
-                console.log('App is running as TWA');
-            }
-
-            // Hide install button if app is already installed
-            if (isInstalled) {
-                setTimeout(() => {
-                    installButton.classList.add('hidden');
-                }, 3000);
             }
         }
 
@@ -2037,84 +1970,6 @@
             const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
             return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
         }
-    </script>
-
-    <script>
-        // Generate manifest.json dynamically
-        document.addEventListener('DOMContentLoaded', function() {
-            const manifest = {
-                "name": "Zynapse",
-                "short_name": "Zynapse",
-                "description": "Secure, private messaging with end-to-end encryption",
-                "start_url": "https://bufferzone-cloud.github.io/zynapse/index.html",
-                "display": "standalone",
-                "display_override": ["window-controls-overlay", "minimal-ui"],
-                "background_color": "#ffffff",
-                "theme_color": "#007aff",
-                "orientation": "portrait-primary",
-                "scope": "/zynapse/",
-                "categories": ["social", "communication", "productivity"],
-                "icons": [
-                    {
-                        "src": "zynaps.png",
-                        "sizes": "192x192",
-                        "type": "image/png",
-                        "purpose": "any maskable"
-                    },
-                    {
-                        "src": "zynaps.png",
-                        "sizes": "512x512",
-                        "type": "image/png",
-                        "purpose": "any maskable"
-                    },
-                    {
-                        "src": "zynaps.png",
-                        "sizes": "180x180",
-                        "type": "image/png",
-                        "purpose": "apple touch icon"
-                    },
-                    {
-                        "src": "zynaps.png",
-                        "sizes": "167x167",
-                        "type": "image/png",
-                        "purpose": "apple touch icon"
-                    }
-                ],
-                "screenshots": [
-                    {
-                        "src": "zynaps.png",
-                        "sizes": "1280x720",
-                        "type": "image/png",
-                        "form_factor": "wide",
-                        "label": "Zynapse Chat Interface"
-                    }
-                ],
-                "shortcuts": [
-                    {
-                        "name": "New Chat",
-                        "short_name": "Chat",
-                        "description": "Start a new conversation",
-                        "url": "/zynapse/index.html?new=true",
-                        "icons": [{ "src": "zynaps.png", "sizes": "96x96" }]
-                    },
-                    {
-                        "name": "Recent Chats",
-                        "short_name": "Chats",
-                        "description": "View recent conversations",
-                        "url": "/zynapse/index.html",
-                        "icons": [{ "src": "zynaps.png", "sizes": "96x96" }]
-                    }
-                ]
-            };
-
-            // Create manifest link if not exists
-            if (!document.querySelector('link[rel="manifest"]')) {
-                const manifestLink = document.createElement('link');
-                manifestLink.rel = 'manifest';
-                manifestLink.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
-                document.head.appendChild(manifestLink);
-            }
-        });
     </script>
 </body>
 </html>
