@@ -6823,78 +6823,96 @@ function renderGroupChatInterface() {
 function setupChatListeners() {
     if (!currentChat) return;
     
+    // Clean up any existing listeners first
     cleanupChatListeners();
     
-    const messagesListener = messagesRef.child(currentChat.id)
+    const messagesQuery = messagesRef.child(currentChat.id)
         .orderByChild('timestamp')
-        .limitToLast(100)
-        .on('child_added', (snapshot) => {
-            const message = snapshot.val();
-            message.id = snapshot.key;
-            addMessageToChat(message);
-        });
+        .limitToLast(100);
     
-    chatListeners.push({ ref: messagesRef.child(currentChat.id), listener: messagesListener });
+    // Store the unsubscribe function
+    const unsubscribeMessages = messagesQuery.on('child_added', (snapshot) => {
+        const message = snapshot.val();
+        message.id = snapshot.key;
+        addMessageToChat(message);
+    });
+    
+    chatListeners.push(unsubscribeMessages);
     
     // Message reactions
-    const reactionsListener = database.ref(`messageReactions/${currentChat.id}`)
-        .on('child_added', (snapshot) => {
-            const reaction = snapshot.val();
-            updateMessageReaction(reaction.messageId, reaction.emoji, reaction.userId, reaction.added);
-        });
-    
-    chatListeners.push({ 
-        ref: database.ref(`messageReactions/${currentChat.id}`), 
-        listener: reactionsListener 
+    const reactionsQuery = database.ref(`messageReactions/${currentChat.id}`);
+    const unsubscribeReactions = reactionsQuery.on('child_added', (snapshot) => {
+        const reaction = snapshot.val();
+        updateMessageReaction(reaction.messageId, reaction.emoji, reaction.userId, reaction.added);
     });
+    
+    chatListeners.push(unsubscribeReactions);
     
     // Typing indicators for private chats
     if (currentChat.type === 'private' && privacySettings.typingIndicators) {
-        const typingListener = database.ref(`typing/${currentChat.id}/${currentChat.uid}`)
-            .on('value', (snapshot) => {
-                const typing = snapshot.val();
-                const typingIndicator = document.getElementById('typingIndicator');
-                if (typing && typing.isTyping) {
-                    typingIndicator.classList.add('active');
-                } else {
-                    typingIndicator.classList.remove('active');
-                }
-            });
-        
-        chatListeners.push({ 
-            ref: database.ref(`typing/${currentChat.id}/${currentChat.uid}`), 
-            listener: typingListener 
+        const typingQuery = database.ref(`typing/${currentChat.id}/${currentChat.uid}`);
+        const unsubscribeTyping = typingQuery.on('value', (snapshot) => {
+            const typing = snapshot.val();
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typing && typing.isTyping) {
+                typingIndicator.classList.add('active');
+            } else {
+                typingIndicator.classList.remove('active');
+            }
         });
+        
+        chatListeners.push(unsubscribeTyping);
     }
     
     // Online status updates for private chats
     if (currentChat.type === 'private') {
-        const onlineListener = onlineRef.child(currentChat.uid)
-            .on('value', (snapshot) => {
-                const status = snapshot.val();
-                if (status) {
-                    currentChat.isOnline = status.isOnline;
-                    currentChat.lastSeen = status.lastSeen;
-                    
-                    const statusDot = document.querySelector('.chat-status-dot');
-                    const statusText = document.querySelector('.chat-user-status span');
-                    
-                    if (statusDot && statusText) {
-                        if (status.isOnline) {
-                            statusDot.classList.add('online');
-                            statusText.textContent = 'Online';
-                        } else {
-                            statusDot.classList.remove('online');
-                            statusText.textContent = formatLastSeen(status.lastSeen);
-                        }
+        const onlineQuery = onlineRef.child(currentChat.uid);
+        const unsubscribeOnline = onlineQuery.on('value', (snapshot) => {
+            const status = snapshot.val();
+            if (status) {
+                currentChat.isOnline = status.isOnline;
+                currentChat.lastSeen = status.lastSeen;
+                
+                const statusDot = document.querySelector('.chat-status-dot');
+                const statusText = document.querySelector('.chat-user-status span');
+                
+                if (statusDot && statusText) {
+                    if (status.isOnline) {
+                        statusDot.classList.add('online');
+                        statusText.textContent = 'Online';
+                    } else {
+                        statusDot.classList.remove('online');
+                        statusText.textContent = formatLastSeen(status.lastSeen);
                     }
                 }
-            });
-        
-        chatListeners.push({ 
-            ref: onlineRef.child(currentChat.uid), 
-            listener: onlineListener 
+            }
         });
+        
+        chatListeners.push(unsubscribeOnline);
+    }
+}
+
+function cleanupChatListeners() {
+    // Call each unsubscribe function to remove the listeners
+    chatListeners.forEach(unsubscribe => {
+        if (typeof unsubscribe === 'function') {
+            unsubscribe();
+        }
+    });
+    chatListeners = [];
+}
+
+function closeChat() {
+    document.getElementById('chatPage').classList.remove('active');
+    document.body.style.overflow = 'auto';
+    cleanupChatListeners();
+    currentChat = null;
+    currentChatId = null;
+    
+    // Also clear the chat messages container
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.innerHTML = '';
     }
 }
 
@@ -6913,14 +6931,15 @@ async function sendTypingIndicator(isTyping) {
 
 async function loadMessages() {
     try {
+        const chatMessages = document.getElementById('chatMessages');
+        // Clear existing messages before loading new ones
+        chatMessages.innerHTML = '';
+        
         const snapshot = await messagesRef
             .child(currentChat.id)
             .orderByChild('timestamp')
             .limitToLast(50)
             .once('value');
-        
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.innerHTML = '';
         
         if (!snapshot.exists()) {
             chatMessages.innerHTML = `
@@ -6998,13 +7017,24 @@ async function loadMessageReactions(messageId) {
 function addMessageToChat(message) {
     const chatMessages = document.getElementById('chatMessages');
     
+    // Check if message already exists to prevent duplicates
+    const existingMessage = chatMessages.querySelector(`[data-message-id="${message.id}"]`);
+    if (existingMessage) {
+        return; // Message already exists, don't add again
+    }
+    
     const emptyState = chatMessages.querySelector('.chat-messages-empty');
     if (emptyState) {
         emptyState.remove();
     }
     
     const messageDate = new Date(message.timestamp).toDateString();
-    const lastDateDivider = chatMessages.querySelector('.message-date-divider:last-child');
+    const dateDividers = chatMessages.querySelectorAll('.message-date-divider');
+    let lastDateDivider = null;
+    
+    if (dateDividers.length > 0) {
+        lastDateDivider = dateDividers[dateDividers.length - 1];
+    }
     
     if (!lastDateDivider || lastDateDivider.querySelector('.date-divider-text').textContent !== formatDate(messageDate)) {
         const dateDivider = document.createElement('div');
@@ -7016,10 +7046,13 @@ function addMessageToChat(message) {
     const messageElement = createMessageElement(message);
     chatMessages.appendChild(messageElement);
     
-    // Auto-scroll to bottom
-    setTimeout(() => {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 100);
+    // Auto-scroll to bottom only if user is near bottom
+    const isNearBottom = chatMessages.scrollHeight - chatMessages.clientHeight - chatMessages.scrollTop < 100;
+    if (isNearBottom) {
+        setTimeout(() => {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 100);
+    }
     
     if (message.senderId !== currentUser.userId) {
         playNotificationSound();
@@ -7599,8 +7632,12 @@ function showMessageOptions(e, messageId, isSent) {
 async function sendMessage() {
     const chatInput = document.getElementById('chatInput');
     const text = chatInput.value.trim();
+    const chatSendBtn = document.getElementById('chatSendBtn');
     
-    if (!text) return;
+    if (!text || chatSendBtn.disabled) return;
+    
+    // Disable button to prevent multiple sends
+    chatSendBtn.disabled = true;
     
     try {
         const messageId = messagesRef.child(currentChat.id).push().key;
@@ -7620,7 +7657,6 @@ async function sendMessage() {
         
         chatInput.value = '';
         chatInput.style.height = 'auto';
-        document.getElementById('chatSendBtn').disabled = true;
         
         sendTypingIndicator(false);
         isTyping = false;
@@ -7630,6 +7666,7 @@ async function sendMessage() {
     } catch (error) {
         console.error('Error sending message:', error);
         showToast('Failed to send message', 'error');
+        chatSendBtn.disabled = false;
     }
 }
 
@@ -10265,4 +10302,5 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
