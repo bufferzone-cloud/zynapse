@@ -538,92 +538,80 @@
             font-size: 12px;
         }
 
-        /* ==================== BOTTOM NAVIGATION ==================== */
-        .bottom-nav {
-            background: var(--white);
-            border-top: 1px solid var(--gray-150);
-            position: sticky;
-            bottom: 0;
-            z-index: var(--z-sticky);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            background: rgba(255, 255, 255, 0.92);
-            padding: 6px 8px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-shrink: 0;
-            height: 56px;
-        }
+       /* ==================== BOTTOM NAVIGATION ==================== */
+.bottom-nav {
+    background: var(--white);
+    border-top: 1px solid var(--gray-150);
+    position: sticky;
+    bottom: 0;
+    z-index: var(--z-sticky);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.92);
+    padding: 6px 8px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-shrink: 0;
+    height: 56px;              /* keep original height */
+}
 
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            text-decoration: none;
-            color: var(--gray-500);
-            padding: 6px 8px;
-            border-radius: var(--radius-sm);
-            transition: all var(--transition-fast);
-            position: relative;
-            flex: 1;
-            max-width: 64px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            font-family: inherit;
-        }
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    text-decoration: none;
+    color: var(--gray-500);
+    padding: 8px 10px;         /* increased from 6px 8px */
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    position: relative;
+    flex: 1;
+    max-width: 80px;           /* increased from 64px */
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+}
 
-        .nav-item i {
-            font-size: 18px;
-            transition: all var(--transition-fast);
-        }
+.nav-item i {
+    font-size: 22px;           /* increased from 18px */
+    transition: all var(--transition-fast);
+}
 
-        .nav-item span {
-            font-size: 9px;
-            font-weight: 600;
-            letter-spacing: 0.2px;
-            transition: all var(--transition-fast);
-            text-transform: uppercase;
-        }
+.nav-item span {
+    font-size: 11px;           /* increased from 9px */
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    transition: all var(--transition-fast);
+    text-transform: uppercase;
+}
 
-        .nav-item.active {
-            color: var(--blue);
-        }
+/* active and hover states remain unchanged */
+.nav-item.active { color: var(--blue); }
+.nav-item.active i { color: var(--blue); }
+.nav-item.active span { color: var(--blue); font-weight: 700; }
+.nav-item:hover:not(.active) { color: var(--gray-700); background: var(--gray-50); }
 
-        .nav-item.active i {
-            color: var(--blue);
-        }
-
-        .nav-item.active span {
-            color: var(--blue);
-            font-weight: 700;
-        }
-
-        .nav-item:hover:not(.active) {
-            color: var(--gray-700);
-            background: var(--gray-50);
-        }
-
-        .nav-badge {
-            position: absolute;
-            top: -2px;
-            right: 0;
-            background: var(--red);
-            color: var(--white);
-            font-size: 8px;
-            font-weight: 700;
-            min-width: 14px;
-            height: 14px;
-            border-radius: var(--radius-circle);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 3px;
-            border: 1px solid var(--white);
-            pointer-events: none;
-        }
+.nav-badge {
+    position: absolute;
+    top: -2px;                /* kept – adjust if needed */
+    right: 0;
+    background: var(--red);
+    color: var(--white);
+    font-size: 8px;
+    font-weight: 700;
+    min-width: 14px;
+    height: 14px;
+    border-radius: var(--radius-circle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    border: 1px solid var(--white);
+    pointer-events: none;
+}
 
         /* ==================== MAIN CONTENT AREA ==================== */
         .main-content {
@@ -4253,18 +4241,16 @@
                 max-width: 100%;
             }
             
-            .nav-item span {
-                display: none;
-            }
-            
-            .nav-item {
-                max-width: 56px;
-                padding: 8px;
-            }
-            
-            .nav-item i {
-                font-size: 18px;
-            }
+.nav-item span {
+        display: none;
+    }
+    .nav-item {
+        max-width: 70px;       /* was 56px – increased by 25% */
+        padding: 8px 10px;    /* keep the larger padding */
+    }
+    .nav-item i {
+        font-size: 22px;       /* was 18px – now consistent */
+    }
             
             .search-results-container {
                 position: fixed;
@@ -10556,3 +10542,4 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
