@@ -2262,7 +2262,7 @@
     padding: calc(var(--space-3) * 1.25);
     display: flex;
     flex-direction: column;
-    ggap: calc(6px * 1.25) !important; 
+    gap: calc(6px * 1.25) !important;    /* FIX: was 'ggap' */
     background: var(--white);
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
@@ -2343,10 +2343,11 @@
 }
 
 .message-container.received .message-bubble {
+    max-width: calc(100% - 48px); /* reserve space for avatar */
     background: #e9e9ed !important;
     color: #000;
     border-bottom-left-radius: calc(4px * 1.25) !important;
-    margin-left: calc(4px * 1.25);
+    margin-left: 0 !important;    /* remove old margin; gap now used */
 }
 
 .message-container.received .message-bubble::after {
@@ -3444,32 +3445,36 @@
 /* ========== GROUP CHAT MESSAGE AVATARS ========== */
 .message-container.received {
     display: flex;
-    gap: 8px;
+    flex-direction: row;          /* force horizontal layout */
+    flex-wrap: nowrap;           /* prevent wrapping */
     align-items: flex-end;
+    gap: 8px;                    /* space between avatar and bubble */
+    margin-bottom: calc(2px * 1.25);
+    max-width: 85%;
+    align-self: flex-start;
+    position: relative;
 }
 .message-avatar {
-  flex-shrink: 0;
-  width: 40px !important;      /* was 32px → +25% */
-height: 40px !important;
-  border-radius: 50%;
-  margin-right: 8px !important; /* was 6px → +25% */
+    flex-shrink: 0;
+    width: 40px !important;
+    height: 40px !important;
+    margin-right: 0 !important;  /* gap handles spacing */
+    border-radius: 50%;
 }
-.message-container.received {
-  display: flex;
-  align-items: flex-end;
-}
+
 .message-avatar img {
     width: 100%;
-    border-radius: 50% !important; /* already round, but enforced */
     height: 100%;
+    border-radius: 50% !important;
     object-fit: cover;
 }
+        
 .message-container.received .message-bubble {
     max-width: calc(100% - 48px) !important;
 }
 .message-container.sent {
-    display: flex;
-    justify-content: flex-end;
+    align-self: flex-end;
+    flex-direction: row-reverse;
 }
 .message-container.sent .message-bubble {
     max-width: 85%;
@@ -10616,6 +10621,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
