@@ -2262,7 +2262,7 @@
     padding: calc(var(--space-3) * 1.25);
     display: flex;
     flex-direction: column;
-    ggap: calc(6px * 1.25) !important; 
+    gap: calc(6px * 1.25) !important; 
     background: var(--white);
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
@@ -2340,6 +2340,26 @@
     border-radius: calc(18px * 1.25) !important;
     position: relative;
     box-shadow: 0 calc(1px * 1.25) calc(2px * 1.25) rgba(0,0,0,0.05);
+    min-width: calc(60px * 1.25); /* 75px – large enough for 3-4 characters */
+    white-space: pre-wrap;
+}
+
+/* Media messages – remove bubble background & padding */
+.message-bubble-media {
+    padding: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+}
+
+/* Ensure the media itself has proper rounded corners */
+.message-bubble-media .message-media,
+.message-bubble-media .message-document,
+.message-bubble-media .message-location,
+.message-bubble-media .message-voice,
+.message-bubble-media .message-view-once .message-media {
+    border-radius: var(--radius-md) !important;
+    max-width: 100%;
+    display: block;
 }
 
 .message-container.received .message-bubble {
@@ -7416,7 +7436,7 @@ function createMessageElement(message) {
 function createTextMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     return `
-        <div class="message-bubble">
+        <div class="message-bubble message-bubble-media">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
             <div class="message-text">${escapeHtml(message.text)}</div>
             <span class="message-time">
@@ -7434,7 +7454,7 @@ function createTextMessage(message, isSent, isGroup) {
 function createImageMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     return `
-        <div class="message-bubble">
+        <div class="message-bubble message-bubble-media">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
             <img src="${message.mediaUrl}" alt="Photo" class="message-media" onclick="viewMedia('${message.mediaUrl}')" data-downloadable>
             ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
@@ -7453,7 +7473,7 @@ function createImageMessage(message, isSent, isGroup) {
 function createVideoMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     return `
-        <div class="message-bubble">
+        <div class="message-bubble message-bubble-media">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
             <video src="${message.mediaUrl}" controls class="message-media" data-downloadable></video>
             ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
@@ -7472,7 +7492,7 @@ function createVideoMessage(message, isSent, isGroup) {
 function createDocumentMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     return `
-        <div class="message-bubble">
+        <div class="message-bubble message-bubble-media">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
             <div class="message-document" onclick="downloadFile('${message.mediaUrl}', '${message.fileName}')" data-downloadable>
                 <div class="message-document-icon">
@@ -7515,7 +7535,7 @@ function createLocationMessage(message, isSent, isGroup) {
     }, 100);
     
     return `
-        <div class="message-bubble">
+        <div class="message-bubble message-bubble-media">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
             <div class="message-location" onclick="openLocationInMap('${message.location.latitude}', '${message.location.longitude}', '${message.location.address}')">
                 <div id="${mapId}" class="message-location-map" style="width: 100%; height: 150px; border-radius: var(--radius-sm);"></div>
@@ -7589,7 +7609,7 @@ function createVoiceMessage(message, isSent, isGroup) {
     const voiceId = `voice-${message.id}`;
     
     return `
-        <div class="message-bubble">
+        <div class="message-bubble message-bubble-media">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
             <div class="message-voice">
                 <button class="message-voice-play" onclick="playVoiceMessage('${voiceId}', '${message.mediaUrl}')" id="${voiceId}-play">
@@ -7616,7 +7636,7 @@ function createViewOnceMessage(message, isSent, isGroup) {
     
     if (hasViewed) {
         return `
-            <div class="message-bubble">
+           <div class="message-bubble message-bubble-media">
                 ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
                 <div class="message-view-once-viewed" style="text-align: center; padding: 20px; color: var(--gray-500);">
                     <i class="fas fa-eye-slash" style="font-size: 24px; margin-bottom: 8px;"></i>
@@ -10615,6 +10635,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
