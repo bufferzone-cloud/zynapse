@@ -2340,16 +2340,9 @@
     border-radius: calc(18px * 1.25) !important;
     position: relative;
     box-shadow: 0 calc(1px * 1.25) calc(2px * 1.25) rgba(0,0,0,0.05);
-     word-wrap: break-word !important;      /* legacy */
-    overflow-wrap: break-word !important;  /* modern */
-    word-break: break-word !important;     /* breaks long words if needed */
-    hyphens: auto;                        /* adds hyphens when possible */
-    white-space: pre-wrap !important;
 }
 
 .message-container.received .message-bubble {
-    flex: 1 1 0%;                       /* take available width, shrink if needed */
-    max-width: calc(100% - 48px); 
     max-width: calc(100% - 48px); /* reserve space for avatar */
     background: #e9e9ed !important;
     color: #000;
@@ -2396,12 +2389,6 @@
     white-space: pre-wrap;
     word-break: break-word;
     line-height: 1.4;
-    .message-text
-     word-wrap: break-word !important;      /* legacy */
-    overflow-wrap: break-word !important;  /* modern */
-    word-break: break-word !important;     /* breaks long words if needed */
-    hyphens: auto;                        /* adds hyphens when possible */
-    white-space: pre-wrap !important;
 }
 
 .message-time {
@@ -10635,11 +10622,3 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
