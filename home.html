@@ -6369,28 +6369,19 @@ async function acceptRequest(requestId) {
             throw new Error('Request not found');
         }
         
-        // Update the request status to accepted
         await requestsRef.child(requestId).update({ status: 'accepted' });
         
-        // Also remove from receiver's requests
-        await database.ref(`users/${currentUser.uid}/requests/${requestId}`).remove();
-        
-        // Get sender's user data
         const senderSnapshot = await usersRef.child(request.senderUid).once('value');
         const sender = senderSnapshot.val();
         
-        if (!sender) {
-            throw new Error('Sender not found');
-        }
-        
-        // Add sender to current user's contacts
+        // Add to contacts
         const contactData = {
             uid: request.senderUid,
             userId: request.senderId,
             name: request.senderName,
             profilePicture: request.senderProfilePicture,
-            email: sender.email || '',
-            phone: sender.phone || '',
+            email: sender.email,
+            phone: sender.phone,
             isOnline: sender.isOnline || false,
             lastSeen: sender.lastSeen || new Date().toISOString(),
             addedAt: new Date().toISOString()
@@ -6398,14 +6389,13 @@ async function acceptRequest(requestId) {
         
         await database.ref(`users/${currentUser.uid}/contacts/${request.senderUid}`).set(contactData);
         
-        // Add current user to sender's contacts
         const receiverContactData = {
             uid: currentUser.uid,
             userId: currentUser.userId,
             name: currentUser.name,
             profilePicture: currentUser.profilePicture,
-            email: currentUser.email || '',
-            phone: currentUser.phone || '',
+            email: currentUser.email,
+            phone: currentUser.phone,
             isOnline: true,
             lastSeen: new Date().toISOString(),
             addedAt: new Date().toISOString()
@@ -6413,30 +6403,22 @@ async function acceptRequest(requestId) {
         
         await database.ref(`users/${request.senderUid}/contacts/${currentUser.uid}`).set(receiverContactData);
         
-        // Generate chat ID - Use a more reliable method
-        const chatId = `private_${[currentUser.uid, request.senderUid].sort().join('_')}`;
+        // Create chat
+        const chatId = [currentUser.uid, request.senderUid].sort().join('_');
+        const chatData = {
+            id: chatId,
+            type: 'private',
+            participants: {
+                [currentUser.uid]: true,
+                [request.senderUid]: true
+            },
+            createdAt: new Date().toISOString(),
+            lastMessage: '',
+            lastMessageTime: new Date().toISOString()
+        };
         
-        // Check if chat already exists
-        const chatSnapshot = await chatsRef.child(chatId).once('value');
+        await chatsRef.child(chatId).set(chatData);
         
-        if (!chatSnapshot.exists()) {
-            // Create chat only if it doesn't exist
-            const chatData = {
-                id: chatId,
-                type: 'private',
-                participants: {
-                    [currentUser.uid]: true,
-                    [request.senderUid]: true
-                },
-                createdAt: new Date().toISOString(),
-                lastMessage: '',
-                lastMessageTime: new Date().toISOString()
-            };
-            
-            await chatsRef.child(chatId).set(chatData);
-        }
-        
-        // Create/Update chat for current user
         const userChatData = {
             id: chatId,
             type: 'private',
@@ -6454,7 +6436,6 @@ async function acceptRequest(requestId) {
         
         await database.ref(`users/${currentUser.uid}/chats/${chatId}`).set(userChatData);
         
-        // Create/Update chat for sender
         const senderChatData = {
             id: chatId,
             type: 'private',
@@ -6475,27 +6456,18 @@ async function acceptRequest(requestId) {
         showToast('Contact added!', 'success');
         playNotificationSound();
         
-        // Reload data
-        await Promise.all([
-            loadContacts(),
-            loadChatRequests(),
-            loadChats()
-        ]);
+        await loadContacts();
+        await loadChatRequests();
+        await loadChats();
         
-        // Remove request from local array
-        chatRequests = chatRequests.filter(r => r.id !== requestId);
-        renderChatRequests();
-        updateBadge('requests', chatRequests.filter(r => r.status === 'pending').length);
-        
-        // Open chat with the new contact
         openChatWithUser(request.senderUid);
         
     } catch (error) {
         console.error('Error accepting request:', error);
-        showToast('Failed to accept request: ' + error.message, 'error');
+        showToast('Failed to accept request', 'error');
     }
 }
-    
+
 async function rejectRequest(requestId) {
     try {
         const requestSnapshot = await requestsRef.child(requestId).once('value');
@@ -6507,19 +6479,15 @@ async function rejectRequest(requestId) {
         
         await requestsRef.child(requestId).update({ status: 'rejected' });
         
-        // Remove from receiver's requests
-        await database.ref(`users/${currentUser.uid}/requests/${requestId}`).remove();
+        await database.ref(`users/${request.receiverUid}/requests/${requestId}`).remove();
         
         showToast('Request rejected', 'info');
         
-        // Remove request from local array
-        chatRequests = chatRequests.filter(r => r.id !== requestId);
-        renderChatRequests();
-        updateBadge('requests', chatRequests.filter(r => r.status === 'pending').length);
+        await loadChatRequests();
         
     } catch (error) {
         console.error('Error rejecting request:', error);
-        showToast('Failed to reject request: ' + error.message, 'error');
+        showToast('Failed to reject request', 'error');
     }
 }
 
@@ -10257,4 +10225,3 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
-
