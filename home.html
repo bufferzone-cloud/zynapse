@@ -3442,10 +3442,10 @@
 }
 .message-avatar {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 40px !important;      /* was 32px → +25% */
+height: 40px !important;
   border-radius: 50%;
-  margin-right: 6px;
+  margin-right: 8px !important; /* was 6px → +25% */
 }
 .message-container.received {
   display: flex;
@@ -3453,11 +3453,12 @@
 }
 .message-avatar img {
     width: 100%;
+    border-radius: 50% !important; /* already round, but enforced */
     height: 100%;
     object-fit: cover;
 }
 .message-container.received .message-bubble {
-    max-width: calc(100% - 40px);
+    max-width: calc(100% - 48px) !important;
 }
 .message-container.sent {
     display: flex;
@@ -10608,6 +10609,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
