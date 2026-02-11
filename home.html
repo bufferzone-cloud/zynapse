@@ -5547,18 +5547,28 @@ async function loadFavorites() {
 
 async function loadChatRequests() {
     try {
-        const snapshot = await requestsRef
+        console.log('Loading chat requests...');
+        
+        // First, clear existing requests
+        chatRequests = [];
+        
+        // Load incoming requests
+        const incomingSnapshot = await requestsRef
             .orderByChild('receiverId')
             .equalTo(currentUser.userId)
             .once('value');
         
-        if (snapshot.exists()) {
-            const requestsData = snapshot.val();
-            chatRequests = Object.values(requestsData || {}).filter(req => req.status === 'pending');
-            chatRequests.forEach((req, index) => req.id = Object.keys(requestsData)[index]);
-        } else {
-            chatRequests = [];
+        if (incomingSnapshot.exists()) {
+            incomingSnapshot.forEach((snapshot) => {
+                const request = snapshot.val();
+                request.id = snapshot.key;
+                if (request.status === 'pending') {
+                    chatRequests.push(request);
+                }
+            });
         }
+        
+        console.log('Found requests:', chatRequests.length);
         
         renderChatRequests();
         updateBadge('requests', chatRequests.length);
@@ -6362,6 +6372,8 @@ async function sendChatRequestTo(receiverId) {
 
 async function acceptRequest(requestId) {
     try {
+        console.log('Accepting request:', requestId);
+        
         const requestSnapshot = await requestsRef.child(requestId).once('value');
         const request = requestSnapshot.val();
         
@@ -6369,12 +6381,17 @@ async function acceptRequest(requestId) {
             throw new Error('Request not found');
         }
         
+        // Update request status first
         await requestsRef.child(requestId).update({ status: 'accepted' });
         
         const senderSnapshot = await usersRef.child(request.senderUid).once('value');
         const sender = senderSnapshot.val();
         
-        // Add to contacts
+        if (!sender) {
+            throw new Error('Sender not found');
+        }
+        
+        // Add to contacts for current user
         const contactData = {
             uid: request.senderUid,
             userId: request.senderId,
@@ -6389,6 +6406,7 @@ async function acceptRequest(requestId) {
         
         await database.ref(`users/${currentUser.uid}/contacts/${request.senderUid}`).set(contactData);
         
+        // Add current user to sender's contacts
         const receiverContactData = {
             uid: currentUser.uid,
             userId: currentUser.userId,
@@ -6403,22 +6421,28 @@ async function acceptRequest(requestId) {
         
         await database.ref(`users/${request.senderUid}/contacts/${currentUser.uid}`).set(receiverContactData);
         
-        // Create chat
+        // Check if chat already exists
         const chatId = [currentUser.uid, request.senderUid].sort().join('_');
-        const chatData = {
-            id: chatId,
-            type: 'private',
-            participants: {
-                [currentUser.uid]: true,
-                [request.senderUid]: true
-            },
-            createdAt: new Date().toISOString(),
-            lastMessage: '',
-            lastMessageTime: new Date().toISOString()
-        };
+        const existingChatSnapshot = await chatsRef.child(chatId).once('value');
         
-        await chatsRef.child(chatId).set(chatData);
+        if (!existingChatSnapshot.exists()) {
+            // Create new chat only if it doesn't exist
+            const chatData = {
+                id: chatId,
+                type: 'private',
+                participants: {
+                    [currentUser.uid]: true,
+                    [request.senderUid]: true
+                },
+                createdAt: new Date().toISOString(),
+                lastMessage: '',
+                lastMessageTime: new Date().toISOString()
+            };
+            
+            await chatsRef.child(chatId).set(chatData);
+        }
         
+        // Always update chat for current user (even if it exists)
         const userChatData = {
             id: chatId,
             type: 'private',
@@ -6436,6 +6460,7 @@ async function acceptRequest(requestId) {
         
         await database.ref(`users/${currentUser.uid}/chats/${chatId}`).set(userChatData);
         
+        // Always update chat for sender (even if it exists)
         const senderChatData = {
             id: chatId,
             type: 'private',
@@ -6453,13 +6478,18 @@ async function acceptRequest(requestId) {
         
         await database.ref(`users/${request.senderUid}/chats/${chatId}`).set(senderChatData);
         
+        // Remove the request from receiver's requests list
+        await database.ref(`users/${request.receiverUid}/requests/${requestId}`).remove();
+        
         showToast('Contact added!', 'success');
         playNotificationSound();
         
+        // Reload data
         await loadContacts();
         await loadChatRequests();
         await loadChats();
         
+        // Open chat with the user
         openChatWithUser(request.senderUid);
         
     } catch (error) {
@@ -6470,6 +6500,8 @@ async function acceptRequest(requestId) {
 
 async function rejectRequest(requestId) {
     try {
+        console.log('Rejecting request:', requestId);
+        
         const requestSnapshot = await requestsRef.child(requestId).once('value');
         const request = requestSnapshot.val();
         
@@ -6477,12 +6509,20 @@ async function rejectRequest(requestId) {
             throw new Error('Request not found');
         }
         
+        // Update request status
         await requestsRef.child(requestId).update({ status: 'rejected' });
         
-        await database.ref(`users/${request.receiverUid}/requests/${requestId}`).remove();
+        // Remove from receiver's requests list
+        if (request.receiverUid) {
+            await database.ref(`users/${request.receiverUid}/requests/${requestId}`).remove();
+        }
+        
+        // Also remove from sender's sent requests if exists
+        await database.ref(`users/${request.senderUid}/sentRequests/${requestId}`).remove();
         
         showToast('Request rejected', 'info');
         
+        // Reload requests
         await loadChatRequests();
         
     } catch (error) {
@@ -10225,3 +10265,4 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
