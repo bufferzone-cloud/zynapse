@@ -6565,6 +6565,12 @@ async function openChatWithUser(userId) {
 
 async function openChat(chatId, chatType) {
     try {
+        // Close any open chat first
+        if (currentChat) {
+            closeChat();
+            await new Promise(resolve => setTimeout(resolve, 50)); // Small delay
+        }
+        
         const chat = chats.find(c => c.id === chatId);
         if (!chat) {
             showToast('Chat not found', 'error');
@@ -6822,27 +6828,39 @@ function renderGroupChatInterface() {
 
 function setupChatListeners() {
     if (!currentChat) return;
-    
+
     cleanupChatListeners();
     
+    // Store the current chat ID to prevent processing messages for wrong chats
+    const currentChatIdAtSetup = currentChat.id;
+    
+    // Messages listener - only listen for new messages
     const messagesListener = messagesRef.child(currentChat.id)
         .orderByChild('timestamp')
         .limitToLast(100)
         .on('child_added', (snapshot) => {
-            const message = snapshot.val();
-            message.id = snapshot.key;
-            addMessageToChat(message);
+            // Check if we're still in the same chat
+            if (currentChat && currentChat.id === currentChatIdAtSetup) {
+                const message = snapshot.val();
+                message.id = snapshot.key;
+                
+                // Check if message already exists in UI to prevent duplicates
+                const existingMessage = document.querySelector(`.message-container[data-message-id="${message.id}"]`);
+                if (!existingMessage) {
+                    addMessageToChat(message);
+                }
+            }
         });
-    
     chatListeners.push({ ref: messagesRef.child(currentChat.id), listener: messagesListener });
     
     // Message reactions
     const reactionsListener = database.ref(`messageReactions/${currentChat.id}`)
         .on('child_added', (snapshot) => {
-            const reaction = snapshot.val();
-            updateMessageReaction(reaction.messageId, reaction.emoji, reaction.userId, reaction.added);
+            if (currentChat && currentChat.id === currentChatIdAtSetup) {
+                const reaction = snapshot.val();
+                updateMessageReaction(reaction.messageId, reaction.emoji, reaction.userId, reaction.added);
+            }
         });
-    
     chatListeners.push({ 
         ref: database.ref(`messageReactions/${currentChat.id}`), 
         listener: reactionsListener 
@@ -6852,12 +6870,14 @@ function setupChatListeners() {
     if (currentChat.type === 'private' && privacySettings.typingIndicators) {
         const typingListener = database.ref(`typing/${currentChat.id}/${currentChat.uid}`)
             .on('value', (snapshot) => {
-                const typing = snapshot.val();
-                const typingIndicator = document.getElementById('typingIndicator');
-                if (typing && typing.isTyping) {
-                    typingIndicator.classList.add('active');
-                } else {
-                    typingIndicator.classList.remove('active');
+                if (currentChat && currentChat.id === currentChatIdAtSetup) {
+                    const typing = snapshot.val();
+                    const typingIndicator = document.getElementById('typingIndicator');
+                    if (typing && typing.isTyping) {
+                        typingIndicator.classList.add('active');
+                    } else {
+                        typingIndicator.classList.remove('active');
+                    }
                 }
             });
         
@@ -6871,21 +6891,23 @@ function setupChatListeners() {
     if (currentChat.type === 'private') {
         const onlineListener = onlineRef.child(currentChat.uid)
             .on('value', (snapshot) => {
-                const status = snapshot.val();
-                if (status) {
-                    currentChat.isOnline = status.isOnline;
-                    currentChat.lastSeen = status.lastSeen;
-                    
-                    const statusDot = document.querySelector('.chat-status-dot');
-                    const statusText = document.querySelector('.chat-user-status span');
-                    
-                    if (statusDot && statusText) {
-                        if (status.isOnline) {
-                            statusDot.classList.add('online');
-                            statusText.textContent = 'Online';
-                        } else {
-                            statusDot.classList.remove('online');
-                            statusText.textContent = formatLastSeen(status.lastSeen);
+                if (currentChat && currentChat.id === currentChatIdAtSetup) {
+                    const status = snapshot.val();
+                    if (status) {
+                        currentChat.isOnline = status.isOnline;
+                        currentChat.lastSeen = status.lastSeen;
+                        
+                        const statusDot = document.querySelector('.chat-status-dot');
+                        const statusText = document.querySelector('.chat-user-status span');
+                        
+                        if (statusDot && statusText) {
+                            if (status.isOnline) {
+                                statusDot.classList.add('online');
+                                statusText.textContent = 'Online';
+                            } else {
+                                statusDot.classList.remove('online');
+                                statusText.textContent = formatLastSeen(status.lastSeen);
+                            }
                         }
                     }
                 }
@@ -6934,16 +6956,23 @@ async function loadMessages() {
         }
         
         const messages = [];
+        const messageIds = new Set(); // Use a Set to track unique message IDs
+        
         snapshot.forEach((childSnapshot) => {
             const message = childSnapshot.val();
             message.id = childSnapshot.key;
             
-            // Filter out view-once messages that have been viewed
-            if (message.type === 'view-once' && message.viewedBy && message.viewedBy.includes(currentUser.uid)) {
-                return;
+            // Check for duplicates
+            if (!messageIds.has(message.id)) {
+                messageIds.add(message.id);
+                
+                // Filter out view-once messages that have been viewed
+                if (message.type === 'view-once' && message.viewedBy && message.viewedBy.includes(currentUser.uid)) {
+                    return;
+                }
+                
+                messages.push(message);
             }
-            
-            messages.push(message);
         });
         
         const groupedMessages = groupMessagesByDate(messages);
@@ -6969,7 +6998,7 @@ async function loadMessages() {
         console.error('Error loading messages:', error);
     }
 }
-
+    
 function groupMessagesByDate(messages) {
     const grouped = {};
     messages.forEach(message => {
@@ -6998,6 +7027,12 @@ async function loadMessageReactions(messageId) {
 function addMessageToChat(message) {
     const chatMessages = document.getElementById('chatMessages');
     
+    // Check if message already exists
+    const existingMessage = document.querySelector(`.message-container[data-message-id="${message.id}"]`);
+    if (existingMessage) {
+        return; // Message already exists, don't add again
+    }
+    
     const emptyState = chatMessages.querySelector('.chat-messages-empty');
     if (emptyState) {
         emptyState.remove();
@@ -7025,7 +7060,6 @@ function addMessageToChat(message) {
         playNotificationSound();
     }
 }
-
 function createMessageElement(message) {
     const isSent = message.senderId === currentUser.userId;
     const messageDiv = document.createElement('div');
@@ -7598,11 +7632,15 @@ function showMessageOptions(e, messageId, isSent) {
 
 async function sendMessage() {
     const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
     const text = chatInput.value.trim();
     
-    if (!text) return;
+    if (!text || chatSendBtn.disabled) return;
     
     try {
+        // Disable send button temporarily
+        chatSendBtn.disabled = true;
+        
         const messageId = messagesRef.child(currentChat.id).push().key;
         const messageData = {
             id: messageId,
@@ -7620,7 +7658,7 @@ async function sendMessage() {
         
         chatInput.value = '';
         chatInput.style.height = 'auto';
-        document.getElementById('chatSendBtn').disabled = true;
+        chatSendBtn.disabled = false;
         
         sendTypingIndicator(false);
         isTyping = false;
@@ -7630,6 +7668,7 @@ async function sendMessage() {
     } catch (error) {
         console.error('Error sending message:', error);
         showToast('Failed to send message', 'error');
+        chatSendBtn.disabled = false;
     }
 }
 
@@ -9988,9 +10027,22 @@ function cleanupListeners() {
 
 function cleanupChatListeners() {
     chatListeners.forEach(({ ref, listener }) => {
-        ref.off('value', listener);
+        try {
+            ref.off('child_added', listener);
+            ref.off('value', listener);
+            ref.off('child_changed', listener);
+        } catch (error) {
+            console.log('Error removing listener:', error);
+        }
     });
     chatListeners = [];
+    
+    // Clear any typing indicator timeout
+    if (typingTimeout) {
+        clearTimeout(typingTimeout);
+        typingTimeout = null;
+    }
+    isTyping = false;
 }
 
 function logout() {
@@ -10265,3 +10317,4 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
