@@ -3145,6 +3145,59 @@
     display: block;
 }
 
+/* ===== CHAT BUBBLE WIDTH & FOOTER STYLES ===== */
+
+/* Allow bubbles to take up to 90% of container width */
+.message-container,
+.message-container.sent,
+.message-container.received {
+    max-width: 90% !important;
+}
+
+/* For received messages with avatar – keep the avatar reservation */
+.message-container.received .message-bubble {
+    max-width: calc(100% - 48px) !important;
+}
+
+/* New inner structure for all bubble types */
+.message-bubble {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    word-wrap: break-word;
+}
+
+.message-content {
+    width: 100%;
+    word-break: break-word;
+}
+
+.message-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    width: 100%;
+}
+
+/* Ensure time doesn't shrink too much */
+.message-time {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Status icons inline with time */
+.message-status {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 2px;
+}
+
+/* Remove old inline-flex layout from message-bubble children */
+.message-bubble > div[style*="display: flex"] {
+    display: block !important;
+}
         /* ==================== MODALS ==================== */
         .modal-overlay {
             position: fixed;
@@ -7428,21 +7481,19 @@ function createMessageElement(message) {
 function createTextMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     return `
-    <div class="message-bubble">
-        ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
-        <div style="display: flex; align-items: baseline; width: 100%;">
-            <div class="message-text">${escapeHtml(message.text)}</div>
-            <span class="message-time">
-                ${formatTime(message.timestamp)}
+        <div class="message-bubble">
+            ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
+            <div class="message-content">${escapeHtml(message.text)}</div>
+            <div class="message-footer">
+                <span class="message-time">${formatTime(message.timestamp)}</span>
                 ${isSent && privacySettings.readReceipts ? `
                     <span class="message-status">
                         <i class="fas fa-check status-check ${message.status === 'read' ? 'status-read' : message.status === 'delivered' ? 'status-delivered' : 'status-sent'}"></i>
                     </span>
                 ` : ''}
-            </span>
+            </div>
         </div>
-    </div>
-`;
+    `;
 }
 
 function createImageMessage(message, isSent, isGroup) {
@@ -7450,16 +7501,18 @@ function createImageMessage(message, isSent, isGroup) {
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
-            <img src="${message.mediaUrl}" alt="Photo" class="message-media" onclick="viewMedia('${message.mediaUrl}')" data-downloadable>
-            ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
-            <span class="message-time">
-                ${formatTime(message.timestamp)}
+            <div class="message-content">
+                <img src="${message.mediaUrl}" alt="Photo" class="message-media" onclick="viewMedia('${message.mediaUrl}')" data-downloadable>
+                ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
+            </div>
+            <div class="message-footer">
+                <span class="message-time">${formatTime(message.timestamp)}</span>
                 ${isSent && privacySettings.readReceipts ? `
                     <span class="message-status">
                         <i class="fas fa-check status-check ${message.status === 'read' ? 'status-read' : message.status === 'delivered' ? 'status-delivered' : 'status-sent'}"></i>
                     </span>
                 ` : ''}
-            </span>
+            </div>
         </div>
     `;
 }
@@ -7469,16 +7522,18 @@ function createVideoMessage(message, isSent, isGroup) {
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
-            <video src="${message.mediaUrl}" controls class="message-media" data-downloadable></video>
-            ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
-            <span class="message-time">
-                ${formatTime(message.timestamp)}
+            <div class="message-content">
+                <video src="${message.mediaUrl}" controls class="message-media" data-downloadable></video>
+                ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
+            </div>
+            <div class="message-footer">
+                <span class="message-time">${formatTime(message.timestamp)}</span>
                 ${isSent && privacySettings.readReceipts ? `
                     <span class="message-status">
                         <i class="fas fa-check status-check ${message.status === 'read' ? 'status-read' : message.status === 'delivered' ? 'status-delivered' : 'status-sent'}"></i>
                     </span>
                 ` : ''}
-            </span>
+            </div>
         </div>
     `;
 }
@@ -7488,24 +7543,24 @@ function createDocumentMessage(message, isSent, isGroup) {
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
-            <div class="message-document" onclick="downloadFile('${message.mediaUrl}', '${message.fileName}')" data-downloadable>
-                <div class="message-document-icon">
-                    <i class="fas fa-file"></i>
+            <div class="message-content">
+                <div class="message-document" onclick="downloadFile('${message.mediaUrl}', '${message.fileName}')" data-downloadable>
+                    <div class="message-document-icon"><i class="fas fa-file"></i></div>
+                    <div class="message-document-info">
+                        <div class="message-document-name">${message.fileName}</div>
+                        <div class="message-document-size">${formatFileSize(message.fileSize)}</div>
+                    </div>
                 </div>
-                <div class="message-document-info">
-                    <div class="message-document-name">${message.fileName}</div>
-                    <div class="message-document-size">${formatFileSize(message.fileSize)}</div>
-                </div>
+                ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
             </div>
-            ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
-            <span class="message-time">
-                ${formatTime(message.timestamp)}
+            <div class="message-footer">
+                <span class="message-time">${formatTime(message.timestamp)}</span>
                 ${isSent && privacySettings.readReceipts ? `
                     <span class="message-status">
                         <i class="fas fa-check status-check ${message.status === 'read' ? 'status-read' : message.status === 'delivered' ? 'status-delivered' : 'status-sent'}"></i>
                     </span>
                 ` : ''}
-            </span>
+            </div>
         </div>
     `;
 }
@@ -7531,28 +7586,25 @@ function createLocationMessage(message, isSent, isGroup) {
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
-            <div class="message-location" onclick="openLocationInMap('${message.location.latitude}', '${message.location.longitude}', '${message.location.address}')">
-                <div id="${mapId}" class="message-location-map" style="width: 100%; height: 150px; border-radius: var(--radius-sm);"></div>
-            </div>
-            <div class="message-location-info">
-                <div class="message-location-address">
-                    <i class="fas fa-map-marker-alt"></i>
-                    ${message.location.address || 'Shared Location'}
+            <div class="message-content">
+                <div class="message-location" onclick="openLocationInMap('${message.location.latitude}', '${message.location.longitude}', '${message.location.address}')">
+                    <div id="${mapId}" class="message-location-map" style="width: 100%; height: 150px; border-radius: var(--radius-sm);"></div>
                 </div>
-                <div class="message-location-details">
-                    <span>Lat: ${message.location.latitude.toFixed(4)}</span>
-                    <span>•</span>
-                    <span>Lng: ${message.location.longitude.toFixed(4)}</span>
+                <div class="message-location-info">
+                    <div class="message-location-address"><i class="fas fa-map-marker-alt"></i> ${message.location.address || 'Shared Location'}</div>
+                    <div class="message-location-details">
+                        <span>Lat: ${message.location.latitude.toFixed(4)}</span> • <span>Lng: ${message.location.longitude.toFixed(4)}</span>
+                    </div>
                 </div>
             </div>
-            <span class="message-time">
-                ${formatTime(message.timestamp)}
+            <div class="message-footer">
+                <span class="message-time">${formatTime(message.timestamp)}</span>
                 ${isSent && privacySettings.readReceipts ? `
                     <span class="message-status">
                         <i class="fas fa-check status-check ${message.status === 'read' ? 'status-read' : message.status === 'delivered' ? 'status-delivered' : 'status-sent'}"></i>
                     </span>
                 ` : ''}
-            </span>
+            </div>
         </div>
     `;
 }
@@ -7605,21 +7657,21 @@ function createVoiceMessage(message, isSent, isGroup) {
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
-            <div class="message-voice">
-                <button class="message-voice-play" onclick="playVoiceMessage('${voiceId}', '${message.mediaUrl}')" id="${voiceId}-play">
-                    <i class="fas fa-play"></i>
-                </button>
-                <div class="message-voice-waveform" id="${voiceId}-waveform"></div>
-                <span class="message-voice-duration">${message.duration || '0:00'}</span>
+            <div class="message-content">
+                <div class="message-voice">
+                    <button class="message-voice-play" onclick="playVoiceMessage('${voiceId}', '${message.mediaUrl}')" id="${voiceId}-play"><i class="fas fa-play"></i></button>
+                    <div class="message-voice-waveform" id="${voiceId}-waveform"></div>
+                    <span class="message-voice-duration">${message.duration || '0:00'}</span>
+                </div>
             </div>
-            <span class="message-time">
-                ${formatTime(message.timestamp)}
+            <div class="message-footer">
+                <span class="message-time">${formatTime(message.timestamp)}</span>
                 ${isSent && privacySettings.readReceipts ? `
                     <span class="message-status">
                         <i class="fas fa-check status-check ${message.status === 'read' ? 'status-read' : message.status === 'delivered' ? 'status-delivered' : 'status-sent'}"></i>
                     </span>
                 ` : ''}
-            </span>
+            </div>
         </div>
     `;
 }
@@ -7632,50 +7684,44 @@ function createViewOnceMessage(message, isSent, isGroup) {
         return `
             <div class="message-bubble">
                 ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
-                <div class="message-view-once-viewed" style="text-align: center; padding: 20px; color: var(--gray-500);">
-                    <i class="fas fa-eye-slash" style="font-size: 24px; margin-bottom: 8px;"></i>
-                    <div>View once media has been viewed</div>
+                <div class="message-content">
+                    <div class="message-view-once-viewed" style="text-align: center; padding: 20px; color: var(--gray-500);">
+                        <i class="fas fa-eye-slash" style="font-size: 24px; margin-bottom: 8px;"></i>
+                        <div>View once media has been viewed</div>
+                    </div>
                 </div>
-                <span class="message-time">
-                    ${formatTime(message.timestamp)}
+                <div class="message-footer">
+                    <span class="message-time">${formatTime(message.timestamp)}</span>
                     ${isSent && privacySettings.readReceipts ? `
                         <span class="message-status">
                             <i class="fas fa-check status-check ${message.status === 'read' ? 'status-read' : message.status === 'delivered' ? 'status-delivered' : 'status-sent'}"></i>
                         </span>
                     ` : ''}
-                </span>
+                </div>
             </div>
         `;
     }
     
-    const isImage = message.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-    const isVideo = message.mediaUrl.match(/\.(mp4|webm|ogg)$/i);
-    
     return `
         <div class="message-bubble message-view-once">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
-            <div class="message-view-once-overlay" id="viewOnceOverlay-${message.id}" onclick="viewOnceMessage('${message.id}')">
-                <i class="fas fa-eye"></i>
-                <span>View Once</span>
-                <small>Tap to view • This media will disappear after viewing</small>
+            <div class="message-content">
+                <div class="message-view-once-overlay" id="viewOnceOverlay-${message.id}" onclick="viewOnceMessage('${message.id}')">
+                    <i class="fas fa-eye"></i>
+                    <span>View Once</span>
+                    <small>Tap to view • This media will disappear after viewing</small>
+                </div>
+                <!-- hidden media will be filled after viewing -->
+                <img src="" alt="View once photo" class="message-media" style="display: none;">
             </div>
-            ${isImage ? 
-                `<img src="" alt="View once photo" class="message-media" style="display: none;">` :
-                isVideo ?
-                `<video controls class="message-media" style="display: none;"></video>` :
-                `<div class="message-media" style="display: none; text-align: center; padding: 20px;">
-                    <i class="fas fa-file"></i>
-                    <div>Media file</div>
-                </div>`
-            }
-            <span class="message-time">
-                ${formatTime(message.timestamp)}
+            <div class="message-footer">
+                <span class="message-time">${formatTime(message.timestamp)}</span>
                 ${isSent && privacySettings.readReceipts ? `
                     <span class="message-status">
                         <i class="fas fa-check status-check ${message.status === 'read' ? 'status-read' : message.status === 'delivered' ? 'status-delivered' : 'status-sent'}"></i>
                     </span>
                 ` : ''}
-            </span>
+            </div>
         </div>
     `;
 }
@@ -10629,4 +10675,5 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
