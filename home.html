@@ -2258,19 +2258,54 @@
             z-index: 1;
         }
 
-        .message-container {
-            display: flex;
-            margin-bottom: 2px;
-            max-width: 85%;
-            align-self: flex-start;
-            position: relative;
-        }
+      .message-container {
+    display: flex;
+    margin-bottom: 4px;
+    max-width: 80%;
+    position: relative;
+}
 
-        .message-container.sent {
-            align-self: flex-end;
-            flex-direction: row-reverse;
-        }
+      .message-container.sent {
+    align-self: flex-end;
+    margin-right: 12px;
+}
 
+/* Group chat: avatar spacing */
+.message-container.received .message-avatar {
+    margin-right: 8px;  /* Gap between avatar and bubble */
+    margin-left: 0;
+}
+
+.message-container.received .message-bubble {
+    max-width: calc(100% - 44px); /* Avatar (32px) + margin (8px) + extra */
+}
+
+/* Media message bubble – minimal padding */
+.message-bubble.media-message {
+    padding: 2px;
+}
+
+/* Make all media types flush with the bubble edge */
+.message-bubble.media-message .message-media,
+.message-bubble.media-message .message-document,
+.message-bubble.media-message .message-location,
+.message-bubble.media-message .message-voice,
+.message-bubble.media-message .message-view-once {
+    border-radius: var(--radius-lg); /* Match bubble’s border-radius */
+    margin-bottom: 0;
+}
+
+/* Allow images/videos to be larger (up to 300px) */
+.message-bubble.media-message .message-media {
+    max-width: 300px;
+    border-radius: var(--radius-lg);
+}
+
+/* Slightly reduce internal padding of document/voice boxes */
+.message-bubble.media-message .message-document,
+.message-bubble.media-message .message-voice {
+    padding: 6px;
+}
         .message-bubble {
             position: relative;
             padding: 8px 12px;
@@ -2284,11 +2319,10 @@
             transition: background-color var(--transition-fast);
         }
 
-        .message-container.received .message-bubble {
-            background: var(--gray-100);
-            color: var(--black);
-            border-bottom-left-radius: 4px;
-        }
+       .message-container.received {
+    align-self: flex-start;
+    margin-left: 12px;
+}
 
         .message-container.sent .message-bubble {
             background: linear-gradient(135deg, var(--blue), #0095ff);
@@ -4171,9 +4205,9 @@
                 padding: var(--space-2);
             }
             
-            .chat-messages {
-                padding: var(--space-2);
-            }
+           .chat-messages {
+    padding: 0;
+}
             
             .chat-input-container {
                 padding: 8px 12px;
@@ -7213,7 +7247,7 @@ function addMessageToChat(message) {
 function createMessageElement(message) {
     const isSent = message.senderId === currentUser.userId;
     const isGroup = currentChat.type === 'group';
-    const showAvatar = isGroup && !isSent; // only avatars for others in group
+    const showAvatar = isGroup && !isSent;
 
     const messageDiv = document.createElement('div');
     messageDiv.className = `message-container ${isSent ? 'sent' : 'received'}`;
@@ -7255,7 +7289,13 @@ function createMessageElement(message) {
     }
 
     messageDiv.innerHTML = avatarHtml + bubbleContent;
-    
+
+    // 👇 NEW: Add 'media-message' class to non-text message bubbles
+    if (message.type !== 'text') {
+        const bubble = messageDiv.querySelector('.message-bubble');
+        if (bubble) bubble.classList.add('media-message');
+    }
+
     // Add context menu for messages (except view-once)
     if (message.type !== 'view-once') {
         const bubble = messageDiv.querySelector('.message-bubble');
@@ -7263,7 +7303,7 @@ function createMessageElement(message) {
             e.preventDefault();
             showMessageOptions(e, message.id, isSent);
         });
-        
+
         // Add long press for mobile
         let pressTimer;
         bubble.addEventListener('touchstart', (e) => {
@@ -7271,23 +7311,17 @@ function createMessageElement(message) {
                 showMessageOptions(e, message.id, isSent);
             }, 500);
         });
-        
-        bubble.addEventListener('touchend', () => {
-            clearTimeout(pressTimer);
-        });
-        
-        bubble.addEventListener('touchmove', () => {
-            clearTimeout(pressTimer);
-        });
+        bubble.addEventListener('touchend', () => clearTimeout(pressTimer));
+        bubble.addEventListener('touchmove', () => clearTimeout(pressTimer));
     }
-    
+
     // Load reactions
     loadMessageReactions(message.id).then(reactions => {
         if (Object.keys(reactions).length > 0) {
             addReactionsToMessage(messageDiv, message.id, reactions);
         }
     });
-    
+
     return messageDiv;
 }
 
@@ -10493,4 +10527,5 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
