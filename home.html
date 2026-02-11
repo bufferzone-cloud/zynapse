@@ -2332,15 +2332,16 @@
 }
 
 .message-bubble {
-    display: inline-block !important;
-    width: auto !important;
-    max-width: 100% !important;
-    word-wrap: break-word;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
     padding: calc(8px * 1.25) calc(12px * 1.25) !important;
     border-radius: calc(18px * 1.25) !important;
     position: relative;
     box-shadow: 0 calc(1px * 1.25) calc(2px * 1.25) rgba(0,0,0,0.05);
 }
+
 
 .message-container.received .message-bubble {
     max-width: calc(100% - 48px); /* reserve space for avatar */
@@ -2386,19 +2387,21 @@
 }
 
 .message-text {
-    white-space: pre-wrap;
+    flex: 1 1 auto;
     word-break: break-word;
-    line-height: 1.4;
+    margin-right: 8px;          /* space between text and time */
 }
 
 .message-time {
-    display: block !important;
+    flex: 0 0 auto;
+    display: inline-flex !important;  /* override block */
+    align-items: center;
+    white-space: nowrap;
+    margin-left: 0 !important;
+    margin-top: 0 !important;
     text-align: right;
     font-size: calc(10px * 1.25);
-    margin-top: calc(4px * 1.25);
-    margin-left: calc(12px * 1.25);
     line-height: 1.2;
-    float: none !important;
     opacity: 0.75;
 }
 
@@ -3482,11 +3485,13 @@
 
 /* Group message sender name inside bubble */
 .message-sender-name {
-  font-size: 11px;
-  font-weight: 600;
-  color: #007aff;
-  margin-bottom: 2px;
-  text-transform: capitalize;
+    font-size: 11px;
+    font-weight: 600;
+    color: #007aff;
+    margin-bottom: 4px;
+    text-transform: capitalize;
+    width: 100%;               /* full width, separate row */
+    flex: 0 0 100%;
 }
 
 /* Admin modal group photo */
@@ -7423,8 +7428,9 @@ function createMessageElement(message) {
 function createTextMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     return `
-        <div class="message-bubble">
-            ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
+    <div class="message-bubble">
+        ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
+        <div style="display: flex; align-items: baseline; width: 100%;">
             <div class="message-text">${escapeHtml(message.text)}</div>
             <span class="message-time">
                 ${formatTime(message.timestamp)}
@@ -7435,7 +7441,8 @@ function createTextMessage(message, isSent, isGroup) {
                 ` : ''}
             </span>
         </div>
-    `;
+    </div>
+`;
 }
 
 function createImageMessage(message, isSent, isGroup) {
@@ -10622,3 +10629,4 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
