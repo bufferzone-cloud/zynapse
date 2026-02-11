@@ -180,83 +180,93 @@
         }
 
         /* ==================== APP HEADER ==================== */
-        .app-header {
-            background: var(--white);
-            border-bottom: 1px solid var(--gray-150);
-            position: sticky;
-            top: 0;
-            z-index: var(--z-sticky);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            background: rgba(255, 255, 255, 0.92);
-            padding: var(--space-2) var(--space-3);
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            flex-shrink: 0;
-            height: 52px;
-        }
+       /* ==================== APP HEADER ==================== */
+.app-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-150);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.92);
+    padding: var(--space-3) var(--space-4); /* Increased padding */
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+    height: 65px; /* Increased from 52px by 25% */
+}
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: var(--space-2);
-            flex: 1;
-            min-width: 0;
-        }
+      .header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3); /* Increased gap */
+    flex: 1;
+    min-width: 0;
+    justify-content: center; /* Center content */
+    position: relative;
+}
 
         .logo-container {
-            display: flex;
-            align-items: center;
-            gap: var(--space-1);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: var(--radius-sm);
-            transition: background-color var(--transition-fast);
-        }
+    display: flex;
+    align-items: center;
+    gap: var(--space-2); /* Increased gap */
+    cursor: pointer;
+    padding: 6px; /* Increased padding */
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+    position: absolute;
+    left: var(--space-3);
+}
 
         .logo-container:hover {
             background-color: var(--gray-100);
         }
 
         .header-logo {
-            width: 28px;
-            height: 28px;
-            border-radius: var(--radius-sm);
-            object-fit: contain;
-            flex-shrink: 0;
-        }
+    width: 35px; /* Increased from 28px by 25% */
+    height: 35px; /* Increased from 28px by 25% */
+    border-radius: var(--radius-sm);
+    object-fit: contain;
+    flex-shrink: 0;
+}
 
-        .user-info-compact {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            flex: 1;
-        }
+       .user-info-compact {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+    align-items: center; /* Center align */
+    text-align: center; /* Center text */
+    max-width: 60%; /* Limit width */
+    margin: 0 auto; /* Center in header */
+}
 
         .user-name-header {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--black);
-            margin-bottom: 1px;
-            line-height: 1.2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+    font-size: 18.75px; /* Increased from 15px by 25% */
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 2px; /* Increased margin */
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-        .user-id-header {
-            font-size: 11px;
-            color: var(--gray-600);
-            font-family: var(--font-mono);
-            letter-spacing: 0.2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: flex;
-            align-items: center;
-            gap: 2px;
-        }
+      .user-id-header {
+    font-size: 13.75px; /* Increased from 11px by 25% */
+    color: var(--gray-600);
+    font-family: var(--font-mono);
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 4px; /* Increased gap */
+    justify-content: center; /* Center items */
+}
 
         .copy-btn-small {
             background: none;
@@ -299,14 +309,14 @@
             flex-shrink: 0;
         }
 
-        .header-profile-pic {
-            width: 32px;
-            height: 32px;
-            border-radius: var(--radius-circle);
-            object-fit: cover;
-            border: 1px solid var(--gray-200);
-            transition: border-color var(--transition-fast);
-        }
+       .header-profile-pic {
+    width: 40px; /* Increased from 32px by 25% */
+    height: 40px; /* Increased from 32px by 25% */
+    border-radius: var(--radius-circle);
+    object-fit: cover;
+    border: 1px solid var(--gray-200);
+    transition: border-color var(--transition-fast);
+}
 
         .header-profile-btn:hover .header-profile-pic {
             border-color: var(--blue);
@@ -539,22 +549,23 @@
         }
 
         /* ==================== BOTTOM NAVIGATION ==================== */
-        .bottom-nav {
-            background: var(--white);
-            border-top: 1px solid var(--gray-150);
-            position: sticky;
-            bottom: 0;
-            z-index: var(--z-sticky);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            background: rgba(255, 255, 255, 0.92);
-            padding: 6px 8px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-shrink: 0;
-            height: 56px;
-        }
+        /* ==================== BOTTOM NAVIGATION ==================== */
+.bottom-nav {
+    background: var(--white);
+    border-top: 1px solid var(--gray-150);
+    position: sticky;
+    bottom: 0;
+    z-index: var(--z-sticky);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.92);
+    padding: 8px 10px; /* Increased padding */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-shrink: 0;
+    height: 70px; /* Increased from 56px by 25% */
+}
 
         .nav-item {
             display: flex;
@@ -576,17 +587,17 @@
         }
 
         .nav-item i {
-            font-size: 18px;
-            transition: all var(--transition-fast);
-        }
+    font-size: 22.5px; /* Increased from 18px by 25% */
+    transition: all var(--transition-fast);
+}
 
-        .nav-item span {
-            font-size: 9px;
-            font-weight: 600;
-            letter-spacing: 0.2px;
-            transition: all var(--transition-fast);
-            text-transform: uppercase;
-        }
+       .nav-item span {
+    font-size: 11.25px; /* Increased from 9px by 25% */
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    transition: all var(--transition-fast);
+    text-transform: uppercase;
+}
 
         .nav-item.active {
             color: var(--blue);
@@ -606,24 +617,24 @@
             background: var(--gray-50);
         }
 
-        .nav-badge {
-            position: absolute;
-            top: -2px;
-            right: 0;
-            background: var(--red);
-            color: var(--white);
-            font-size: 8px;
-            font-weight: 700;
-            min-width: 14px;
-            height: 14px;
-            border-radius: var(--radius-circle);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 3px;
-            border: 1px solid var(--white);
-            pointer-events: none;
-        }
+       .nav-badge {
+    position: absolute;
+    top: 0; /* Adjusted position */
+    right: 5px; /* Adjusted position */
+    background: var(--red);
+    color: var(--white);
+    font-size: 10px; /* Increased from 8px */
+    font-weight: 700;
+    min-width: 18px; /* Increased from 14px */
+    height: 18px; /* Increased from 14px */
+    border-radius: var(--radius-circle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px; /* Increased padding */
+    border: 1px solid var(--white);
+    pointer-events: none;
+}
 
         /* ==================== MAIN CONTENT AREA ==================== */
         .main-content {
@@ -6369,6 +6380,16 @@ async function acceptRequest(requestId) {
             throw new Error('Request not found');
         }
         
+        // Check if already a contact (this should not prevent acceptance)
+        const existingContact = contacts.find(c => c.uid === request.senderUid);
+        
+        if (existingContact) {
+            // If already a contact, just open the chat
+            showToast('Already a contact', 'info');
+            openChatWithUser(request.senderUid);
+            return;
+        }
+        
         await requestsRef.child(requestId).update({ status: 'accepted' });
         
         const senderSnapshot = await usersRef.child(request.senderUid).once('value');
@@ -6403,7 +6424,7 @@ async function acceptRequest(requestId) {
         
         await database.ref(`users/${request.senderUid}/contacts/${currentUser.uid}`).set(receiverContactData);
         
-        // Create chat
+        // Create chat - ALWAYS create a new chat when accepting a request
         const chatId = [currentUser.uid, request.senderUid].sort().join('_');
         const chatData = {
             id: chatId,
@@ -6453,18 +6474,30 @@ async function acceptRequest(requestId) {
         
         await database.ref(`users/${request.senderUid}/chats/${chatId}`).set(senderChatData);
         
+        // Update local arrays
+        contacts.push(contactData);
+        
+        // Add to chats array
+        const newChat = {
+            ...userChatData,
+            unreadCount: 0
+        };
+        chats.push(newChat);
+        
         showToast('Contact added!', 'success');
         playNotificationSound();
         
+        // Update UI
         await loadContacts();
         await loadChatRequests();
         await loadChats();
         
+        // Open the chat immediately
         openChatWithUser(request.senderUid);
         
     } catch (error) {
         console.error('Error accepting request:', error);
-        showToast('Failed to accept request', 'error');
+        showToast('Failed to accept request: ' + error.message, 'error');
     }
 }
 
@@ -10225,6 +10258,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
