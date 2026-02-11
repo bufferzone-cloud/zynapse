@@ -322,6 +322,13 @@
     color: var(--blue);
 }
 
+.app-header {
+  z-index: 1030;  /* higher than .search-container's 1020 */
+}
+
+.dropdown-menu {
+  z-index: 1040;  /* optional: extra safety for dropdown content */
+}
 /* ==================== SEARCH BAR ==================== */
 .search-container {
     background: var(--white);
@@ -10609,6 +10616,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
