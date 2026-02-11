@@ -2008,7 +2008,23 @@
         .contact-action-btn.delete:hover {
             color: var(--red);
         }
+/* Add to your existing CSS */
+.create-zyne-container.hidden {
+    display: none;
+}
 
+.zynes-header {
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.zynes-header:hover {
+    background-color: var(--gray-50);
+}
+
+.zynes-header h2, .zynes-subtitle {
+    pointer-events: none;
+}
         /* ==================== CHAT INTERFACE ==================== */
         .chat-page {
             position: fixed;
@@ -4258,42 +4274,42 @@
                 </div>
             </div>
 
-            <!-- Zynes Page -->
-            <div class="page page-content" id="zynesPage">
-                <div class="zynes-page">
-                    <div class="zynes-header">
-                        <h2>Zynes</h2>
-                        <div class="zynes-subtitle">Share moments with your contacts</div>
-                    </div>
-                    <div class="create-zyne-container">
-                        <div class="create-zyne-card">
-                            <div class="create-zyne-header">
-                                <img src="https://via.placeholder.com/150" alt="Profile" class="create-zyne-avatar" id="createZyneAvatar">
-                                <div class="create-zyne-input-wrapper">
-                                    <textarea class="create-zyne-input" id="zyneText" placeholder="What's on your mind?"></textarea>
-                                </div>
-                            </div>
-                            <div class="zyne-media-preview" id="zyneMediaPreview"></div>
-                            <div class="create-zyne-actions">
-                                <div class="media-attach-buttons">
-                                    <button class="attach-media-btn" onclick="attachZynePhoto()">
-                                        <i class="fas fa-image"></i> Photo
-                                    </button>
-                                    <button class="attach-media-btn" onclick="attachZyneVideo()">
-                                        <i class="fas fa-video"></i> Video
-                                    </button>
-                                </div>
-                                <button class="post-zyne-btn" onclick="postZyne()" id="postZyneBtn">
-                                    <i class="fas fa-paper-plane"></i> Post
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="zynes-feed" id="zynesFeed">
-                        <!-- Zynes will be loaded here -->
+           <!-- Zynes Page -->
+<div class="page page-content" id="zynesPage">
+    <div class="zynes-page">
+        <div class="zynes-header" id="zynesHeader">
+            <h2>Zynes</h2>
+            <div class="zynes-subtitle">TAP TO: share moments with your contacts</div>
+        </div>
+        <div class="create-zyne-container hidden" id="createZyneContainer">
+            <div class="create-zyne-card">
+                <div class="create-zyne-header">
+                    <img src="https://via.placeholder.com/150" alt="Profile" class="create-zyne-avatar" id="createZyneAvatar">
+                    <div class="create-zyne-input-wrapper">
+                        <textarea class="create-zyne-input" id="zyneText" placeholder="What's on your mind?"></textarea>
                     </div>
                 </div>
+                <div class="zyne-media-preview" id="zyneMediaPreview"></div>
+                <div class="create-zyne-actions">
+                    <div class="media-attach-buttons">
+                        <button class="attach-media-btn" onclick="attachZynePhoto()">
+                            <i class="fas fa-image"></i> Photo
+                        </button>
+                        <button class="attach-media-btn" onclick="attachZyneVideo()">
+                            <i class="fas fa-video"></i> Video
+                        </button>
+                    </div>
+                    <button class="post-zyne-btn" onclick="postZyne()" id="postZyneBtn">
+                        <i class="fas fa-paper-plane"></i> Post
+                    </button>
+                </div>
             </div>
+        </div>
+        <div class="zynes-feed" id="zynesFeed">
+            <!-- Zynes will be loaded here -->
+        </div>
+    </div>
+</div>
 
             <!-- Groups Page -->
             <div class="page page-content" id="groupsPage">
@@ -5223,6 +5239,9 @@ function setupEventListeners() {
             document.getElementById('searchResults').classList.add('show');
         }
     });
+
+ // Add click listener for Zynes header
+    document.getElementById('zynesHeader')?.addEventListener('click', toggleCreateZyneContainer);
     
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.search-input-wrapper') && !e.target.closest('.search-results-container')) {
@@ -6152,6 +6171,15 @@ function switchPage(page) {
             loadChats();
             break;
         case 'zynes':
+            // Hide create-zyne-container when switching to zynes page
+            const createZyneContainer = document.getElementById('createZyneContainer');
+            if (createZyneContainer) {
+                createZyneContainer.classList.add('hidden');
+                const zynesHeader = document.getElementById('zynesHeader');
+                if (zynesHeader) {
+                    zynesHeader.style.backgroundColor = 'var(--white)';
+                }
+            }
             loadZynes();
             break;
         case 'groups':
@@ -6163,6 +6191,30 @@ function switchPage(page) {
         case 'contacts':
             loadContacts();
             break;
+    }
+}
+
+function toggleCreateZyneContainer() {
+    const createZyneContainer = document.getElementById('createZyneContainer');
+    const zynesHeader = document.getElementById('zynesHeader');
+    
+    if (createZyneContainer) {
+        createZyneContainer.classList.toggle('hidden');
+        
+        // Add visual feedback
+        zynesHeader.style.backgroundColor = createZyneContainer.classList.contains('hidden') 
+            ? 'var(--white)' 
+            : 'var(--blue-light)';
+        
+        // Focus on input when shown
+        if (!createZyneContainer.classList.contains('hidden')) {
+            setTimeout(() => {
+                const zyneText = document.getElementById('zyneText');
+                if (zyneText) {
+                    zyneText.focus();
+                }
+            }, 100);
+        }
     }
 }
 
@@ -10317,4 +10369,5 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
