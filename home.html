@@ -830,16 +830,81 @@
     flex-direction: column;
 }
 
+/* ========== ZYNES HEADER – TAPPABLE BUTTON STYLE ========== */
 .zynes-header {
-    padding: calc(var(--space-3) * 1.25);
-    background: var(--white);
-    border-bottom: calc(1px * 1.25) solid var(--gray-150);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.92);
+    background: linear-gradient(135deg, var(--blue), #0095ff) !important;
+    color: white !important;
+    padding: 16px 20px !important;
+    margin: 0 12px 12px 12px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 12px rgba(0,122,255,0.2), 0 0 0 1px rgba(255,255,255,0.1) inset !important;
+    cursor: pointer !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease !important;
+    position: relative;
+    border: none !important;
+}
+
+/* Icon – plus sign inside a circle (no extra HTML needed) */
+.zynes-header::before {
+    content: "\f067";  /* FontAwesome plus */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 14px;
+    background: rgba(255,255,255,0.2);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    color: white;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+}
+
+.zynes-header h2 {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: white !important;
+    margin: 0 !important;
+    line-height: 1.2;
+    flex: 1;
+}
+
+.zynes-subtitle {
+    font-size: 12px !important;
+    color: rgba(255,255,255,0.8) !important;
+    font-weight: 500;
+    margin-top: 2px;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Hover / active feedback */
+.zynes-header:hover {
+    background: linear-gradient(135deg, #0066d6, #0080ff) !important;
+    box-shadow: 0 8px 18px rgba(0,122,255,0.3), 0 0 0 1px rgba(255,255,255,0.2) inset !important;
+    transform: scale(1.01) translateY(-1px);
+}
+
+.zynes-header:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(0,122,255,0.2) !important;
+}
+
+/* When the create‑Zyne container is visible, indicate an “open” state */
+.zynes-header[style*="var(--blue-light)"] {
+    background: linear-gradient(135deg, #004999, #0066cc) !important;
+}
+.zynes-header[style*="var(--blue-light)"]::before {
+    content: "\f068";  /* FontAwesome minus */
+    background: rgba(255,255,255,0.3);
 }
 
 .zynes-header h2 {
@@ -10543,6 +10608,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
