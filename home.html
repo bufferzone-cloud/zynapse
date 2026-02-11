@@ -4415,6 +4415,164 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--gray-400);
         }
+        /* ========== FIXED CHAT BUBBLES – APPLE MESSAGES STYLE ========== */
+
+/* 1. Shrink-wrap bubbles – no full‑width containers */
+.chat-messages {
+  gap: 6px !important;                  /* proper spacing between messages */
+}
+
+.message-container {
+  max-width: 75% !important;           /* Apple‑like max width (adjust to taste) */
+  margin-bottom: 2px;
+}
+
+.message-bubble {
+  display: inline-block !important;    /* bubble width = content + padding */
+  width: auto !important;
+  max-width: 100% !important;
+  word-wrap: break-word;
+  padding: 8px 12px !important;
+  border-radius: 18px !important;      /* larger, softer radius */
+  position: relative;                 /* needed for tail */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* subtle depth */
+}
+
+/* Received (gray) bubble – left aligned, tail on left */
+.message-container.received .message-bubble {
+  background: #e9e9ed !important;      /* system gray, matches Apple */
+  color: #000;
+  border-bottom-left-radius: 4px !important; /* sharp corner for tail */
+  margin-left: 4px;
+}
+
+.message-container.received .message-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -8px;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  border-right-color: #e9e9ed;
+  border-left: 0;
+  border-bottom: 0;
+  transform: rotate(45deg);
+}
+
+/* Sent (blue) bubble – right aligned, tail on right */
+.message-container.sent .message-bubble {
+  background: #007aff !important;      /* Apple blue */
+  color: white;
+  border-bottom-right-radius: 4px !important;
+  margin-right: 4px;
+}
+
+.message-container.sent .message-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: -8px;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  border-left-color: #007aff;
+  border-right: 0;
+  border-bottom: 0;
+  transform: rotate(45deg);
+}
+
+/* 2. Time & status – always inside bubble, bottom right */
+.message-time {
+  display: block !important;
+  text-align: right;
+  font-size: 10px;
+  margin-top: 4px;
+  margin-left: 12px;
+  line-height: 1.2;
+  float: none !important;             /* override float */
+  opacity: 0.75;
+}
+
+/* Sent time – lighter color on blue */
+.message-container.sent .message-time {
+  color: rgba(255,255,255,0.8) !important;
+}
+
+/* 3. Group chat – sender name above bubble (small, blue) */
+.message-sender-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #007aff;
+  margin-bottom: 2px;
+  text-transform: capitalize;
+}
+
+/* 4. Avatar alignment for group messages */
+.message-avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.message-container.received {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* ========== ZERO BORDER AROUND MEDIA ========== */
+.message-media,
+.message-media img,
+.message-media video,
+.message-document,
+.message-location-map,
+.message-voice,
+.zyne-media,
+.media-preview-item,
+.contact-avatar,
+.chat-list-avatar,
+.group-avatar,
+.profile-avatar-large,
+.view-profile-avatar,
+.header-profile-pic,
+.create-zyne-avatar {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Optional – remove tiny border from avatar containers if any */
+.contact-avatar,
+.chat-list-avatar,
+.group-avatar,
+.header-profile-pic {
+  border: none !important;
+}
+
+/* 5. Media bubbles – no border, clean radius */
+.message-media {
+  border-radius: 12px !important;
+  max-width: 240px;
+  margin-bottom: 4px;
+}
+
+.message-document {
+  background: rgba(0,0,0,0.04) !important;
+  border-radius: 10px !important;
+  border: none !important;
+  padding: 8px 12px !important;
+}
+.message-container.sent .message-document {
+  background: rgba(255,255,255,0.1) !important;
+}
+
+/* 6. Force consistent bubble sizing for text only */
+.message-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.4;
+}
     </style>
 </head>
 <body>
@@ -10621,6 +10779,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
