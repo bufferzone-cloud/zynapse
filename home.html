@@ -128,407 +128,7 @@
             position: relative;
             overflow: hidden;
         }
-/* ==================== GROUP SETTINGS & MESSAGE PROFILE PICTURES ==================== */
 
-/* Group header with photo */
-.group-header-with-photo {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--space-3);
-    background: linear-gradient(135deg, var(--blue-light), var(--white));
-    border-bottom: 1px solid var(--gray-150);
-}
-
-.group-header-photo {
-    width: 80px;
-    height: 80px;
-    border-radius: var(--radius-circle);
-    object-fit: cover;
-    border: 3px solid var(--white);
-    margin-bottom: var(--space-2);
-    box-shadow: var(--shadow-medium);
-}
-
-.group-header-name {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--black);
-    margin-bottom: var(--space-1);
-    text-align: center;
-}
-
-.group-header-members {
-    font-size: 12px;
-    color: var(--gray-600);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.group-settings-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: var(--space-3);
-    background: var(--white);
-    border-bottom: 1px solid var(--gray-150);
-}
-
-.group-settings-btn {
-    flex: 1;
-    min-width: 120px;
-    padding: 10px 12px;
-    background: var(--gray-100);
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-md);
-    font-size: 13px;
-    color: var(--gray-800);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    justify-content: center;
-}
-
-.group-settings-btn:hover {
-    background: var(--blue-light);
-    border-color: var(--blue);
-    color: var(--blue);
-    transform: translateY(-1px);
-}
-
-.group-settings-btn i {
-    font-size: 14px;
-}
-
-/* Group message with profile picture */
-.group-message-container {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 2px;
-    max-width: 85%;
-    align-self: flex-start;
-}
-
-.group-message-container.sent {
-    align-self: flex-end;
-    flex-direction: row-reverse;
-}
-
-.group-message-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-circle);
-    object-fit: cover;
-    border: 1px solid var(--gray-200);
-    flex-shrink: 0;
-    margin-top: auto;
-}
-
-.group-message-content {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-.group-message-sender {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--gray-700);
-    margin-bottom: 2px;
-    margin-left: 4px;
-    display: none;
-}
-
-.group-message-container:not(:first-child) .group-message-sender {
-    display: block;
-}
-
-.group-message-bubble {
-    position: relative;
-    padding: 8px 12px;
-    border-radius: var(--radius-lg);
-    word-wrap: break-word;
-    line-height: 1.3;
-    font-size: 13px;
-    box-shadow: var(--shadow-subtle);
-    max-width: 100%;
-    word-break: break-word;
-    transition: background-color var(--transition-fast);
-}
-
-.group-message-container .group-message-bubble {
-    background: var(--gray-100);
-    color: var(--black);
-    border-bottom-left-radius: 4px;
-}
-
-.group-message-container.sent .group-message-bubble {
-    background: linear-gradient(135deg, var(--blue), #0095ff);
-    color: var(--white);
-    border-bottom-right-radius: 4px;
-}
-
-.group-message-text {
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-}
-
-.group-message-time {
-    display: block;
-    text-align: right;
-    font-size: 9px;
-    opacity: 0.7;
-    margin-top: 4px;
-    margin-left: 6px;
-    float: right;
-    clear: both;
-    letter-spacing: 0.1px;
-}
-
-.group-message-container.sent .group-message-time {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.group-message-container .group-message-time {
-    color: var(--gray-600);
-}
-
-/* Group media messages with profile */
-.group-message-media {
-    width: 100%;
-    border-radius: var(--radius-sm);
-    margin-bottom: 6px;
-    cursor: pointer;
-    display: block;
-    max-width: 200px;
-    transition: transform var(--transition-fast);
-}
-
-.group-message-media:hover {
-    transform: scale(1.02);
-}
-
-/* Group typing indicator with avatar */
-.group-typing-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    padding-left: 4px;
-    animation: fadeIn 0.2s ease;
-}
-
-.group-typing-bubble {
-    background: var(--gray-100);
-    border-radius: var(--radius-md);
-    padding: 8px 12px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.group-typing-dots {
-    display: flex;
-    gap: 2px;
-}
-
-.group-typing-dot {
-    width: 5px;
-    height: 5px;
-    background: var(--gray-500);
-    border-radius: var(--radius-circle);
-    animation: typing 1.4s infinite;
-}
-
-.group-typing-dot:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.group-typing-dot:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-.group-typing-text {
-    font-size: 11px;
-    color: var(--gray-600);
-    font-weight: 500;
-}
-
-/* Enhanced nav badges */
-.nav-badge-enhanced {
-    position: absolute;
-    top: -4px;
-    right: -2px;
-    background: var(--red);
-    color: var(--white);
-    font-size: 10px;
-    font-weight: 700;
-    min-width: 18px;
-    height: 18px;
-    border-radius: var(--radius-circle);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 4px;
-    border: 2px solid var(--white);
-    pointer-events: none;
-    z-index: 1;
-}
-
-.nav-badge-enhanced.home {
-    background: var(--blue);
-}
-
-.nav-badge-enhanced.zynes {
-    background: var(--orange);
-}
-
-.nav-badge-enhanced.groups {
-    background: var(--purple);
-}
-
-.nav-badge-enhanced.requests {
-    background: var(--green);
-}
-
-.nav-badge-enhanced.contacts {
-    background: var(--pink);
-}
-
-/* Group member list in settings */
-.group-members-list-settings {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-md);
-    padding: 8px;
-}
-
-.group-member-settings-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    border-bottom: 1px solid var(--gray-100);
-    transition: background-color var(--transition-fast);
-}
-
-.group-member-settings-item:last-child {
-    border-bottom: none;
-}
-
-.group-member-settings-item:hover {
-    background-color: var(--gray-50);
-    border-radius: var(--radius-sm);
-}
-
-.group-member-settings-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-circle);
-    object-fit: cover;
-    border: 2px solid var(--blue);
-}
-
-.group-member-settings-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.group-member-settings-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--black);
-    margin-bottom: 2px;
-}
-
-.group-member-settings-id {
-    font-size: 12px;
-    color: var(--gray-600);
-    font-family: var(--font-mono);
-}
-
-.group-member-admin-badge {
-    background: var(--orange);
-    color: var(--white);
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: var(--radius-pill);
-    margin-left: auto;
-}
-
-/* Group photo upload preview */
-.group-photo-upload-preview {
-    text-align: center;
-    padding: var(--space-3);
-    background: var(--gray-50);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-3);
-}
-
-.group-photo-preview {
-    width: 120px;
-    height: 120px;
-    border-radius: var(--radius-circle);
-    object-fit: cover;
-    border: 3px solid var(--white);
-    box-shadow: var(--shadow-medium);
-    margin: 0 auto var(--space-2);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.group-photo-preview:hover {
-    border-color: var(--blue);
-    transform: scale(1.05);
-}
-
-.group-photo-upload-btn {
-    background: linear-gradient(135deg, var(--blue), #0095ff);
-    color: var(--white);
-    border: none;
-    padding: 8px 16px;
-    border-radius: var(--radius-pill);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: all var(--transition-fast);
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
-}
-
-.group-photo-upload-btn:hover {
-    background: var(--blue-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
-}
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
-    .group-settings-options {
-        flex-direction: column;
-    }
-    
-    .group-settings-btn {
-        min-width: 100%;
-    }
-    
-    .group-header-photo {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .group-message-avatar {
-        width: 24px;
-        height: 24px;
-    }
-}
         /* ==================== LOADING SCREEN ==================== */
         .loading-screen {
             position: fixed;
@@ -3670,7 +3270,104 @@
             color: var(--gray-400);
             font-size: 12px;
         }
+/* ========== GROUP PHOTO ENHANCEMENTS ========== */
+.group-avatar,
+.chat-user-avatar[src*="group"] {
+    border: 2px solid var(--blue);
+    box-shadow: 0 2px 8px rgba(0,122,255,0.1);
+    transition: transform var(--transition-fast);
+}
+.group-avatar:hover,
+.chat-user-avatar[src*="group"]:hover {
+    transform: scale(1.05);
+}
 
+/* Group options dropdown – consistent with other dropdowns */
+.group-admin-menu {
+    border-radius: var(--radius-lg);
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-deep);
+    min-width: 180px;
+    padding: 4px 0;
+}
+.group-menu-item {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--black);
+    transition: all var(--transition-fast);
+}
+.group-menu-item i {
+    width: 18px;
+    text-align: center;
+    color: var(--gray-600);
+}
+.group-menu-item:hover {
+    background: var(--gray-50);
+    color: var(--blue);
+}
+.group-menu-item:hover i {
+    color: var(--blue);
+}
+.group-menu-item.danger {
+    color: var(--red);
+}
+.group-menu-item.danger i {
+    color: var(--red);
+}
+.group-menu-item.danger:hover {
+    background: var(--red);
+    color: white;
+}
+.group-menu-item.danger:hover i {
+    color: white;
+}
+
+/* ========== GROUP CHAT MESSAGE AVATARS ========== */
+.message-container.received {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+.message-avatar {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-circle);
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+}
+.message-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.message-container.received .message-bubble {
+    max-width: calc(100% - 40px);
+}
+.message-container.sent {
+    display: flex;
+    justify-content: flex-end;
+}
+.message-container.sent .message-bubble {
+    max-width: 85%;
+}
+
+/* Group message sender name inside bubble */
+.message-sender-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue);
+    margin-bottom: 2px;
+    text-transform: capitalize;
+}
+
+/* Admin modal group photo */
+.group-admin-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-150);
+    padding: 16px;
+}
         /* Edit Profile Modal */
         .edit-profile-form {
             display: flex;
@@ -4752,34 +4449,33 @@
         </main>
 
         <!-- Bottom Navigation -->
-        <!-- Update your bottom navigation (around line 102) -->
-<nav class="bottom-nav safe-area-bottom">
-    <button class="nav-item active" data-page="home" onclick="switchPage('home')">
-        <i class="fas fa-home"></i>
-        <span>HOME</span>
-        <span class="nav-badge-enhanced home hidden" id="homeBadge">0</span>
-    </button>
-    <button class="nav-item" data-page="zynes" onclick="switchPage('zynes')">
-        <i class="fas fa-fire"></i>
-        <span>ZYNES</span>
-        <span class="nav-badge-enhanced zynes hidden" id="zynesBadge">0</span>
-    </button>
-    <button class="nav-item" data-page="groups" onclick="switchPage('groups')">
-        <i class="fas fa-users"></i>
-        <span>GROUPS</span>
-        <span class="nav-badge-enhanced groups hidden" id="groupsBadge">0</span>
-    </button>
-    <button class="nav-item" data-page="requests" onclick="switchPage('requests')">
-        <i class="fas fa-user-plus"></i>
-        <span>REQUESTS</span>
-        <span class="nav-badge-enhanced requests hidden" id="requestsBadge">0</span>
-    </button>
-    <button class="nav-item" data-page="contacts" onclick="switchPage('contacts')">
-        <i class="fas fa-address-book"></i>
-        <span>CONTACTS</span>
-        <span class="nav-badge-enhanced contacts hidden" id="contactsBadge">0</span>
-    </button>
-</nav>
+        <nav class="bottom-nav safe-area-bottom">
+            <button class="nav-item active" data-page="home" onclick="switchPage('home')">
+                <i class="fas fa-home"></i>
+                <span>HOME</span>
+                <span class="nav-badge hidden" id="homeBadge">0</span>
+            </button>
+            <button class="nav-item" data-page="zynes" onclick="switchPage('zynes')">
+                <i class="fas fa-fire"></i>
+                <span>ZYNES</span>
+                <span class="nav-badge hidden" id="zynesBadge">0</span>
+            </button>
+            <button class="nav-item" data-page="groups" onclick="switchPage('groups')">
+                <i class="fas fa-users"></i>
+                <span>GROUPS</span>
+                <span class="nav-badge hidden" id="groupsBadge">0</span>
+            </button>
+            <button class="nav-item" data-page="requests" onclick="switchPage('requests')">
+                <i class="fas fa-user-plus"></i>
+                <span>REQUESTS</span>
+                <span class="nav-badge hidden" id="requestsBadge">0</span>
+            </button>
+            <button class="nav-item" data-page="contacts" onclick="switchPage('contacts')">
+                <i class="fas fa-address-book"></i>
+                <span>CONTACTS</span>
+                <span class="nav-badge hidden" id="contactsBadge">0</span>
+            </button>
+        </nav>
     </div>
 
     <!-- Chat Interface -->
@@ -5558,7 +5254,6 @@ const onlineRef = database.ref('online');
 const presenceRef = database.ref('presence');
 
 // Initialize application
-// Modify your DOMContentLoaded event (around line 144)
 document.addEventListener('DOMContentLoaded', async function() {
     const savedUser = localStorage.getItem('zynapse_user');
     if (!savedUser) {
@@ -5583,14 +5278,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         await loadInitialData();
         setupRealtimeListeners();
-        
-        // NEW: Initialize counters
-        await initializeCounters();
-        
         showToast('Welcome back!', 'success');
         playNotificationSound();
         setupEventListeners();
         
+        // Set online status
         await setOnlineStatus(true);
         
     } catch (error) {
@@ -5616,22 +5308,7 @@ function updateUserUI() {
     document.getElementById('editProfileEmail').value = currentUser.email || '';
     document.getElementById('createZyneAvatar').src = profilePic;
 }
-    
-// Add these at the TOP of your script section (around line 140)
-let counters = {
-    home: 0,      // New private messages
-    zynes: 0,     // New status from contacts
-    groups: 0,    // New group messages
-    requests: 0,  // Pending chat requests
-    contacts: 0   // New contacts
-};
 
-let groupMessageSettings = {
-    showProfilePictures: true,
-    showSenderNames: true,
-    messageSequenceTimeout: 300000 // 5 minutes
-};
-    
 function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
     const clearSearch = document.getElementById('clearSearch');
@@ -6573,7 +6250,6 @@ function switchPage(page) {
     document.querySelectorAll('.page').forEach(p => {
         p.classList.remove('active');
     });
-
     
     const pageElement = document.getElementById(`${page}Page`);
     if (pageElement) {
@@ -6613,426 +6289,8 @@ function switchPage(page) {
             loadContacts();
             break;
     }
-
-    const originalSwitchPage = window.switchPage;
-window.switchPage = function(page) {
-    originalSwitchPage(page);
-    resetCounterOnView(page);
-};
-
-function resetCounterOnView(page) {
-    switch(page) {
-        case 'zynes':
-            localStorage.setItem('zynapse_lastZyneView', new Date().toISOString());
-            counters.zynes = 0;
-            updateBadge('zynes', 0);
-            break;
-            
-        case 'contacts':
-            localStorage.setItem('zynapse_lastContactView', new Date().toISOString());
-            counters.contacts = 0;
-            updateBadge('contacts', 0);
-            break;
-            
-        case 'requests':
-            // Requests are handled when accepted/rejected
-            break;
-            
-        case 'home':
-            // Mark all private chats as read
-            markAllPrivateChatsAsRead();
-            break;
-            
-        case 'groups':
-            // Mark all group chats as read
-            markAllGroupChatsAsRead();
-            break;
-    }
 }
 
-async function markAllPrivateChatsAsRead() {
-    try {
-        const snapshot = await database.ref(`users/${currentUser.uid}/chats`).once('value');
-        if (!snapshot.exists()) return;
-        
-        const updates = {};
-        snapshot.forEach((childSnapshot) => {
-            const chat = childSnapshot.val();
-            if (chat.type === 'private' && chat.unreadCount > 0) {
-                updates[`${currentUser.uid}/chats/${chat.id}/unreadCount`] = 0;
-            }
-        });
-        
-        if (Object.keys(updates).length > 0) {
-            await database.ref().update(updates);
-            counters.home = 0;
-            updateBadge('home', 0);
-        }
-    } catch (error) {
-        console.error('Error marking chats as read:', error);
-    }
-}
-
-async function markAllGroupChatsAsRead() {
-    try {
-        const snapshot = await database.ref(`users/${currentUser.uid}/groups`).once('value');
-        if (!snapshot.exists()) return;
-        
-        const updates = {};
-        snapshot.forEach((childSnapshot) => {
-            const group = childSnapshot.val();
-            if (group.unreadCount > 0) {
-                updates[`${currentUser.uid}/groups/${group.id}/unreadCount`] = 0;
-            }
-        });
-        
-        if (Object.keys(updates).length > 0) {
-            await database.ref().update(updates);
-            counters.groups = 0;
-            updateBadge('groups', 0);
-        }
-    } catch (error) {
-        console.error('Error marking groups as read:', error);
-    }
-}
-}
-
-// Add this function to open group settings
-function openGroupSettings() {
-    if (!currentChat || currentChat.type !== 'group') return;
-    
-    const modalHTML = `
-        <div class="modal-overlay active" id="groupSettingsModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>${currentChat.groupName} Settings</h3>
-                    <button class="modal-close" onclick="closeModal('groupSettingsModal')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    ${createGroupHeaderWithPhoto()}
-                    
-                    <div class="settings-section">
-                        <h4>Group Members (${Object.keys(currentChat.members || {}).length})</h4>
-                        <div class="group-members-list-settings" id="groupMembersList">
-                            <!-- Members will be loaded here -->
-                        </div>
-                    </div>
-                    
-                    <div class="settings-section">
-                        <h4>Group Actions</h4>
-                        <div class="group-settings-options">
-                            <button class="group-settings-btn" onclick="openEditGroupModal()">
-                                <i class="fas fa-edit"></i> Edit Group Name
-                            </button>
-                            <button class="group-settings-btn" onclick="openAddMemberModal()">
-                                <i class="fas fa-user-plus"></i> Add Members
-                            </button>
-                            ${currentChat.isAdmin ? `
-                                <button class="group-settings-btn" onclick="openMakeAdminModal()">
-                                    <i class="fas fa-crown"></i> Make Admin
-                                </button>
-                                <button class="group-settings-btn danger" onclick="deleteGroupConfirm()">
-                                    <i class="fas fa-trash"></i> Delete Group
-                                </button>
-                            ` : `
-                                <button class="group-settings-btn danger" onclick="leaveGroupConfirm()">
-                                    <i class="fas fa-sign-out-alt"></i> Leave Group
-                                </button>
-                            `}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Add modal to page
-    const modalContainer = document.createElement('div');
-    modalContainer.innerHTML = modalHTML;
-    document.body.appendChild(modalContainer);
-    
-    // Load members
-    loadGroupMembersForSettings();
-}
-
-async function loadGroupMembersForSettings() {
-    const membersList = document.getElementById('groupMembersList');
-    if (!membersList) return;
-    
-    membersList.innerHTML = '<div class="loading-text">Loading members...</div>';
-    
-    try {
-        const members = [];
-        
-        // Get member details
-        for (const memberId in currentChat.members) {
-            const userSnapshot = await usersRef.child(memberId).once('value');
-            if (userSnapshot.exists()) {
-                const user = userSnapshot.val();
-                members.push({
-                    uid: memberId,
-                    ...user,
-                    isAdmin: currentChat.admin === memberId
-                });
-            }
-        }
-        
-        // Render members
-        membersList.innerHTML = members.map(member => `
-            <div class="group-member-settings-item">
-                <img src="${member.profilePicture || 'https://via.placeholder.com/150'}" 
-                     alt="${member.name}" 
-                     class="group-member-settings-avatar"
-                     onclick="viewUserProfile('${member.uid}')">
-                <div class="group-member-settings-info">
-                    <div class="group-member-settings-name">
-                        ${member.name}
-                        ${member.uid === currentUser.uid ? ' (You)' : ''}
-                    </div>
-                    <div class="group-member-settings-id">${member.userId}</div>
-                </div>
-                ${member.isAdmin ? 
-                    '<span class="group-member-admin-badge">Admin</span>' : 
-                    (currentChat.isAdmin && member.uid !== currentUser.uid ? `
-                        <div class="group-admin-actions">
-                            <button class="group-admin-btn make-admin-btn" 
-                                    onclick="makeGroupAdmin('${member.uid}')">
-                                Make Admin
-                            </button>
-                            <button class="group-admin-btn remove-member-btn" 
-                                    onclick="removeGroupMember('${member.uid}')">
-                                Remove
-                            </button>
-                        </div>
-                    ` : '')
-                }
-            </div>
-        `).join('');
-        
-    } catch (error) {
-        console.error('Error loading members:', error);
-        membersList.innerHTML = '<div class="error-text">Failed to load members</div>';
-    }
-}
-
-// Add member functions
-async function openAddMemberModal() {
-    const modalHTML = `
-        <div class="modal-overlay active" id="addMemberModal">
-            <div class="modal-content modal-small">
-                <div class="modal-header">
-                    <h3>Add Members to ${currentChat.groupName}</h3>
-                    <button class="modal-close" onclick="closeModal('addMemberModal')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="search-input-wrapper" style="margin-bottom: 12px;">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" 
-                               class="search-input" 
-                               id="searchAddMember" 
-                               placeholder="Search contacts...">
-                    </div>
-                    
-                    <div class="group-members-list" 
-                         id="addMembersList" 
-                         style="max-height: 300px; overflow-y: auto;">
-                        <!-- Contacts list will be loaded here -->
-                    </div>
-                    
-                    <div class="modal-actions" style="margin-top: 16px;">
-                        <button class="modal-btn modal-btn-secondary" 
-                                onclick="closeModal('addMemberModal')">
-                            Cancel
-                        </button>
-                        <button class="modal-btn modal-btn-primary" 
-                                onclick="addSelectedMembers()"
-                                id="addMembersBtn"
-                                disabled>
-                            Add Selected Members
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const modalContainer = document.createElement('div');
-    modalContainer.innerHTML = modalHTML;
-    document.body.appendChild(modalContainer);
-    
-    loadContactsForAdding();
-    setupAddMemberSearch();
-}
-
-async function loadContactsForAdding() {
-    const addMembersList = document.getElementById('addMembersList');
-    if (!addMembersList) return;
-    
-    // Filter out members already in group
-    const availableContacts = contacts.filter(contact => 
-        !currentChat.members || !currentChat.members[contact.uid]
-    );
-    
-    if (availableContacts.length === 0) {
-        addMembersList.innerHTML = `
-            <div style="text-align: center; color: var(--gray-500); padding: 40px;">
-                <i class="fas fa-users" style="font-size: 32px;"></i>
-                <p>All contacts are already in this group</p>
-            </div>
-        `;
-        return;
-    }
-    
-    addMembersList.innerHTML = availableContacts.map(contact => `
-        <div class="group-member-item" onclick="toggleAddMemberSelection('${contact.uid}')">
-            <img src="${contact.profilePicture || 'https://via.placeholder.com/150'}" 
-                 alt="${contact.name}" class="group-member-avatar">
-            <div class="group-member-info">
-                <div class="group-member-name">${contact.name}</div>
-                <div class="group-member-id">${contact.userId}</div>
-            </div>
-            <div class="group-member-checkbox">
-                <i class="fas fa-check"></i>
-            </div>
-        </div>
-    `).join('');
-}
-
-function setupAddMemberSearch() {
-    const searchInput = document.getElementById('searchAddMember');
-    if (!searchInput) return;
-    
-    searchInput.addEventListener('input', debounce(() => {
-        const query = searchInput.value.toLowerCase();
-        const items = document.querySelectorAll('#addMembersList .group-member-item');
-        
-        items.forEach(item => {
-            const name = item.querySelector('.group-member-name').textContent.toLowerCase();
-            const id = item.querySelector('.group-member-id').textContent.toLowerCase();
-            
-            if (name.includes(query) || id.includes(query)) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    }, 300));
-}
-
-// Member selection
-let selectedMembersToAdd = [];
-
-function toggleAddMemberSelection(userId) {
-    const item = document.querySelector(`[onclick="toggleAddMemberSelection('${userId}')"]`);
-    const index = selectedMembersToAdd.indexOf(userId);
-    
-    if (index === -1) {
-        selectedMembersToAdd.push(userId);
-        item.classList.add('selected');
-    } else {
-        selectedMembersToAdd.splice(index, 1);
-        item.classList.remove('selected');
-    }
-    
-    // Update add button
-    const addBtn = document.getElementById('addMembersBtn');
-    addBtn.disabled = selectedMembersToAdd.length === 0;
-}
-
-async function addSelectedMembers() {
-    if (selectedMembersToAdd.length === 0) return;
-    
-    try {
-        // Add to group members
-        for (const memberId of selectedMembersToAdd) {
-            await groupsRef.child(currentChat.id).update({
-                [`members/${memberId}`]: true
-            });
-            
-            // Add group to member's groups list
-            const userSnapshot = await usersRef.child(memberId).once('value');
-            const user = userSnapshot.val();
-            
-            await database.ref(`users/${memberId}/groups/${currentChat.id}`).set({
-                id: currentChat.id,
-                name: currentChat.groupName,
-                groupPhoto: currentChat.groupPhoto || '',
-                joinedAt: new Date().toISOString(),
-                unreadCount: 0
-            });
-            
-            // Add group chat to member's chats
-            await database.ref(`users/${memberId}/chats/${currentChat.id}`).set({
-                id: currentChat.id,
-                type: 'group',
-                name: currentChat.groupName,
-                profilePicture: currentChat.groupPhoto || '',
-                lastMessage: '',
-                lastMessageTime: new Date().toISOString(),
-                unreadCount: 0
-            });
-        }
-        
-        showToast(`${selectedMembersToAdd.length} members added`, 'success');
-        closeModal('addMemberModal');
-        selectedMembersToAdd = [];
-        
-        // Update current chat
-        await loadGroupMembersForSettings();
-        
-    } catch (error) {
-        console.error('Error adding members:', error);
-        showToast('Failed to add members', 'error');
-    }
-}
-
-// Remove member
-async function removeGroupMember(memberId) {
-    if (!confirm(`Remove this member from group?`)) return;
-    
-    try {
-        // Remove from group
-        await groupsRef.child(currentChat.id + '/members/' + memberId).remove();
-        
-        // Remove from member's groups
-        await database.ref(`users/${memberId}/groups/${currentChat.id}`).remove();
-        await database.ref(`users/${memberId}/chats/${currentChat.id}`).remove();
-        
-        showToast('Member removed', 'success');
-        
-        // Reload members list
-        await loadGroupMembersForSettings();
-        
-    } catch (error) {
-        console.error('Error removing member:', error);
-        showToast('Failed to remove member', 'error');
-    }
-}
-
-// Make admin
-async function makeGroupAdmin(memberId) {
-    if (!confirm(`Make this member an admin? They will have full control of the group.`)) return;
-    
-    try {
-        await groupsRef.child(currentChat.id).update({
-            admin: memberId
-        });
-        
-        currentChat.admin = memberId;
-        currentChat.isAdmin = false;
-        
-        showToast('Admin updated successfully', 'success');
-        await loadGroupMembersForSettings();
-        
-    } catch (error) {
-        console.error('Error making admin:', error);
-        showToast('Failed to update admin', 'error');
-    }
-}
 function toggleCreateZyneContainer() {
     const createZyneContainer = document.getElementById('createZyneContainer');
     const zynesHeader = document.getElementById('zynesHeader');
@@ -7260,217 +6518,7 @@ async function sendChatRequestTo(receiverId) {
         showToast('Failed to send request', 'error');
     }
 }
-// Add this function to create group header with photo
-function createGroupHeaderWithPhoto() {
-    return `
-        <div class="group-header-with-photo">
-            <img src="${currentChat.groupPhoto || 'https://via.placeholder.com/150'}" 
-                 alt="${currentChat.groupName}" 
-                 class="group-header-photo"
-                 onclick="openGroupPhotoUploader()">
-            <div class="group-header-name">${currentChat.groupName}</div>
-            <div class="group-header-members">
-                <i class="fas fa-users"></i>
-                <span>${Object.keys(currentChat.members || {}).length} members</span>
-            </div>
-        </div>
-        <div class="group-settings-options">
-            <button class="group-settings-btn" onclick="openEditGroupModal()">
-                <i class="fas fa-edit"></i> Edit Group
-            </button>
-            <button class="group-settings-btn" onclick="openAddMemberModal()">
-                <i class="fas fa-user-plus"></i> Add Member
-            </button>
-            <button class="group-settings-btn" onclick="openGroupMembersList()">
-                <i class="fas fa-users-cog"></i> Manage Members
-            </button>
-            ${currentChat.isAdmin ? `
-                <button class="group-settings-btn" onclick="deleteGroupConfirm()">
-                    <i class="fas fa-trash"></i> Delete Group
-                </button>
-            ` : `
-                <button class="group-settings-btn" onclick="leaveGroupConfirm()">
-                    <i class="fas fa-sign-out-alt"></i> Leave Group
-                </button>
-            `}
-        </div>
-    `;
-}
 
-// Add this function for uploading group photos
-async function openGroupPhotoUploader() {
-    if (!currentChat.isAdmin) {
-        showToast('Only admin can change group photo', 'error');
-        return;
-    }
-
-    if (!cloudinaryWidget) {
-        cloudinaryWidget = cloudinary.createUploadWidget({
-            cloudName: CLOUDINARY_CONFIG.cloudName,
-            uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
-            sources: ['local', 'camera'],
-            multiple: false,
-            maxFileSize: 10000000, // 10MB
-            folder: 'zynapse/group_photos',
-            cropping: true,
-            croppingAspectRatio: 1,
-            showAdvancedOptions: false
-        }, async (error, result) => {
-            if (!error && result && result.event === "success") {
-                const photoUrl = result.info.secure_url;
-                await updateGroupPhoto(photoUrl);
-            }
-        });
-    }
-    
-    cloudinaryWidget.open();
-}
-
-async function updateGroupPhoto(photoUrl) {
-    try {
-        // Update in Firebase
-        await groupsRef.child(currentChat.id).update({
-            groupPhoto: photoUrl
-        });
-
-        // Update all members' group data
-        for (const memberId in currentChat.members) {
-            await database.ref(`users/${memberId}/groups/${currentChat.id}`).update({
-                groupPhoto: photoUrl
-            });
-        }
-
-        // Update UI
-        updateGroupPhotoUI(photoUrl);
-        showToast('Group photo updated!', 'success');
-
-    } catch (error) {
-        console.error('Error updating group photo:', error);
-        showToast('Failed to update photo', 'error');
-    }
-}
-
-function updateGroupPhotoUI(photoUrl) {
-    // Update in current chat
-    currentChat.groupPhoto = photoUrl;
-    
-    // Update header photo
-    const headerPhoto = document.querySelector('.group-header-photo');
-    if (headerPhoto) headerPhoto.src = photoUrl;
-    
-    // Update chat header photo
-    const chatHeaderPhoto = document.querySelector('.chat-user-avatar');
-    if (chatHeaderPhoto) chatHeaderPhoto.src = photoUrl;
-    
-    // Update group list photo
-    const groupListPhoto = document.querySelector(`[data-group-id="${currentChat.id}"] .group-avatar`);
-    if (groupListPhoto) groupListPhoto.src = photoUrl;
-}
-
-// Add this function to render group messages with profile pictures
-function renderGroupMessage(message) {
-    const isSent = message.senderUid === currentUser.uid;
-    const sender = currentChat.members?.[message.senderUid];
-    
-    if (!sender) return '';
-    
-    const showSenderName = shouldShowSenderName(message);
-    const senderName = isSent ? 'You' : (sender.name || 'Unknown');
-    const profilePic = isSent ? currentUser.profilePicture : (sender.profilePicture || 'https://via.placeholder.com/150');
-    
-    return `
-        <div class="group-message-container ${isSent ? 'sent' : ''}" 
-             data-message-id="${message.id}"
-             data-sender-uid="${message.senderUid}"
-             data-timestamp="${message.timestamp}">
-            
-            ${!isSent ? `
-                <img src="${profilePic}" 
-                     alt="${senderName}" 
-                     class="group-message-avatar"
-                     onclick="viewUserProfile('${message.senderUid}')">
-            ` : ''}
-            
-            <div class="group-message-content">
-                ${showSenderName && !isSent ? `
-                    <div class="group-message-sender">${senderName}</div>
-                ` : ''}
-                
-                <div class="group-message-bubble">
-                    ${renderMessageContent(message)}
-                    <span class="group-message-time">
-                        ${formatTime(message.timestamp)}
-                        ${isSent ? getMessageStatusIcon(message) : ''}
-                    </span>
-                </div>
-            </div>
-            
-            ${isSent ? `
-                <img src="${currentUser.profilePicture}" 
-                     alt="You" 
-                     class="group-message-avatar">
-            ` : ''}
-        </div>
-    `;
-}
-
-function shouldShowSenderName(message) {
-    const messagesContainer = document.getElementById('chatMessages');
-    if (!messagesContainer) return true;
-    
-    const lastMessage = messagesContainer.lastElementChild;
-    if (!lastMessage) return true;
-    
-    // Check if last message was from same sender
-    const lastSender = lastMessage.dataset.senderUid;
-    const lastTime = lastMessage.dataset.timestamp;
-    
-    if (lastSender !== message.senderUid) return true;
-    
-    // Check time difference (show name if > 5 minutes)
-    const timeDiff = new Date(message.timestamp) - new Date(lastTime);
-    return timeDiff > groupMessageSettings.messageSequenceTimeout;
-}
-
-function renderMessageContent(message) {
-    switch (message.type) {
-        case 'text':
-            return `<div class="group-message-text">${escapeHtml(message.text)}</div>`;
-            
-        case 'image':
-            return `
-                <img src="${message.mediaUrl}" 
-                     alt="Photo" 
-                     class="group-message-media"
-                     onclick="viewMedia('${message.mediaUrl}')">
-                ${message.text ? `<div class="group-message-text">${escapeHtml(message.text)}</div>` : ''}
-            `;
-            
-        case 'video':
-            return `
-                <video src="${message.mediaUrl}" 
-                       controls 
-                       class="group-message-media"></video>
-                ${message.text ? `<div class="group-message-text">${escapeHtml(message.text)}</div>` : ''}
-            `;
-            
-        default:
-            return `<div class="group-message-text">${escapeHtml(message.text || 'Message')}</div>`;
-    }
-}
-
-function getMessageStatusIcon(message) {
-    if (!privacySettings.readReceipts) return '';
-    
-    switch(message.status) {
-        case 'read':
-            return '<i class="fas fa-check-double status-check status-read"></i>';
-        case 'delivered':
-            return '<i class="fas fa-check-double status-check status-delivered"></i>';
-        default:
-            return '<i class="fas fa-check status-check status-sent"></i>';
-    }
-}
 async function acceptRequest(requestId) {
     try {
         console.log('Accepting request:', requestId);
@@ -8034,13 +7082,12 @@ async function sendTypingIndicator(isTyping) {
     }
 }
 
-// Modify your loadMessages function (around line 1170)
 async function loadMessages() {
     try {
         const snapshot = await messagesRef
             .child(currentChat.id)
             .orderByChild('timestamp')
-            .limitToLast(100)
+            .limitToLast(50)
             .once('value');
         
         const chatMessages = document.getElementById('chatMessages');
@@ -8058,70 +7105,51 @@ async function loadMessages() {
         }
         
         const messages = [];
+        const messageIds = new Set(); // Use a Set to track unique message IDs
+        
         snapshot.forEach((childSnapshot) => {
             const message = childSnapshot.val();
             message.id = childSnapshot.key;
             
-            // Skip view-once messages that have been viewed
-            if (message.type === 'view-once' && 
-                message.viewedBy && 
-                message.viewedBy.includes(currentUser.uid)) {
-                return;
+            // Check for duplicates
+            if (!messageIds.has(message.id)) {
+                messageIds.add(message.id);
+                
+                // Filter out view-once messages that have been viewed
+                if (message.type === 'view-once' && message.viewedBy && message.viewedBy.includes(currentUser.uid)) {
+                    return;
+                }
+                
+                messages.push(message);
             }
-            
-            messages.push(message);
         });
         
-        // Group messages by date
         const groupedMessages = groupMessagesByDate(messages);
         
         for (const date in groupedMessages) {
-            // Add date separator
             chatMessages.innerHTML += `
                 <div class="message-date-divider">
                     <span class="date-divider-text">${formatDate(date)}</span>
                 </div>
             `;
             
-            // Add messages for this date
             groupedMessages[date].forEach(message => {
-                const messageHTML = currentChat.type === 'group' 
-                    ? renderGroupMessage(message)
-                    : renderPrivateMessage(message);
-                
-                chatMessages.innerHTML += messageHTML;
+                const messageElement = createMessageElement(message);
+                chatMessages.appendChild(messageElement);
             });
         }
         
-        scrollToBottom();
+        setTimeout(() => {
+            scrollToBottom();
+        }, 50);
         
     } catch (error) {
         console.error('Error loading messages:', error);
-        showToast('Failed to load messages', 'error');
     }
 }
-
-// Add helper function for private messages
-function renderPrivateMessage(message) {
-    const isSent = message.senderUid === currentUser.uid;
     
-    return `
-        <div class="message-container ${isSent ? 'sent' : 'received'}" 
-             data-message-id="${message.id}">
-            <div class="message-bubble">
-                ${renderMessageContent(message)}
-                <span class="message-time">
-                    ${formatTime(message.timestamp)}
-                    ${isSent ? getMessageStatusIcon(message) : ''}
-                </span>
-            </div>
-        </div>
-    `;
-}
-
 function groupMessagesByDate(messages) {
     const grouped = {};
-    
     messages.forEach(message => {
         const date = new Date(message.timestamp).toDateString();
         if (!grouped[date]) {
@@ -8129,214 +7157,7 @@ function groupMessagesByDate(messages) {
         }
         grouped[date].push(message);
     });
-    
     return grouped;
-}
-
-// Add these functions for counter management
-async function initializeCounters() {
-    // Set initial view times
-    if (!localStorage.getItem('zynapse_lastZyneView')) {
-        localStorage.setItem('zynapse_lastZyneView', new Date().toISOString());
-    }
-    if (!localStorage.getItem('zynapse_lastContactView')) {
-        localStorage.setItem('zynapse_lastContactView', new Date().toISOString());
-    }
-    
-    // Load initial counts
-    await updateAllCounters();
-    
-    // Setup real-time listeners
-    setupCounterListeners();
-    
-    // Update every minute
-    setInterval(updateAllCounters, 60000);
-}
-
-async function updateAllCounters() {
-    try {
-        // Update home counter (private messages)
-        await updateHomeCounter();
-        
-        // Update zynes counter (new status)
-        await updateZynesCounter();
-        
-        // Update groups counter
-        await updateGroupsCounter();
-        
-        // Update requests counter
-        await updateRequestsCounter();
-        
-        // Update contacts counter
-        await updateContactsCounter();
-        
-        // Update UI
-        updateAllBadges();
-        
-    } catch (error) {
-        console.error('Error updating counters:', error);
-    }
-}
-
-async function updateHomeCounter() {
-    const snapshot = await database.ref(`users/${currentUser.uid}/chats`).once('value');
-    if (!snapshot.exists()) {
-        counters.home = 0;
-        return;
-    }
-    
-    let total = 0;
-    snapshot.forEach((childSnapshot) => {
-        const chat = childSnapshot.val();
-        if (chat.type === 'private' && chat.unreadCount) {
-            total += chat.unreadCount;
-        }
-    });
-    
-    counters.home = total;
-}
-
-async function updateZynesCounter() {
-    const lastView = localStorage.getItem('zynapse_lastZyneView');
-    if (!lastView) return;
-    
-    let newZynes = 0;
-    
-    // Check each contact's zynes
-    for (const contact of contacts) {
-        const zynesSnapshot = await database.ref(`users/${contact.uid}/zynes`).once('value');
-        if (!zynesSnapshot.exists()) continue;
-        
-        zynesSnapshot.forEach((childSnapshot) => {
-            const zyne = childSnapshot.val();
-            const zyneTime = new Date(zyne.timestamp);
-            const lastViewTime = new Date(lastView);
-            
-            if (zyneTime > lastViewTime && zyne.userId !== currentUser.userId) {
-                newZynes++;
-            }
-        });
-    }
-    
-    counters.zynes = newZynes;
-}
-
-async function updateGroupsCounter() {
-    const snapshot = await database.ref(`users/${currentUser.uid}/groups`).once('value');
-    if (!snapshot.exists()) {
-        counters.groups = 0;
-        return;
-    }
-    
-    let total = 0;
-    snapshot.forEach((childSnapshot) => {
-        const group = childSnapshot.val();
-        if (group.unreadCount) {
-            total += group.unreadCount;
-        }
-    });
-    
-    counters.groups = total;
-}
-
-async function updateRequestsCounter() {
-    const snapshot = await requestsRef
-        .orderByChild('receiverId')
-        .equalTo(currentUser.userId)
-        .once('value');
-    
-    if (!snapshot.exists()) {
-        counters.requests = 0;
-        return;
-    }
-    
-    let pending = 0;
-    snapshot.forEach((childSnapshot) => {
-        const request = childSnapshot.val();
-        if (request.status === 'pending') {
-            pending++;
-        }
-    });
-    
-    counters.requests = pending;
-}
-
-async function updateContactsCounter() {
-    const lastView = localStorage.getItem('zynapse_lastContactView');
-    if (!lastView) return;
-    
-    const snapshot = await database.ref(`users/${currentUser.uid}/contacts`).once('value');
-    if (!snapshot.exists()) {
-        counters.contacts = 0;
-        return;
-    }
-    
-    let newContacts = 0;
-    const lastViewTime = new Date(lastView);
-    
-    snapshot.forEach((childSnapshot) => {
-        const contact = childSnapshot.val();
-        if (contact.addedAt && new Date(contact.addedAt) > lastViewTime) {
-            newContacts++;
-        }
-    });
-    
-    counters.contacts = newContacts;
-}
-
-function updateAllBadges() {
-    Object.keys(counters).forEach(key => {
-        updateBadge(key, counters[key]);
-    });
-}
-
-function updateBadge(type, count) {
-    const badge = document.getElementById(`${type}Badge`);
-    if (!badge) return;
-    
-    if (count > 0) {
-        badge.textContent = count > 99 ? '99+' : count;
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
-    }
-}
-
-function setupCounterListeners() {
-    // Listen for chat updates
-    database.ref(`users/${currentUser.uid}/chats`).on('child_changed', () => {
-        updateHomeCounter();
-        updateGroupsCounter();
-        updateAllBadges();
-    });
-    
-    // Listen for new zynes
-    zynesRef.on('child_added', () => {
-        updateZynesCounter();
-        updateAllBadges();
-    });
-    
-    // Listen for new requests
-    requestsRef.orderByChild('receiverId')
-        .equalTo(currentUser.userId)
-        .on('child_added', () => {
-            updateRequestsCounter();
-            updateAllBadges();
-        });
-    
-    // Listen for new contacts
-    database.ref(`users/${currentUser.uid}/contacts`).on('child_added', () => {
-        updateContactsCounter();
-        updateAllBadges();
-    });
-    
-    // Listen for request changes (accepted/rejected)
-    requestsRef.orderByChild('receiverId')
-        .equalTo(currentUser.userId)
-        .on('child_changed', () => {
-            updateRequestsCounter();
-            updateAllBadges();
-        });
 }
 
 async function loadMessageReactions(messageId) {
@@ -8388,41 +7209,52 @@ function addMessageToChat(message) {
         playNotificationSound();
     }
 }
+    
 function createMessageElement(message) {
     const isSent = message.senderId === currentUser.userId;
+    const isGroup = currentChat.type === 'group';
+    const showAvatar = isGroup && !isSent; // only avatars for others in group
+
     const messageDiv = document.createElement('div');
     messageDiv.className = `message-container ${isSent ? 'sent' : 'received'}`;
     messageDiv.dataset.messageId = message.id;
-    
-    let messageContent = '';
-    
+
+    // Avatar (only for group received)
+    let avatarHtml = '';
+    if (showAvatar) {
+        const avatarUrl = message.senderAvatar || 'https://via.placeholder.com/32';
+        avatarHtml = `<div class="message-avatar"><img src="${avatarUrl}" alt="${message.senderName}"></div>`;
+    }
+
+    // Bubble content depends on message type
+    let bubbleContent = '';
     switch (message.type) {
         case 'text':
-            messageContent = createTextMessage(message, isSent);
+            bubbleContent = createTextMessage(message, isSent, isGroup);
             break;
         case 'image':
-            messageContent = createImageMessage(message, isSent);
+            bubbleContent = createImageMessage(message, isSent, isGroup);
             break;
         case 'video':
-            messageContent = createVideoMessage(message, isSent);
+            bubbleContent = createVideoMessage(message, isSent, isGroup);
             break;
         case 'document':
-            messageContent = createDocumentMessage(message, isSent);
+            bubbleContent = createDocumentMessage(message, isSent, isGroup);
             break;
         case 'location':
-            messageContent = createLocationMessage(message, isSent);
+            bubbleContent = createLocationMessage(message, isSent, isGroup);
             break;
         case 'voice':
-            messageContent = createVoiceMessage(message, isSent);
+            bubbleContent = createVoiceMessage(message, isSent, isGroup);
             break;
         case 'view-once':
-            messageContent = createViewOnceMessage(message, isSent);
+            bubbleContent = createViewOnceMessage(message, isSent, isGroup);
             break;
         default:
-            messageContent = createTextMessage(message, isSent);
+            bubbleContent = createTextMessage(message, isSent, isGroup);
     }
-    
-    messageDiv.innerHTML = messageContent;
+
+    messageDiv.innerHTML = avatarHtml + bubbleContent;
     
     // Add context menu for messages (except view-once)
     if (message.type !== 'view-once') {
@@ -8459,9 +7291,8 @@ function createMessageElement(message) {
     return messageDiv;
 }
 
-function createTextMessage(message, isSent) {
-    const showSenderName = currentChat.type === 'group' && !isSent;
-    
+function createTextMessage(message, isSent, isGroup) {
+    const showSenderName = isGroup && !isSent;
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
@@ -8478,9 +7309,8 @@ function createTextMessage(message, isSent) {
     `;
 }
 
-function createImageMessage(message, isSent) {
-    const showSenderName = currentChat.type === 'group' && !isSent;
-    
+function createImageMessage(message, isSent, isGroup) {
+    const showSenderName = isGroup && !isSent;
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
@@ -8498,9 +7328,8 @@ function createImageMessage(message, isSent) {
     `;
 }
 
-function createVideoMessage(message, isSent) {
-    const showSenderName = currentChat.type === 'group' && !isSent;
-    
+function createVideoMessage(message, isSent, isGroup) {
+    const showSenderName = isGroup && !isSent;
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
@@ -8518,9 +7347,8 @@ function createVideoMessage(message, isSent) {
     `;
 }
 
-function createDocumentMessage(message, isSent) {
-    const showSenderName = currentChat.type === 'group' && !isSent;
-    
+function createDocumentMessage(message, isSent, isGroup) {
+    const showSenderName = isGroup && !isSent;
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${message.senderName}</div>` : ''}
@@ -8546,20 +7374,17 @@ function createDocumentMessage(message, isSent) {
     `;
 }
 
-function createLocationMessage(message, isSent) {
-    const showSenderName = currentChat.type === 'group' && !isSent;
+function createLocationMessage(message, isSent, isGroup) {
+    const showSenderName = isGroup && !isSent;
     const mapId = `map-${message.id}`;
     
-    // Initialize map after element is added to DOM
     setTimeout(() => {
         if (document.getElementById(mapId)) {
             const map = L.map(mapId).setView([message.location.latitude, message.location.longitude], 15);
-            
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
-            
             L.marker([message.location.latitude, message.location.longitude])
                 .addTo(map)
                 .bindPopup(message.location.address || 'Location')
@@ -8637,8 +7462,8 @@ function openLocationInMap(lat, lng, address) {
     }, 100);
 }
 
-function createVoiceMessage(message, isSent) {
-    const showSenderName = currentChat.type === 'group' && !isSent;
+function createVoiceMessage(message, isSent, isGroup) {
+    const showSenderName = isGroup && !isSent;
     const voiceId = `voice-${message.id}`;
     
     return `
@@ -8663,8 +7488,8 @@ function createVoiceMessage(message, isSent) {
     `;
 }
 
-function createViewOnceMessage(message, isSent) {
-    const showSenderName = currentChat.type === 'group' && !isSent;
+function createViewOnceMessage(message, isSent, isGroup) {
+    const showSenderName = isGroup && !isSent;
     const hasViewed = message.viewedBy && message.viewedBy.includes(currentUser.uid);
     
     if (hasViewed) {
@@ -8966,7 +7791,6 @@ async function sendMessage() {
     if (!text || chatSendBtn.disabled) return;
     
     try {
-        // Disable send button temporarily
         chatSendBtn.disabled = true;
         
         const messageId = messagesRef.child(currentChat.id).push().key;
@@ -8976,6 +7800,7 @@ async function sendMessage() {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
+            senderAvatar: currentUser.profilePicture, // 👈 added
             type: 'text',
             timestamp: new Date().toISOString(),
             status: 'sent'
@@ -9235,6 +8060,7 @@ async function sendDocumentMessage(fileUrl, fileName, fileSize) {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
+            senderAvatar: currentUser.profilePicture, // 👈 added
             timestamp: new Date().toISOString(),
             status: 'sent'
         };
@@ -9261,6 +8087,7 @@ async function sendLocationMessage(locationData) {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
+            senderAvatar: currentUser.profilePicture, // 👈 added
             timestamp: new Date().toISOString(),
             status: 'sent'
         };
@@ -9318,6 +8145,7 @@ async function sendMediaMessage(mediaUrl, type) {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
+            senderAvatar: currentUser.profilePicture, // 👈 added
             timestamp: new Date().toISOString(),
             status: 'sent'
         };
@@ -9344,6 +8172,7 @@ async function sendViewOnceMessage(mediaUrl) {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
+            senderAvatar: currentUser.profilePicture, // 👈 added
             timestamp: new Date().toISOString(),
             status: 'sent',
             isViewOnce: true,
@@ -9558,6 +8387,7 @@ async function sendVoiceMessage(audioUrl, duration) {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
+            senderAvatar: currentUser.profilePicture, // 👈 added
             timestamp: new Date().toISOString(),
             status: 'sent'
         };
@@ -10109,47 +8939,65 @@ async function openGroupAdmin() {
         const groupSnapshot = await groupsRef.child(currentChat.id).once('value');
         const group = groupSnapshot.val();
         
-        const membersList = document.getElementById('groupMembersAdminList');
-        membersList.innerHTML = '';
+        const modal = document.getElementById('groupAdminModal');
+        const modalBody = modal.querySelector('.modal-body');
         
+        // Group header with photo and name
+        const headerHtml = `
+            <div class="group-admin-header" style="display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-150); margin-bottom: 16px;">
+                <img src="${group.groupPhoto || 'https://via.placeholder.com/150'}" 
+                     alt="${group.name}" 
+                     style="width: 60px; height: 60px; border-radius: var(--radius-circle); object-fit: cover; border: 2px solid var(--blue);">
+                <div>
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">${group.name}</h3>
+                    <p style="font-size: 12px; color: var(--gray-600);">
+                        <i class="fas fa-user-friends"></i> ${Object.keys(group.members).length} members
+                    </p>
+                </div>
+            </div>
+        `;
+        
+        // Members list
+        let membersHtml = '<div class="group-members-admin-list">';
         for (const memberId in group.members) {
             const userSnapshot = await usersRef.child(memberId).once('value');
             const user = userSnapshot.val();
             
-            const memberDiv = document.createElement('div');
-            memberDiv.className = 'group-admin-member';
-            memberDiv.innerHTML = `
-                <div class="group-admin-member-info">
-                    <img src="${user.profilePicture || 'https://via.placeholder.com/150'}" 
-                         alt="${user.name}" class="group-admin-member-avatar">
-                    <div class="group-admin-member-details">
-                        <h4>${user.name}</h4>
-                        <p>${user.userId} ${memberId === group.admin ? '(Admin)' : ''}</p>
+            membersHtml += `
+                <div class="group-admin-member">
+                    <div class="group-admin-member-info">
+                        <img src="${user.profilePicture || 'https://via.placeholder.com/150'}" 
+                             alt="${user.name}" class="group-admin-member-avatar">
+                        <div class="group-admin-member-details">
+                            <h4>${user.name}</h4>
+                            <p>${user.userId} ${memberId === group.admin ? '(Admin)' : ''}</p>
+                        </div>
                     </div>
-                </div>
-                <div class="group-admin-actions">
-                    ${memberId !== currentUser.uid ? `
-                        ${memberId !== group.admin ? `
-                            <button class="group-admin-btn make-admin-btn" onclick="makeGroupAdmin('${currentChat.id}', '${memberId}')">
-                                Make Admin
+                    <div class="group-admin-actions">
+                        ${memberId !== currentUser.uid ? `
+                            ${memberId !== group.admin ? `
+                                <button class="group-admin-btn make-admin-btn" onclick="makeGroupAdmin('${currentChat.id}', '${memberId}')">
+                                    Make Admin
+                                </button>
+                            ` : ''}
+                            <button class="group-admin-btn remove-member-btn" onclick="removeGroupMember('${currentChat.id}', '${memberId}')">
+                                Remove
                             </button>
                         ` : ''}
-                        <button class="group-admin-btn remove-member-btn" onclick="removeGroupMember('${currentChat.id}', '${memberId}')">
-                            Remove
-                        </button>
-                    ` : ''}
+                    </div>
                 </div>
             `;
-            membersList.appendChild(memberDiv);
         }
+        membersHtml += '</div>';
         
+        modalBody.innerHTML = headerHtml + membersHtml;
         openModal('groupAdminModal');
+        
     } catch (error) {
         console.error('Error loading group admin:', error);
         showToast('Failed to load members', 'error');
     }
 }
-
 async function makeGroupAdmin(groupId, userId) {
     try {
         await groupsRef.child(groupId).update({
@@ -11641,26 +10489,8 @@ window.changePassword = changePassword;
 window.saveNickname = saveNickname;
 window.submitReport = submitReport;
 window.openAvatarUploader = openAvatarUploader;
-// Add these at the BOTTOM of your script
-window.openGroupSettings = openGroupSettings;
-window.openGroupPhotoUploader = openGroupPhotoUploader;
-window.updateGroupPhoto = updateGroupPhoto;
-window.openAddMemberModal = openAddMemberModal;
-window.loadContactsForAdding = loadContactsForAdding;
-window.toggleAddMemberSelection = toggleAddMemberSelection;
-window.addSelectedMembers = addSelectedMembers;
-window.removeGroupMember = removeGroupMember;
-window.makeGroupAdmin = makeGroupAdmin;
-window.closeModal = closeModal;
-window.initializeCounters = initializeCounters;
-window.updateAllCounters = updateAllCounters;
-window.resetCounterOnView = resetCounterOnView;
-window.markAllPrivateChatsAsRead = markAllPrivateChatsAsRead;
-window.markAllGroupChatsAsRead = markAllGroupChatsAsRead;
 window.closeModal = closeModal;
 </script>
 </body>
 </html>
-
-
 
