@@ -3443,17 +3443,24 @@
 }
 
 /* ========== GROUP CHAT MESSAGE AVATARS ========== */
-.message-container.received {
+.message-container.received.group-message {
     display: flex;
-    flex-direction: row;          /* force horizontal layout */
-    flex-wrap: nowrap;           /* prevent wrapping */
+    flex-direction: row;
+    flex-wrap: nowrap;
     align-items: flex-end;
-    gap: 8px;                    /* space between avatar and bubble */
+    gap: 8px;
     margin-bottom: calc(2px * 1.25);
-   max-width: 95% !important;
+    max-width: 95% !important;
     align-self: flex-start;
     position: relative;
 }
+
+.message-container.received {
+    align-self: flex-start;
+    max-width: 95% !important;
+    margin-bottom: calc(2px * 1.25);
+}
+        
 .message-avatar {
     flex-shrink: 0;
     width: 40px !important;
@@ -7352,9 +7359,13 @@ function createMessageElement(message) {
     const isGroup = currentChat.type === 'group';
     const showAvatar = isGroup && !isSent; // only avatars for others in group
 
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message-container ${isSent ? 'sent' : 'received'}`;
-    messageDiv.dataset.messageId = message.id;
+   const messageDiv = document.createElement('div');
+let className = `message-container ${isSent ? 'sent' : 'received'}`;
+if (currentChat.type === 'group' && !isSent) {
+    className += ' group-message';
+}
+messageDiv.className = className;
+messageDiv.dataset.messageId = message.id;
 
     // Avatar (only for group received)
     let avatarHtml = '';
@@ -10581,6 +10592,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
