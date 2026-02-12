@@ -4472,6 +4472,35 @@
 .message-container.received .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice)::after {
     display: none !important;
 }
+
+/* ==================== SENT MEDIA – ALIGN TO FAR RIGHT EDGE ==================== */
+.message-container.sent .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;  /* push content to the right */
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.message-container.sent .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice)::after {
+    display: none !important;
+}
+
+.message-container.sent .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice) .message-media,
+.message-container.sent .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice) .message-document,
+.message-container.sent .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice) .message-location,
+.message-container.sent .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice) .message-voice {
+    margin-left: auto !important;   /* ensure the element itself is flush right */
+    margin-right: 0 !important;
+}
+
+.message-container.sent .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice) .message-time {
+    align-self: flex-end !important;  /* time stays at bottom right */
+    margin-top: 4px !important;
+}
     </style>
 </head>
 <body>
@@ -10633,6 +10662,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
