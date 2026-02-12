@@ -119,11 +119,11 @@
             padding-bottom: constant(safe-area-inset-bottom);
         }
 
-        .app-container {
-    height: 100dvh;               /* dynamic viewport height */
+    .app-container {
+    height: 100dvh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;            /* MUST be hidden – no page scroll */
+    overflow: hidden;            /* important: no scrolling here */
     background: var(--white);
     position: relative;
 }
@@ -188,8 +188,7 @@
 .app-header {
     background: var(--white);
     border-bottom: 1px solid var(--gray-150);
-    position: sticky;
-    top: 0;
+   
     z-index: var(--z-sticky);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -339,8 +338,7 @@
     background: var(--white);
     border-bottom: 1px solid var(--gray-150);
     padding: 10px 15px;          /* was var(--space-2) var(--space-3) = 8px 12px → +25% */
-    position: sticky;
-    top: 65px;                  /* was 52px (header height) → now 65px */
+                   /* was 52px (header height) → now 65px */
     z-index: var(--z-sticky);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -552,19 +550,18 @@
 
        /* ==================== BOTTOM NAVIGATION ==================== */
 .bottom-nav {
-    background: var(--white);
+    background: rgba(255,255,255,0.92);
     border-top: 1px solid var(--gray-150);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    background: rgba(255, 255, 255, 0.92);
-    padding: 6px 8px env(safe-area-inset-bottom) 8px;
+    padding: 6px 8px;                 /* remove env() from here */
+    padding-bottom: max(6px, env(safe-area-inset-bottom)); /* if you still need it */
     display: flex;
     justify-content: space-around;
     align-items: center;
-    flex-shrink: 0;               /* prevent nav from shrinking */
+    flex-shrink: 0;
     min-height: 56px;
     height: auto;
-    /* remove position: sticky and bottom – they are not needed here */
 }
 
 .nav-item {
@@ -630,7 +627,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    position: relative;
+    min-height: 0;              /* essential for flex children to respect overflow */
 }
 
 .page-content {
@@ -10666,6 +10663,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
