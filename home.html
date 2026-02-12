@@ -3420,6 +3420,7 @@
 }
 
 /* ========== ZERO BORDER AROUND MEDIA ========== */
+
 .message-media,
 .message-media img,
 .message-media video,
@@ -3437,7 +3438,19 @@
 .create-zyne-avatar {
   border: 0 !important;
   outline: 0 !important;
-  box-shadow: none !important;
+}
+
+/* ========== FLOATING SHADOW + CURVED EDGES FOR SENT MEDIA ========== */
+.message-media,
+.message-media img,
+.message-media video,
+.message-document,
+.message-location-map,
+.message-voice,
+.zyne-media,
+.media-preview-item {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06) !important;
+  border-radius: var(--radius-md) !important; /* consistent curved edges */
 }
 
 /* Optional – remove tiny border from avatar containers if any */
@@ -4436,14 +4449,7 @@
             background: var(--gray-400);
         }
 
-        /* Shadow and curved edges for sent media files */
-.message-media,
-.message-media img,
-.message-media video {
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.06) !important;
-    border-radius: 12px !important;
-}
- 
+   
     </style>
 </head>
 <body>
@@ -10605,6 +10611,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
