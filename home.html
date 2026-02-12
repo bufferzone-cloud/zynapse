@@ -2332,12 +2332,13 @@
 }
 
 .message-bubble {
-    display: inline-flex !important;    /* makes width fit content */
-    flex-direction: column !important;
-    align-items: flex-start !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: baseline !important;
+    justify-content: flex-start !important;
     width: auto !important;
-    max-width: 400% !important;
-    padding: 10px 14px !important;      /* consistent with your scale */
+    max-width: 100% !important;
+    padding: 10px 14px !important;
     border-radius: 18px !important;
 }
 
@@ -2386,20 +2387,25 @@
 }
 
 .message-text {
-    width: 100%;
-    word-break: break-word;
-    line-height: 1.4;
-    margin-bottom: 2px;                /* small space before time */
+    flex: 1 1 auto !important;      /* takes remaining space, can shrink */
+    min-width: 30px !important;     /* prevents too‑small collapse */
+    word-break: break-word !important;
+    line-height: 1.4 !important;
+    margin-right: 6px !important;   /* space before time */
+    margin-bottom: 0 !important;    /* no bottom margin – time is on same row */
+    width: auto !important;         /* override old width:100% */
 }
 
 .message-time {
-    margin-top: 4px !important;
-    align-self: flex-end !important;   /* or use text-align: right */
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    opacity: 0.8;
+    flex: 0 0 auto !important;      /* never wraps, stays beside text */
+    white-space: nowrap !important;
+    margin-top: 0 !important;       /* remove forced top margin */
+    align-self: baseline !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 11px !important;
+    opacity: 0.8 !important;
 }
 
 .message-container.sent .message-time {
@@ -3495,13 +3501,12 @@
 }
 /* Group message sender name inside bubble */
 .message-sender-name {
+    flex: 0 0 100% !important;     /* full width, pushes to new line */
     font-size: 11px;
     font-weight: 600;
     color: #007aff;
     margin-bottom: 4px;
-    text-transform: capitalize;
-    width: 100%;               /* full width, separate row */
-    flex: 0 0 100%;
+    width: 100% !important;
 }
 
 /* Admin modal group photo */
@@ -10592,6 +10597,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
