@@ -1,143 +1,91 @@
-// Zynapse PWA Service Worker
-const CACHE_NAME = 'zynapse-v2.0.0';
-const CACHE_URLS = [
-    '/',
-    '/index.html',
-    '/home.html',
-    'zynaps.png',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-    'https://upload-widget.cloudinary.com/global/all.js',
-    'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
-    'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js',
-    'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js'
+// Zynapse Service Worker – v1.0
+const CACHE_NAME = 'zynapse-v1';
+
+// Assets to cache on install
+const PRECACHE_ASSETS = [
+  '/zynapse/',
+  '/zynapse/index.html',
+  '/zynapse/manifest.json',
+  '/zynapse/zynaps.png',
+  // External resources (CDN)
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+  'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js',
+  'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js',
+  'https://upload-widget.cloudinary.com/global/all.js'
 ];
 
-// Install event - cache assets
+// Install event – cache all critical assets
 self.addEventListener('install', event => {
-    console.log('Service Worker: Installing...');
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('Service Worker: Caching files');
-                return cache.addAll(CACHE_URLS);
-            })
-            .then(() => self.skipWaiting())
-    );
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(PRECACHE_ASSETS))
+      .then(() => self.skipWaiting())
+  );
 });
 
-// Activate event - clean old caches
+// Activate event – clean up old caches
 self.addEventListener('activate', event => {
-    console.log('Service Worker: Activated');
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cache => {
-                    if (cache !== CACHE_NAME) {
-                        console.log('Service Worker: Clearing old cache:', cache);
-                        return caches.delete(cache);
-                    }
-                })
-            );
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
         })
-    );
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
-// Fetch event - serve from cache or network
+// Fetch event – serve from cache, fallback to network
 self.addEventListener('fetch', event => {
-    // Skip cross-origin requests
-    if (!event.request.url.startsWith(self.location.origin)) {
-        return;
-    }
+  // Skip cross-origin requests like analytics, etc. (optional)
+  // We'll handle all requests with a cache-first strategy for static assets,
+  // and network-first for HTML navigation.
 
+  const url = new URL(event.request.url);
+
+  // For same-origin HTML navigation: try network first, then cache (offline fallback)
+  if (event.request.mode === 'navigate' || 
+      (url.pathname.endsWith('.html') && url.origin === location.origin)) {
     event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                // Return cached response if found
-                if (response) {
-                    return response;
-                }
-
-                // Clone the request
-                const fetchRequest = event.request.clone();
-
-                // Make network request
-                return fetch(fetchRequest)
-                    .then(response => {
-                        // Check if valid response
-                        if (!response || response.status !== 200 || response.type !== 'basic') {
-                            return response;
-                        }
-
-                        // Clone the response
-                        const responseToCache = response.clone();
-
-                        // Cache the new response
-                        caches.open(CACHE_NAME)
-                            .then(cache => {
-                                cache.put(event.request, responseToCache);
-                            });
-
-                        return response;
-                    })
-                    .catch(error => {
-                        console.log('Fetch failed; returning offline page:', error);
-                        // Return offline page for HTML requests
-                        if (event.request.headers.get('accept').includes('text/html')) {
-                            return caches.match('/index.html');
-                        }
-                    });
-            })
+      fetch(event.request)
+        .then(response => {
+          // Optionally cache the fresh HTML
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone);
+          });
+          return response;
+        })
+        .catch(() => caches.match(event.request))
     );
-});
+    return;
+  }
 
-// Background sync for offline messages
-self.addEventListener('sync', event => {
-    if (event.tag === 'sync-messages') {
-        event.waitUntil(syncMessages());
-    }
-});
-
-// Push notification handler
-self.addEventListener('push', event => {
-    const data = event.data ? event.data.json() : {};
-    const title = data.title || 'Zynapse';
-    const options = {
-        body: data.body || 'You have a new message',
-        icon: 'zynaps.png',
-        badge: 'zynaps.png',
-        vibrate: [200, 100, 200],
-        data: {
-            url: data.url || '/'
+  // For all other requests (CSS, JS, images, CDN resources): cache-first
+  event.respondWith(
+    caches.match(event.request)
+      .then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-    };
-
-    event.waitUntil(
-        self.registration.showNotification(title, options)
-    );
+        // Not in cache – fetch from network, then cache for future
+        return fetch(event.request).then(networkResponse => {
+          // Cache valid responses (ignore opaque responses if you wish)
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return networkResponse;
+        }).catch(error => {
+          // Optional: fallback for images, etc.
+          console.error('Fetch failed:', error);
+        });
+      })
+  );
 });
-
-// Notification click handler
-self.addEventListener('notificationclick', event => {
-    event.notification.close();
-    event.waitUntil(
-        clients.matchAll({ type: 'window' })
-            .then(clientList => {
-                // If a window is already open, focus it
-                for (const client of clientList) {
-                    if (client.url === event.notification.data.url && 'focus' in client) {
-                        return client.focus();
-                    }
-                }
-                // Otherwise open a new window
-                if (clients.openWindow) {
-                    return clients.openWindow(event.notification.data.url);
-                }
-            })
-    );
-});
-
-// Sync messages function
-async function syncMessages() {
-    console.log('Syncing messages in background...');
-    // Implement your background sync logic here
-}
