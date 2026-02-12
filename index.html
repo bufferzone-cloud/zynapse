@@ -10,7 +10,7 @@
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <style>
         /* ==================== ZYNAPSE iOS THEMED CHAT APP - PRODUCTION CSS ==================== */
-        /* Reset & Base Styles - Compact iOS Style */
+        /* Reset & Base Styles - Compact iOS Style - SCALED 125% GLOBAL, LOGO 187.5% */
         * {
             margin: 0;
             padding: 0;
@@ -21,7 +21,7 @@
         }
 
         :root {
-            /* Color Palette - Pure White iOS Theme */
+            /* Color Palette - Pure White iOS Theme (unchanged) */
             --white: #ffffff;
             --white-98: #fafafa;
             --white-95: #f2f2f2;
@@ -54,46 +54,46 @@
             --yellow: #ffcc00;
             --zyne-red: #ff3b30;
             
-            /* Shadows */
-            --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.05);
-            --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.04);
-            --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.05);
-            --shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.06);
-            --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.08);
+            /* Shadows - scaled by 1.25 */
+            --shadow-subtle: 0 1.25px 3.75px rgba(0, 0, 0, 0.05);
+            --shadow-light: 0 2.5px 10px rgba(0, 0, 0, 0.04);
+            --shadow-medium: 0 5px 15px rgba(0, 0, 0, 0.05);
+            --shadow-heavy: 0 10px 30px rgba(0, 0, 0, 0.06);
+            --shadow-float: 0 15px 40px rgba(0, 0, 0, 0.08);
             
-            /* Border Radius */
-            --radius-xs: 4px;
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 20px;
-            --radius-2xl: 24px;
+            /* Border Radius - scaled by 1.25 */
+            --radius-xs: 5px;
+            --radius-sm: 10px;
+            --radius-md: 15px;
+            --radius-lg: 20px;
+            --radius-xl: 25px;
+            --radius-2xl: 30px;
             --radius-circle: 50%;
             
             /* Typography - Compact */
             --font-sf: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
             --font-mono: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
             
-            /* Spacing - Compact */
-            --space-1: 4px;
-            --space-2: 8px;
-            --space-3: 12px;
-            --space-4: 16px;
-            --space-5: 20px;
-            --space-6: 24px;
-            --space-8: 32px;
-            --space-10: 40px;
+            /* Spacing - Compact - scaled by 1.25 */
+            --space-1: 5px;
+            --space-2: 10px;
+            --space-3: 15px;
+            --space-4: 20px;
+            --space-5: 25px;
+            --space-6: 30px;
+            --space-8: 40px;
+            --space-10: 50px;
             
-            /* Transitions */
+            /* Transitions (unchanged) */
             --transition-fast: 150ms ease;
             --transition-normal: 250ms ease;
             --transition-slow: 350ms ease;
             --transition-spring: 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* Base Styles */
+        /* Base Styles - scaled root font */
         html {
-            font-size: 15px;
+            font-size: 18.75px; /* 15px * 1.25 */
             height: 100%;
             overflow: hidden;
         }
@@ -112,7 +112,7 @@
             touch-action: manipulation;
         }
 
-        /* Safe Area Insets for Notch Devices */
+        /* Safe Area Insets for Notch Devices (unchanged) */
         .safe-area-top {
             padding-top: env(safe-area-inset-top);
             padding-top: constant(safe-area-inset-top);
@@ -164,9 +164,10 @@
             padding: var(--space-6);
         }
 
+        /* LOGO: scaled extra 50% (1.875x) */
         .loading-logo {
-            width: 72px;
-            height: 72px;
+            width: 135px; /* 72px * 1.875 */
+            height: 135px;
             margin-bottom: var(--space-6);
             border-radius: var(--radius-lg);
             object-fit: contain;
@@ -174,9 +175,9 @@
         }
 
         .spinner-large {
-            width: 36px;
-            height: 36px;
-            border: 3px solid rgba(0, 122, 255, 0.08);
+            width: 45px; /* 36px * 1.25 */
+            height: 45px;
+            border: 3.75px solid rgba(0, 122, 255, 0.08); /* 3px * 1.25 */
             border-top-color: var(--blue);
             border-radius: var(--radius-circle);
             margin: 0 auto var(--space-4);
@@ -185,9 +186,9 @@
 
         .loading-content p {
             color: var(--gray-600);
-            font-size: 13px;
+            font-size: 16.25px; /* 13px * 1.25 */
             font-weight: 500;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.375px; /* 0.3px * 1.25 */
         }
 
         /* Authentication Pages */
@@ -209,7 +210,7 @@
             align-items: center;
             justify-content: center;
             padding: var(--space-6);
-            max-width: 400px;
+            max-width: 500px; /* 400px * 1.25 */
             margin: 0 auto;
             width: 100%;
         }
@@ -220,9 +221,10 @@
             animation: fadeInUp 0.5s var(--transition-spring);
         }
 
+        /* LOGO: scaled extra 50% (1.875x) */
         .logo-large {
-            width: 88px;
-            height: 88px;
+            width: 165px; /* 88px * 1.875 */
+            height: 165px;
             margin: 0 auto var(--space-4);
             border-radius: var(--radius-lg);
             object-fit: contain;
@@ -230,15 +232,15 @@
         }
 
         .welcome-screen h1 {
-            font-size: 32px;
+            font-size: 40px; /* 32px * 1.25 */
             font-weight: 800;
             color: var(--black);
             margin-bottom: var(--space-2);
-            letter-spacing: -0.5px;
+            letter-spacing: -0.625px; /* -0.5px * 1.25 */
         }
 
         .tagline {
-            font-size: 15px;
+            font-size: 18.75px; /* 15px * 1.25 */
             color: var(--gray-600);
             margin-bottom: var(--space-2);
             line-height: 1.4;
@@ -246,11 +248,11 @@
         }
 
         .powered-by {
-            font-size: 12px;
+            font-size: 15px; /* 12px * 1.25 */
             color: var(--gray-500);
             margin-bottom: var(--space-8);
             font-weight: 500;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.625px; /* 0.5px * 1.25 */
         }
 
         .welcome-actions {
@@ -263,8 +265,8 @@
 
         .welcome-footer {
             padding-top: var(--space-4);
-            border-top: 1px solid var(--gray-150);
-            font-size: 12px;
+            border-top: 1.25px solid var(--gray-150); /* 1px * 1.25 */
+            font-size: 15px; /* 12px * 1.25 */
             color: var(--gray-500);
         }
 
@@ -296,35 +298,36 @@
             background: none;
             border: none;
             color: var(--gray-500);
-            font-size: 18px;
+            font-size: 22.5px; /* 18px * 1.25 */
             cursor: pointer;
             padding: var(--space-2);
             border-radius: var(--radius-circle);
             transition: all var(--transition-normal);
-            width: 32px;
-            height: 32px;
+            width: 40px; /* 32px * 1.25 */
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
+        /* LOGO: scaled extra 50% (1.875x) */
         .logo-small {
-            width: 52px;
-            height: 52px;
+            width: 97.5px; /* 52px * 1.875 */
+            height: 97.5px;
             border-radius: var(--radius-md);
             margin-bottom: var(--space-4);
             object-fit: contain;
         }
 
         .auth-header h2 {
-            font-size: 22px;
+            font-size: 27.5px; /* 22px * 1.25 */
             font-weight: 700;
             color: var(--black);
             margin-bottom: var(--space-1);
         }
 
         .auth-header p {
-            font-size: 14px;
+            font-size: 17.5px; /* 14px * 1.25 */
             color: var(--gray-600);
         }
 
@@ -340,20 +343,20 @@
 
         .input-group i {
             position: absolute;
-            left: 14px;
+            left: 17.5px; /* 14px * 1.25 */
             top: 50%;
             transform: translateY(-50%);
             color: var(--gray-500);
-            font-size: 16px;
+            font-size: 20px; /* 16px * 1.25 */
             z-index: 1;
             pointer-events: none;
         }
 
         .input-group input {
             width: 100%;
-            padding: 14px 14px 14px 40px;
-            font-size: 15px;
-            border: 1.5px solid var(--gray-200);
+            padding: 17.5px 17.5px 17.5px 50px; /* 14px * 1.25, 40px * 1.25 */
+            font-size: 18.75px; /* 15px * 1.25 */
+            border: 1.875px solid var(--gray-200); /* 1.5px * 1.25 */
             border-radius: var(--radius-md);
             background: var(--white);
             color: var(--black);
@@ -366,7 +369,7 @@
         .input-group input:focus {
             outline: none;
             border-color: var(--blue);
-            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.08);
+            box-shadow: 0 0 0 3.75px rgba(0, 122, 255, 0.08); /* 3px * 1.25 */
         }
 
         .input-group input::placeholder {
@@ -376,7 +379,7 @@
 
         .toggle-password {
             left: auto !important;
-            right: 14px;
+            right: 17.5px; /* 14px * 1.25 */
             cursor: pointer;
             pointer-events: auto;
         }
@@ -389,7 +392,7 @@
         .upload-label {
             display: block;
             margin-bottom: var(--space-3);
-            font-size: 14px;
+            font-size: 17.5px; /* 14px * 1.25 */
             font-weight: 600;
             color: var(--gray-800);
         }
@@ -402,15 +405,15 @@
         }
 
         .upload-preview {
-            width: 72px;
-            height: 72px;
+            width: 90px; /* 72px * 1.25 */
+            height: 90px;
             border-radius: var(--radius-circle);
             background: var(--gray-50);
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border: 1.5px dashed var(--gray-300);
+            border: 1.875px dashed var(--gray-300); /* 1.5px * 1.25 */
             transition: all var(--transition-normal);
             flex-shrink: 0;
         }
@@ -429,35 +432,35 @@
         }
 
         .preview-placeholder i {
-            font-size: 22px;
+            font-size: 27.5px; /* 22px * 1.25 */
             color: var(--gray-400);
-            margin-bottom: 4px;
+            margin-bottom: 5px; /* 4px * 1.25 */
         }
 
         .preview-placeholder span {
-            font-size: 11px;
+            font-size: 13.75px; /* 11px * 1.25 */
             color: var(--gray-500);
         }
 
         .upload-buttons {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 7.5px; /* 6px * 1.25 */
             flex: 1;
         }
 
         .btn-upload, .btn-remove {
-            padding: 10px 14px;
+            padding: 12.5px 17.5px; /* 10px * 1.25, 14px * 1.25 */
             border-radius: var(--radius-md);
-            font-size: 13px;
+            font-size: 16.25px; /* 13px * 1.25 */
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition-normal);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            border: 1.5px solid;
+            gap: 7.5px; /* 6px * 1.25 */
+            border: 1.875px solid; /* 1.5px * 1.25 */
         }
 
         .btn-upload {
@@ -483,15 +486,15 @@
         }
 
         .upload-hint {
-            font-size: 11px;
+            font-size: 13.75px; /* 11px * 1.25 */
             color: var(--gray-500);
-            margin-top: 2px;
+            margin-top: 2.5px; /* 2px * 1.25 */
         }
 
         /* Terms */
         .terms-agreement {
             margin: var(--space-3) 0;
-            font-size: 12px;
+            font-size: 15px; /* 12px * 1.25 */
             color: var(--gray-600);
         }
 
@@ -501,14 +504,14 @@
             align-items: center;
             margin: var(--space-4) 0;
             color: var(--gray-400);
-            font-size: 12px;
+            font-size: 15px; /* 12px * 1.25 */
         }
 
         .auth-divider::before,
         .auth-divider::after {
             content: "";
             flex: 1;
-            height: 1px;
+            height: 1.25px; /* 1px * 1.25 */
             background: var(--gray-200);
         }
 
@@ -518,16 +521,16 @@
 
         /* Buttons */
         .btn-primary, .btn-secondary, .btn-danger {
-            padding: 14px;
+            padding: 17.5px; /* 14px * 1.25 */
             border-radius: var(--radius-md);
-            font-size: 15px;
+            font-size: 18.75px; /* 15px * 1.25 */
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition-normal);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px; /* 8px * 1.25 */
             border: none;
             width: 100%;
         }
@@ -539,14 +542,14 @@
 
         .btn-primary:hover:not(:disabled) {
             background: #0066d6;
-            transform: translateY(-1px);
+            transform: translateY(-1.25px); /* -1px * 1.25 */
             box-shadow: var(--shadow-light);
         }
 
         .btn-secondary {
             background: var(--white);
             color: var(--blue);
-            border: 1.5px solid var(--blue);
+            border: 1.875px solid var(--blue); /* 1.5px * 1.25 */
         }
 
         .btn-secondary:hover:not(:disabled) {
@@ -566,17 +569,17 @@
         .btn-google {
             background: var(--white);
             color: var(--gray-800);
-            border: 1.5px solid var(--gray-200);
-            padding: 12px;
+            border: 1.875px solid var(--gray-200); /* 1.5px * 1.25 */
+            padding: 15px; /* 12px * 1.25 */
             border-radius: var(--radius-md);
-            font-size: 14px;
+            font-size: 17.5px; /* 14px * 1.25 */
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition-normal);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px; /* 8px * 1.25 */
             width: 100%;
         }
 
@@ -590,8 +593,8 @@
             text-align: center;
             margin-top: var(--space-4);
             padding-top: var(--space-4);
-            border-top: 1px solid var(--gray-150);
-            font-size: 14px;
+            border-top: 1.25px solid var(--gray-150); /* 1px * 1.25 */
+            font-size: 17.5px; /* 14px * 1.25 */
             color: var(--gray-600);
         }
 
@@ -602,6 +605,7 @@
         }
 
         /* ==================== ANIMATIONS ==================== */
+        /* All animations unchanged except where px values appear */
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -610,7 +614,7 @@
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(15px);
+                transform: translateY(18.75px); /* 15px * 1.25 */
             }
             to {
                 opacity: 1;
@@ -621,7 +625,7 @@
         @keyframes modalSlideUp {
             from {
                 opacity: 0;
-                transform: translateY(30px) scale(0.95);
+                transform: translateY(37.5px) scale(0.95); /* 30px * 1.25 */
             }
             to {
                 opacity: 1;
@@ -632,7 +636,7 @@
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(12.5px); /* 10px * 1.25 */
             }
             to {
                 opacity: 1;
@@ -674,13 +678,13 @@
 
         @keyframes typing {
             0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-4px); opacity: 1; }
+            30% { transform: translateY(-5px); opacity: 1; } /* -4px * 1.25 */
         }
 
         @keyframes messageSlide {
             from {
                 opacity: 0;
-                transform: translateY(8px);
+                transform: translateY(10px); /* 8px * 1.25 */
             }
             to {
                 opacity: 1;
@@ -691,7 +695,7 @@
         @keyframes dropdownFade {
             from {
                 opacity: 0;
-                transform: translateY(-5px);
+                transform: translateY(-6.25px); /* -5px * 1.25 */
             }
             to {
                 opacity: 1;
@@ -707,7 +711,7 @@
         /* ==================== RESPONSIVE DESIGN ==================== */
         @media (max-width: 768px) {
             html {
-                font-size: 14px;
+                font-size: 17.5px; /* 14px * 1.25 */
             }
             
             .auth-container {
@@ -721,7 +725,7 @@
 
         @media (max-width: 480px) {
             html {
-                font-size: 13.5px;
+                font-size: 16.875px; /* 13.5px * 1.25 */
             }
             
             .auth-container {
@@ -774,7 +778,7 @@
             background: rgba(255, 255, 255, 0.7);
             z-index: 10;
             border-radius: inherit;
-            backdrop-filter: blur(2px);
+            backdrop-filter: blur(2.5px); /* 2px * 1.25 */
         }
 
         /* Utility Classes */
@@ -784,10 +788,10 @@
 
         .visually-hidden {
             position: absolute;
-            width: 1px;
-            height: 1px;
+            width: 1.25px; /* 1px * 1.25 */
+            height: 1.25px;
             padding: 0;
-            margin: -1px;
+            margin: -1.25px; /* -1px * 1.25 */
             overflow: hidden;
             clip: rect(0, 0, 0, 0);
             white-space: nowrap;
@@ -837,9 +841,9 @@
         .p-3 { padding: var(--space-3); }
         .p-4 { padding: var(--space-4); }
 
-        .text-sm { font-size: 12px; }
-        .text-base { font-size: 14px; }
-        .text-lg { font-size: 16px; }
+        .text-sm { font-size: 15px; } /* 12px * 1.25 */
+        .text-base { font-size: 17.5px; } /* 14px * 1.25 */
+        .text-lg { font-size: 20px; } /* 16px * 1.25 */
 
         .font-normal { font-weight: 400; }
         .font-medium { font-weight: 500; }
@@ -870,25 +874,25 @@
         /* Toast Notifications */
         .toast-container {
             position: fixed;
-            top: 20px;
-            right: 16px;
+            top: 25px; /* 20px * 1.25 */
+            right: 20px; /* 16px * 1.25 */
             z-index: 99999;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            max-width: 300px;
+            gap: 10px; /* 8px * 1.25 */
+            max-width: 375px; /* 300px * 1.25 */
         }
 
         .toast {
             background: var(--gray-900);
             color: var(--white);
-            padding: 12px 16px;
+            padding: 15px 20px; /* 12px * 1.25, 16px * 1.25 */
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-heavy);
             animation: slideInRight 0.3s var(--transition-spring), fadeOut 0.3s ease 2.7s forwards;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12.5px; /* 10px * 1.25 */
             position: relative;
             overflow: hidden;
             max-width: 100%;
@@ -900,7 +904,7 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 2px;
+            height: 2.5px; /* 2px * 1.25 */
             background: rgba(255, 255, 255, 0.2);
             animation: toastProgress 3s linear forwards;
         }
@@ -922,13 +926,13 @@
         }
 
         .toast i {
-            font-size: 16px;
+            font-size: 20px; /* 16px * 1.25 */
             flex-shrink: 0;
         }
 
         .toast span {
             flex: 1;
-            font-size: 14px;
+            font-size: 17.5px; /* 14px * 1.25 */
             line-height: 1.3;
         }
 
@@ -940,7 +944,7 @@
             }
             
             input, textarea {
-                font-size: 16px; /* Prevents zoom on iOS */
+                font-size: 20px; /* Prevents zoom on iOS - scaled from 16px */
             }
         }
     </style>
