@@ -4448,8 +4448,30 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--gray-400);
         }
+        /* ==================== REMOVE BUBBLE FOR MEDIA MESSAGES ==================== */
+/* Sent media */
+.message-container.sent .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice) {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.message-container.sent .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice)::after {
+    display: none !important;
+}
 
-   
+/* Received media */
+.message-container.received .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice) {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.message-container.received .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice)::after {
+    display: none !important;
+}
     </style>
 </head>
 <body>
@@ -10611,6 +10633,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
