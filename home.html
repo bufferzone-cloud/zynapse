@@ -120,15 +120,20 @@
         }
 
         .app-container {
-            height: 100vh;
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            background: var(--white);
-            position: relative;
-            overflow: hidden;
-        }
+    height: 100dvh;               /* dynamic viewport height */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;            /* MUST be hidden – no page scroll */
+    background: var(--white);
+    position: relative;
+}
 
+    html, body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
         /* ==================== LOADING SCREEN ==================== */
         .loading-screen {
             position: fixed;
@@ -549,19 +554,17 @@
 .bottom-nav {
     background: var(--white);
     border-top: 1px solid var(--gray-150);
-    position: sticky;
-    bottom: 0;
-    z-index: var(--z-sticky);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     background: rgba(255, 255, 255, 0.92);
-    padding: 6px 8px env(safe-area-inset-bottom) 8px; /* bottom padding = safe area */
+    padding: 6px 8px env(safe-area-inset-bottom) 8px;
     display: flex;
     justify-content: space-around;
     align-items: center;
-    flex-shrink: 0;
+    flex-shrink: 0;               /* prevent nav from shrinking */
     min-height: 56px;
     height: auto;
+    /* remove position: sticky and bottom – they are not needed here */
 }
 
 .nav-item {
@@ -10663,6 +10666,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
