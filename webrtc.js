@@ -1,93 +1,44 @@
-// ==================== webrtc.js ====================
-// WebRTC Calling Module – Zynapse
-
-// ---------- Firestore ----------
-const firestore = firebase.firestore();
-const callsCollection = firestore.collection('calls');
-
-// ---------- STUN/TURN Servers ----------
-const iceServers = {
-  iceServers: [
-    { urls: "stun:stun.relay.metered.ca:80" },
-    { urls: "turn:global.relay.metered.ca:80", username: "ff9b5e603d75447bba6ebc9c", credential: "XMFx6MoZrP/NB3wb" },
-    { urls: "turn:global.relay.metered.ca:80?transport=tcp", username: "ff9b5e603d75447bba6ebc9c", credential: "XMFx6MoZrP/NB3wb" },
-    { urls: "turn:global.relay.metered.ca:443", username: "ff9b5e603d75447bba6ebc9c", credential: "XMFx6MoZrP/NB3wb" },
-    { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: "ff9b5e603d75447bba6ebc9c", credential: "XMFx6MoZrP/NB3wb" }
-  ]
-};
-
-// ---------- Global State ----------
-let currentCall = {
-  id: null,
-  peerConnection: null,
-  localStream: null,
-  remoteStream: null,
-  isVideo: false,
-  isCaller: false,
-  status: null
-};
-
-let incomingCallListener = null;
-let ringingTimer = null;
-
-// ---------- UI Helpers ----------
-function showIncomingCall(callId, callerId, callerName, callerAvatar, isVideo) {
-  document.getElementById('incomingCallAvatar').src = callerAvatar || 'https://via.placeholder.com/150';
-  document.getElementById('incomingCallName').innerText = callerName;
-  document.getElementById('incomingCallType').innerHTML = isVideo ? '📹 Video call' : '📞 Voice call';
-  
-  // Store call ID for accept/reject
-  document.getElementById('incomingCallModal').dataset.callId = callId;
-  openModal('incomingCallModal');
-  
-  // Start ringing sound (loop)
-  if (notificationSound) {
-    notificationSound.loop = true;
-    notificationSound.play().catch(e => console.log('Ringtone error:', e));
+// ---------- Fetch TURN credentials dynamically ----------
+async function getIceServers() {
+  try {
+    const response = await fetch(
+      "https://zynapse.metered.live/api/v1/turn/credentials?apiKey=3a22dab1c7aa03b20437df26936a41309718"
+    );
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const iceServers = await response.json();
+    return iceServers;
+  } catch (error) {
+    console.error('TURN fetch failed, using fallback STUN:', error);
+    // Fallback – at least STUN
+    return [{ urls: "stun:stun.relay.metered.ca:80" }];
   }
 }
 
-function hideIncomingCall() {
-  closeModal('incomingCallModal');
-  if (notificationSound) {
-    notificationSound.loop = false;
-    notificationSound.pause();
-    notificationSound.currentTime = 0;
-  }
-}
-
-function showActiveCall(callerName, isVideo) {
-  document.getElementById('callStatusHeader').innerText = `📱 ${callerName}`;
-  // Show/hide video elements
-  const remoteVideo = document.getElementById('remoteVideo');
-  const localVideo = document.getElementById('localVideo');
-  if (remoteVideo) remoteVideo.style.display = isVideo ? 'block' : 'none';
-  if (localVideo) localVideo.style.display = isVideo ? 'block' : 'none';
-  
-  openModal('activeCallModal');
-}
-
-function hideActiveCall() {
-  closeModal('activeCallModal');
-}
-
-// ---------- WebRTC Core ----------
+// ---------- startCall – updated with dynamic TURN ----------
 async function startCall(isVideo) {
   if (!currentChat || currentChat.type !== 'private') {
     showToast('Can only call private contacts', 'error');
     return;
   }
-  
+  if (!currentUser) {
+    showToast('User not logged in', 'error');
+    return;
+  }
+
   try {
-    // Get media stream
+    // 1. Get dynamic ICE servers
+    const iceServers = await getIceServers();
+
+    // 2. Get user media
     const constraints = { audio: true, video: isVideo };
     currentCall.localStream = await navigator.mediaDevices.getUserMedia(constraints);
     document.getElementById('localVideo').srcObject = currentCall.localStream;
-    
-    // Create peer connection
-    currentCall.peerConnection = new RTCPeerConnection(iceServers);
+
+    // 3. Create peer connection
+    currentCall.peerConnection = new RTCPeerConnection({ iceServers });
     currentCall.isVideo = isVideo;
     currentCall.isCaller = true;
+
     
     // Add tracks
     currentCall.localStream.getTracks().forEach(track => {
@@ -119,13 +70,17 @@ async function startCall(isVideo) {
     
     // Create Firestore call document
     const callDoc = await callsCollection.add({
-      callerId: currentUser.userId,
-      receiverId: currentChat.userId,
-      isVideo: isVideo,
-      offer: { type: offer.type, sdp: offer.sdp },
-      status: 'ringing',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+  callerId: currentUser.userId,        // ZYN-XXXX
+  callerUid: currentUser.uid,          // Firebase UID (important!)
+  callerName: currentUser.name,
+  receiverId: currentChat.userId,
+  receiverUid: currentChat.uid,
+  receiverName: currentChat.userName,
+  isVideo: isVideo,
+  offer: { type: offer.type, sdp: offer.sdp },
+  status: 'ringing',
+  createdAt: firebase.firestore.FieldValue.serverTimestamp()
+});
     
     currentCall.id = callDoc.id;
     
@@ -158,9 +113,10 @@ async function startCall(isVideo) {
       candidateListener();
     };
     
-  } catch (error) {
-    console.error('Failed to start call:', error);
-    showToast('Could not start call', 'error');
+    } catch (error) {
+    console.error('startCall detailed error:', error);
+    // Show a clean user message – never display raw error objects
+    showToast('Could not start call. Please check camera/microphone permissions and try again.', 'error');
     endCall();
   }
 }
