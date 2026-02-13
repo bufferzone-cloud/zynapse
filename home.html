@@ -3368,6 +3368,147 @@
             color: var(--gray-400);
             font-size: 12px;
         }
+
+/* ========== CALL MODAL LAYOUTS ========== */
+#activeCallModal .modal-content {
+    max-width: 100vw;
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    border-radius: 0;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+}
+#activeCallModal .modal-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+    border-bottom: none;
+    color: white;
+}
+#activeCallModal .modal-header h3 { color: white; }
+#activeCallModal .modal-close { color: white; }
+
+/* Video call layout */
+.call-container.video-mode {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.remote-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #111;
+}
+.local-video {
+    position: absolute;
+    bottom: 30px;
+    right: 20px;
+    width: 120px;
+    height: 160px;
+    border-radius: 12px;
+    border: 2px solid white;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 20;
+    background: #222;
+}
+.call-controls {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    padding: 10px 20px;
+    border-radius: 50px;
+    z-index: 30;
+}
+.call-timer {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-family: monospace;
+    font-size: 18px;
+    background: rgba(0,0,0,0.5);
+    padding: 5px 15px;
+    border-radius: 20px;
+    z-index: 30;
+}
+
+/* Audio call layout (iOS white themed) */
+.call-container.audio-mode {
+    background: white;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 40px 20px;
+}
+.audio-profile-top, .audio-profile-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+.audio-profile-top .profile-avatar-large,
+.audio-profile-bottom .profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid white;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+.audio-profile-top .profile-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: #000;
+}
+.audio-profile-top .profile-user-id {
+    font-size: 14px;
+    color: #666;
+}
+.audio-profile-bottom .profile-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #000;
+}
+.audio-controls {
+    display: flex;
+    gap: 30px;
+    margin: 20px 0;
+}
+.audio-controls .chat-action-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    color: #007aff;
+    font-size: 24px;
+}
+.audio-controls .chat-action-btn.end-call {
+    background: #ff3b30;
+    color: white;
+}
+.audio-timer {
+    font-size: 18px;
+    color: #666;
+    font-family: monospace;
+}
 /* ========== GROUP PHOTO ENHANCEMENTS ========== */
 .group-avatar,
 .chat-user-avatar[src*="group"] {
@@ -3455,6 +3596,21 @@
   border-radius: var(--radius-md) !important; /* consistent curved edges */
 }
 
+
+.message-bubble.system-message {
+    background: transparent !important;
+    color: var(--gray-600);
+    justify-content: center;
+    font-style: italic;
+    padding: 6px 12px !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+.message-bubble.system-message::after {
+    display: none !important;
+}
+
+        
 /* Optional – remove tiny border from avatar containers if any */
 .contact-avatar,
 .chat-list-avatar,
@@ -5818,7 +5974,35 @@ firestore.collection('calls')
       }
     });
   });
-    
+
+    // Listen for calls where current user is participant (to log after end)
+firestore.collection('calls')
+  .where('callerUid', '==', currentUser.uid)
+  .onSnapshot(snapshot => handleCallStatusChange(snapshot));
+firestore.collection('calls')
+  .where('receiverUid', '==', currentUser.uid)
+  .onSnapshot(snapshot => handleCallStatusChange(snapshot));
+
+function handleCallStatusChange(snapshot) {
+  snapshot.docChanges().forEach(change => {
+    if (change.type === 'modified') {
+      const callData = change.doc.data();
+      const prevStatus = change.doc.data().status; // not directly available, but we can track via local variable
+      // We'll keep a simple map of processed calls to avoid duplicate logs
+      if (!window.processedCallLogs) window.processedCallLogs = {};
+      const callId = change.doc.id;
+      if (window.processedCallLogs[callId]) return; // already logged
+
+      const finalStates = ['ended', 'rejected', 'missed', 'no-answer'];
+      if (finalStates.includes(callData.status)) {
+        // Determine chat ID: it's the same as private chat between the two
+        const chatId = [callData.callerUid, callData.receiverUid].sort().join('_');
+        sendCallLogMessage(chatId, callData);
+        window.processedCallLogs[callId] = true;
+      }
+    }
+  });
+}
     // Pinned chats listener
     const pinnedListener = database.ref(`users/${currentUser.uid}/pinnedChats`)
         .on('value', (snapshot) => {
@@ -5861,9 +6045,11 @@ function showIncomingCallUI(callData) {
   openModal('incomingCallModal');
 
   // Auto‑reject after 45 seconds
-  setTimeout(() => {
+   setTimeout(() => {
     if (document.getElementById('incomingCallModal').classList.contains('active')) {
-      rejectCall();
+      // Update call status to missed
+      firestore.collection('calls').doc(currentCallId).update({ status: 'missed' });
+      rejectCall(); // also closes modal
     }
   }, 45000);
 }
@@ -7527,7 +7713,15 @@ if (currentChat.type === 'group' && !isSent) {
 }
 messageDiv.className = className;
 messageDiv.dataset.messageId = message.id;
-
+case 'call_log':
+  bubbleContent = `
+    <div class="message-bubble system-message">
+      <i class="fas ${message.callData?.isVideo ? 'fa-video' : 'fa-phone'}"></i>
+      <span>${escapeHtml(message.text)}</span>
+      <span class="message-time">${formatTime(message.timestamp)}</span>
+    </div>
+  `;
+  break;
     // Avatar (only for group received)
     let avatarHtml = '';
     if (showAvatar) {
@@ -10747,6 +10941,45 @@ async function initiateCall(isVideo) {
     openModal('activeCallModal');
     startCallTimer();
 
+      // After opening modal
+  const callContainer = document.getElementById('callContainer');
+  callContainer.className = `call-container ${isVideo ? 'video-mode' : 'audio-mode'}`;
+  
+  if (isVideo) {
+    callContainer.innerHTML = `
+      <video id="remoteVideo" class="remote-video" autoplay playsinline></video>
+      <video id="localVideo" class="local-video" autoplay playsinline muted></video>
+      <div class="call-controls">
+        <button id="muteAudioBtn" class="chat-action-btn" onclick="toggleMute()"><i class="fas fa-microphone"></i></button>
+        <button id="muteVideoBtn" class="chat-action-btn" onclick="toggleVideo()"><i class="fas fa-video"></i></button>
+        <button class="chat-action-btn" onclick="toggleSpeaker()"><i class="fas fa-volume-up"></i></button>
+        <button class="chat-action-btn end-call" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
+      </div>
+      <div class="call-timer" id="callTimer">00:00</div>
+    `;
+  } else {
+    callContainer.innerHTML = `
+      <div class="audio-profile-top">
+        <img src="${currentChat.userAvatar || 'https://via.placeholder.com/150'}" class="profile-avatar-large" id="audioRemoteAvatar">
+        <div class="profile-name" id="audioRemoteName">${currentChat.userName}</div>
+        <div class="profile-user-id" id="audioRemoteId">${currentChat.userId}</div>
+      </div>
+      <div class="audio-controls">
+        <button id="muteAudioBtn" class="chat-action-btn" onclick="toggleMute()"><i class="fas fa-microphone"></i></button>
+        <button class="chat-action-btn end-call" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
+        <button class="chat-action-btn" onclick="toggleSpeaker()"><i class="fas fa-volume-up"></i></button>
+      </div>
+      <div class="audio-timer" id="callTimer">00:00</div>
+      <div class="audio-profile-bottom">
+        <img src="${currentUser.profilePicture || 'https://via.placeholder.com/150'}" class="profile-avatar-large">
+        <div class="profile-name">${currentUser.name}</div>
+      </div>
+    `;
+  }
+
+  // Start timer etc.
+  startCallTimer();
+}
   } catch (error) {
     console.error('Error initiating call:', error);
     showToast('Could not start call', 'error');
@@ -10838,6 +11071,53 @@ async function endCall(remote = false) {
   cleanupCall();
   closeModal('activeCallModal');
   closeModal('incomingCallModal');
+}
+
+async function sendCallLogMessage(chatId, callData) {
+  const { isVideo, status, callerUid, receiverUid, answeredAt, createdAt } = callData;
+  // Determine direction: did current user place or receive the call?
+  const isOutgoing = callerUid === currentUser.uid;
+  let callStatusText = '';
+  let duration = null;
+
+  if (status === 'ended' && answeredAt) {
+    const endTime = new Date(); // approximate, or we could store end time in Firestore
+    const start = answeredAt.toDate ? answeredAt.toDate() : new Date(answeredAt);
+    const end = new Date();
+    const diffMs = end - start;
+    const minutes = Math.floor(diffMs / 60000);
+    const seconds = Math.floor((diffMs % 60000) / 1000);
+    duration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    callStatusText = isOutgoing ? 'outgoing' : 'incoming';
+  } else if (status === 'rejected') {
+    callStatusText = isOutgoing ? 'rejected' : 'missed';
+  } else if (status === 'missed' || status === 'no-answer') {
+    callStatusText = 'missed';
+  } else {
+    return; // don't log other statuses
+  }
+
+  const messageText = `${isVideo ? '📹' : '🎧'} ${isVideo ? 'Video' : 'Audio'} call ${callStatusText}${duration ? ` (${duration})` : ''}`;
+
+  const messageId = messagesRef.child(chatId).push().key;
+  const messageData = {
+    id: messageId,
+    type: 'call_log',
+    text: messageText,
+    callData: {
+      isVideo,
+      status,
+      duration,
+      direction: isOutgoing ? 'outgoing' : 'incoming',
+      timestamp: new Date().toISOString()
+    },
+    senderId: 'system',
+    senderName: 'System',
+    timestamp: new Date().toISOString()
+  };
+
+  await messagesRef.child(chatId).child(messageId).set(messageData);
+  await updateChatLastMessage(messageText, 'call_log');
 }
 
 function cleanupCall() {
@@ -11024,37 +11304,23 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 
 <!-- ========== ACTIVE CALL OVERLAY ========== -->
+<!-- ========== ACTIVE CALL OVERLAY ========== -->
 <div class="modal-overlay" id="activeCallModal">
-  <div class="modal-content" style="max-width: 90vw; width: 800px; background: #000; color: white;">
-    <div class="modal-header" style="background: rgba(0,0,0,0.8); border-bottom: 1px solid #333;">
-      <h3 style="color: white;">Call with <span id="activeCallUserName"></span></h3>
-      <button class="modal-close" onclick="endCall()" style="color: white;"><i class="fas fa-times"></i></button>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Call with <span id="activeCallUserName"></span></h3>
+      <button class="modal-close" onclick="endCall()"><i class="fas fa-times"></i></button>
     </div>
-    <div class="modal-body" style="display: flex; flex-direction: column; align-items: center;">
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%;">
-        <video id="remoteVideo" autoplay playsinline style="width: 100%; max-width: 480px; border-radius: 12px; background: #111;"></video>
-        <video id="localVideo" autoplay playsinline muted style="width: 120px; height: 160px; border-radius: 12px; background: #222; object-fit: cover;"></video>
+    <div class="modal-body" style="padding:0; height: calc(100vh - 60px);">
+      <div class="call-container" id="callContainer">
+        <!-- Dynamic content will be inserted by JS -->
       </div>
-      <div style="display: flex; gap: 20px; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 50px;">
-        <button id="muteAudioBtn" class="chat-action-btn" onclick="toggleMute()" style="background: #333; color: white; width: 50px; height: 50px;">
-          <i class="fas fa-microphone"></i>
-        </button>
-        <button id="muteVideoBtn" class="chat-action-btn" onclick="toggleVideo()" style="background: #333; color: white; width: 50px; height: 50px;">
-          <i class="fas fa-video"></i>
-        </button>
-        <button class="chat-action-btn" onclick="toggleSpeaker()" style="background: #333; color: white; width: 50px; height: 50px;">
-          <i class="fas fa-volume-up"></i>
-        </button>
-        <button class="chat-action-btn" onclick="endCall()" style="background: #ff3b30; color: white; width: 50px; height: 50px;">
-          <i class="fas fa-phone-slash"></i>
-        </button>
-      </div>
-      <div id="callTimer" style="margin-top: 10px; font-family: monospace; font-size: 16px;">00:00</div>
     </div>
   </div>
 </div>
 </body>
 </html>
+
 
 
 
