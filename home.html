@@ -4503,6 +4503,143 @@
     align-self: flex-end !important;  /* time stays at bottom right */
     margin-top: 4px !important;
 }
+
+/* ========== CALL MODAL ENHANCEMENTS ========== */
+.call-modal .modal-content {
+  max-width: 90vw;
+  width: 800px;
+  background: #000;
+  color: white;
+  transition: all 0.2s;
+}
+
+/* Video mode – fullscreen incoming, small outgoing PiP */
+.call-modal.video-mode .call-video-container {
+  position: relative;
+  width: 100%;
+  min-height: 400px;
+  background: #111;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.call-modal.video-mode #remoteVideo {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: cover;
+  display: block;
+}
+.call-modal.video-mode #localVideo {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 120px;
+  height: 160px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  z-index: 10;
+}
+/* Hide audio‑only elements in video mode */
+.call-modal.video-mode .audio-profile {
+  display: none !important;
+}
+
+/* Audio mode – iOS white themed */
+.call-modal.audio-mode .modal-content {
+  background: #fff;
+  color: #000;
+}
+.call-modal.audio-mode .call-video-container {
+  display: none !important;
+}
+.call-modal.audio-mode .audio-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 400px;
+  padding: 20px 0;
+}
+.call-modal.audio-mode .remote-profile {
+  text-align: center;
+}
+.call-modal.audio-mode .remote-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 60px;
+  object-fit: cover;
+  border: 4px solid #007aff;
+  margin-bottom: 10px;
+}
+.call-modal.audio-mode .remote-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #000;
+}
+.call-modal.audio-mode .remote-id {
+  font-size: 14px;
+  color: #8e8e93;
+  margin-top: 4px;
+}
+.call-modal.audio-mode .local-profile {
+  text-align: center;
+  margin-top: 20px;
+}
+.call-modal.audio-mode .local-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 40px;
+  object-fit: cover;
+  border: 3px solid #007aff;
+}
+.call-modal.audio-mode .local-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  margin-top: 8px;
+}
+/* Buttons overlay – same for both modes */
+.call-controls {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50px;
+  justify-content: center;
+}
+.call-modal.audio-mode .call-controls {
+  background: #f2f2f7;
+}
+.call-controls button {
+  background: #333;
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.call-modal.audio-mode .call-controls button {
+  background: #e5e5ea;
+  color: #000;
+}
+.call-controls button:hover {
+  transform: scale(1.1);
+}
+.call-controls .end-call-btn {
+  background: #ff3b30;
+  color: white;
+}
+#callTimer {
+  font-family: monospace;
+  font-size: 16px;
+  margin-top: 10px;
+  color: inherit;
+}
     </style>
 </head>
 <body>
@@ -5860,14 +5997,27 @@ function showIncomingCallUI(callData) {
 
   openModal('incomingCallModal');
 
-  // Auto‑reject after 45 seconds
   setTimeout(() => {
-    if (document.getElementById('incomingCallModal').classList.contains('active')) {
-      rejectCall();
-    }
-  }, 45000);
+  if (document.getElementById('incomingCallModal').classList.contains('active')) {
+    missCall();   // <-- new function
+  }
+}, 45000);
 }
 
+async function missCall() {
+  if (ringingSound) { ringingSound.pause(); ringingSound = null; }
+  closeModal('incomingCallModal');
+  if (currentCallId) {
+    await firestore.collection('calls').doc(currentCallId).update({ 
+      status: 'missed',
+      wasConnected: false,
+      endedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+  cleanupCall();
+  showToast('Call missed', 'info');
+}
+    
 function setupOnlineStatus() {
     // Set user as online
     const userStatusRef = onlineRef.child(currentUser.uid);
@@ -8693,6 +8843,46 @@ function downloadFile(url, filename) {
     document.body.removeChild(a);
 }
 
+async function sendCallLogMessage(chatId, callType, outcome) {
+  // callType: 'audio' or 'video'
+  // outcome: 'answered', 'rejected', 'missed'
+  if (!chatId) return;
+
+  const messageId = messagesRef.child(chatId).push().key;
+  const text = `${callType === 'video' ? 'Video' : 'Audio'} call ${outcome}`; // e.g. "Video call answered"
+
+  const messageData = {
+    id: messageId,
+    type: 'call',               // new message type
+    text: text,
+    senderId: 'system',          // special sender
+    senderName: 'System',
+    senderUid: 'system',
+    senderAvatar: '',            // no avatar
+    timestamp: new Date().toISOString(),
+    status: 'sent'
+  };
+
+  await messagesRef.child(chatId).child(messageId).set(messageData);
+
+  // Update chat last message
+  await database.ref(`users/${currentUser.uid}/chats/${chatId}`).update({
+    lastMessage: text,
+    lastMessageType: 'call',
+    lastMessageTime: new Date().toISOString()
+  });
+
+  // For the other participant (if private chat)
+  if (currentChat && currentChat.type === 'private' && currentChat.uid) {
+    await database.ref(`users/${currentChat.uid}/chats/${chatId}`).update({
+      lastMessage: text,
+      lastMessageType: 'call',
+      lastMessageTime: new Date().toISOString(),
+      unreadCount: firebase.database.ServerValue.increment(1)
+    });
+  }
+}
+
 function openLocation(latitude, longitude) {
     window.open(`https://www.google.com/maps?q=${latitude},${longitude}`, '_blank');
 }
@@ -10672,6 +10862,7 @@ async function initiateCall(isVideo) {
   }
   const receiverUid = currentChat.uid;
   const receiverId = currentChat.userId;
+  currentCallType = isVideo ? 'video' : 'audio';   // store globally if needed
 
   try {
     const constraints = { audio: true, video: isVideo };
@@ -10679,6 +10870,9 @@ async function initiateCall(isVideo) {
     document.getElementById('localVideo').srcObject = localStream;
 
     const callId = firestore.collection('calls').doc().id;
+    currentCallId = callId;
+
+    // Create Firestore call document with additional metadata
     await firestore.collection('calls').doc(callId).set({
       callerUid: currentUser.uid,
       callerId: currentUser.userId,
@@ -10689,11 +10883,13 @@ async function initiateCall(isVideo) {
       receiverName: currentChat.userName,
       receiverAvatar: currentChat.userAvatar || '',
       isVideo,
+      chatId: currentChat.id,                    // for call log message
+      callType: isVideo ? 'video' : 'audio',      // for call log message
+      wasConnected: false,
       status: 'ringing',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    currentCallId = callId;
     peerConnection = new RTCPeerConnection(iceServers);
 
     localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
@@ -10713,25 +10909,46 @@ async function initiateCall(isVideo) {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
 
-    // ✅ FIX: store as plain object, NOT offer.toJSON()
+    // Store offer as plain object
     await firestore.collection('calls').doc(callId).update({ 
       offer: { type: offer.type, sdp: offer.sdp } 
     });
 
+    // Flag to avoid duplicate call log messages
+    window[`callLogSent_${callId}`] = false;
+
+    // Listen for changes on the call document
     callDocListener = firestore.collection('calls').doc(callId)
       .onSnapshot(async (snapshot) => {
         const data = snapshot.data();
         if (!data) return;
+
+        // Handle answer (remote accepted)
         if (data.answer && !peerConnection.currentRemoteDescription) {
-          // ✅ FIX: create from plain object
           const answer = new RTCSessionDescription(data.answer);
           await peerConnection.setRemoteDescription(answer);
         }
-        if (data.status === 'ended' || data.status === 'rejected') {
-          endCall(true);
+
+        // Handle final states (ended, rejected, missed) – send call log message once
+        const finalStates = ['ended', 'rejected', 'missed'];
+        if (finalStates.includes(data.status) && data.chatId && !window[`callLogSent_${callId}`]) {
+          let outcome = 'missed';
+          if (data.status === 'ended' && data.wasConnected) outcome = 'answered';
+          else if (data.status === 'rejected') outcome = 'rejected';
+          else if (data.status === 'missed') outcome = 'missed';
+          
+          // Send the call log message
+          await sendCallLogMessage(data.chatId, data.callType || (data.isVideo ? 'video' : 'audio'), outcome);
+          window[`callLogSent_${callId}`] = true;
+        }
+
+        // Clean up UI when call ends
+        if (data.status === 'ended' || data.status === 'rejected' || data.status === 'missed') {
+          endCall(true); // remote hang-up or timeout
         }
       });
 
+    // Listen for receiver candidates
     receiverCandidateListener = firestore.collection('calls').doc(callId)
       .collection('receiverCandidates')
       .onSnapshot(snapshot => {
@@ -10742,6 +10959,20 @@ async function initiateCall(isVideo) {
           }
         });
       });
+
+    // Open the active call modal and set appropriate UI mode
+    const modal = document.getElementById('activeCallModal');
+    modal.classList.remove('video-mode', 'audio-mode');
+    modal.classList.add(isVideo ? 'video-mode' : 'audio-mode');
+
+    if (!isVideo) {
+      // Fill audio profile data
+      document.getElementById('callRemoteAvatar').src = currentChat.userAvatar || 'https://via.placeholder.com/120';
+      document.getElementById('callRemoteName').textContent = currentChat.userName;
+      document.getElementById('callRemoteId').textContent = currentChat.userId;
+      document.getElementById('callLocalAvatar').src = currentUser.profilePicture || 'https://via.placeholder.com/80';
+      document.getElementById('callLocalName').textContent = currentUser.name;
+    }
 
     document.getElementById('activeCallUserName').textContent = currentChat.userName;
     openModal('activeCallModal');
@@ -10791,10 +11022,11 @@ async function acceptCall() {
     
     // ✅ FIX: store answer as plain object
     await callRef.update({
-      answer: { type: answer.type, sdp: answer.sdp },
-      status: 'connected',
-      answeredAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+  answer: { type: answer.type, sdp: answer.sdp },
+  status: 'connected',
+  wasConnected: true,               // ADD THIS
+  answeredAt: firebase.firestore.FieldValue.serverTimestamp()
+});
 
     callerCandidateListener = callRef.collection('callerCandidates')
       .onSnapshot(snapshot => {
@@ -10822,19 +11054,33 @@ async function rejectCall() {
   if (ringingSound) { ringingSound.pause(); ringingSound = null; }
   closeModal('incomingCallModal');
   if (currentCallId) {
-    await firestore.collection('calls').doc(currentCallId).update({ status: 'rejected' });
-  }
-  cleanupCall();
-  showToast('Call rejected', 'info');
-}
+    await firestore.collection('calls').doc(currentCallId).update({ 
+  status: 'rejected', 
+  wasConnected: false,
+  endedAt: firebase.firestore.FieldValue.serverTimestamp() 
+});
 
 async function endCall(remote = false) {
-  if (!remote) {
-    if (currentCallId) {
-      await firestore.collection('calls').doc(currentCallId).update({ status: 'ended' });
+  if (!remote && currentCallId) {
+    const callRef = firestore.collection('calls').doc(currentCallId);
+    const callDoc = await callRef.get();
+    const callData = callDoc.data();
+    
+    let finalStatus = 'ended';
+    if (callData.status === 'connected') {
+      finalStatus = 'ended';      // normal hang up after answer
+    } else if (callData.status === 'ringing') {
+      // caller hung up before answer → missed
+      finalStatus = 'missed';
     }
-    showToast('Call ended', 'info');
+    
+    await callRef.update({ 
+      status: finalStatus,
+      wasConnected: callData.wasConnected || false,
+      endedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
   }
+  
   cleanupCall();
   closeModal('activeCallModal');
   closeModal('incomingCallModal');
@@ -11025,34 +11271,51 @@ window.toggleSpeaker = toggleSpeaker;
 
 <!-- ========== ACTIVE CALL OVERLAY ========== -->
 <div class="modal-overlay" id="activeCallModal">
-  <div class="modal-content" style="max-width: 90vw; width: 800px; background: #000; color: white;">
+  <div class="modal-content" style="background: #000; color: white;">
     <div class="modal-header" style="background: rgba(0,0,0,0.8); border-bottom: 1px solid #333;">
       <h3 style="color: white;">Call with <span id="activeCallUserName"></span></h3>
       <button class="modal-close" onclick="endCall()" style="color: white;"><i class="fas fa-times"></i></button>
     </div>
-    <div class="modal-body" style="display: flex; flex-direction: column; align-items: center;">
-      <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%;">
-        <video id="remoteVideo" autoplay playsinline style="width: 100%; max-width: 480px; border-radius: 12px; background: #111;"></video>
-        <video id="localVideo" autoplay playsinline muted style="width: 120px; height: 160px; border-radius: 12px; background: #222; object-fit: cover;"></video>
+    <div class="modal-body">
+      <!-- Video layout (shown when video call) -->
+      <div class="call-video-container" style="position: relative; width: 100%; min-height: 400px; background: #111; border-radius: 16px; overflow: hidden;">
+        <video id="remoteVideo" autoplay playsinline style="width: 100%; height: auto; max-height: 70vh; object-fit: cover; display: block;"></video>
+        <video id="localVideo" autoplay playsinline muted style="position: absolute; bottom: 20px; right: 20px; width: 120px; height: 160px; border-radius: 12px; object-fit: cover; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 10;"></video>
       </div>
-      <div style="display: flex; gap: 20px; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 50px;">
-        <button id="muteAudioBtn" class="chat-action-btn" onclick="toggleMute()" style="background: #333; color: white; width: 50px; height: 50px;">
+
+      <!-- Audio layout (shown when audio call) -->
+      <div class="audio-profile" style="display: none; flex-direction: column; align-items: center; justify-content: space-between; min-height: 400px; padding: 20px 0;">
+        <div class="remote-profile" style="text-align: center;">
+          <img id="callRemoteAvatar" src="https://via.placeholder.com/120" class="remote-avatar" style="width: 120px; height: 120px; border-radius: 60px; object-fit: cover; border: 4px solid #007aff; margin-bottom: 10px;">
+          <div class="remote-name" id="callRemoteName" style="font-size: 24px; font-weight: 700; color: #000;"></div>
+          <div class="remote-id" id="callRemoteId" style="font-size: 14px; color: #8e8e93; margin-top: 4px;"></div>
+        </div>
+        <div class="local-profile" style="text-align: center; margin-top: 20px;">
+          <img src="https://via.placeholder.com/80" id="callLocalAvatar" class="local-avatar" style="width: 80px; height: 80px; border-radius: 40px; object-fit: cover; border: 3px solid #007aff;">
+          <div class="local-name" id="callLocalName" style="font-size: 18px; font-weight: 600; color: #000; margin-top: 8px;"></div>
+        </div>
+      </div>
+
+      <!-- Call controls (same for both modes) -->
+      <div class="call-controls" style="display: flex; gap: 20px; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 50px; justify-content: center;">
+        <button id="muteAudioBtn" onclick="toggleMute()" style="background: #333; color: white; width: 50px; height: 50px; border-radius: 25px; border: none; cursor: pointer;">
           <i class="fas fa-microphone"></i>
         </button>
-        <button id="muteVideoBtn" class="chat-action-btn" onclick="toggleVideo()" style="background: #333; color: white; width: 50px; height: 50px;">
+        <button id="muteVideoBtn" onclick="toggleVideo()" style="background: #333; color: white; width: 50px; height: 50px; border-radius: 25px; border: none; cursor: pointer;">
           <i class="fas fa-video"></i>
         </button>
-        <button class="chat-action-btn" onclick="toggleSpeaker()" style="background: #333; color: white; width: 50px; height: 50px;">
+        <button onclick="toggleSpeaker()" style="background: #333; color: white; width: 50px; height: 50px; border-radius: 25px; border: none; cursor: pointer;">
           <i class="fas fa-volume-up"></i>
         </button>
-        <button class="chat-action-btn" onclick="endCall()" style="background: #ff3b30; color: white; width: 50px; height: 50px;">
+        <button onclick="endCall()" class="end-call-btn" style="background: #ff3b30; color: white; width: 50px; height: 50px; border-radius: 25px; border: none; cursor: pointer;">
           <i class="fas fa-phone-slash"></i>
         </button>
       </div>
-      <div id="callTimer" style="margin-top: 10px; font-family: monospace; font-size: 16px;">00:00</div>
+      <div id="callTimer" style="margin-top: 10px; font-family: monospace; font-size: 16px; text-align: center;">00:00</div>
     </div>
   </div>
 </div>
 </body>
 </html>
+
 
