@@ -10674,44 +10674,35 @@ async function initiateCall(isVideo) {
   const receiverId = currentChat.userId;
 
   try {
-    // 1. Get local media
     const constraints = { audio: true, video: isVideo };
     localStream = await navigator.mediaDevices.getUserMedia(constraints);
     document.getElementById('localVideo').srcObject = localStream;
 
-    // 2. Create Firestore call document
     const callId = firestore.collection('calls').doc().id;
     await firestore.collection('calls').doc(callId).set({
       callerUid: currentUser.uid,
       callerId: currentUser.userId,
       callerName: currentUser.name,
-      callerAvatar: currentUser.profilePicture,
+      callerAvatar: currentUser.profilePicture || '',
       receiverUid,
       receiverId,
       receiverName: currentChat.userName,
-      receiverAvatar: currentChat.userAvatar,
+      receiverAvatar: currentChat.userAvatar || '',
       isVideo,
       status: 'ringing',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
     currentCallId = callId;
-
-    // 3. Create peer connection
     peerConnection = new RTCPeerConnection(iceServers);
 
-    // 4. Add local stream tracks
-    localStream.getTracks().forEach(track => {
-      peerConnection.addTrack(track, localStream);
-    });
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-    // 5. Listen for remote stream
     peerConnection.ontrack = event => {
       remoteStream = event.streams[0];
       document.getElementById('remoteVideo').srcObject = remoteStream;
     };
 
-    // 6. ICE candidate handling → Firestore subcollection
     peerConnection.onicecandidate = event => {
       if (event.candidate) {
         firestore.collection('calls').doc(callId)
@@ -10719,32 +10710,28 @@ async function initiateCall(isVideo) {
       }
     };
 
-    // 7. Create offer
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
 
-    // 8. Save offer to Firestore
-    await firestore.collection('calls').doc(callId).update({ offer: offer.toJSON() });
+    // ✅ FIX: store as plain object, NOT offer.toJSON()
+    await firestore.collection('calls').doc(callId).update({ 
+      offer: { type: offer.type, sdp: offer.sdp } 
+    });
 
-    // 9. Listen for answer
     callDocListener = firestore.collection('calls').doc(callId)
       .onSnapshot(async (snapshot) => {
         const data = snapshot.data();
         if (!data) return;
-
-        // Answer received
         if (data.answer && !peerConnection.currentRemoteDescription) {
+          // ✅ FIX: create from plain object
           const answer = new RTCSessionDescription(data.answer);
           await peerConnection.setRemoteDescription(answer);
         }
-
-        // Call ended by receiver
         if (data.status === 'ended' || data.status === 'rejected') {
-          endCall(true); // true = remote ended
+          endCall(true);
         }
       });
 
-    // 10. Listen for remote ICE candidates (receiverCandidates)
     receiverCandidateListener = firestore.collection('calls').doc(callId)
       .collection('receiverCandidates')
       .onSnapshot(snapshot => {
@@ -10756,7 +10743,6 @@ async function initiateCall(isVideo) {
         });
       });
 
-    // 11. Show active call UI
     document.getElementById('activeCallUserName').textContent = currentChat.userName;
     openModal('activeCallModal');
     startCallTimer();
@@ -10776,15 +10762,12 @@ async function acceptCall() {
   const callData = callDoc.data();
 
   try {
-    // 1. Stop ringing sound
     if (ringingSound) { ringingSound.pause(); ringingSound = null; }
 
-    // 2. Get local media
     const constraints = { audio: true, video: callData.isVideo };
     localStream = await navigator.mediaDevices.getUserMedia(constraints);
     document.getElementById('localVideo').srcObject = localStream;
 
-    // 3. Create peer connection
     peerConnection = new RTCPeerConnection(iceServers);
     localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
@@ -10799,22 +10782,20 @@ async function acceptCall() {
       }
     };
 
-    // 4. Set remote description (offer)
+    // ✅ FIX: create offer from plain object
     const offer = new RTCSessionDescription(callData.offer);
     await peerConnection.setRemoteDescription(offer);
-
-    // 5. Create answer
+    
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
-
-    // 6. Save answer to Firestore
+    
+    // ✅ FIX: store answer as plain object
     await callRef.update({
-      answer: answer.toJSON(),
+      answer: { type: answer.type, sdp: answer.sdp },
       status: 'connected',
       answeredAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    // 7. Listen for caller's ICE candidates
     callerCandidateListener = callRef.collection('callerCandidates')
       .onSnapshot(snapshot => {
         snapshot.docChanges().forEach(async change => {
@@ -10825,7 +10806,6 @@ async function acceptCall() {
         });
       });
 
-    // 8. Update UI
     closeModal('incomingCallModal');
     document.getElementById('activeCallUserName').textContent = callData.callerName;
     openModal('activeCallModal');
@@ -11075,4 +11055,5 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
