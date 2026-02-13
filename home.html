@@ -11055,10 +11055,12 @@ async function rejectCall() {
   closeModal('incomingCallModal');
   if (currentCallId) {
     await firestore.collection('calls').doc(currentCallId).update({ 
-  status: 'rejected', 
-  wasConnected: false,
-  endedAt: firebase.firestore.FieldValue.serverTimestamp() 
-});
+      status: 'rejected', 
+      wasConnected: false,
+      endedAt: firebase.firestore.FieldValue.serverTimestamp() 
+    });
+  }
+}
 
 async function endCall(remote = false) {
   if (!remote && currentCallId) {
@@ -11317,5 +11319,6 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
