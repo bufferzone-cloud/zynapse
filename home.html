@@ -8711,7 +8711,7 @@ async function viewOnceMessage(messageId) {
             } catch (err) {
                 console.error('Error deleting view once message:', err);
             }
-        }, 5000);
+        }, 30000);
 
         showToast('View once message will disappear soon', 'info');
 
@@ -11363,6 +11363,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
