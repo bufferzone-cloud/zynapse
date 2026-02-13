@@ -5467,6 +5467,13 @@ const CLOUDINARY_CONFIG = {
     folder: 'zynapse'
 };
 
+// Initialise Firestore (required for webrtc.js)
+const firestore = firebase.firestore();
+
+// Create the 'calls' collection if it doesn't exist (first call will auto-create)
+firestore.collection('calls').doc('_init').set({ initialized: true })
+  .catch(err => console.warn('Firestore initialisation note:', err));
+    
 // Initialize Firebase
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -10730,6 +10737,7 @@ window.closeModal = closeModal;
 </script>
 </body>
 </html>
+
 
 
 
