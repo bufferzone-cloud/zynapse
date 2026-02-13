@@ -4640,6 +4640,58 @@
   margin-top: 10px;
   color: inherit;
 }
+
+/* Animated waveform bars */
+.message-voice-waveform {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 24px;
+    flex: 1;
+    margin: 0 8px;
+}
+
+.wave-bar {
+    width: 4px;
+    height: 100%;
+    background: currentColor;
+    border-radius: 2px;
+    animation: wave-animation 1s ease-in-out infinite;
+    transform-origin: bottom;
+    opacity: 0.8;
+}
+
+.wave-bar:nth-child(1) { animation-delay: 0.0s; height: 12px; }
+.wave-bar:nth-child(2) { animation-delay: 0.1s; height: 18px; }
+.wave-bar:nth-child(3) { animation-delay: 0.2s; height: 24px; }
+.wave-bar:nth-child(4) { animation-delay: 0.3s; height: 18px; }
+.wave-bar:nth-child(5) { animation-delay: 0.4s; height: 12px; }
+
+@keyframes wave-animation {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.6); }
+}
+
+/* Force voice note container to stretch */
+.message-voice {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    background: rgba(0,0,0,0.04);
+    border-radius: 20px;
+    margin: 4px 0;
+}
+
+.message-container.sent .message-voice {
+    background: rgba(255,255,255,0.15);
+}
+
+/* Ensure bubble takes full width inside container */
+.message-container .message-bubble:has(.message-voice) {
+    width: 100%;
+    max-width: 100%;
+}
     </style>
 </head>
 <body>
@@ -7891,7 +7943,13 @@ function createVoiceMessage(message, isSent, isGroup) {
                 <button class="message-voice-play" onclick="playVoiceMessage('${voiceId}', '${message.mediaUrl}')" id="${voiceId}-play">
                     <i class="fas fa-play"></i>
                 </button>
-                <div class="message-voice-waveform" id="${voiceId}-waveform"></div>
+                <div class="message-voice-waveform" id="${voiceId}-waveform">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
                 <span class="message-voice-duration">${message.duration || '0:00'}</span>
             </div>
             <span class="message-time">
@@ -7934,10 +7992,10 @@ function createViewOnceMessage(message, isSent, isGroup) {
         <div class="message-bubble message-view-once">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
             <div class="message-view-once-overlay" id="viewOnceOverlay-${message.id}" onclick="viewOnceMessage('${message.id}')">
-                <i class="fas fa-eye"></i>
-                <span>View Once</span>
-                <small>Tap to view • This media will disappear after viewing</small>
-            </div>
+    <i class="fas fa-eye"></i>
+    <span>View Once</span>
+    <small>Tap to view • This media will disappear after viewing</small>
+</div>
             <!-- Hidden media – shown only after view -->
             <span class="message-time">
                 ${formatTime(message.timestamp)}
@@ -8600,74 +8658,63 @@ async function sendViewOnceMessage(mediaUrl) {
 
 async function viewOnceMessage(messageId) {
     try {
-        // First, get the message to check if it's already viewed
-        const messageSnapshot = await messagesRef.child(currentChat.id).child(messageId).once('value');
-        const message = messageSnapshot.val();
-        
+        const messageRef = messagesRef.child(currentChat.id).child(messageId);
+        const snapshot = await messageRef.once('value');
+        const message = snapshot.val();
+
         if (!message) {
             showToast('Message not found', 'error');
             return;
         }
-        
-        // Check if already viewed
+
+        // If already viewed by current user, show placeholder
         const viewedBy = message.viewedBy || [];
         if (viewedBy.includes(currentUser.uid)) {
             showToast('Already viewed', 'info');
             return;
         }
-        
-        // Mark as viewed
-        await messagesRef.child(currentChat.id).child(messageId).update({
-            viewedBy: firebase.database.ServerValue.arrayUnion(currentUser.uid),
-            status: 'read'
+
+        // Use a transaction to safely add viewer to viewedBy array
+        await messageRef.transaction((currentData) => {
+            if (currentData) {
+                if (!currentData.viewedBy) currentData.viewedBy = [];
+                if (!currentData.viewedBy.includes(currentUser.uid)) {
+                    currentData.viewedBy.push(currentUser.uid);
+                }
+                currentData.status = 'read';
+            }
+            return currentData;
         });
-        
+
         // Show the media
         const overlay = document.getElementById(`viewOnceOverlay-${messageId}`);
-        const media = overlay.parentNode.querySelector('.message-media');
-        
-        if (overlay) {
-            overlay.style.display = 'none';
-            overlay.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-eye-slash"></i><div>Viewed</div></div>';
-        }
-        
-        if (media) {
-            media.style.display = 'block';
-            
-            // For images, show immediately
-            if (media.tagName === 'IMG') {
-                media.src = message.mediaUrl;
-            }
-            
-            // For videos, create video element
-            if (media.tagName === 'VIDEO') {
-                const video = document.createElement('video');
-                video.src = message.mediaUrl;
-                video.controls = true;
-                video.className = 'message-media';
-                video.style.width = '100%';
-                media.parentNode.replaceChild(video, media);
-            }
-        }
-        
-        // Schedule deletion after viewing (immediate or after delay)
+        const bubble = overlay?.parentNode;
+        if (overlay) overlay.style.display = 'none';
+
+        // Display image or video
+        const mediaElement = message.mediaUrl.match(/\.(mp4|webm|ogg)$/i)
+            ? document.createElement('video')
+            : document.createElement('img');
+        mediaElement.src = message.mediaUrl;
+        mediaElement.className = 'message-media';
+        mediaElement.controls = true;
+        mediaElement.style.width = '100%';
+        mediaElement.onclick = () => viewMedia(message.mediaUrl);
+        bubble?.appendChild(mediaElement);
+
+        // Delete after 5 seconds
         setTimeout(async () => {
             try {
-                // Remove from Firebase
-                await messagesRef.child(currentChat.id).child(messageId).remove();
-                
-                // Remove from UI
-                const messageElement = document.querySelector(`.message-container[data-message-id="${messageId}"]`);
-                if (messageElement) {
-                    messageElement.remove();
-                }
-            } catch (error) {
-                console.error('Error deleting view once message:', error);
+                await messageRef.remove();
+                const msgDiv = document.querySelector(`.message-container[data-message-id="${messageId}"]`);
+                if (msgDiv) msgDiv.remove();
+            } catch (err) {
+                console.error('Error deleting view once message:', err);
             }
-        }, 5000); // Delete after 5 seconds of viewing
-        
+        }, 5000);
+
         showToast('View once message will disappear soon', 'info');
-        
+
     } catch (error) {
         console.error('Error viewing once message:', error);
         showToast('Failed to view message', 'error');
@@ -11316,6 +11363,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
