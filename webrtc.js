@@ -1,4 +1,15 @@
-// ==================== webrtc.js – Fixed ====================
+// ==================== webrtc.js – Robust version ====================
+let firestore, callsCollection;
+
+try {
+  // Firestore may not be enabled – we degrade gracefully
+  firestore = firebase.firestore();
+  callsCollection = firestore.collection('calls');
+  console.log('Firestore ready for calls');
+} catch (e) {
+  console.warn('Firestore not available – calling disabled', e);
+  // Calls will be unavailable, but the rest of the script still loads
+}
 // WebRTC Calling Module – Zynapse
 
 const firestore = firebase.firestore();
