@@ -5858,12 +5858,8 @@ function setupEventListeners() {
     }
     
     // Load saved theme
-    const savedTheme = localStorage.getItem('zynapse_theme') || 'light';
-    currentTheme = savedTheme;
-    if (savedTheme === 'dark') {
-        document.getElementById('darkModeToggle').checked = true;
-        toggleTheme();
-    }
+   const savedTheme = localStorage.getItem('zynapse_theme') || 'light';
+setTheme(savedTheme);
     
     // Load privacy settings
     const savedPrivacy = localStorage.getItem('zynapse_privacy');
@@ -6353,7 +6349,10 @@ async function loadPrivacySettings() {
     try {
         const snapshot = await database.ref(`users/${currentUser.uid}/privacySettings`).once('value');
         if (snapshot.exists()) {
-            privacySettings = snapshot.val();
+            privacySettings = {
+                ...privacySettings,        // keep defaults for missing fields
+                ...snapshot.val()
+            };
             localStorage.setItem('zynapse_privacy', JSON.stringify(privacySettings));
         }
     } catch (error) {
@@ -10385,23 +10384,26 @@ async function saveProfileChanges() {
 
 async function savePrivacySettings() {
     try {
-        const privacySettings = {
+        const settingsToSave = {
             profileVisibility: document.getElementById('profileVisibility').value,
             zynesVisibility: document.getElementById('zynesVisibility').value,
             requestsVisibility: document.getElementById('requestsVisibility').value,
             readReceipts: privacySettings.readReceipts,
-            typingIndicators: privacySettings.typingIndicators
+            typingIndicators: privacySettings.typingIndicators,
+            notifications: document.getElementById('notificationsToggle').checked,
+            sounds: document.getElementById('soundsToggle').checked
         };
         
         await usersRef.child(currentUser.uid).update({
-            privacySettings: privacySettings
+            privacySettings: settingsToSave
         });
         
+        // Update global object
+        privacySettings = { ...privacySettings, ...settingsToSave };
         localStorage.setItem('zynapse_privacy', JSON.stringify(privacySettings));
         
         showToast('Settings saved', 'success');
         closeModal('privacySettingsModal');
-        
     } catch (error) {
         console.error('Error saving privacy settings:', error);
         showToast('Failed to save', 'error');
@@ -10455,55 +10457,52 @@ async function changePassword() {
     }
 }
 
-function toggleTheme() {
-    const toggle = document.getElementById('darkModeToggle');
-    const isDarkMode = toggle.checked;
-    
-    if (isDarkMode) {
-        // Apply dark theme
-        document.documentElement.style.setProperty('--white', '#000000');
-        document.documentElement.style.setProperty('--white-98', '#0a0a0a');
-        document.documentElement.style.setProperty('--white-95', '#111111');
-        document.documentElement.style.setProperty('--gray-50', '#1c1c1e');
-        document.documentElement.style.setProperty('--gray-100', '#2c2c2e');
-        document.documentElement.style.setProperty('--gray-150', '#3a3a3c');
-        document.documentElement.style.setProperty('--gray-200', '#48484a');
-        document.documentElement.style.setProperty('--gray-300', '#636366');
-        document.documentElement.style.setProperty('--gray-400', '#8e8e93');
-        document.documentElement.style.setProperty('--gray-500', '#aeaeb2');
-        document.documentElement.style.setProperty('--gray-600', '#c7c7cc');
-        document.documentElement.style.setProperty('--gray-700', '#d1d1d6');
-        document.documentElement.style.setProperty('--gray-800', '#e5e5ea');
-        document.documentElement.style.setProperty('--gray-900', '#f2f2f7');
-        document.documentElement.style.setProperty('--black', '#ffffff');
-        document.documentElement.style.setProperty('--blue-light', 'rgba(10, 132, 255, 0.1)');
-        
-        currentTheme = 'dark';
-        showToast('Dark mode on', 'success');
+function setTheme(theme) {
+    const isDark = theme === 'dark';
+    const root = document.documentElement;
+    if (isDark) {
+        root.style.setProperty('--white', '#000000');
+        root.style.setProperty('--white-98', '#0a0a0a');
+        root.style.setProperty('--white-95', '#111111');
+        root.style.setProperty('--gray-50', '#1c1c1e');
+        root.style.setProperty('--gray-100', '#2c2c2e');
+        root.style.setProperty('--gray-150', '#3a3a3c');
+        root.style.setProperty('--gray-200', '#48484a');
+        root.style.setProperty('--gray-300', '#636366');
+        root.style.setProperty('--gray-400', '#8e8e93');
+        root.style.setProperty('--gray-500', '#aeaeb2');
+        root.style.setProperty('--gray-600', '#c7c7cc');
+        root.style.setProperty('--gray-700', '#d1d1d6');
+        root.style.setProperty('--gray-800', '#e5e5ea');
+        root.style.setProperty('--gray-900', '#f2f2f7');
+        root.style.setProperty('--black', '#ffffff');
+        root.style.setProperty('--blue-light', 'rgba(10, 132, 255, 0.1)');
     } else {
-        // Apply light theme
-        document.documentElement.style.setProperty('--white', '#ffffff');
-        document.documentElement.style.setProperty('--white-98', '#fafafa');
-        document.documentElement.style.setProperty('--white-95', '#f2f2f2');
-        document.documentElement.style.setProperty('--gray-50', '#f8f8f8');
-        document.documentElement.style.setProperty('--gray-100', '#f0f0f0');
-        document.documentElement.style.setProperty('--gray-150', '#e8e8e8');
-        document.documentElement.style.setProperty('--gray-200', '#e0e0e0');
-        document.documentElement.style.setProperty('--gray-300', '#d1d1d6');
-        document.documentElement.style.setProperty('--gray-400', '#c7c7cc');
-        document.documentElement.style.setProperty('--gray-500', '#8e8e93');
-        document.documentElement.style.setProperty('--gray-600', '#6d6d72');
-        document.documentElement.style.setProperty('--gray-700', '#48484a');
-        document.documentElement.style.setProperty('--gray-800', '#3a3a3c');
-        document.documentElement.style.setProperty('--gray-900', '#2c2c2e');
-        document.documentElement.style.setProperty('--black', '#000000');
-        document.documentElement.style.setProperty('--blue-light', 'rgba(0, 122, 255, 0.1)');
-        
-        currentTheme = 'light';
-        showToast('Light mode on', 'success');
+        root.style.setProperty('--white', '#ffffff');
+        root.style.setProperty('--white-98', '#fafafa');
+        root.style.setProperty('--white-95', '#f2f2f2');
+        root.style.setProperty('--gray-50', '#f8f8f8');
+        root.style.setProperty('--gray-100', '#f0f0f0');
+        root.style.setProperty('--gray-150', '#e8e8e8');
+        root.style.setProperty('--gray-200', '#e0e0e0');
+        root.style.setProperty('--gray-300', '#d1d1d6');
+        root.style.setProperty('--gray-400', '#c7c7cc');
+        root.style.setProperty('--gray-500', '#8e8e93');
+        root.style.setProperty('--gray-600', '#6d6d72');
+        root.style.setProperty('--gray-700', '#48484a');
+        root.style.setProperty('--gray-800', '#3a3a3c');
+        root.style.setProperty('--gray-900', '#2c2c2e');
+        root.style.setProperty('--black', '#000000');
+        root.style.setProperty('--blue-light', 'rgba(0, 122, 255, 0.1)');
     }
-    
-    localStorage.setItem('zynapse_theme', currentTheme);
+    document.getElementById('darkModeToggle').checked = isDark;
+    currentTheme = theme;
+    localStorage.setItem('zynapse_theme', theme);
+}
+
+function toggleTheme() {
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
 }
 
 function updateProfileStats() {
@@ -10574,6 +10573,7 @@ function playNotificationSound() {
         if (notificationSound) {
             notificationSound.currentTime = 0;
             notificationSound.play();
+            if (!privacySettings.notifications) return; // or just skip
         } else {
             // Fallback to beep sound
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -10602,6 +10602,7 @@ function playSentSound() {
         if (sentSound) {
             sentSound.currentTime = 0;
             sentSound.play();
+            if (!privacySettings.sounds) return;
         } else {
             // Fallback to beep sound
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -11363,6 +11364,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
