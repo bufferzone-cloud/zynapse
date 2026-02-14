@@ -5597,6 +5597,30 @@ const CLOUDINARY_CONFIG = {
     folder: 'zynapse'
 };
 
+// Request FCM permission and get token
+async function requestFCMPermission() {
+  try {
+    const messaging = firebase.messaging();
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      const token = await messaging.getToken({ vapidKey: 'BNi7jQIOBcQeGLur-WsMbiCVmGmk7qyNuRmIRMIl01r0AjPC47JBfMYPJfoJP0Ay4Tel8R0i4OhCugmvKsM7NwM' });
+      console.log('FCM Token:', token);
+      
+      // Store token in Firestore under /fcmTokens/{userId}
+      if (currentUser && currentUser.uid) {
+        await firestore.collection('fcmTokens').doc(currentUser.uid).set({
+          token: token,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    } else {
+      console.log('Notification permission denied.');
+    }
+  } catch (error) {
+    console.error('Error getting FCM token:', error);
+  }
+}
+    
 // Initialize Firebase
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -5733,7 +5757,39 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         // Set online status
         await setOnlineStatus(true);
-        
+
+        await loadInitialData();
+await requestFCMPermission();          // from the push notification step
+
+// Register service worker (if not already registered)
+if ('serviceWorker' in navigator) {
+    try {
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        console.log('Service Worker registered:', registration);
+    } catch (err) {
+        console.error('Service Worker registration failed:', err);
+    }
+}
+
+// Listen for navigation messages from the service worker
+navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data.action === 'navigate') {
+        const url = new URL(event.data.url, window.location.origin);
+        const chatId = url.searchParams.get('chatId');
+        if (chatId) {
+            // Determine chat type – you might store it, or try both
+            // Try opening as private first, fallback to group if needed
+            const chat = chats.find(c => c.id === chatId);
+            if (chat) {
+                openChat(chatId, chat.type);
+            } else {
+                // If not found in current chats list, assume private
+                openChat(chatId, 'private');
+            }
+        }
+        // You can add similar handling for callId etc.
+    }
+});
     } catch (error) {
         console.error('Error loading user data:', error);
         showToast('Error loading data', 'error');
@@ -5893,6 +5949,9 @@ async function loadInitialData() {
         await loadNicknames();
         await loadPinnedChats();
         await loadPrivacySettings();
+        await loadInitialData();
+// Add this line
+await requestFCMPermission();
         updateProfileStats();
     } catch (error) {
         console.error('Error loading initial data:', error);
@@ -11364,6 +11423,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
