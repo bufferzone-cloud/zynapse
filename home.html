@@ -188,8 +188,8 @@
         /* ==================== APP HEADER ==================== */
 .app-header {
     background: var(--white);
-    border-bottom: 1px solid var(--gray-150);
-   
+   box-shadow: var(--shadow-light);
+    border-bottom: none;
     z-index: var(--z-sticky);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -552,7 +552,8 @@
        /* ==================== BOTTOM NAVIGATION ==================== */
 .bottom-nav {
     background: rgba(255,255,255,0.92);
-    border-top: 1px solid var(--gray-150);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+    border-top: none;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     padding: 6px 8px;                 /* remove env() from here */
@@ -655,12 +656,13 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    background: var(--gray-50);
 }
 
 .chats-container {
     flex: 1;
     overflow-y: auto;
-    padding: 0;
+    padding: 8px 0;
     background: var(--white);
 }
 
@@ -703,19 +705,18 @@
 }
 
 .chat-list-item {
-    display: flex;
-    align-items: center;
-    padding: calc(var(--space-2) * 1.25) calc(var(--space-3) * 1.25);
-    border-bottom: calc(1px * 1.25) solid var(--gray-100);
     background: var(--white);
-    cursor: pointer;
-    transition: background var(--transition-fast);
-    position: relative;
-    min-height: calc(64px * 1.25);
+    border-radius: var(--radius-lg);
+    margin: 8px 12px;
+    padding: 12px;
+    box-shadow: var(--shadow-light);
+    border: none;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .chat-list-item:hover {
-    background: var(--gray-50);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
 }
 
 .chat-list-item.active {
@@ -2117,7 +2118,8 @@
     display: flex;
     align-items: center;
     gap: calc(var(--space-2) * 1.25);
-    border-bottom: calc(1px * 1.25) solid var(--gray-150);
+    box-shadow: var(--shadow-light);
+    border-bottom: none;
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
@@ -2255,7 +2257,7 @@
     flex: 1;
     overflow: hidden;
     position: relative;
-    background: var(--white);
+    background: var(--gray-50);
 }
 
 .chat-messages {
@@ -2901,7 +2903,8 @@
 .chat-input-container {
     background: var(--white);
     padding: calc(var(--space-2) * 1.25) calc(var(--space-3) * 1.25);
-    border-top: calc(1px * 1.25) solid var(--gray-150);
+   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+    border-top: none;
     display: flex;
     align-items: flex-end;
     gap: calc(8px * 1.25);
@@ -4692,60 +4695,7 @@
     width: 100%;
     max-width: 100%;
 }
-        /* ==================== FLOATING CARD STYLES FOR HOME SCREEN ==================== */
-.chats-page {
-    background: var(--gray-50);  /* Light grey background */
-}
-
-.chats-container {
-    padding: 8px 0;
-}
-
-.chat-list-item {
-    background: var(--white);
-    border-radius: var(--radius-lg);
-    margin: 8px 12px;
-    padding: 12px;
-    box-shadow: var(--shadow-light);
-    border: none;
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.chat-list-item:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
-}
-
-/* Remove the default border-bottom from chat items */
-.chat-list-item {
-    border-bottom: none;
-}
-
-/* ==================== FLOATING HEADER & BOTTOM NAV ==================== */
-.app-header {
-    box-shadow: var(--shadow-light);
-    border-bottom: none;
-}
-
-.bottom-nav {
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
-    border-top: none;
-}
-
-/* ==================== INSIDE CHAT PAGE ==================== */
-.chat-header {
-    box-shadow: var(--shadow-light);
-    border-bottom: none;
-}
-
-.chat-messages-container {
-    background: var(--gray-50);
-}
-
-.chat-input-container {
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
-    border-top: none;
-}
+      
     </style>
 </head>
 <body>
@@ -11418,6 +11368,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
