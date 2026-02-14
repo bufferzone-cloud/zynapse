@@ -4692,6 +4692,60 @@
     width: 100%;
     max-width: 100%;
 }
+        /* ==================== FLOATING CARD STYLES FOR HOME SCREEN ==================== */
+.chats-page {
+    background: var(--gray-50);  /* Light grey background */
+}
+
+.chats-container {
+    padding: 8px 0;
+}
+
+.chat-list-item {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    margin: 8px 12px;
+    padding: 12px;
+    box-shadow: var(--shadow-light);
+    border: none;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.chat-list-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+/* Remove the default border-bottom from chat items */
+.chat-list-item {
+    border-bottom: none;
+}
+
+/* ==================== FLOATING HEADER & BOTTOM NAV ==================== */
+.app-header {
+    box-shadow: var(--shadow-light);
+    border-bottom: none;
+}
+
+.bottom-nav {
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+    border-top: none;
+}
+
+/* ==================== INSIDE CHAT PAGE ==================== */
+.chat-header {
+    box-shadow: var(--shadow-light);
+    border-bottom: none;
+}
+
+.chat-messages-container {
+    background: var(--gray-50);
+}
+
+.chat-input-container {
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+    border-top: none;
+}
     </style>
 </head>
 <body>
@@ -11364,6 +11418,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
