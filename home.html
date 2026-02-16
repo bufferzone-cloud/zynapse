@@ -4701,6 +4701,60 @@
 .message-container.sent .message-location-details {
     color: var(--blue) !important; /* uses the app's primary blue #007aff */
 }
+
+/* ==================== WHATSAPP‑STYLE REPLY INDICATOR ==================== */
+.message-reply {
+    background: var(--gray-100);
+    border-left: 4px solid var(--blue);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+
+.message-reply:hover {
+    background: var(--gray-200);
+}
+
+.message-reply-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 2px;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.message-reply-header i {
+    font-size: 12px;
+}
+
+.message-reply-text {
+    color: var(--gray-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.9em;
+}
+
+/* Sent messages get a lighter border and inverted text colours */
+.message-container.sent .message-reply {
+    border-left-color: var(--blue-dark);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.message-container.sent .message-reply .message-reply-header {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.message-container.sent .message-reply .message-reply-text {
+    color: rgba(255, 255, 255, 0.8);
+}
     </style>
 </head>
 <body>
@@ -7876,14 +7930,18 @@ messageDiv.dataset.messageId = message.id;
 
 // ==================== UPDATED MESSAGE CREATION FUNCTIONS ====================
 
+// ==================== UPDATED MESSAGE CREATION FUNCTIONS ====================
+
 function createTextMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     let replyHtml = '';
     if (message.replyTo) {
         replyHtml = `
-            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
-                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            <div class="message-reply">
+                <div class="message-reply-header">
+                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
+                </div>
+                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
             </div>
         `;
     }
@@ -7909,9 +7967,11 @@ function createImageMessage(message, isSent, isGroup) {
     let replyHtml = '';
     if (message.replyTo) {
         replyHtml = `
-            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
-                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            <div class="message-reply">
+                <div class="message-reply-header">
+                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
+                </div>
+                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
             </div>
         `;
     }
@@ -7938,9 +7998,11 @@ function createVideoMessage(message, isSent, isGroup) {
     let replyHtml = '';
     if (message.replyTo) {
         replyHtml = `
-            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
-                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            <div class="message-reply">
+                <div class="message-reply-header">
+                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
+                </div>
+                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
             </div>
         `;
     }
@@ -7967,9 +8029,11 @@ function createDocumentMessage(message, isSent, isGroup) {
     let replyHtml = '';
     if (message.replyTo) {
         replyHtml = `
-            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
-                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            <div class="message-reply">
+                <div class="message-reply-header">
+                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
+                </div>
+                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
             </div>
         `;
     }
@@ -8004,15 +8068,17 @@ function createLocationMessage(message, isSent, isGroup) {
     let replyHtml = '';
     if (message.replyTo) {
         replyHtml = `
-            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
-                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            <div class="message-reply">
+                <div class="message-reply-header">
+                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
+                </div>
+                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
             </div>
         `;
     }
     const mapId = `map-${message.id}`;
     
-    // Map initialisation – keep exactly as before
+    // Map initialisation
     setTimeout(() => {
         if (document.getElementById(mapId)) {
             const map = L.map(mapId).setView([message.location.latitude, message.location.longitude], 15);
@@ -8062,9 +8128,11 @@ function createVoiceMessage(message, isSent, isGroup) {
     let replyHtml = '';
     if (message.replyTo) {
         replyHtml = `
-            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
-                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            <div class="message-reply">
+                <div class="message-reply-header">
+                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
+                </div>
+                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
             </div>
         `;
     }
@@ -8105,9 +8173,11 @@ function createViewOnceMessage(message, isSent, isGroup) {
     let replyHtml = '';
     if (message.replyTo) {
         replyHtml = `
-            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
-                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            <div class="message-reply">
+                <div class="message-reply-header">
+                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
+                </div>
+                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
             </div>
         `;
     }
@@ -8153,7 +8223,7 @@ function createViewOnceMessage(message, isSent, isGroup) {
         </div>
     `;
 }
-
+    
 async function addMembersAsMember(groupId) {
     try {
         const groupSnapshot = await groupsRef.child(groupId).once('value');
@@ -11546,4 +11616,5 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
