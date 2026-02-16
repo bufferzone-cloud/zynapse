@@ -4698,6 +4698,70 @@
 .message-container.sent .message-location-details {
     color: var(--blue) !important; /* uses the app's primary blue #007aff */
 }
+
+.reply-preview {
+    background: var(--gray-100);
+    border-left: 3px solid var(--blue);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+.reply-preview-content {
+    display: flex;
+    flex-direction: column;
+}
+.reply-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: var(--blue);
+}
+.reply-preview-close {
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    font-size: 16px;
+    cursor: pointer;
+}
+.reply-preview-text {
+    color: var(--gray-700);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.message-reply {
+    background: rgba(0,0,0,0.05);
+    border-left: 3px solid var(--blue);
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+}
+.message-container.sent .message-reply {
+    background: rgba(255,255,255,0.1);
+    border-left-color: rgba(255,255,255,0.5);
+}
+.reply-sender {
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 2px;
+}
+.message-container.sent .reply-sender {
+    color: rgba(255,255,255,0.9);
+}
+.reply-text {
+    color: var(--gray-700);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.message-container.sent .reply-text {
+    color: rgba(255,255,255,0.8);
+}
     </style>
 </head>
 <body>
@@ -5633,6 +5697,7 @@ let audioChunks = [];
 let recordingTimer = null;
 let recordingStartTime = null;
 let listeners = [];
+let replyingTo = null;
 let chatListeners = [];
 let typingTimeout = null;
 let isTyping = false;
@@ -7372,7 +7437,17 @@ function renderChatInterface() {
                     </div>
                 </div>
             </div>
+            
             <div class="chat-input-container">
+            <div class="reply-preview" id="replyPreview" style="display: none;">
+    <div class="reply-preview-content">
+        <div class="reply-preview-header">
+            <span class="reply-preview-name"></span>
+            <button class="reply-preview-close" onclick="clearReply()">&times;</button>
+        </div>
+        <div class="reply-preview-text"></div>
+    </div>
+</div>
                 <button class="chat-attach-btn" onclick="toggleAttachmentOptions()">
                     <i class="fas fa-plus"></i>
                 </button>
@@ -7718,7 +7793,20 @@ function addMessageToChat(message) {
         playNotificationSound();
     }
 }
-    
+
+function setReplyTo(message) {
+    replyingTo = message;
+    const preview = document.getElementById('replyPreview');
+    preview.querySelector('.reply-preview-name').textContent = message.senderName;
+    preview.querySelector('.reply-preview-text').textContent = message.text || (message.type === 'image' ? '📷 Photo' : '📎 Media');
+    preview.style.display = 'block';
+}
+
+function clearReply() {
+    replyingTo = null;
+    document.getElementById('replyPreview').style.display = 'none';
+}
+
 function createMessageElement(message) {
     const isSent = message.senderId === currentUser.userId;
     const isGroup = currentChat.type === 'group';
@@ -7732,6 +7820,35 @@ if (currentChat.type === 'group' && !isSent) {
 messageDiv.className = className;
 messageDiv.dataset.messageId = message.id;
 
+const bubble = messageDiv.querySelector('.message-bubble');
+let touchStartX = 0;
+let touchEndX = 0;
+const minSwipeDistance = 50; // pixels
+
+bubble.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+bubble.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    const distance = touchEndX - touchStartX;
+    if (distance > minSwipeDistance) { // swipe right
+        setReplyTo(message);
+    }
+}
+
+if (message.replyTo) {
+    bubbleContent = `
+        <div class="message-reply">
+            <div class="reply-sender">${escapeHtml(message.replyTo.senderName)}</div>
+            <div class="reply-text">${escapeHtml(message.replyTo.text || (message.replyTo.type === 'image' ? '📷 Photo' : '📎 Media'))}</div>
+        </div>
+    ` + bubbleContent;
+}
     // Avatar (only for group received)
     let avatarHtml = '';
     if (showAvatar) {
@@ -8202,71 +8319,111 @@ function updateMessageReaction(messageId, emoji, userId, added) {
 }
 
 function showMessageOptions(e, messageId, isSent) {
+    e.preventDefault(); // prevent default context menu
+
+    // Get the message bubble element
+    const messageContainer = e.target.closest('.message-container');
+    if (!messageContainer) return;
+    const bubble = messageContainer.querySelector('.message-bubble');
+    if (!bubble) return;
+
+    // Remove any existing picker
+    const oldPicker = document.getElementById('tempReactionPicker');
+    if (oldPicker) oldPicker.remove();
+
     // Create reaction picker
-    const optionsDiv = document.createElement('div');
-    optionsDiv.className = 'reaction-picker show';
-    optionsDiv.style.position = 'fixed';
-    optionsDiv.style.left = e.clientX - 80 + 'px';
-    optionsDiv.style.bottom = '100px';
-    
+    const picker = document.createElement('div');
+    picker.id = 'tempReactionPicker';
+    picker.className = 'reaction-picker show';
+    picker.style.position = 'absolute';
+    picker.style.zIndex = '2000';
+
+    // Position below the bubble
+    const rect = bubble.getBoundingClientRect();
+    const chatMessages = document.getElementById('chatMessages');
+    const chatRect = chatMessages.getBoundingClientRect();
+
+    picker.style.left = (rect.left - chatRect.left) + 'px';
+    picker.style.top = (rect.bottom - chatRect.top + 5) + 'px'; // 5px gap
+
     const emojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
-    optionsDiv.innerHTML = emojis.map(emoji => `
+    picker.innerHTML = emojis.map(emoji => `
         <div class="reaction-emoji" data-message-id="${messageId}" data-emoji="${emoji}">
             ${emoji}
         </div>
     `).join('');
-    
-    // Handle emoji click – toggle reaction and close picker
-    optionsDiv.addEventListener('click', (event) => {
+
+    // Handle emoji click
+    picker.addEventListener('click', (event) => {
         const target = event.target.closest('.reaction-emoji');
         if (!target) return;
-        
         const msgId = target.dataset.messageId;
         const emoji = target.dataset.emoji;
-        toggleReaction(msgId, emoji);   // existing function
-        
-        // Remove this picker and the message options menu
-        optionsDiv.remove();
-        if (messageOptions) messageOptions.remove();
+
+        // Optimistic UI update: add reaction immediately
+        addReactionToMessageUI(msgId, emoji, true);
+
+        // Toggle reaction in database (will also sync via listener)
+        toggleReaction(msgId, emoji);
+
+        // Remove picker
+        picker.remove();
     });
-    
-    document.getElementById('chatPage').appendChild(optionsDiv);
-    
-    // Additional message options (copy, forward, etc.)
-    const messageOptions = document.createElement('div');
-    messageOptions.className = 'dropdown-menu show';
-    messageOptions.style.position = 'fixed';
-    messageOptions.style.left = e.clientX - 120 + 'px';
-    messageOptions.style.bottom = '150px';
-    messageOptions.innerHTML = `
-        <button class="dropdown-item" onclick="copyMessageText('${messageId}')">
-            <i class="fas fa-copy"></i> Copy
-        </button>
-        <button class="dropdown-item" onclick="forwardMessage('${messageId}')">
-            <i class="fas fa-share"></i> Forward
-        </button>
-        ${isSent ? `
-            <button class="dropdown-item" onclick="deleteMessage('${messageId}')">
-                <i class="fas fa-trash"></i> Delete
-            </button>
-        ` : ''}
-        <button class="dropdown-item" onclick="reportMessage('${messageId}')">
-            <i class="fas fa-flag"></i> Report
-        </button>
-    `;
-    
-    document.getElementById('chatPage').appendChild(messageOptions);
-    
-    // Close both pickers when clicking outside
+
+    // Close picker when clicking outside
     setTimeout(() => {
-        document.addEventListener('click', function closeOptions(ev) {
-            if (!optionsDiv.contains(ev.target) && !messageOptions.contains(ev.target)) {
-                optionsDiv.remove();
-                messageOptions.remove();
-                document.removeEventListener('click', closeOptions);
+        document.addEventListener('click', function closePicker(ev) {
+            if (!picker.contains(ev.target)) {
+                picker.remove();
+                document.removeEventListener('click', closePicker);
             }
         });
     }, 10);
+
+    chatMessages.appendChild(picker);
+}
+
+function addReactionToMessageUI(messageId, emoji, added) {
+    const messageContainer = document.querySelector(`.message-container[data-message-id="${messageId}"]`);
+    if (!messageContainer) return;
+
+    let reactionsDiv = messageContainer.querySelector('.message-reactions');
+    if (!reactionsDiv) {
+        reactionsDiv = document.createElement('div');
+        reactionsDiv.className = 'message-reactions';
+        messageContainer.querySelector('.message-bubble').appendChild(reactionsDiv);
+    }
+
+    // Find or create reaction element for this emoji
+    let reactionEl = Array.from(reactionsDiv.children).find(el => el.textContent.includes(emoji));
+    if (added) {
+        if (reactionEl) {
+            // Increase count
+            const countSpan = reactionEl.querySelector('.message-reaction-count');
+            if (countSpan) {
+                countSpan.textContent = parseInt(countSpan.textContent) + 1;
+            }
+            reactionEl.classList.add('user-reacted');
+        } else {
+            // Create new reaction
+            const newReaction = document.createElement('div');
+            newReaction.className = 'message-reaction user-reacted';
+            newReaction.setAttribute('onclick', `toggleReaction('${messageId}', '${emoji}')`);
+            newReaction.innerHTML = `<span>${emoji}</span><span class="message-reaction-count">1</span>`;
+            reactionsDiv.appendChild(newReaction);
+        }
+    } else {
+        if (reactionEl) {
+            const countSpan = reactionEl.querySelector('.message-reaction-count');
+            const count = parseInt(countSpan.textContent);
+            if (count > 1) {
+                countSpan.textContent = count - 1;
+                reactionEl.classList.remove('user-reacted');
+            } else {
+                reactionEl.remove();
+            }
+        }
+    }
 }
 
 async function sendMessage() {
@@ -8291,6 +8448,16 @@ async function sendMessage() {
             timestamp: new Date().toISOString(),
             status: 'sent'
         };
+
+        if (replyingTo) {
+    messageData.replyTo = {
+        messageId: replyingTo.id,
+        senderId: replyingTo.senderId,
+        senderName: replyingTo.senderName,
+        text: replyingTo.text || null,
+        type: replyingTo.type
+    };
+}
         
         await messagesRef.child(currentChat.id).child(messageId).set(messageData);
         await updateChatLastMessage(text, 'text');
@@ -11386,6 +11553,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
