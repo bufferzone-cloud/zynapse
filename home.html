@@ -7906,9 +7906,19 @@ function createTextMessage(message, isSent, isGroup) {
 
 function createImageMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
+    let replyHtml = '';
+    if (message.replyTo) {
+        replyHtml = `
+            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
+                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            </div>
+        `;
+    }
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
+            ${replyHtml}
             <img src="${message.mediaUrl}" alt="Photo" class="message-media" onclick="viewMedia('${message.mediaUrl}')" data-downloadable>
             ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
             <span class="message-time">
@@ -7925,9 +7935,19 @@ function createImageMessage(message, isSent, isGroup) {
 
 function createVideoMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
+    let replyHtml = '';
+    if (message.replyTo) {
+        replyHtml = `
+            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
+                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            </div>
+        `;
+    }
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
+            ${replyHtml}
             <video src="${message.mediaUrl}" controls class="message-media" data-downloadable></video>
             ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
             <span class="message-time">
@@ -7944,9 +7964,19 @@ function createVideoMessage(message, isSent, isGroup) {
 
 function createDocumentMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
+    let replyHtml = '';
+    if (message.replyTo) {
+        replyHtml = `
+            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
+                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            </div>
+        `;
+    }
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
+            ${replyHtml}
             <div class="message-document" onclick="downloadFile('${message.mediaUrl}', '${message.fileName}')" data-downloadable>
                 <div class="message-document-icon">
                     <i class="fas fa-file"></i>
@@ -7971,6 +8001,15 @@ function createDocumentMessage(message, isSent, isGroup) {
 
 function createLocationMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
+    let replyHtml = '';
+    if (message.replyTo) {
+        replyHtml = `
+            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
+                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            </div>
+        `;
+    }
     const mapId = `map-${message.id}`;
     
     // Map initialisation – keep exactly as before
@@ -7991,6 +8030,7 @@ function createLocationMessage(message, isSent, isGroup) {
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
+            ${replyHtml}
             <div class="message-location" onclick="openLocationInMap('${message.location.latitude}', '${message.location.longitude}', '${message.location.address}')">
                 <div id="${mapId}" class="message-location-map" style="width: 100%; height: 150px; border-radius: var(--radius-sm);"></div>
             </div>
@@ -8019,11 +8059,21 @@ function createLocationMessage(message, isSent, isGroup) {
 
 function createVoiceMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
+    let replyHtml = '';
+    if (message.replyTo) {
+        replyHtml = `
+            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
+                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            </div>
+        `;
+    }
     const voiceId = `voice-${message.id}`;
     
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
+            ${replyHtml}
             <div class="message-voice">
                 <button class="message-voice-play" onclick="playVoiceMessage('${voiceId}', '${message.mediaUrl}')" id="${voiceId}-play">
                     <i class="fas fa-play"></i>
@@ -8052,11 +8102,21 @@ function createVoiceMessage(message, isSent, isGroup) {
 function createViewOnceMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     const hasViewed = message.viewedBy && message.viewedBy.includes(currentUser.uid);
+    let replyHtml = '';
+    if (message.replyTo) {
+        replyHtml = `
+            <div style="background: rgba(0,0,0,0.05); border-left: 3px solid var(--blue); padding: 4px 8px; margin-bottom: 4px; border-radius: 4px; font-size: 0.9em;">
+                <div style="font-weight:600;">↩️ Reply to ${escapeHtml(message.replyTo.senderName)}</div>
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(message.replyTo.text)}</div>
+            </div>
+        `;
+    }
     
     if (hasViewed) {
         return `
             <div class="message-bubble">
                 ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
+                ${replyHtml}
                 <div class="message-view-once-viewed" style="text-align: center; padding: 20px; color: var(--gray-500);">
                     <i class="fas fa-eye-slash" style="font-size: 24px; margin-bottom: 8px;"></i>
                     <div>View once media has been viewed</div>
@@ -8076,12 +8136,12 @@ function createViewOnceMessage(message, isSent, isGroup) {
     return `
         <div class="message-bubble message-view-once">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
+            ${replyHtml}
             <div class="message-view-once-overlay" id="viewOnceOverlay-${message.id}" onclick="viewOnceMessage('${message.id}')">
-    <i class="fas fa-eye"></i>
-    <span>View Once</span>
-    <small>Tap to view • This media will disappear after viewing</small>
-</div>
-            <!-- Hidden media – shown only after view -->
+                <i class="fas fa-eye"></i>
+                <span>View Once</span>
+                <small>Tap to view • This media will disappear after viewing</small>
+            </div>
             <span class="message-time">
                 ${formatTime(message.timestamp)}
                 ${isSent && privacySettings.readReceipts ? `
@@ -11486,3 +11546,4 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
