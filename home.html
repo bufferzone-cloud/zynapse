@@ -4692,6 +4692,12 @@
     width: 100%;
     max-width: 100%;
 }
+
+/* Location address and details in blue for sent messages */
+.message-container.sent .message-location-address,
+.message-container.sent .message-location-details {
+    color: var(--blue) !important; /* uses the app's primary blue #007aff */
+}
     </style>
 </head>
 <body>
@@ -11364,6 +11370,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
