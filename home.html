@@ -6354,22 +6354,61 @@ async function loadChats() {
     }
 }
 
-function setReplyMessage(messageId, senderName, textPreview) {
+function setReplyMessage(messageId, senderName, textPreview, type) {
     replyMessage = {
         id: messageId,
         senderName: senderName,
-        text: textPreview
+        text: textPreview,
+        type: type
     };
     showReplyPreview();
 }
 
 function showReplyPreview() {
     const chatInputArea = document.querySelector('.chat-input-container');
-    // Remove any existing preview
     const existingPreview = document.getElementById('replyPreview');
     if (existingPreview) existingPreview.remove();
 
     if (!replyMessage) return;
+
+    let icon = 'fas fa-reply';
+    let typeText = 'message';
+    let displayText = replyMessage.text || '';
+
+    if (replyMessage.type) {
+        switch (replyMessage.type) {
+            case 'image':
+                icon = 'fas fa-image';
+                typeText = 'photo';
+                displayText = displayText || 'Photo';
+                break;
+            case 'video':
+                icon = 'fas fa-video';
+                typeText = 'video';
+                displayText = displayText || 'Video';
+                break;
+            case 'document':
+                icon = 'fas fa-file';
+                typeText = 'document';
+                displayText = displayText || 'Document';
+                break;
+            case 'voice':
+                icon = 'fas fa-microphone';
+                typeText = 'voice message';
+                displayText = displayText || 'Voice message';
+                break;
+            case 'location':
+                icon = 'fas fa-map-marker-alt';
+                typeText = 'location';
+                displayText = displayText || 'Location';
+                break;
+            case 'view-once':
+                icon = 'fas fa-eye';
+                typeText = 'view-once photo';
+                displayText = displayText || 'View once photo';
+                break;
+        }
+    }
 
     const preview = document.createElement('div');
     preview.id = 'replyPreview';
@@ -6385,8 +6424,9 @@ function showReplyPreview() {
     `;
     preview.innerHTML = `
         <div style="flex:1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            <strong>Replying to ${escapeHtml(replyMessage.senderName)}</strong>: 
-            ${escapeHtml(replyMessage.text)}
+            <i class="${icon}" style="margin-right: 4px;"></i>
+            <strong>Replying to ${escapeHtml(replyMessage.senderName)}'s ${typeText}</strong>: 
+            ${escapeHtml(displayText)}
         </div>
         <button onclick="cancelReply()" style="background:none; border:none; color:var(--gray-600); cursor:pointer;">
             <i class="fas fa-times"></i>
@@ -7615,18 +7655,25 @@ function setupChatListeners() {
         });
     chatListeners.push({ ref: messagesRef.child(currentChat.id), listener: messagesListener });
     
-    // Message reactions
-    const reactionsListener = database.ref(`messageReactions/${currentChat.id}`)
-        .on('child_added', (snapshot) => {
-            if (currentChat && currentChat.id === currentChatIdAtSetup) {
-                const reaction = snapshot.val();
-                updateMessageReaction(reaction.messageId, reaction.emoji, reaction.userId, reaction.added);
-            }
-        });
-    chatListeners.push({ 
-        ref: database.ref(`messageReactions/${currentChat.id}`), 
-        listener: reactionsListener 
+   // Message reactions (existing)
+const reactionsListener = database.ref(`messageReactions/${currentChat.id}`)
+    .on('child_added', (snapshot) => {
+        if (currentChat && currentChat.id === currentChatIdAtSetup) {
+            const reaction = snapshot.val();
+            updateMessageReaction(reaction.messageId, reaction.emoji, reaction.userId, reaction.added);
+        }
     });
+chatListeners.push({ ref: database.ref(`messageReactions/${currentChat.id}`), listener: reactionsListener });
+
+// NEW: child_changed for reactions (when toggled off)
+const reactionsChangedListener = database.ref(`messageReactions/${currentChat.id}`)
+    .on('child_changed', (snapshot) => {
+        if (currentChat && currentChat.id === currentChatIdAtSetup) {
+            const reaction = snapshot.val();
+            updateMessageReaction(reaction.messageId, reaction.emoji, reaction.userId, reaction.added);
+        }
+    });
+chatListeners.push({ ref: database.ref(`messageReactions/${currentChat.id}`), listener: reactionsChangedListener });
     
     // Typing indicators for private chats
     if (currentChat.type === 'private' && privacySettings.typingIndicators) {
@@ -7873,26 +7920,30 @@ messageDiv.dataset.messageId = message.id;
 
     messageDiv.innerHTML = avatarHtml + bubbleContent;
         // Swipe detection for reply
-    let touchStartX = 0;
-    let touchEndX = 0;
-    const minSwipeDistance = 50; // pixels
+let touchStartX = 0;
+let touchEndX = 0;
+const minSwipeDistance = 50; // pixels
 
-    messageDiv.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
+messageDiv.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+}, { passive: true });
 
-    messageDiv.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    }, { passive: true });
+messageDiv.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+}, { passive: true });
 
-    const handleSwipe = () => {
-        const distance = touchEndX - touchStartX;
-        if (distance > minSwipeDistance) {
-            // Right swipe detected
-            setReplyMessage(message.id, message.senderName, getMessagePreview(message.type, message.text));
-        }
-    };
+const handleSwipe = () => {
+    const distance = touchEndX - touchStartX;
+    if (distance > minSwipeDistance) {
+        // Right swipe detected
+        const msgId = message.id;
+        const senderName = message.senderName;
+        const textPreview = getMessagePreview(message.type, message.text);
+        const type = message.type;
+        setReplyMessage(msgId, senderName, textPreview, type);
+    }
+};
     // Add context menu for messages (except view-once)
     if (message.type !== 'view-once') {
         const bubble = messageDiv.querySelector('.message-bubble');
@@ -7928,7 +7979,55 @@ messageDiv.dataset.messageId = message.id;
     return messageDiv;
 }
 
-// ==================== UPDATED MESSAGE CREATION FUNCTIONS ====================
+function getReplyHtml(replyTo) {
+    let icon = 'fas fa-reply';
+    let typeText = 'message';
+    let displayText = replyTo.text || '';
+
+    if (replyTo.type) {
+        switch (replyTo.type) {
+            case 'image':
+                icon = 'fas fa-image';
+                typeText = 'photo';
+                displayText = displayText || 'Photo';
+                break;
+            case 'video':
+                icon = 'fas fa-video';
+                typeText = 'video';
+                displayText = displayText || 'Video';
+                break;
+            case 'document':
+                icon = 'fas fa-file';
+                typeText = 'document';
+                displayText = displayText || 'Document';
+                break;
+            case 'voice':
+                icon = 'fas fa-microphone';
+                typeText = 'voice message';
+                displayText = displayText || 'Voice message';
+                break;
+            case 'location':
+                icon = 'fas fa-map-marker-alt';
+                typeText = 'location';
+                displayText = displayText || 'Location';
+                break;
+            case 'view-once':
+                icon = 'fas fa-eye';
+                typeText = 'view-once photo';
+                displayText = displayText || 'View once photo';
+                break;
+        }
+    }
+
+    return `
+        <div class="message-reply">
+            <div class="message-reply-header">
+                <i class="${icon}"></i> Reply to ${escapeHtml(replyTo.senderName)}'s ${typeText}
+            </div>
+            <div class="message-reply-text">${escapeHtml(displayText)}</div>
+        </div>
+    `;
+}
 
 // ==================== UPDATED MESSAGE CREATION FUNCTIONS ====================
 
@@ -7936,14 +8035,7 @@ function createTextMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     let replyHtml = '';
     if (message.replyTo) {
-        replyHtml = `
-            <div class="message-reply">
-                <div class="message-reply-header">
-                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
-                </div>
-                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
-            </div>
-        `;
+        replyHtml = getReplyHtml(message.replyTo);
     }
     return `
         <div class="message-bubble">
@@ -7966,14 +8058,7 @@ function createImageMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     let replyHtml = '';
     if (message.replyTo) {
-        replyHtml = `
-            <div class="message-reply">
-                <div class="message-reply-header">
-                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
-                </div>
-                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
-            </div>
-        `;
+        replyHtml = getReplyHtml(message.replyTo);
     }
     return `
         <div class="message-bubble">
@@ -7997,14 +8082,7 @@ function createVideoMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     let replyHtml = '';
     if (message.replyTo) {
-        replyHtml = `
-            <div class="message-reply">
-                <div class="message-reply-header">
-                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
-                </div>
-                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
-            </div>
-        `;
+        replyHtml = getReplyHtml(message.replyTo);
     }
     return `
         <div class="message-bubble">
@@ -8028,14 +8106,7 @@ function createDocumentMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     let replyHtml = '';
     if (message.replyTo) {
-        replyHtml = `
-            <div class="message-reply">
-                <div class="message-reply-header">
-                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
-                </div>
-                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
-            </div>
-        `;
+        replyHtml = getReplyHtml(message.replyTo);
     }
     return `
         <div class="message-bubble">
@@ -8067,17 +8138,10 @@ function createLocationMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     let replyHtml = '';
     if (message.replyTo) {
-        replyHtml = `
-            <div class="message-reply">
-                <div class="message-reply-header">
-                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
-                </div>
-                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
-            </div>
-        `;
+        replyHtml = getReplyHtml(message.replyTo);
     }
     const mapId = `map-${message.id}`;
-    
+
     // Map initialisation
     setTimeout(() => {
         if (document.getElementById(mapId)) {
@@ -8092,7 +8156,7 @@ function createLocationMessage(message, isSent, isGroup) {
                 .openPopup();
         }
     }, 100);
-    
+
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
@@ -8122,22 +8186,15 @@ function createLocationMessage(message, isSent, isGroup) {
         </div>
     `;
 }
-
+    
 function createVoiceMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
     let replyHtml = '';
     if (message.replyTo) {
-        replyHtml = `
-            <div class="message-reply">
-                <div class="message-reply-header">
-                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
-                </div>
-                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
-            </div>
-        `;
+        replyHtml = getReplyHtml(message.replyTo);
     }
     const voiceId = `voice-${message.id}`;
-    
+
     return `
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
@@ -8172,16 +8229,9 @@ function createViewOnceMessage(message, isSent, isGroup) {
     const hasViewed = message.viewedBy && message.viewedBy.includes(currentUser.uid);
     let replyHtml = '';
     if (message.replyTo) {
-        replyHtml = `
-            <div class="message-reply">
-                <div class="message-reply-header">
-                    <i class="fas fa-reply"></i> Reply to ${escapeHtml(message.replyTo.senderName)}
-                </div>
-                <div class="message-reply-text">${escapeHtml(message.replyTo.text)}</div>
-            </div>
-        `;
+        replyHtml = getReplyHtml(message.replyTo);
     }
-    
+
     if (hasViewed) {
         return `
             <div class="message-bubble">
@@ -8202,7 +8252,7 @@ function createViewOnceMessage(message, isSent, isGroup) {
             </div>
         `;
     }
-    
+
     return `
         <div class="message-bubble message-view-once">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
@@ -8491,12 +8541,12 @@ async function sendMessage() {
     const chatInput = document.getElementById('chatInput');
     const chatSendBtn = document.getElementById('chatSendBtn');
     const text = chatInput.value.trim();
-    
+
     if (!text || chatSendBtn.disabled) return;
-    
+
     try {
         chatSendBtn.disabled = true;
-        
+
         const messageId = messagesRef.child(currentChat.id).push().key;
         const messageData = {
             id: messageId,
@@ -8515,25 +8565,25 @@ async function sendMessage() {
             messageData.replyTo = {
                 messageId: replyMessage.id,
                 senderName: replyMessage.senderName,
-                text: replyMessage.text
+                text: replyMessage.text,
+                type: replyMessage.type   // <-- ADDED
             };
         }
-        
+
         await messagesRef.child(currentChat.id).child(messageId).set(messageData);
         await updateChatLastMessage(text, 'text');
-        
+
         chatInput.value = '';
         chatInput.style.height = 'auto';
         chatSendBtn.disabled = false;
-        
-        // Clear reply after sending
-        cancelReply();
-        
+
+        cancelReply();   // Clear reply after sending
+
         sendTypingIndicator(false);
         isTyping = false;
-        
+
         playSentSound();
-        
+
     } catch (error) {
         console.error('Error sending message:', error);
         showToast('Failed to send message', 'error');
@@ -8776,17 +8826,27 @@ async function sendDocumentMessage(fileUrl, fileName, fileSize) {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
-            senderAvatar: currentUser.profilePicture, // 👈 added
+            senderAvatar: currentUser.profilePicture,
             timestamp: new Date().toISOString(),
             status: 'sent'
         };
-        
+
+        // Add reply information if replying
+        if (replyMessage) {
+            messageData.replyTo = {
+                messageId: replyMessage.id,
+                senderName: replyMessage.senderName,
+                text: replyMessage.text,
+                type: replyMessage.type   // <-- ADDED
+            };
+        }
+
         await messagesRef.child(currentChat.id).child(messageId).set(messageData);
         await updateChatLastMessage(`Document: ${fileName}`, 'document');
-        
+
         playSentSound();
         showToast('File sent', 'success');
-        
+
     } catch (error) {
         console.error('Error sending document:', error);
         showToast('Failed to send file', 'error');
@@ -8803,17 +8863,27 @@ async function sendLocationMessage(locationData) {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
-            senderAvatar: currentUser.profilePicture, // 👈 added
+            senderAvatar: currentUser.profilePicture,
             timestamp: new Date().toISOString(),
             status: 'sent'
         };
-        
+
+        // Add reply information if replying
+        if (replyMessage) {
+            messageData.replyTo = {
+                messageId: replyMessage.id,
+                senderName: replyMessage.senderName,
+                text: replyMessage.text,
+                type: replyMessage.type   // <-- ADDED
+            };
+        }
+
         await messagesRef.child(currentChat.id).child(messageId).set(messageData);
         await updateChatLastMessage('Location shared', 'location');
-        
+
         playSentSound();
         showToast('Location sent', 'success');
-        
+
     } catch (error) {
         console.error('Error sending location:', error);
         showToast('Failed to send location', 'error');
@@ -8861,17 +8931,27 @@ async function sendMediaMessage(mediaUrl, type) {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
-            senderAvatar: currentUser.profilePicture, // 👈 added
+            senderAvatar: currentUser.profilePicture,
             timestamp: new Date().toISOString(),
             status: 'sent'
         };
-        
+
+        // Add reply information if replying
+        if (replyMessage) {
+            messageData.replyTo = {
+                messageId: replyMessage.id,
+                senderName: replyMessage.senderName,
+                text: replyMessage.text,
+                type: replyMessage.type   // <-- ADDED
+            };
+        }
+
         await messagesRef.child(currentChat.id).child(messageId).set(messageData);
         await updateChatLastMessage(`${type === 'image' ? 'Photo' : 'Video'} sent`, type);
-        
+
         playSentSound();
         showToast(`${type === 'image' ? 'Photo' : 'Video'} sent`, 'success');
-        
+
     } catch (error) {
         console.error('Error sending media:', error);
         showToast(`Failed to send ${type}`, 'error');
@@ -8888,25 +8968,34 @@ async function sendViewOnceMessage(mediaUrl) {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
-            senderAvatar: currentUser.profilePicture, // 👈 added
+            senderAvatar: currentUser.profilePicture,
             timestamp: new Date().toISOString(),
             status: 'sent',
             isViewOnce: true,
             viewedBy: []
         };
-        
+
+        // Add reply information if replying
+        if (replyMessage) {
+            messageData.replyTo = {
+                messageId: replyMessage.id,
+                senderName: replyMessage.senderName,
+                text: replyMessage.text,
+                type: replyMessage.type   // <-- ADDED
+            };
+        }
+
         await messagesRef.child(currentChat.id).child(messageId).set(messageData);
         await updateChatLastMessage('View once photo sent', 'view-once');
-        
+
         playSentSound();
         showToast('View once sent', 'success');
-        
+
     } catch (error) {
         console.error('Error sending view-once message:', error);
         showToast('Failed to send view once', 'error');
     }
 }
-
 async function viewOnceMessage(messageId) {
     try {
         const messageRef = messagesRef.child(currentChat.id).child(messageId);
@@ -9092,23 +9181,32 @@ async function sendVoiceMessage(audioUrl, duration) {
             senderId: currentUser.userId,
             senderName: currentUser.name,
             senderUid: currentUser.uid,
-            senderAvatar: currentUser.profilePicture, // 👈 added
+            senderAvatar: currentUser.profilePicture,
             timestamp: new Date().toISOString(),
             status: 'sent'
         };
-        
+
+        // Add reply information if replying
+        if (replyMessage) {
+            messageData.replyTo = {
+                messageId: replyMessage.id,
+                senderName: replyMessage.senderName,
+                text: replyMessage.text,
+                type: replyMessage.type   // <-- ADDED
+            };
+        }
+
         await messagesRef.child(currentChat.id).child(messageId).set(messageData);
         await updateChatLastMessage('Voice message', 'voice');
-        
+
         playSentSound();
         showToast('Voice sent', 'success');
-        
+
     } catch (error) {
         console.error('Error sending voice message:', error);
         showToast('Failed to send voice', 'error');
     }
 }
-
 function playVoiceMessage(voiceId, url) {
     const audio = new Audio(url);
     const playBtn = document.getElementById(`${voiceId}-play`);
@@ -11616,5 +11714,6 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
