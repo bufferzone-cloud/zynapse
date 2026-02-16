@@ -8202,6 +8202,7 @@ function updateMessageReaction(messageId, emoji, userId, added) {
 }
 
 function showMessageOptions(e, messageId, isSent) {
+    // Create reaction picker
     const optionsDiv = document.createElement('div');
     optionsDiv.className = 'reaction-picker show';
     optionsDiv.style.position = 'fixed';
@@ -8210,14 +8211,28 @@ function showMessageOptions(e, messageId, isSent) {
     
     const emojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
     optionsDiv.innerHTML = emojis.map(emoji => `
-        <div class="reaction-emoji" onclick="toggleReaction('${messageId}', '${emoji}')">
+        <div class="reaction-emoji" data-message-id="${messageId}" data-emoji="${emoji}">
             ${emoji}
         </div>
     `).join('');
     
+    // Handle emoji click – toggle reaction and close picker
+    optionsDiv.addEventListener('click', (event) => {
+        const target = event.target.closest('.reaction-emoji');
+        if (!target) return;
+        
+        const msgId = target.dataset.messageId;
+        const emoji = target.dataset.emoji;
+        toggleReaction(msgId, emoji);   // existing function
+        
+        // Remove this picker and the message options menu
+        optionsDiv.remove();
+        if (messageOptions) messageOptions.remove();
+    });
+    
     document.getElementById('chatPage').appendChild(optionsDiv);
     
-    // Additional message options
+    // Additional message options (copy, forward, etc.)
     const messageOptions = document.createElement('div');
     messageOptions.className = 'dropdown-menu show';
     messageOptions.style.position = 'fixed';
@@ -8242,9 +8257,10 @@ function showMessageOptions(e, messageId, isSent) {
     
     document.getElementById('chatPage').appendChild(messageOptions);
     
+    // Close both pickers when clicking outside
     setTimeout(() => {
-        document.addEventListener('click', function closeOptions(event) {
-            if (!optionsDiv.contains(event.target) && !messageOptions.contains(event.target)) {
+        document.addEventListener('click', function closeOptions(ev) {
+            if (!optionsDiv.contains(ev.target) && !messageOptions.contains(ev.target)) {
                 optionsDiv.remove();
                 messageOptions.remove();
                 document.removeEventListener('click', closeOptions);
@@ -11370,6 +11386,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
