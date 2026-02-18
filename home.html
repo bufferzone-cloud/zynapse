@@ -4755,6 +4755,31 @@
 .message-container.sent .message-reply .message-reply-text {
     color: rgba(255, 255, 255, 0.8);
 }
+
+.zyne-reactions-summary {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+}
+.zyne-reaction {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--gray-100);
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.zyne-reaction.user-reacted {
+    background: var(--blue-light);
+    border: 1px solid var(--blue);
+}
+.zyne-reaction:hover {
+    background: var(--gray-200);
+}
     </style>
 </head>
 <body>
@@ -4868,6 +4893,15 @@
                         <i class="fas fa-paper-plane"></i> Post
                     </button>
                 </div>
+                <div class="expiration-options" style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+    <span style="font-size: 12px; color: var(--gray-600);">Expires in:</span>
+    <select id="zyneExpiration" style="flex: 1; padding: 6px; border-radius: var(--radius-pill); border: 1px solid var(--gray-200); background: var(--white);">
+        <option value="3600000">1 hour</option>
+        <option value="21600000">6 hours</option>
+        <option value="43200000">12 hours</option>
+        <option value="86400000" selected>24 hours</option>
+    </select>
+</div>
             </div>
         </div>
         <div class="zynes-feed" id="zynesFeed">
@@ -6633,24 +6667,27 @@ ${zyne.mediaUrl ? `
 ` : ''}
             </div>
             <div class="zyne-stats">
-                <div class="zyne-stat">
-                    <i class="fas fa-heart"></i>
-                    <span>${zyne.likes ? Object.keys(zyne.likes).length : 0}</span>
-                </div>
-                <div class="zyne-stat">
-                    <i class="fas fa-comment"></i>
-                    <span>${zyne.comments ? Object.keys(zyne.comments).length : 0}</span>
-                </div>
-                <div class="zyne-stat">
-                    <i class="fas fa-share"></i>
-                    <span>${zyne.shares || 0}</span>
-                </div>
-            </div>
+    <div class="zyne-stat">
+        <i class="fas fa-heart"></i>
+        <span>${zyne.likes ? Object.keys(zyne.likes).length : 0}</span>
+    </div>
+    <div class="zyne-stat">
+        <i class="fas fa-comment"></i>
+        <span>${zyne.comments ? Object.keys(zyne.comments).length : 0}</span>
+    </div>
+    <div class="zyne-stat">
+        <i class="fas fa-eye"></i>
+        <span>${zyne.views ? Object.keys(zyne.views).length : 0}</span>
+    </div>
+    <div class="zyne-stat">
+        <i class="fas fa-share"></i>
+        <span>${zyne.shares || 0}</span>
+    </div>
+</div>
             <div class="zyne-actions">
-                <button class="zyne-action-btn ${zyne.likes && zyne.likes[currentUser.uid] ? 'liked' : ''}" 
-                        onclick="toggleZyneLike('${zyne.id}', '${zyne.userId}')">
-                    <i class="fas fa-heart"></i> Like
-                </button>
+               <button class="zyne-action-btn" onclick="showZyneReactionPicker(event, '${zyne.id}', '${zyne.userId}')">
+    <i class="fas fa-smile"></i> React
+</button>
                 <button class="zyne-action-btn" onclick="toggleZyneComments('${zyne.id}')">
                     <i class="fas fa-comment"></i> Comment
                 </button>
@@ -6715,11 +6752,95 @@ ${zyne.mediaUrl ? `
                         </div>
                     `).join('') : ''}
                 </div>
+                <div class="zyne-reactions-summary" id="reactions-${zyne.id}">
+    ${renderReactionsSummary(zyne)}
+</div>
             </div>
         </div>
     `).join('');
 }
 
+// Toggle a reaction for a Zyne
+async function toggleZyneReaction(zyneId, ownerId, emoji) {
+    const reactionKey = `${currentUser.uid}_${emoji}`;
+    const reactionRef = database.ref(`users/${ownerId}/zynes/${zyneId}/reactions/${reactionKey}`);
+    const snapshot = await reactionRef.once('value');
+    
+    if (snapshot.exists()) {
+        await reactionRef.remove();
+        await zynesRef.child(`${ownerId}/${zyneId}/reactions/${reactionKey}`).remove();
+    } else {
+        const reactionData = {
+            userId: currentUser.uid,
+            userName: currentUser.name,
+            emoji: emoji,
+            timestamp: new Date().toISOString()
+        };
+        await reactionRef.set(reactionData);
+        await zynesRef.child(`${ownerId}/${zyneId}/reactions/${reactionKey}`).set(reactionData);
+    }
+}
+
+// Show reaction picker above the React button
+function showZyneReactionPicker(event, zyneId, ownerId) {
+    event.stopPropagation();
+    const existingPicker = document.getElementById(`zyne-reaction-picker-${zyneId}`);
+    if (existingPicker) {
+        existingPicker.remove();
+        return;
+    }
+    const picker = document.createElement('div');
+    picker.id = `zyne-reaction-picker-${zyneId}`;
+    picker.className = 'reaction-picker show';
+    picker.style.position = 'absolute';
+    picker.style.zIndex = '1000';
+    const rect = event.target.getBoundingClientRect();
+    picker.style.top = (rect.bottom + window.scrollY) + 'px';
+    picker.style.left = (rect.left + window.scrollX) + 'px';
+    
+    const emojis = ['❤️', '😂', '😮', '😢', '👍', '🙏'];
+    picker.innerHTML = emojis.map(emoji => `
+        <div class="reaction-emoji" data-emoji="${emoji}">${emoji}</div>
+    `).join('');
+    
+    picker.addEventListener('click', (e) => {
+        const target = e.target.closest('.reaction-emoji');
+        if (target) {
+            const emoji = target.dataset.emoji;
+            toggleZyneReaction(zyneId, ownerId, emoji);
+            picker.remove();
+        }
+    });
+    
+    document.body.appendChild(picker);
+    
+    // Close when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', function closePicker(ev) {
+            if (!picker.contains(ev.target) && ev.target !== event.target) {
+                picker.remove();
+                document.removeEventListener('click', closePicker);
+            }
+        });
+    }, 10);
+}
+
+function renderReactionsSummary(zyne) {
+    const reactions = zyne.reactions || {};
+    const counts = {};
+    Object.values(reactions).forEach(r => {
+        if (!counts[r.emoji]) counts[r.emoji] = { count: 0, users: [] };
+        counts[r.emoji].count++;
+        counts[r.emoji].users.push(r.userId);
+    });
+    
+    let html = '';
+    for (const [emoji, data] of Object.entries(counts)) {
+        const userReacted = data.users.includes(currentUser.uid);
+        html += `<span class="zyne-reaction ${userReacted ? 'user-reacted' : ''}" onclick="toggleZyneReaction('${zyne.id}', '${zyne.userId}', '${emoji}')">${emoji} ${data.count}</span>`;
+    }
+    return html;
+}
 function renderGroups() {
     const groupsList = document.getElementById('groupsList');
     
@@ -9356,6 +9477,9 @@ async function postZyne() {
     
     try {
         const zyneId = database.ref(`users/${currentUser.uid}/zynes`).push().key;
+        const expirationMs = parseInt(document.getElementById('zyneExpiration').value);
+        const expiresAt = new Date(Date.now() + expirationMs).toISOString();
+        
         const zyneData = {
             id: zyneId,
             text: text,
@@ -9368,7 +9492,9 @@ async function postZyne() {
             likes: {},
             comments: {},
             shares: 0,
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+            views: {},          // NEW: track who viewed
+            reactions: {},       // NEW: store emoji reactions
+            expiresAt: expiresAt
         };
         
         await database.ref(`users/${currentUser.uid}/zynes/${zyneId}`).set(zyneData);
@@ -9388,6 +9514,17 @@ async function postZyne() {
     } catch (error) {
         console.error('Error posting zyne:', error);
         showToast('Failed to post', 'error');
+    }
+}
+
+async function markZyneViewed(zyneId, ownerId) {
+    if (!currentUser) return;
+    const viewRef = database.ref(`users/${ownerId}/zynes/${zyneId}/views/${currentUser.uid}`);
+    const snapshot = await viewRef.once('value');
+    if (!snapshot.exists()) {
+        await viewRef.set(new Date().toISOString());
+        // Also update the mirrored zynesRef
+        await zynesRef.child(`${ownerId}/${zyneId}/views/${currentUser.uid}`).set(new Date().toISOString());
     }
 }
 
@@ -9528,7 +9665,8 @@ async function deleteZyne(zyneId) {
 }
 
 function viewZyneDetail(zyneId, ownerId) {
-    toggleZyneComments(zyneId);
+    toggleZyneComments(zyneId);          // existing behaviour
+    markZyneViewed(zyneId, ownerId);      // new: mark as viewed
 }
 
 function showReplySection(zyneId, commentId) {
@@ -11716,3 +11854,4 @@ window.toggleSpeaker = toggleSpeaker;
 </html>
 
 Step by step and full functions including where to put them exactly
+
