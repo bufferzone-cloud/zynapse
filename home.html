@@ -5027,25 +5027,6 @@
 .zyne-reaction:hover {
     background: var(--gray-200);
 }
-
-.interest-tag {
-    display: inline-block;
-    background: var(--gray-100);
-    border-radius: var(--radius-pill);
-    padding: 2px 8px;
-    margin: 2px;
-    font-size: 12px;
-    color: var(--gray-700);
-}
-.verified-badge {
-    display: inline-block;
-    background: var(--blue-light);
-    color: var(--blue);
-    font-size: 12px;
-    padding: 2px 8px;
-    border-radius: var(--radius-pill);
-    margin-top: 4px;
-}
     </style>
 </head>
 <body>
@@ -5348,29 +5329,6 @@
                     </div>
                 </div>
                 <div class="profile-actions">
-    <div class="profile-action-list">
-        <!-- NEW: Edit Full Profile -->
-        <div class="profile-action-item" onclick="openFullProfileModal()">
-            <div class="profile-action-icon">
-                <i class="fas fa-id-card"></i>
-            </div>
-            <div class="profile-action-text">
-                <h4>Edit Full Profile</h4>
-                <p>Add bio, interests, skills & more</p>
-            </div>
-            <i class="fas fa-chevron-right profile-action-arrow"></i>
-        </div>
-        <!-- NEW: Profile Visibility -->
-        <div class="profile-action-item" onclick="openProfileVisibilityModal()">
-            <div class="profile-action-icon">
-                <i class="fas fa-eye"></i>
-            </div>
-            <div class="profile-action-text">
-                <h4>Profile Visibility</h4>
-                <p>Choose what others see</p>
-            </div>
-            <i class="fas fa-chevron-right profile-action-arrow"></i>
-        </div>
                     <div class="profile-action-list">
                         <div class="profile-action-item" onclick="openEditProfileModal()">
                             <div class="profile-action-icon">
@@ -5428,300 +5386,267 @@
         </div>
     </div>
 
-   <!-- Edit Full Profile Modal -->
-<div class="modal-overlay" id="editFullProfileModal">
-    <div class="modal-content" style="max-width: 500px;">
-        <div class="modal-header">
-            <h3>Edit Full Profile</h3>
-            <button class="modal-close" onclick="closeModal('editFullProfileModal')">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-            <form id="fullProfileForm">
-                <!-- Bio Section -->
-                <div class="settings-section">
-                    <h4>Bio</h4>
-                    <div class="form-group">
-                        <label class="form-label">Short Bio</label>
-                        <textarea class="form-input" id="profileBio" rows="2" placeholder="e.g. Builder. Dreamer. Late-night thinker."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Pronouns</label>
-                        <input type="text" class="form-input" id="profilePronouns" placeholder="e.g. they/them">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Verified Badge</label>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="checkbox" id="profileVerifiedBadge" disabled> <span style="color: var(--gray-500);">(Only admins can grant)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Personal Expression -->
-                <div class="settings-section">
-                    <h4>Personal Expression</h4>
-                    <div class="form-group">
-                        <label class="form-label">Mood Status</label>
-                        <select class="form-input" id="profileMood">
-                            <option value="">Select mood</option>
-                            <option value="😊 Feeling good">😊 Feeling good</option>
-                            <option value="😴 Offline energy">😴 Offline energy</option>
-                            <option value="🔥 Grinding">🔥 Grinding</option>
-                            <option value="custom">Custom...</option>
-                        </select>
-                        <input type="text" class="form-input" id="profileCustomMood" style="margin-top: 8px;" placeholder="Custom status">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Favorite Quote</label>
-                        <textarea class="form-input" id="profileQuote" rows="2" placeholder="Your mantra..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Theme Color</label>
-                        <input type="color" class="form-input" id="profileThemeColor" value="#007aff">
-                    </div>
-                </div>
-
-                <!-- Interests & Lifestyle -->
-                <div class="settings-section">
-                    <h4>Interests & Lifestyle</h4>
-                    <div class="form-group">
-                        <label class="form-label">Interests (comma separated)</label>
-                        <input type="text" class="form-input" id="profileInterests" placeholder="Tech, Music, Sports">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Favorite Music/Artist</label>
-                        <input type="text" class="form-input" id="profileMusic" placeholder="e.g. Coldplay">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Favorite Movie/Series</label>
-                        <input type="text" class="form-input" id="profileMovie" placeholder="e.g. Inception">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Favorite Sport/Team</label>
-                        <input type="text" class="form-input" id="profileSport" placeholder="e.g. Lakers">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Languages Spoken</label>
-                        <input type="text" class="form-input" id="profileLanguages" placeholder="English, Spanish">
-                    </div>
-                </div>
-
-                <!-- Professional & Skills -->
-                <div class="settings-section">
-                    <h4>Professional & Skills</h4>
-                    <div class="form-group">
-                        <label class="form-label">Occupation/Role</label>
-                        <input type="text" class="form-input" id="profileOccupation" placeholder="e.g. Designer">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Skills (comma separated)</label>
-                        <input type="text" class="form-input" id="profileSkills" placeholder="Design, Coding, Marketing">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Company / Brand</label>
-                        <input type="text" class="form-input" id="profileCompany" placeholder="e.g. Zynapse">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Portfolio / Website Link</label>
-                        <input type="url" class="form-input" id="profilePortfolio" placeholder="https://...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Business Contact Button</label>
-                        <div style="display: flex; align-items: center;">
-                            <input type="checkbox" id="profileBusinessContact"> Show contact button
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Social & External Links -->
-                <div class="settings-section">
-                    <h4>Social Links</h4>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fab fa-instagram"></i> Instagram</label>
-                        <input type="url" class="form-input" id="profileInstagram" placeholder="https://instagram.com/...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fab fa-x-twitter"></i> X (Twitter)</label>
-                        <input type="url" class="form-input" id="profileTwitter" placeholder="https://x.com/...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fab fa-tiktok"></i> TikTok</label>
-                        <input type="url" class="form-input" id="profileTikTok" placeholder="https://tiktok.com/...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fab fa-youtube"></i> YouTube</label>
-                        <input type="url" class="form-input" id="profileYouTube" placeholder="https://youtube.com/...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-globe"></i> Website</label>
-                        <input type="url" class="form-input" id="profileWebsite" placeholder="https://...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Linktree / Single Link Hub</label>
-                        <input type="url" class="form-input" id="profileLinkHub" placeholder="https://linktr.ee/...">
-                    </div>
-                </div>
-
-                <!-- Media Highlights -->
-                <div class="settings-section">
-                    <h4>Media Highlights</h4>
-                    <div class="form-group">
-                        <label class="form-label">Cover Photo</label>
-                        <div class="avatar-upload-section">
-                            <img src="https://via.placeholder.com/300x100" alt="Cover" id="profileCoverPreview" style="width:100%; height:100px; object-fit:cover; border-radius:var(--radius-md);">
-                            <button type="button" class="avatar-upload-btn" onclick="uploadProfileMedia('cover')">
-                                <i class="fas fa-upload"></i> Upload Cover
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Photo Highlights (2–5 images)</label>
-                        <div id="photoHighlightsPreview" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
-                        <button type="button" class="avatar-upload-btn" onclick="uploadProfileMedia('photo')">
-                            <i class="fas fa-plus"></i> Add Photo
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>Edit Profile</h3>
+                <button class="modal-close" onclick="closeModal('editProfileModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form class="edit-profile-form" id="editProfileForm">
+                    <div class="avatar-upload-section">
+                        <img src="https://via.placeholder.com/150" alt="Profile" class="avatar-preview" id="editProfileAvatar" onclick="openAvatarUploader()">
+                        <button type="button" class="avatar-upload-btn" onclick="openAvatarUploader()">
+                            <i class="fas fa-upload"></i> Change Photo
                         </button>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Intro Video (optional)</label>
-                        <div id="introVideoPreview"></div>
-                        <button type="button" class="avatar-upload-btn" onclick="uploadProfileMedia('video')">
-                            <i class="fas fa-video"></i> Upload Video
-                        </button>
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-input" id="editProfileName" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Voice Intro (10–15 sec)</label>
-                        <div id="voiceIntroPreview"></div>
-                        <button type="button" class="avatar-upload-btn" onclick="recordVoiceIntro()">
-                            <i class="fas fa-microphone"></i> Record
-                        </button>
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-input" id="editProfilePhone" required>
                     </div>
-                </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-input" id="editProfileEmail" required>
+                    </div>
+                    <!-- ========== EXTENDED PROFILE FIELDS (start) ========== -->
+<h4 style="margin-top: 16px; border-top: 1px solid var(--gray-200); padding-top: 12px;">Personal Expression</h4>
 
-                <!-- Relationship & Social Context -->
-                <div class="settings-section">
-                    <h4>Relationship & Social</h4>
-                    <div class="form-group">
-                        <label class="form-label">Relationship Status</label>
-                        <select class="form-input" id="profileRelationship">
-                            <option value="">Select...</option>
-                            <option value="Single">Single</option>
-                            <option value="In a relationship">In a relationship</option>
-                            <option value="Engaged">Engaged</option>
-                            <option value="Married">Married</option>
-                            <option value="It's complicated">It's complicated</option>
-                            <option value="Prefer not to say">Prefer not to say</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Open to new chats</label>
-                        <select class="form-input" id="profileOpenToChats">
-                            <option value="Yes">Yes</option>
-                            <option value="Friends only">Friends only</option>
-                            <option value="No">No</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="modal-btn modal-btn-secondary" onclick="closeModal('editFullProfileModal')">Cancel</button>
-                    <button type="submit" class="modal-btn modal-btn-primary" id="saveFullProfileBtn">Save Profile</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<!-- Short Bio -->
+<div class="form-group">
+    <label class="form-label">Short Bio</label>
+    <textarea class="form-input" id="editProfileBio" placeholder="e.g. Builder. Dreamer. Late-night thinker."></textarea>
+    <label style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+        <input type="checkbox" id="editProfileBioVisible" checked> Show on profile
+    </label>
 </div>
 
-<!-- Profile Visibility Modal -->
-<div class="modal-overlay" id="profileVisibilityModal">
-    <div class="modal-content modal-small">
-        <div class="modal-header">
-            <h3>Profile Visibility</h3>
-            <button class="modal-close" onclick="closeModal('profileVisibilityModal')">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="settings-section">
-                <p style="color: var(--gray-600); margin-bottom: 12px;">Choose which sections others can see. Empty sections won't appear.</p>
-                <div class="settings-item">
-                    <div class="settings-label">
-                        <i class="fas fa-user-circle settings-icon"></i>
-                        <span>Bio & Pronouns</span>
+<!-- Pronouns -->
+<div class="form-group">
+    <label class="form-label">Pronouns (optional)</label>
+    <input type="text" class="form-input" id="editProfilePronouns" placeholder="e.g. they/them">
+    <label><input type="checkbox" id="editProfilePronounsVisible" checked> Show</label>
+</div>
+
+<!-- Mood Status -->
+<div class="form-group">
+    <label class="form-label">Mood Status</label>
+    <select class="form-input" id="editProfileMoodPreset" onchange="toggleCustomMoodField()">
+        <option value="">Select a mood</option>
+        <option value="😊 Feeling good">😊 Feeling good</option>
+        <option value="😴 Offline energy">😴 Offline energy</option>
+        <option value="🔥 Grinding">🔥 Grinding</option>
+        <option value="custom">Custom</option>
+    </select>
+    <input type="text" class="form-input" id="editProfileMoodCustom" placeholder="Custom status" style="margin-top: 4px; display: none;">
+    <label><input type="checkbox" id="editProfileMoodVisible" checked> Show</label>
+</div>
+
+<!-- Favorite Quote -->
+<div class="form-group">
+    <label class="form-label">Favorite Quote or Mantra</label>
+    <textarea class="form-input" id="editProfileQuote" placeholder="Your favorite quote..."></textarea>
+    <label><input type="checkbox" id="editProfileQuoteVisible" checked> Show</label>
+</div>
+
+<!-- Theme Color -->
+<div class="form-group">
+    <label class="form-label">Theme Color (accent)</label>
+    <input type="color" class="form-input" id="editProfileThemeColor" value="#007aff">
+    <label><input type="checkbox" id="editProfileThemeColorVisible" checked> Show</label>
+</div>
+
+<h4 style="margin-top: 16px;">Interests & Lifestyle</h4>
+
+<!-- Interests (comma separated) -->
+<div class="form-group">
+    <label class="form-label">Interests / Hobbies (comma separated)</label>
+    <input type="text" class="form-input" id="editProfileInterests" placeholder="e.g. Music, Tech, Sports, Gaming, Art">
+    <label><input type="checkbox" id="editProfileInterestsVisible" checked> Show</label>
+</div>
+
+<!-- Favorite Music -->
+<div class="form-group">
+    <label class="form-label">Favorite Music / Artist</label>
+    <input type="text" class="form-input" id="editProfileMusic" placeholder="e.g. The Beatles, Kanye West">
+    <label><input type="checkbox" id="editProfileMusicVisible" checked> Show</label>
+</div>
+
+<!-- Favorite Movie -->
+<div class="form-group">
+    <label class="form-label">Favorite Movie / Series</label>
+    <input type="text" class="form-input" id="editProfileMovie" placeholder="e.g. Inception, Game of Thrones">
+    <label><input type="checkbox" id="editProfileMovieVisible" checked> Show</label>
+</div>
+
+<!-- Favorite Sport -->
+<div class="form-group">
+    <label class="form-label">Favorite Sport / Team</label>
+    <input type="text" class="form-input" id="editProfileSport" placeholder="e.g. Lakers, Manchester United">
+    <label><input type="checkbox" id="editProfileSportVisible" checked> Show</label>
+</div>
+
+<!-- Languages -->
+<div class="form-group">
+    <label class="form-label">Languages Spoken (comma separated)</label>
+    <input type="text" class="form-input" id="editProfileLanguages" placeholder="e.g. English, Spanish, French">
+    <label><input type="checkbox" id="editProfileLanguagesVisible" checked> Show</label>
+</div>
+
+<h4 style="margin-top: 16px;">Professional & Skills (Optional)</h4>
+
+<!-- Occupation -->
+<div class="form-group">
+    <label class="form-label">Occupation / Role</label>
+    <input type="text" class="form-input" id="editProfileOccupation" placeholder="e.g. Software Engineer">
+    <label><input type="checkbox" id="editProfileOccupationVisible" checked> Show</label>
+</div>
+
+<!-- Skills -->
+<div class="form-group">
+    <label class="form-label">Skills (comma separated)</label>
+    <input type="text" class="form-input" id="editProfileSkills" placeholder="e.g. Design, Coding, Marketing">
+    <label><input type="checkbox" id="editProfileSkillsVisible" checked> Show</label>
+</div>
+
+<!-- Company -->
+<div class="form-group">
+    <label class="form-label">Company / Brand Name</label>
+    <input type="text" class="form-input" id="editProfileCompany" placeholder="e.g. Zynapse Inc.">
+    <label><input type="checkbox" id="editProfileCompanyVisible" checked> Show</label>
+</div>
+
+<!-- Portfolio/Website -->
+<div class="form-group">
+    <label class="form-label">Portfolio / Website Link</label>
+    <input type="url" class="form-input" id="editProfileWebsite" placeholder="https://...">
+    <label><input type="checkbox" id="editProfileWebsiteVisible" checked> Show</label>
+</div>
+
+<!-- Business Contact Button -->
+<div class="form-group">
+    <label class="form-label">Business Contact Button</label>
+    <label style="display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="editProfileBusinessContact"> Enable business contact
+    </label>
+    <label><input type="checkbox" id="editProfileBusinessContactVisible" checked> Show button</label>
+</div>
+
+<h4 style="margin-top: 16px;">Social Links</h4>
+
+<!-- Instagram -->
+<div class="form-group">
+    <label class="form-label">Instagram</label>
+    <input type="url" class="form-input" id="editProfileInstagram" placeholder="https://instagram.com/...">
+    <label><input type="checkbox" id="editProfileInstagramVisible" checked> Show</label>
+</div>
+
+<!-- X (Twitter) -->
+<div class="form-group">
+    <label class="form-label">X (Twitter)</label>
+    <input type="url" class="form-input" id="editProfileTwitter" placeholder="https://x.com/...">
+    <label><input type="checkbox" id="editProfileTwitterVisible" checked> Show</label>
+</div>
+
+<!-- TikTok -->
+<div class="form-group">
+    <label class="form-label">TikTok</label>
+    <input type="url" class="form-input" id="editProfileTikTok" placeholder="https://tiktok.com/...">
+    <label><input type="checkbox" id="editProfileTikTokVisible" checked> Show</label>
+</div>
+
+<!-- YouTube -->
+<div class="form-group">
+    <label class="form-label">YouTube</label>
+    <input type="url" class="form-input" id="editProfileYouTube" placeholder="https://youtube.com/...">
+    <label><input type="checkbox" id="editProfileYouTubeVisible" checked> Show</label>
+</div>
+
+<h4 style="margin-top: 16px;">Media Highlights</h4>
+
+<!-- Cover Photo -->
+<div class="form-group">
+    <label class="form-label">Profile Cover Photo</label>
+    <button type="button" class="avatar-upload-btn" onclick="uploadCoverPhoto()">
+        <i class="fas fa-upload"></i> Upload Cover
+    </button>
+    <img id="editProfileCoverPreview" src="" style="max-width:100%; max-height:100px; margin-top:8px; display:none;">
+    <input type="hidden" id="editProfileCoverUrl">
+    <label><input type="checkbox" id="editProfileCoverVisible" checked> Show cover</label>
+</div>
+
+<!-- Photo Highlights -->
+<div class="form-group">
+    <label class="form-label">Photo Highlights (2-5 images)</label>
+    <button type="button" class="avatar-upload-btn" onclick="uploadHighlightPhoto()">Add Photo</button>
+    <div id="editProfileHighlightsPreview" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
+    <input type="hidden" id="editProfileHighlights">
+    <label><input type="checkbox" id="editProfileHighlightsVisible" checked> Show highlights</label>
+</div>
+
+<!-- Intro Video -->
+<div class="form-group">
+    <label class="form-label">Short Intro Video (optional)</label>
+    <button type="button" class="avatar-upload-btn" onclick="uploadIntroVideo()">Upload Video</button>
+    <div id="editProfileVideoPreview"></div>
+    <input type="hidden" id="editProfileIntroVideo">
+    <label><input type="checkbox" id="editProfileIntroVideoVisible" checked> Show video</label>
+</div>
+
+<!-- Voice Intro -->
+<div class="form-group">
+    <label class="form-label">Voice Intro (10-15 sec)</label>
+    <button type="button" class="avatar-upload-btn" onclick="uploadVoiceIntro()">Upload Voice</button>
+    <div id="editProfileVoicePreview"></div>
+    <input type="hidden" id="editProfileVoiceIntro">
+    <label><input type="checkbox" id="editProfileVoiceIntroVisible" checked> Show voice</label>
+</div>
+
+<h4 style="margin-top: 16px;">Relationship & Social Context</h4>
+
+<!-- Relationship Status -->
+<div class="form-group">
+    <label class="form-label">Relationship Status</label>
+    <select class="form-input" id="editProfileRelationship">
+        <option value="">Prefer not to say</option>
+        <option value="single">Single</option>
+        <option value="in a relationship">In a relationship</option>
+        <option value="married">Married</option>
+        <option value="complicated">It's complicated</option>
+    </select>
+    <label><input type="checkbox" id="editProfileRelationshipVisible" checked> Show</label>
+</div>
+
+<!-- Open to new chats -->
+<div class="form-group">
+    <label class="form-label">Open to new chats</label>
+    <select class="form-input" id="editProfileOpenToChats">
+        <option value="yes">Yes</option>
+        <option value="friends">Friends only</option>
+        <option value="no">No</option>
+    </select>
+    <label><input type="checkbox" id="editProfileOpenToChatsVisible" checked> Show</label>
+</div>
+<!-- ========== EXTENDED PROFILE FIELDS (end) ========== -->
+                    <div class="modal-actions">
+                        <button type="button" class="modal-btn modal-btn-secondary" onclick="closeModal('editProfileModal')">
+                            Cancel
+                        </button>
+                        <button type="submit" class="modal-btn modal-btn-primary" id="saveProfileBtn">
+                            Save
+                        </button>
                     </div>
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="toggle-checkbox" id="visBio" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="settings-item">
-                    <div class="settings-label">
-                        <i class="fas fa-smile settings-icon"></i>
-                        <span>Personal Expression</span>
-                    </div>
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="toggle-checkbox" id="visExpression" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="settings-item">
-                    <div class="settings-label">
-                        <i class="fas fa-heart settings-icon"></i>
-                        <span>Interests & Lifestyle</span>
-                    </div>
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="toggle-checkbox" id="visInterests" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="settings-item">
-                    <div class="settings-label">
-                        <i class="fas fa-briefcase settings-icon"></i>
-                        <span>Professional & Skills</span>
-                    </div>
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="toggle-checkbox" id="visProfessional" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="settings-item">
-                    <div class="settings-label">
-                        <i class="fas fa-link settings-icon"></i>
-                        <span>Social Links</span>
-                    </div>
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="toggle-checkbox" id="visSocial" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="settings-item">
-                    <div class="settings-label">
-                        <i class="fas fa-images settings-icon"></i>
-                        <span>Media Highlights</span>
-                    </div>
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="toggle-checkbox" id="visMedia" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <div class="settings-item">
-                    <div class="settings-label">
-                        <i class="fas fa-heartbeat settings-icon"></i>
-                        <span>Relationship & Social</span>
-                    </div>
-                    <label class="settings-toggle">
-                        <input type="checkbox" class="toggle-checkbox" id="visRelationship" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="modal-btn modal-btn-secondary" onclick="closeModal('profileVisibilityModal')">Cancel</button>
-                <button class="modal-btn modal-btn-primary" onclick="saveProfileVisibility()">Save Visibility</button>
+                </form>
             </div>
         </div>
     </div>
-</div>
+
     <!-- Settings Modal -->
     <div class="modal-overlay settings-modal" id="settingsModal">
         <div class="modal-content modal-small">
@@ -6336,10 +6261,6 @@ let currentGroupAvatar = '';
 let currentEditAvatar = '';
 let isRecording = false;
 let mediaRecorder = null;
-let profileCoverUrl = '';
-let profilePhotoHighlights = [];
-let profileIntroVideoUrl = '';
-let profileVoiceIntroUrl = '';
 let audioChunks = [];
 let recordingTimer = null;
 let recordingStartTime = null;
@@ -6610,6 +6531,7 @@ async function loadInitialData() {
         await loadNicknames();
         await loadPinnedChats();
         await loadPrivacySettings();
+        await loadUserProfileDetails();
         updateProfileStats();
     } catch (error) {
         console.error('Error loading initial data:', error);
@@ -7160,6 +7082,20 @@ async function loadPrivacySettings() {
         }
     } catch (error) {
         console.error('Error loading privacy settings:', error);
+    }
+}
+
+async function loadUserProfileDetails() {
+    try {
+        const snapshot = await usersRef.child(currentUser.uid).once('value');
+        const userData = snapshot.val() || {};
+        // Store extended profile (if exists)
+        currentUser.profile = userData.profile || {};
+        currentUser.profileVisibility = userData.profileVisibility || {};
+    } catch (error) {
+        console.error('Error loading extended profile:', error);
+        currentUser.profile = {};
+        currentUser.profileVisibility = {};
     }
 }
 
@@ -11128,9 +11064,129 @@ function openProfileModal() {
     closeDropdown('profileDropdown');
 }
 
-function openEditProfileModal() {
+window.openEditProfileModal = function() {
+    // Fill basic fields
+    document.getElementById('editProfileName').value = currentUser.name || '';
+    document.getElementById('editProfilePhone').value = currentUser.phone || '';
+    document.getElementById('editProfileEmail').value = currentUser.email || '';
+    document.getElementById('editProfileAvatar').src = currentUser.profilePicture || 'https://via.placeholder.com/150';
+
+    // Fill extended profile fields from currentUser.profile and currentUser.profileVisibility
+    const profile = currentUser.profile || {};
+    const vis = currentUser.profileVisibility || {};
+
+    // Personal Expression
+    document.getElementById('editProfileBio').value = profile.bio || '';
+    document.getElementById('editProfileBioVisible').checked = vis.bio !== false; // default true
+
+    document.getElementById('editProfilePronouns').value = profile.pronouns || '';
+    document.getElementById('editProfilePronounsVisible').checked = vis.pronouns !== false;
+
+    // Mood
+    const mood = profile.mood || {};
+    if (mood.preset) {
+        document.getElementById('editProfileMoodPreset').value = mood.preset;
+        if (mood.preset === 'custom') {
+            document.getElementById('editProfileMoodCustom').value = mood.custom || '';
+            document.getElementById('editProfileMoodCustom').style.display = 'block';
+        } else {
+            document.getElementById('editProfileMoodCustom').style.display = 'none';
+        }
+    } else {
+        document.getElementById('editProfileMoodPreset').value = '';
+    }
+    document.getElementById('editProfileMoodVisible').checked = vis.mood !== false;
+
+    document.getElementById('editProfileQuote').value = profile.quote || '';
+    document.getElementById('editProfileQuoteVisible').checked = vis.quote !== false;
+
+    document.getElementById('editProfileThemeColor').value = profile.themeColor || '#007aff';
+    document.getElementById('editProfileThemeColorVisible').checked = vis.themeColor !== false;
+
+    // Interests & Lifestyle
+    document.getElementById('editProfileInterests').value = (profile.interests || []).join(', ');
+    document.getElementById('editProfileInterestsVisible').checked = vis.interests !== false;
+
+    document.getElementById('editProfileMusic').value = profile.music || '';
+    document.getElementById('editProfileMusicVisible').checked = vis.music !== false;
+
+    document.getElementById('editProfileMovie').value = profile.movie || '';
+    document.getElementById('editProfileMovieVisible').checked = vis.movie !== false;
+
+    document.getElementById('editProfileSport').value = profile.sport || '';
+    document.getElementById('editProfileSportVisible').checked = vis.sport !== false;
+
+    document.getElementById('editProfileLanguages').value = (profile.languages || []).join(', ');
+    document.getElementById('editProfileLanguagesVisible').checked = vis.languages !== false;
+
+    // Professional
+    document.getElementById('editProfileOccupation').value = profile.occupation || '';
+    document.getElementById('editProfileOccupationVisible').checked = vis.occupation !== false;
+
+    document.getElementById('editProfileSkills').value = (profile.skills || []).join(', ');
+    document.getElementById('editProfileSkillsVisible').checked = vis.skills !== false;
+
+    document.getElementById('editProfileCompany').value = profile.company || '';
+    document.getElementById('editProfileCompanyVisible').checked = vis.company !== false;
+
+    document.getElementById('editProfileWebsite').value = profile.website || '';
+    document.getElementById('editProfileWebsiteVisible').checked = vis.website !== false;
+
+    document.getElementById('editProfileBusinessContact').checked = profile.businessContact || false;
+    document.getElementById('editProfileBusinessContactVisible').checked = vis.businessContact !== false;
+
+    // Social Links
+    document.getElementById('editProfileInstagram').value = profile.instagram || '';
+    document.getElementById('editProfileInstagramVisible').checked = vis.instagram !== false;
+
+    document.getElementById('editProfileTwitter').value = profile.twitter || '';
+    document.getElementById('editProfileTwitterVisible').checked = vis.twitter !== false;
+
+    document.getElementById('editProfileTikTok').value = profile.tiktok || '';
+    document.getElementById('editProfileTikTokVisible').checked = vis.tiktok !== false;
+
+    document.getElementById('editProfileYouTube').value = profile.youtube || '';
+    document.getElementById('editProfileYouTubeVisible').checked = vis.youtube !== false;
+
+    // Media Highlights
+    if (profile.coverPhoto) {
+        document.getElementById('editProfileCoverUrl').value = profile.coverPhoto;
+        document.getElementById('editProfileCoverPreview').src = profile.coverPhoto;
+        document.getElementById('editProfileCoverPreview').style.display = 'block';
+    } else {
+        document.getElementById('editProfileCoverPreview').style.display = 'none';
+    }
+    document.getElementById('editProfileCoverVisible').checked = vis.coverPhoto !== false;
+
+    highlightUrls = profile.highlights || [];
+    document.getElementById('editProfileHighlights').value = JSON.stringify(highlightUrls);
+    renderHighlightPreviews();
+    document.getElementById('editProfileHighlightsVisible').checked = vis.highlights !== false;
+
+    if (profile.introVideo) {
+        document.getElementById('editProfileIntroVideo').value = profile.introVideo;
+        document.getElementById('editProfileVideoPreview').innerHTML = `<video src="${profile.introVideo}" controls style="max-width:100%; max-height:100px;"></video>`;
+    } else {
+        document.getElementById('editProfileVideoPreview').innerHTML = '';
+    }
+    document.getElementById('editProfileIntroVideoVisible').checked = vis.introVideo !== false;
+
+    if (profile.voiceIntro) {
+        document.getElementById('editProfileVoiceIntro').value = profile.voiceIntro;
+        document.getElementById('editProfileVoicePreview').innerHTML = `<audio src="${profile.voiceIntro}" controls style="max-width:100%;"></audio>`;
+    } else {
+        document.getElementById('editProfileVoicePreview').innerHTML = '';
+    }
+    document.getElementById('editProfileVoiceIntroVisible').checked = vis.voiceIntro !== false;
+
+    // Relationship
+    document.getElementById('editProfileRelationship').value = profile.relationship || '';
+    document.getElementById('editProfileRelationshipVisible').checked = vis.relationship !== false;
+
+    document.getElementById('editProfileOpenToChats').value = profile.openToChats || 'yes';
+    document.getElementById('editProfileOpenToChatsVisible').checked = vis.openToChats !== false;
+
     openModal('editProfileModal');
-    closeModal('profileModal');
 }
 
 function openSettingsModal() {
@@ -11342,207 +11398,33 @@ async function toggleFavorite(userId) {
     }
 }
 
-async function viewUserProfile(userId) {
+window.viewUserProfile = async function(userId) {
     try {
         const userSnapshot = await usersRef.child(userId).once('value');
         if (!userSnapshot.exists()) {
             showToast('User not found', 'error');
             return;
         }
-        
+
         const user = userSnapshot.val();
         user.uid = userId;
-        
-        const vis = user.profileVisibility || {}; // default all true
-        
-        let sectionsHtml = '';
-        
-        // Bio section
-        if (vis.bio !== false && (user.bio || user.pronouns)) {
-            sectionsHtml += `
-                <div class="info-item">
-                    <div class="info-icon"><i class="fas fa-user"></i></div>
-                    <div class="info-content">
-                        <div class="info-label">Bio</div>
-                        <div class="info-value">${escapeHtml(user.bio || '')}</div>
-                        ${user.pronouns ? `<div style="font-size:12px; color:var(--gray-600);">Pronouns: ${escapeHtml(user.pronouns)}</div>` : ''}
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Personal Expression
-        if (vis.expression !== false && (user.moodStatus || user.favoriteQuote || user.themeColor)) {
-            let expHtml = '';
-            if (user.moodStatus) expHtml += `<div>😊 Mood: ${escapeHtml(user.moodStatus)}</div>`;
-            if (user.favoriteQuote) expHtml += `<div>💬 “${escapeHtml(user.favoriteQuote)}”</div>`;
-            if (user.themeColor) expHtml += `<div>🎨 Theme: <span style="display:inline-block; width:16px; height:16px; background:${user.themeColor}; border-radius:4px;"></span></div>`;
-            sectionsHtml += `
-                <div class="info-item">
-                    <div class="info-icon"><i class="fas fa-smile"></i></div>
-                    <div class="info-content">
-                        <div class="info-label">Personal Expression</div>
-                        <div class="info-value">${expHtml}</div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Interests
-        if (vis.interests !== false && (user.interests?.length || user.favoriteMusicArtist || user.favoriteMovieSeries || user.favoriteSportTeam || user.languages?.length)) {
-            let intHtml = '';
-            if (user.interests?.length) intHtml += `<div>🏷️ Interests: ${user.interests.map(i => `<span class="interest-tag">${escapeHtml(i)}</span>`).join(' ')}</div>`;
-            if (user.favoriteMusicArtist) intHtml += `<div>🎵 Music: ${escapeHtml(user.favoriteMusicArtist)}</div>`;
-            if (user.favoriteMovieSeries) intHtml += `<div>🎬 Movies: ${escapeHtml(user.favoriteMovieSeries)}</div>`;
-            if (user.favoriteSportTeam) intHtml += `<div>⚽ Sports: ${escapeHtml(user.favoriteSportTeam)}</div>`;
-            if (user.languages?.length) intHtml += `<div>🗣️ Languages: ${user.languages.join(', ')}</div>`;
-            sectionsHtml += `
-                <div class="info-item">
-                    <div class="info-icon"><i class="fas fa-heart"></i></div>
-                    <div class="info-content">
-                        <div class="info-label">Interests & Lifestyle</div>
-                        <div class="info-value">${intHtml}</div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Professional
-        if (vis.professional !== false && (user.occupation || user.skills?.length || user.company || user.portfolioLink || user.businessContactButton)) {
-            let profHtml = '';
-            if (user.occupation) profHtml += `<div>💼 ${escapeHtml(user.occupation)}</div>`;
-            if (user.skills?.length) profHtml += `<div>🔧 Skills: ${user.skills.join(', ')}</div>`;
-            if (user.company) profHtml += `<div>🏢 ${escapeHtml(user.company)}</div>`;
-            if (user.portfolioLink) profHtml += `<div>🌐 <a href="${user.portfolioLink}" target="_blank">Portfolio</a></div>`;
-            if (user.businessContactButton) profHtml += `<div>📞 Business contact available</div>`;
-            sectionsHtml += `
-                <div class="info-item">
-                    <div class="info-icon"><i class="fas fa-briefcase"></i></div>
-                    <div class="info-content">
-                        <div class="info-label">Professional</div>
-                        <div class="info-value">${profHtml}</div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Social Links
-        if (vis.social !== false && user.socialLinks) {
-            const sl = user.socialLinks;
-            let socialHtml = '';
-            if (sl.instagram) socialHtml += `<a href="${sl.instagram}" target="_blank"><i class="fab fa-instagram"></i></a> `;
-            if (sl.twitter) socialHtml += `<a href="${sl.twitter}" target="_blank"><i class="fab fa-x-twitter"></i></a> `;
-            if (sl.tiktok) socialHtml += `<a href="${sl.tiktok}" target="_blank"><i class="fab fa-tiktok"></i></a> `;
-            if (sl.youtube) socialHtml += `<a href="${sl.youtube}" target="_blank"><i class="fab fa-youtube"></i></a> `;
-            if (sl.website) socialHtml += `<a href="${sl.website}" target="_blank"><i class="fas fa-globe"></i></a> `;
-            if (sl.linkhub) socialHtml += `<a href="${sl.linkhub}" target="_blank"><i class="fas fa-link"></i></a> `;
-            if (socialHtml) {
-                sectionsHtml += `
-                    <div class="info-item">
-                        <div class="info-icon"><i class="fas fa-link"></i></div>
-                        <div class="info-content">
-                            <div class="info-label">Social</div>
-                            <div class="info-value">${socialHtml}</div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        
-        // Media Highlights
-        if (vis.media !== false && user.mediaHighlights) {
-            const mh = user.mediaHighlights;
-            let mediaHtml = '';
-            if (mh.coverPhoto) mediaHtml += `<div><img src="${mh.coverPhoto}" style="width:100%; max-height:100px; object-fit:cover; border-radius:var(--radius-sm);"></div>`;
-            if (mh.photos?.length) {
-                mediaHtml += `<div style="display:flex; gap:4px; flex-wrap:wrap;">${mh.photos.map(url => `<img src="${url}" style="width:60px; height:60px; object-fit:cover; border-radius:var(--radius-sm);">`).join('')}</div>`;
-            }
-            if (mh.introVideo) mediaHtml += `<div><video src="${mh.introVideo}" controls style="max-width:100%; max-height:150px;"></video></div>`;
-            if (mh.voiceIntro) mediaHtml += `<div><audio src="${mh.voiceIntro}" controls style="width:100%;"></audio></div>`;
-            if (mediaHtml) {
-                sectionsHtml += `
-                    <div class="info-item">
-                        <div class="info-icon"><i class="fas fa-images"></i></div>
-                        <div class="info-content">
-                            <div class="info-label">Media Highlights</div>
-                            <div class="info-value">${mediaHtml}</div>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        
-        // Relationship
-        if (vis.relationship !== false && (user.relationshipStatus || user.openToChats)) {
-            let relHtml = '';
-            if (user.relationshipStatus) relHtml += `<div>❤️ ${escapeHtml(user.relationshipStatus)}</div>`;
-            if (user.openToChats) {
-                let icon = user.openToChats === 'Yes' ? '💬' : user.openToChats === 'Friends only' ? '👥' : '🚫';
-                relHtml += `<div>${icon} Open to chats: ${escapeHtml(user.openToChats)}</div>`;
-            }
-            sectionsHtml += `
-                <div class="info-item">
-                    <div class="info-icon"><i class="fas fa-heartbeat"></i></div>
-                    <div class="info-content">
-                        <div class="info-label">Relationship</div>
-                        <div class="info-value">${relHtml}</div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // If no sections, show a placeholder
-        if (!sectionsHtml) {
-            sectionsHtml = '<div class="info-item">This user hasn\'t added any additional info yet.</div>';
-        }
-        
-        // Build the full modal content
-        const modal = document.getElementById('viewProfileModal');
-        const modalBody = modal.querySelector('.modal-body');
-        modalBody.innerHTML = `
-            <div class="view-profile-header">
-                <img src="${user.profilePicture || 'https://via.placeholder.com/150'}" alt="Profile" class="view-profile-avatar" id="viewProfileAvatar">
-                <div class="view-profile-name" id="viewProfileName">${escapeHtml(user.name)}</div>
-                <div class="view-profile-id" id="viewProfileId">${user.userId}</div>
-                ${user.verifiedBadge ? '<span class="verified-badge"><i class="fas fa-check-circle" style="color: var(--blue);"></i> Verified</span>' : ''}
-            </div>
-            <div class="profile-info-section" id="profileInfoSections">
-                ${sectionsHtml}
-                <div class="info-item">
-                    <div class="info-icon"><i class="fas fa-clock"></i></div>
-                    <div class="info-content">
-                        <div class="info-label">Last Seen</div>
-                        <div class="info-value" id="viewProfileLastSeen">${formatLastSeen(user.lastSeen)}</div>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon"><i class="fas fa-calendar"></i></div>
-                    <div class="info-content">
-                        <div class="info-label">Member Since</div>
-                        <div class="info-value" id="viewProfileCreatedAt">${formatDate(user.createdAt)}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="profile-actions-section">
-                <button class="profile-action-btn chat" id="viewProfileChatBtn" onclick="startChatFromProfile()">
-                    <i class="fas fa-comment"></i> Chat
-                </button>
-                <button class="profile-action-btn favorite" id="viewProfileFavoriteBtn" onclick="toggleFavorite()">
-                    <i class="fas fa-star"></i> Favorite
-                </button>
-                <button class="profile-action-btn block" id="viewProfileBlockBtn" onclick="toggleBlockUser()">
-                    <i class="fas fa-ban"></i> Block
-                </button>
-            </div>
-        `;
-        
-        modal.dataset.userId = userId;
-        
-        // Update buttons based on contact/block status
+
+        // Also fetch extended profile and visibility for this user
+        const profile = user.profile || {};
+        const visibility = user.profileVisibility || {};
+
+        document.getElementById('viewProfileAvatar').src = user.profilePicture || 'https://via.placeholder.com/150';
+        document.getElementById('viewProfileName').textContent = user.name;
+        document.getElementById('viewProfileId').textContent = user.userId;
+        document.getElementById('viewProfilePhone').textContent = user.phone || 'Not provided';
+        document.getElementById('viewProfileEmail').textContent = user.email || 'Not provided';
+        document.getElementById('viewProfileLastSeen').textContent = formatLastSeen(user.lastSeen);
+        document.getElementById('viewProfileCreatedAt').textContent = formatDate(user.createdAt);
+
         const isBlocked = blockedUsers.some(b => b.uid === userId);
         const isContact = contacts.some(c => c.uid === userId);
         const isFavorite = favorites.some(f => f.uid === userId);
-        
+
         document.getElementById('viewProfileChatBtn').style.display = isContact && !isBlocked ? 'block' : 'none';
         document.getElementById('viewProfileBlockBtn').innerHTML = isBlocked ? 
             `<i class="fas fa-unlock"></i> Unblock` : 
@@ -11550,14 +11432,21 @@ async function viewUserProfile(userId) {
         document.getElementById('viewProfileFavoriteBtn').innerHTML = isFavorite ? 
             `<i class="fas fa-star"></i> Favorited` : 
             `<i class="far fa-star"></i> Favorite`;
-        
+
+        // Render extended profile fields
+        renderExtendedProfileInView(profile, visibility);
+
+        document.getElementById('viewProfileModal').dataset.userId = userId;
+
         openModal('viewProfileModal');
-        
+        document.getElementById('searchResults').classList.remove('show');
+
     } catch (error) {
         console.error('Error viewing user profile:', error);
         showToast('Failed to load profile', 'error');
     }
 }
+
 function viewContactProfile(userId) {
     viewUserProfile(userId);
 }
@@ -11855,41 +11744,242 @@ function openAvatarUploader() {
     cloudinaryWidget.open();
 }
 
-async function saveProfileChanges() {
+// Upload cover photo
+window.uploadCoverPhoto = function() {
+    if (!cloudinaryWidget) {
+        cloudinaryWidget = cloudinary.createUploadWidget({
+            cloudName: CLOUDINARY_CONFIG.cloudName,
+            uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+            sources: ['local', 'url'],
+            multiple: false,
+            maxFileSize: 50000000,
+            folder: 'zynapse/profiles/covers',
+            cropping: true,
+            showAdvancedOptions: false
+        }, (error, result) => {
+            if (!error && result && result.event === "success") {
+                const url = result.info.secure_url;
+                document.getElementById('editProfileCoverUrl').value = url;
+                const preview = document.getElementById('editProfileCoverPreview');
+                preview.src = url;
+                preview.style.display = 'block';
+            }
+        });
+    }
+    cloudinaryWidget.open();
+}
+
+// Upload highlight photo (multiple allowed)
+let highlightUrls = [];
+window.uploadHighlightPhoto = function() {
+    if (!cloudinaryWidget) {
+        cloudinaryWidget = cloudinary.createUploadWidget({
+            cloudName: CLOUDINARY_CONFIG.cloudName,
+            uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+            sources: ['local', 'url'],
+            multiple: true,
+            maxFiles: 5,
+            maxFileSize: 50000000,
+            folder: 'zynapse/profiles/highlights',
+            cropping: true,
+            showAdvancedOptions: false
+        }, (error, result) => {
+            if (!error && result && result.event === "success") {
+                highlightUrls.push(result.info.secure_url);
+                document.getElementById('editProfileHighlights').value = JSON.stringify(highlightUrls);
+                renderHighlightPreviews();
+            }
+        });
+    }
+    cloudinaryWidget.open();
+}
+
+function renderHighlightPreviews() {
+    const container = document.getElementById('editProfileHighlightsPreview');
+    container.innerHTML = '';
+    highlightUrls.forEach((url, index) => {
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.width = '60px';
+        img.style.height = '60px';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '8px';
+        img.onclick = () => {
+            highlightUrls.splice(index, 1);
+            document.getElementById('editProfileHighlights').value = JSON.stringify(highlightUrls);
+            renderHighlightPreviews();
+        };
+        container.appendChild(img);
+    });
+}
+
+// Upload intro video
+window.uploadIntroVideo = function() {
+    if (!cloudinaryWidget) {
+        cloudinaryWidget = cloudinary.createUploadWidget({
+            cloudName: CLOUDINARY_CONFIG.cloudName,
+            uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+            sources: ['local', 'url'],
+            multiple: false,
+            maxFileSize: 100000000,
+            folder: 'zynapse/profiles/videos',
+            showAdvancedOptions: false
+        }, (error, result) => {
+            if (!error && result && result.event === "success") {
+                const url = result.info.secure_url;
+                document.getElementById('editProfileIntroVideo').value = url;
+                document.getElementById('editProfileVideoPreview').innerHTML = `<video src="${url}" controls style="max-width:100%; max-height:100px;"></video>`;
+            }
+        });
+    }
+    cloudinaryWidget.open();
+}
+
+// Upload voice intro
+window.uploadVoiceIntro = function() {
+    if (!cloudinaryWidget) {
+        cloudinaryWidget = cloudinary.createUploadWidget({
+            cloudName: CLOUDINARY_CONFIG.cloudName,
+            uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+            sources: ['local'],
+            multiple: false,
+            maxFileSize: 5000000,
+            folder: 'zynapse/profiles/voice',
+            showAdvancedOptions: false
+        }, (error, result) => {
+            if (!error && result && result.event === "success") {
+                const url = result.info.secure_url;
+                document.getElementById('editProfileVoiceIntro').value = url;
+                document.getElementById('editProfileVoicePreview').innerHTML = `<audio src="${url}" controls style="max-width:100%;"></audio>`;
+            }
+        });
+    }
+    cloudinaryWidget.open();
+}
+    
+window.saveProfileChanges = async function() {
     const name = document.getElementById('editProfileName').value.trim();
     const phone = document.getElementById('editProfilePhone').value.trim();
     const email = document.getElementById('editProfileEmail').value.trim();
-    
+
     if (!name || !phone || !email) {
         showToast('Fill all fields', 'error');
         return;
     }
-    
+
     try {
+        // Basic updates
         const updates = {
             name: name,
             phone: phone,
             email: email
         };
-        
+
         if (currentEditAvatar) {
             updates.profilePicture = currentEditAvatar;
             currentUser.profilePicture = currentEditAvatar;
         }
-        
-        await usersRef.child(currentUser.uid).update(updates);
-        
+
+        // Build extended profile object
+        const profile = {};
+        const visibility = {};
+
+        // Helper: set field and visibility if not empty
+        const setField = (key, value, visibleCheckboxId, defaultValue = null) => {
+            if (value !== null && value !== undefined && value !== '') {
+                profile[key] = value;
+                visibility[key] = document.getElementById(visibleCheckboxId).checked;
+            } else {
+                // if empty, we might want to delete the field or leave as undefined
+                profile[key] = null; // will be filtered out later
+            }
+        };
+
+        // Personal Expression
+        setField('bio', document.getElementById('editProfileBio').value.trim(), 'editProfileBioVisible');
+        setField('pronouns', document.getElementById('editProfilePronouns').value.trim(), 'editProfilePronounsVisible');
+
+        // Mood – store as object with preset and custom
+        const moodPreset = document.getElementById('editProfileMoodPreset').value;
+        const moodCustom = document.getElementById('editProfileMoodCustom').value.trim();
+        let moodValue = null;
+        if (moodPreset) {
+            if (moodPreset === 'custom' && moodCustom) {
+                moodValue = { preset: 'custom', custom: moodCustom };
+            } else if (moodPreset !== 'custom') {
+                moodValue = { preset: moodPreset };
+            }
+        }
+        setField('mood', moodValue, 'editProfileMoodVisible');
+
+        setField('quote', document.getElementById('editProfileQuote').value.trim(), 'editProfileQuoteVisible');
+        setField('themeColor', document.getElementById('editProfileThemeColor').value, 'editProfileThemeColorVisible');
+
+        // Interests – split comma
+        const interestsStr = document.getElementById('editProfileInterests').value.trim();
+        setField('interests', interestsStr ? interestsStr.split(',').map(s => s.trim()).filter(s => s) : null, 'editProfileInterestsVisible');
+
+        setField('music', document.getElementById('editProfileMusic').value.trim(), 'editProfileMusicVisible');
+        setField('movie', document.getElementById('editProfileMovie').value.trim(), 'editProfileMovieVisible');
+        setField('sport', document.getElementById('editProfileSport').value.trim(), 'editProfileSportVisible');
+
+        const langsStr = document.getElementById('editProfileLanguages').value.trim();
+        setField('languages', langsStr ? langsStr.split(',').map(s => s.trim()).filter(s => s) : null, 'editProfileLanguagesVisible');
+
+        // Professional
+        setField('occupation', document.getElementById('editProfileOccupation').value.trim(), 'editProfileOccupationVisible');
+
+        const skillsStr = document.getElementById('editProfileSkills').value.trim();
+        setField('skills', skillsStr ? skillsStr.split(',').map(s => s.trim()).filter(s => s) : null, 'editProfileSkillsVisible');
+
+        setField('company', document.getElementById('editProfileCompany').value.trim(), 'editProfileCompanyVisible');
+        setField('website', document.getElementById('editProfileWebsite').value.trim(), 'editProfileWebsiteVisible');
+        setField('businessContact', document.getElementById('editProfileBusinessContact').checked, 'editProfileBusinessContactVisible');
+
+        // Social Links
+        setField('instagram', document.getElementById('editProfileInstagram').value.trim(), 'editProfileInstagramVisible');
+        setField('twitter', document.getElementById('editProfileTwitter').value.trim(), 'editProfileTwitterVisible');
+        setField('tiktok', document.getElementById('editProfileTikTok').value.trim(), 'editProfileTikTokVisible');
+        setField('youtube', document.getElementById('editProfileYouTube').value.trim(), 'editProfileYouTubeVisible');
+
+        // Media Highlights
+        setField('coverPhoto', document.getElementById('editProfileCoverUrl').value || null, 'editProfileCoverVisible');
+        setField('highlights', highlightUrls.length ? highlightUrls : null, 'editProfileHighlightsVisible');
+        setField('introVideo', document.getElementById('editProfileIntroVideo').value || null, 'editProfileIntroVideoVisible');
+        setField('voiceIntro', document.getElementById('editProfileVoiceIntro').value || null, 'editProfileVoiceIntroVisible');
+
+        // Relationship
+        setField('relationship', document.getElementById('editProfileRelationship').value || null, 'editProfileRelationshipVisible');
+        setField('openToChats', document.getElementById('editProfileOpenToChats').value || null, 'editProfileOpenToChatsVisible');
+
+        // Remove null values from profile (optional, but cleaner)
+        Object.keys(profile).forEach(key => {
+            if (profile[key] === null || profile[key] === undefined) {
+                delete profile[key];
+            }
+        });
+
+        // Save to Firebase
+        await usersRef.child(currentUser.uid).update({
+            ...updates,
+            profile: profile,
+            profileVisibility: visibility
+        });
+
+        // Update local currentUser
         currentUser.name = name;
         currentUser.phone = phone;
         currentUser.email = email;
-        
+        currentUser.profile = profile;
+        currentUser.profileVisibility = visibility;
+
         localStorage.setItem('zynapse_user', JSON.stringify(currentUser));
-        
+
         updateUserUI();
-        
+
         showToast('Profile updated!', 'success');
         closeModal('editProfileModal');
-        
+
     } catch (error) {
         console.error('Error updating profile:', error);
         showToast('Failed to update', 'error');
@@ -12012,6 +12102,18 @@ function setTheme(theme) {
     document.getElementById('darkModeToggle').checked = isDark;
     currentTheme = theme;
     localStorage.setItem('zynapse_theme', theme);
+}
+
+// Toggle custom mood input based on preset selection
+window.toggleCustomMoodField = function() {
+    const preset = document.getElementById('editProfileMoodPreset').value;
+    const customInput = document.getElementById('editProfileMoodCustom');
+    if (preset === 'custom') {
+        customInput.style.display = 'block';
+    } else {
+        customInput.style.display = 'none';
+        customInput.value = ''; // clear custom when not selected
+    }
 }
 
 function toggleTheme() {
@@ -12359,6 +12461,180 @@ function formatFileSize(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function renderExtendedProfileInView(profile, visibility) {
+    const container = document.querySelector('.profile-info-section');
+    // Clear previous extended entries (but keep basic ones like phone, email etc. – we'll rebuild the whole section)
+    // Better to create a new container for extended info after the basic ones.
+    // Let's insert a new div after the basic info items.
+
+    let basicInfoHTML = `
+        <div class="info-item">
+            <div class="info-icon"><i class="fas fa-phone"></i></div>
+            <div class="info-content"><div class="info-label">Phone</div><div class="info-value" id="viewProfilePhone">${profile.phone || 'Not provided'}</div></div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon"><i class="fas fa-envelope"></i></div>
+            <div class="info-content"><div class="info-label">Email</div><div class="info-value" id="viewProfileEmail">${profile.email || 'Not provided'}</div></div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon"><i class="fas fa-clock"></i></div>
+            <div class="info-content"><div class="info-label">Last Seen</div><div class="info-value" id="viewProfileLastSeen">${formatLastSeen(profile.lastSeen)}</div></div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon"><i class="fas fa-calendar"></i></div>
+            <div class="info-content"><div class="info-label">Member Since</div><div class="info-value" id="viewProfileCreatedAt">${formatDate(profile.createdAt)}</div></div>
+        </div>
+    `;
+
+    // Extended fields
+    let extendedHTML = '';
+
+    // Helper to add a field if visible and not empty
+    const addField = (icon, label, value) => {
+        if (value && value !== '') {
+            extendedHTML += `
+                <div class="info-item">
+                    <div class="info-icon"><i class="fas ${icon}"></i></div>
+                    <div class="info-content">
+                        <div class="info-label">${label}</div>
+                        <div class="info-value">${escapeHtml(value)}</div>
+                    </div>
+                </div>
+            `;
+        }
+    };
+
+    if (visibility.bio !== false && profile.bio) addField('fa-quote-right', 'Bio', profile.bio);
+    if (visibility.pronouns !== false && profile.pronouns) addField('fa-user-tag', 'Pronouns', profile.pronouns);
+    if (visibility.mood !== false && profile.mood) {
+        let moodText = '';
+        if (profile.mood.preset === 'custom') moodText = profile.mood.custom;
+        else moodText = profile.mood.preset;
+        if (moodText) addField('fa-smile', 'Mood', moodText);
+    }
+    if (visibility.quote !== false && profile.quote) addField('fa-star', 'Favorite Quote', profile.quote);
+    if (visibility.themeColor !== false && profile.themeColor) {
+        extendedHTML += `
+            <div class="info-item">
+                <div class="info-icon"><i class="fas fa-palette"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Theme Color</div>
+                    <div class="info-value"><span style="display:inline-block; width:20px; height:20px; background:${profile.themeColor}; border-radius:4px;"></span> ${profile.themeColor}</div>
+                </div>
+            </div>
+        `;
+    }
+    if (visibility.interests !== false && profile.interests && profile.interests.length) {
+        addField('fa-heart', 'Interests', profile.interests.join(', '));
+    }
+    if (visibility.music !== false && profile.music) addField('fa-music', 'Favorite Music', profile.music);
+    if (visibility.movie !== false && profile.movie) addField('fa-film', 'Favorite Movie', profile.movie);
+    if (visibility.sport !== false && profile.sport) addField('fa-futbol', 'Favorite Sport', profile.sport);
+    if (visibility.languages !== false && profile.languages && profile.languages.length) {
+        addField('fa-language', 'Languages', profile.languages.join(', '));
+    }
+    if (visibility.occupation !== false && profile.occupation) addField('fa-briefcase', 'Occupation', profile.occupation);
+    if (visibility.skills !== false && profile.skills && profile.skills.length) {
+        addField('fa-code', 'Skills', profile.skills.join(', '));
+    }
+    if (visibility.company !== false && profile.company) addField('fa-building', 'Company', profile.company);
+    if (visibility.website !== false && profile.website) {
+        extendedHTML += `
+            <div class="info-item">
+                <div class="info-icon"><i class="fas fa-globe"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Website</div>
+                    <div class="info-value"><a href="${escapeHtml(profile.website)}" target="_blank">${escapeHtml(profile.website)}</a></div>
+                </div>
+            </div>
+        `;
+    }
+    if (visibility.businessContact !== false && profile.businessContact) {
+        extendedHTML += `
+            <div class="info-item">
+                <div class="info-icon"><i class="fas fa-briefcase"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Business Contact</div>
+                    <div class="info-value">Available</div>
+                </div>
+            </div>
+        `;
+    }
+    // Social links
+    if (visibility.instagram !== false && profile.instagram) {
+        extendedHTML += `<div class="info-item"><div class="info-icon"><i class="fab fa-instagram"></i></div><div class="info-content"><div class="info-label">Instagram</div><div class="info-value"><a href="${escapeHtml(profile.instagram)}" target="_blank">${escapeHtml(profile.instagram)}</a></div></div></div>`;
+    }
+    if (visibility.twitter !== false && profile.twitter) {
+        extendedHTML += `<div class="info-item"><div class="info-icon"><i class="fab fa-twitter"></i></div><div class="info-content"><div class="info-label">X (Twitter)</div><div class="info-value"><a href="${escapeHtml(profile.twitter)}" target="_blank">${escapeHtml(profile.twitter)}</a></div></div></div>`;
+    }
+    if (visibility.tiktok !== false && profile.tiktok) {
+        extendedHTML += `<div class="info-item"><div class="info-icon"><i class="fab fa-tiktok"></i></div><div class="info-content"><div class="info-label">TikTok</div><div class="info-value"><a href="${escapeHtml(profile.tiktok)}" target="_blank">${escapeHtml(profile.tiktok)}</a></div></div></div>`;
+    }
+    if (visibility.youtube !== false && profile.youtube) {
+        extendedHTML += `<div class="info-item"><div class="info-icon"><i class="fab fa-youtube"></i></div><div class="info-content"><div class="info-label">YouTube</div><div class="info-value"><a href="${escapeHtml(profile.youtube)}" target="_blank">${escapeHtml(profile.youtube)}</a></div></div></div>`;
+    }
+
+    // Media highlights
+    if (visibility.coverPhoto !== false && profile.coverPhoto) {
+        extendedHTML += `
+            <div class="info-item">
+                <div class="info-icon"><i class="fas fa-image"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Cover Photo</div>
+                    <div class="info-value"><img src="${profile.coverPhoto}" style="max-width:100%; max-height:100px; border-radius:8px;"></div>
+                </div>
+            </div>
+        `;
+    }
+    if (visibility.highlights !== false && profile.highlights && profile.highlights.length) {
+        let highlightsHTML = '';
+        profile.highlights.forEach(url => {
+            highlightsHTML += `<img src="${url}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; margin-right:4px;">`;
+        });
+        extendedHTML += `
+            <div class="info-item">
+                <div class="info-icon"><i class="fas fa-images"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Highlights</div>
+                    <div class="info-value">${highlightsHTML}</div>
+                </div>
+            </div>
+        `;
+    }
+    if (visibility.introVideo !== false && profile.introVideo) {
+        extendedHTML += `
+            <div class="info-item">
+                <div class="info-icon"><i class="fas fa-video"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Intro Video</div>
+                    <div class="info-value"><video src="${profile.introVideo}" controls style="max-width:100%; max-height:100px;"></video></div>
+                </div>
+            </div>
+        `;
+    }
+    if (visibility.voiceIntro !== false && profile.voiceIntro) {
+        extendedHTML += `
+            <div class="info-item">
+                <div class="info-icon"><i class="fas fa-microphone"></i></div>
+                <div class="info-content">
+                    <div class="info-label">Voice Intro</div>
+                    <div class="info-value"><audio src="${profile.voiceIntro}" controls style="max-width:100%;"></audio></div>
+                </div>
+            </div>
+        `;
+    }
+    if (visibility.relationship !== false && profile.relationship) {
+        addField('fa-heart', 'Relationship', profile.relationship);
+    }
+    if (visibility.openToChats !== false && profile.openToChats) {
+        let openText = profile.openToChats === 'yes' ? 'Yes' : profile.openToChats === 'friends' ? 'Friends only' : 'No';
+        addField('fa-comments', 'Open to new chats', openText);
+    }
+
+    // Combine basic and extended
+    container.innerHTML = basicInfoHTML + (extendedHTML ? `<div style="border-top:1px solid var(--gray-150); margin:12px 0;"></div>${extendedHTML}` : '');
 }
 
 function formatDuration(seconds) {
@@ -12885,288 +13161,6 @@ function startCallTimer() {
     document.getElementById('callTimer').textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }, 1000);
 }
-
-function openFullProfileModal() {
-    // Load current user data into the form
-    const user = currentUser;
-    document.getElementById('profileBio').value = user.bio || '';
-    document.getElementById('profilePronouns').value = user.pronouns || '';
-    document.getElementById('profileVerifiedBadge').checked = user.verifiedBadge || false;
-    
-    // Mood
-    const mood = user.moodStatus || '';
-    const moodSelect = document.getElementById('profileMood');
-    const customMood = document.getElementById('profileCustomMood');
-    if (mood && !['😊 Feeling good','😴 Offline energy','🔥 Grinding'].includes(mood)) {
-        moodSelect.value = 'custom';
-        customMood.value = mood;
-    } else {
-        moodSelect.value = mood || '';
-        customMood.value = '';
-    }
-    
-    document.getElementById('profileQuote').value = user.favoriteQuote || '';
-    document.getElementById('profileThemeColor').value = user.themeColor || '#007aff';
-    document.getElementById('profileInterests').value = (user.interests || []).join(', ');
-    document.getElementById('profileMusic').value = user.favoriteMusicArtist || '';
-    document.getElementById('profileMovie').value = user.favoriteMovieSeries || '';
-    document.getElementById('profileSport').value = user.favoriteSportTeam || '';
-    document.getElementById('profileLanguages').value = (user.languages || []).join(', ');
-    document.getElementById('profileOccupation').value = user.occupation || '';
-    document.getElementById('profileSkills').value = (user.skills || []).join(', ');
-    document.getElementById('profileCompany').value = user.company || '';
-    document.getElementById('profilePortfolio').value = user.portfolioLink || '';
-    document.getElementById('profileBusinessContact').checked = user.businessContactButton || false;
-    
-    // Social
-    document.getElementById('profileInstagram').value = user.socialLinks?.instagram || '';
-    document.getElementById('profileTwitter').value = user.socialLinks?.twitter || '';
-    document.getElementById('profileTikTok').value = user.socialLinks?.tiktok || '';
-    document.getElementById('profileYouTube').value = user.socialLinks?.youtube || '';
-    document.getElementById('profileWebsite').value = user.socialLinks?.website || '';
-    document.getElementById('profileLinkHub').value = user.socialLinks?.linkhub || '';
-    
-    // Media
-    profileCoverUrl = user.mediaHighlights?.coverPhoto || '';
-    profilePhotoHighlights = user.mediaHighlights?.photos || [];
-    profileIntroVideoUrl = user.mediaHighlights?.introVideo || '';
-    profileVoiceIntroUrl = user.mediaHighlights?.voiceIntro || '';
-    updateMediaPreviews();
-    
-    document.getElementById('profileRelationship').value = user.relationshipStatus || '';
-    document.getElementById('profileOpenToChats').value = user.openToChats || 'Yes';
-    
-    openModal('editFullProfileModal');
-}
-
-function updateMediaPreviews() {
-    if (profileCoverUrl) {
-        document.getElementById('profileCoverPreview').src = profileCoverUrl;
-    }
-    const photosDiv = document.getElementById('photoHighlightsPreview');
-    photosDiv.innerHTML = profilePhotoHighlights.map((url, idx) => `
-        <div style="position:relative; width:60px; height:60px;">
-            <img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:var(--radius-sm);">
-            <button type="button" style="position:absolute; top:-4px; right:-4px; background:var(--red); color:white; border:none; border-radius:50%; width:20px; height:20px;" onclick="removePhotoHighlight(${idx})">×</button>
-        </div>
-    `).join('');
-    const videoDiv = document.getElementById('introVideoPreview');
-    videoDiv.innerHTML = profileIntroVideoUrl ? `<video src="${profileIntroVideoUrl}" controls style="max-width:100%; max-height:100px;"></video>` : '';
-    const voiceDiv = document.getElementById('voiceIntroPreview');
-    voiceDiv.innerHTML = profileVoiceIntroUrl ? `<audio src="${profileVoiceIntroUrl}" controls style="width:100%;"></audio>` : '';
-}
-
-function removePhotoHighlight(index) {
-    profilePhotoHighlights.splice(index, 1);
-    updateMediaPreviews();
-}
-
-function uploadProfileMedia(type) {
-    if (!cloudinaryWidget) {
-        cloudinaryWidget = cloudinary.createUploadWidget({
-            cloudName: CLOUDINARY_CONFIG.cloudName,
-            uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
-            sources: ['local', 'url', 'camera'],
-            multiple: type === 'photo',
-            maxFileSize: 50000000,
-            folder: `zynapse/profiles/${type}`,
-            cropping: type === 'cover' || type === 'photo',
-            showAdvancedOptions: false
-        }, (error, result) => {
-            if (!error && result && result.event === "success") {
-                const url = result.info.secure_url;
-                if (type === 'cover') {
-                    profileCoverUrl = url;
-                } else if (type === 'photo') {
-                    profilePhotoHighlights.push(url);
-                } else if (type === 'video') {
-                    profileIntroVideoUrl = url;
-                }
-                updateMediaPreviews();
-            }
-        });
-    }
-    cloudinaryWidget.open();
-}
-
-// Voice intro recording (similar to voice note)
-function recordVoiceIntro() {
-    startVoiceRecordingForProfile();
-}
-
-function startVoiceRecordingForProfile() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        showToast('Voice recording not supported', 'error');
-        return;
-    }
-    
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            const mediaRecorder = new MediaRecorder(stream);
-            const audioChunks = [];
-            
-            mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
-            mediaRecorder.onstop = async () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                const formData = new FormData();
-                formData.append('file', audioBlob);
-                formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-                formData.append('folder', 'zynapse/profiles/voice');
-                
-                showToast('Uploading...', 'info');
-                try {
-                    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/upload`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const result = await response.json();
-                    profileVoiceIntroUrl = result.secure_url;
-                    updateMediaPreviews();
-                    showToast('Voice intro uploaded', 'success');
-                } catch (e) {
-                    showToast('Upload failed', 'error');
-                }
-                stream.getTracks().forEach(track => track.stop());
-            };
-            
-            mediaRecorder.start();
-            // Simple UI: show recording indicator (optional)
-            showToast('Recording... Tap stop when done', 'info');
-            
-            // Stop after 15 seconds max
-            setTimeout(() => {
-                if (mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                }
-            }, 15000);
-            
-            // We need a stop button; for simplicity, we'll just stop after 15s.
-            // In production, add a stop button.
-        })
-        .catch(err => {
-            showToast('Microphone access denied', 'error');
-        });
-}
-
-document.getElementById('fullProfileForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    await saveFullProfile();
-});
-
-async function saveFullProfile() {
-    const bio = document.getElementById('profileBio').value.trim();
-    const pronouns = document.getElementById('profilePronouns').value.trim();
-    const verifiedBadge = document.getElementById('profileVerifiedBadge').checked;
-    
-    let moodStatus = document.getElementById('profileMood').value;
-    if (moodStatus === 'custom') {
-        moodStatus = document.getElementById('profileCustomMood').value.trim() || moodStatus;
-    }
-    
-    const favoriteQuote = document.getElementById('profileQuote').value.trim();
-    const themeColor = document.getElementById('profileThemeColor').value;
-    
-    const interests = document.getElementById('profileInterests').value.split(',').map(s => s.trim()).filter(s => s);
-    const favoriteMusicArtist = document.getElementById('profileMusic').value.trim();
-    const favoriteMovieSeries = document.getElementById('profileMovie').value.trim();
-    const favoriteSportTeam = document.getElementById('profileSport').value.trim();
-    const languages = document.getElementById('profileLanguages').value.split(',').map(s => s.trim()).filter(s => s);
-    
-    const occupation = document.getElementById('profileOccupation').value.trim();
-    const skills = document.getElementById('profileSkills').value.split(',').map(s => s.trim()).filter(s => s);
-    const company = document.getElementById('profileCompany').value.trim();
-    const portfolioLink = document.getElementById('profilePortfolio').value.trim();
-    const businessContactButton = document.getElementById('profileBusinessContact').checked;
-    
-    const instagram = document.getElementById('profileInstagram').value.trim();
-    const twitter = document.getElementById('profileTwitter').value.trim();
-    const tiktok = document.getElementById('profileTikTok').value.trim();
-    const youtube = document.getElementById('profileYouTube').value.trim();
-    const website = document.getElementById('profileWebsite').value.trim();
-    const linkhub = document.getElementById('profileLinkHub').value.trim();
-    
-    const relationshipStatus = document.getElementById('profileRelationship').value;
-    const openToChats = document.getElementById('profileOpenToChats').value;
-    
-    const mediaHighlights = {
-        coverPhoto: profileCoverUrl,
-        photos: profilePhotoHighlights,
-        introVideo: profileIntroVideoUrl,
-        voiceIntro: profileVoiceIntroUrl
-    };
-    
-    const socialLinks = { instagram, twitter, tiktok, youtube, website, linkhub };
-    
-    const updates = {
-        bio,
-        pronouns,
-        verifiedBadge,
-        moodStatus,
-        customStatus: moodStatus, // we can store same as moodStatus for simplicity
-        favoriteQuote,
-        themeColor,
-        interests,
-        favoriteMusicArtist,
-        favoriteMovieSeries,
-        favoriteSportTeam,
-        languages,
-        occupation,
-        skills,
-        company,
-        portfolioLink,
-        businessContactButton,
-        socialLinks,
-        mediaHighlights,
-        relationshipStatus,
-        openToChats
-    };
-    
-    // Remove empty arrays/objects to save space? We'll just set.
-    try {
-        await usersRef.child(currentUser.uid).update(updates);
-        Object.assign(currentUser, updates);
-        showToast('Profile updated!', 'success');
-        closeModal('editFullProfileModal');
-    } catch (error) {
-        console.error('Error saving full profile:', error);
-        showToast('Failed to save', 'error');
-    }
-}
-
-function openProfileVisibilityModal() {
-    // Load current visibility settings
-    const vis = currentUser.profileVisibility || {};
-    document.getElementById('visBio').checked = vis.bio !== false;
-    document.getElementById('visExpression').checked = vis.expression !== false;
-    document.getElementById('visInterests').checked = vis.interests !== false;
-    document.getElementById('visProfessional').checked = vis.professional !== false;
-    document.getElementById('visSocial').checked = vis.social !== false;
-    document.getElementById('visMedia').checked = vis.media !== false;
-    document.getElementById('visRelationship').checked = vis.relationship !== false;
-    openModal('profileVisibilityModal');
-}
-
-async function saveProfileVisibility() {
-    const visibility = {
-        bio: document.getElementById('visBio').checked,
-        expression: document.getElementById('visExpression').checked,
-        interests: document.getElementById('visInterests').checked,
-        professional: document.getElementById('visProfessional').checked,
-        social: document.getElementById('visSocial').checked,
-        media: document.getElementById('visMedia').checked,
-        relationship: document.getElementById('visRelationship').checked
-    };
-    
-    try {
-        await usersRef.child(currentUser.uid).update({ profileVisibility: visibility });
-        currentUser.profileVisibility = visibility;
-        showToast('Visibility saved', 'success');
-        closeModal('profileVisibilityModal');
-    } catch (error) {
-        console.error('Error saving visibility:', error);
-        showToast('Failed to save', 'error');
-    }
-}
 // Export functions to global scope
 window.switchPage = switchPage;
 window.openChat = openChat;
@@ -13331,7 +13325,3 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
-
-
-
-
