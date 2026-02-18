@@ -4742,6 +4742,182 @@
     font-size: 0.9em;
 }
 
+/* ==================== CALLS PAGE (WhatsApp style) ==================== */
+.calls-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.calls-header {
+    padding: var(--space-3);
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-150);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.calls-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--black);
+}
+
+.calls-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.calls-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: var(--space-6);
+    text-align: center;
+    color: var(--gray-500);
+}
+
+.calls-empty-icon {
+    font-size: 48px;
+    margin-bottom: var(--space-3);
+    color: var(--gray-300);
+}
+
+.calls-empty-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-600);
+    margin-bottom: var(--space-1);
+}
+
+.calls-empty-subtext {
+    font-size: 12px;
+    color: var(--gray-500);
+    max-width: 240px;
+    line-height: 1.3;
+}
+
+.call-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--gray-100);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    background: var(--white);
+}
+
+.call-item:hover {
+    background: var(--gray-50);
+}
+
+.call-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-circle);
+    object-fit: cover;
+    margin-right: var(--space-2);
+    flex-shrink: 0;
+    border: 1px solid var(--gray-200);
+}
+
+.call-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.call-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--black);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.call-detail {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--gray-600);
+}
+
+.call-outcome {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.call-outcome.missed i {
+    color: var(--red);
+}
+
+.call-outcome.answered i {
+    color: var(--green);
+}
+
+.call-outcome.rejected i {
+    color: var(--gray-500);
+}
+
+.call-type i {
+    font-size: 11px;
+}
+
+.call-time {
+    font-size: 11px;
+    color: var(--gray-500);
+    white-space: nowrap;
+    margin-left: 8px;
+}
+
+.call-duration {
+    font-size: 11px;
+    color: var(--gray-600);
+    white-space: nowrap;
+}
+
+.call-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-left: auto;
+    padding-left: var(--space-2);
+}
+
+.call-action-btn {
+    background: none;
+    border: none;
+    color: var(--gray-600);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--radius-circle);
+    transition: all var(--transition-fast);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.call-action-btn:hover {
+    background: var(--gray-100);
+    color: var(--blue);
+}
+        
 /* ==================== PER-CHAT THEME STYLES ==================== */
 .theme-option {
     flex: 1;
@@ -4934,7 +5110,17 @@
                     </div>
                 </div>
             </div>
-
+<!-- Calls Page (Call Log History) -->
+<div class="page page-content" id="callsPage">
+    <div class="calls-page">
+        <div class="calls-header">
+            <h2>Call Log</h2>
+        </div>
+        <div class="calls-list" id="callsList">
+            <!-- Calls will be loaded here -->
+        </div>
+    </div>
+</div>
            <!-- Zynes Page -->
 <div class="page page-content" id="zynesPage">
     <div class="zynes-page">
@@ -5022,33 +5208,39 @@
         </main>
 
         <!-- Bottom Navigation -->
-        <nav class="bottom-nav safe-area-bottom">
-            <button class="nav-item active" data-page="home" onclick="switchPage('home')">
-                <i class="fas fa-home"></i>
-                <span>HOME</span>
-                <span class="nav-badge hidden" id="homeBadge">0</span>
-            </button>
-            <button class="nav-item" data-page="zynes" onclick="switchPage('zynes')">
-                <i class="fas fa-fire"></i>
-                <span>ZYNES</span>
-                <span class="nav-badge hidden" id="zynesBadge">0</span>
-            </button>
-            <button class="nav-item" data-page="groups" onclick="switchPage('groups')">
-                <i class="fas fa-users"></i>
-                <span>GROUPS</span>
-                <span class="nav-badge hidden" id="groupsBadge">0</span>
-            </button>
-            <button class="nav-item" data-page="requests" onclick="switchPage('requests')">
-                <i class="fas fa-user-plus"></i>
-                <span>REQUESTS</span>
-                <span class="nav-badge hidden" id="requestsBadge">0</span>
-            </button>
-            <button class="nav-item" data-page="contacts" onclick="switchPage('contacts')">
-                <i class="fas fa-address-book"></i>
-                <span>CONTACTS</span>
-                <span class="nav-badge hidden" id="contactsBadge">0</span>
-            </button>
-        </nav>
+       <nav class="bottom-nav safe-area-bottom">
+    <button class="nav-item active" data-page="home" onclick="switchPage('home')">
+        <i class="fas fa-home"></i>
+        <span>HOME</span>
+        <span class="nav-badge hidden" id="homeBadge">0</span>
+    </button>
+    <button class="nav-item" data-page="zynes" onclick="switchPage('zynes')">
+        <i class="fas fa-fire"></i>
+        <span>ZYNES</span>
+        <span class="nav-badge hidden" id="zynesBadge">0</span>
+    </button>
+    <!-- NEW CALLS BUTTON -->
+    <button class="nav-item" data-page="calls" onclick="switchPage('calls')">
+        <i class="fas fa-phone-alt"></i>
+        <span>CALLS</span>
+        <span class="nav-badge hidden" id="callsBadge">0</span>
+    </button>
+    <button class="nav-item" data-page="groups" onclick="switchPage('groups')">
+        <i class="fas fa-users"></i>
+        <span>GROUPS</span>
+        <span class="nav-badge hidden" id="groupsBadge">0</span>
+    </button>
+    <button class="nav-item" data-page="requests" onclick="switchPage('requests')">
+        <i class="fas fa-user-plus"></i>
+        <span>REQUESTS</span>
+        <span class="nav-badge hidden" id="requestsBadge">0</span>
+    </button>
+    <button class="nav-item" data-page="contacts" onclick="switchPage('contacts')">
+        <i class="fas fa-address-book"></i>
+        <span>CONTACTS</span>
+        <span class="nav-badge hidden" id="contactsBadge">0</span>
+    </button>
+</nav>
     </div>
 
     <!-- Chat Interface -->
@@ -6673,6 +6865,177 @@ async function loadPrivacySettings() {
     }
 }
 
+function formatCallDuration(seconds) {
+    if (!seconds) return '';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins > 0 ? `${mins} min ${secs} sec` : `${secs} sec`;
+}
+
+async function loadCalls() {
+    const callsList = document.getElementById('callsList');
+    if (!callsList) return;
+
+    try {
+        const callsRef = firestore.collection('calls');
+        const snapshot = await callsRef
+            .where('callerUid', '==', currentUser.uid)
+            .get();
+        
+        const snapshot2 = await callsRef
+            .where('receiverUid', '==', currentUser.uid)
+            .get();
+        
+        const missedCount = calls.filter(c => 
+    c.receiverUid === currentUser.uid && 
+    c.status === 'missed' && 
+    !c.wasConnected
+).length;
+updateBadge('calls', missedCount);
+
+        let calls = [];
+        snapshot.forEach(doc => calls.push({ id: doc.id, ...doc.data() }));
+        snapshot2.forEach(doc => calls.push({ id: doc.id, ...doc.data() }));
+
+        // Remove duplicates (if both caller and receiver conditions matched the same doc)
+        calls = calls.filter((call, index, self) => 
+            index === self.findIndex(c => c.id === call.id)
+        );
+
+        // Sort by createdAt descending
+        calls.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds || 0);
+
+        renderCalls(calls);
+    } catch (error) {
+        console.error('Error loading calls:', error);
+        showToast('Failed to load call history', 'error');
+    }
+}
+
+function renderCalls(calls) {
+    const callsList = document.getElementById('callsList');
+
+    if (calls.length === 0) {
+        callsList.innerHTML = `
+            <div class="calls-empty-state">
+                <i class="fas fa-phone-alt calls-empty-icon"></i>
+                <div class="calls-empty-text">No Calls Yet</div>
+                <div class="calls-empty-subtext">Your call history will appear here</div>
+            </div>
+        `;
+        return;
+    }
+
+    callsList.innerHTML = calls.map(call => {
+        const isOutgoing = call.callerUid === currentUser.uid;
+        const otherUid = isOutgoing ? call.receiverUid : call.callerUid;
+        const otherName = isOutgoing ? call.receiverName : call.callerName;
+        const otherAvatar = isOutgoing ? call.receiverAvatar : call.callerAvatar;
+
+        let outcome = 'missed';
+        let outcomeIcon = 'fa-phone-slash';
+        let outcomeClass = 'missed';
+
+        if (call.wasConnected) {
+            outcome = 'answered';
+            outcomeIcon = 'fa-phone-alt';
+            outcomeClass = 'answered';
+        } else if (call.status === 'rejected') {
+            outcome = 'rejected';
+            outcomeIcon = 'fa-ban';
+            outcomeClass = 'rejected';
+        } else if (call.status === 'missed') {
+            outcome = 'missed';
+            outcomeIcon = 'fa-phone-slash';
+            outcomeClass = 'missed';
+        }
+
+        const duration = call.wasConnected && call.endedAt && call.answeredAt
+            ? Math.floor((call.endedAt.seconds - call.answeredAt.seconds))
+            : null;
+
+        const date = call.createdAt ? new Date(call.createdAt.seconds * 1000) : new Date();
+
+        return `
+            <div class="call-item" onclick="openChatWithUid('${otherUid}')">
+                <img src="${otherAvatar || 'https://via.placeholder.com/150'}" 
+                     alt="${otherName}" class="call-avatar">
+                <div class="call-info">
+                    <div class="call-name">${otherName}</div>
+                    <div class="call-detail">
+                        <span class="call-outcome ${outcomeClass}">
+                            <i class="fas ${outcomeIcon}"></i> ${outcome}
+                        </span>
+                        <span class="call-type">
+                            <i class="fas fa-${call.isVideo ? 'video' : 'phone'}"></i>
+                            ${call.isVideo ? 'Video' : 'Audio'}
+                        </span>
+                        ${duration ? `<span class="call-duration">${formatCallDuration(duration)}</span>` : ''}
+                    </div>
+                </div>
+                <div class="call-time">${formatTime(date.toISOString())}</div>
+                <div class="call-actions">
+                    <button class="call-action-btn" onclick="event.stopPropagation(); initiateCallWithUid('${otherUid}', ${call.isVideo})" title="Call again">
+                        <i class="fas fa-phone"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function openChatWithUid(uid) {
+    // Find contact or just open chat
+    const contact = contacts.find(c => c.uid === uid);
+    if (contact) {
+        openChatWithUser(uid);
+    } else {
+        // Try to fetch user info
+        try {
+            const userSnap = await usersRef.child(uid).once('value');
+            if (userSnap.exists()) {
+                const user = userSnap.val();
+                // Temporarily treat as chat
+                const chatId = [currentUser.uid, uid].sort().join('_');
+                currentChat = {
+                    id: chatId,
+                    type: 'private',
+                    uid: uid,
+                    userId: user.userId,
+                    userName: user.name,
+                    userAvatar: user.profilePicture,
+                    isOnline: user.isOnline || false,
+                    lastSeen: user.lastSeen
+                };
+                renderChatInterface();
+                await loadMessages();
+                showChatPage();
+            } else {
+                showToast('User not found', 'error');
+            }
+        } catch (error) {
+            console.error('Error opening chat:', error);
+        }
+    }
+}
+
+function initiateCallWithUid(uid, isVideo) {
+    const contact = contacts.find(c => c.uid === uid);
+    if (!contact) {
+        showToast('Contact not found', 'error');
+        return;
+    }
+    // Temporarily set currentChat to this contact
+    currentChat = {
+        id: [currentUser.uid, uid].sort().join('_'),
+        type: 'private',
+        uid: uid,
+        userName: contact.name,
+        userAvatar: contact.profilePicture,
+        userId: contact.userId
+    };
+    initiateCall(isVideo);
+}
 function renderChats() {
     const chatsContainer = document.getElementById('chatsContainer');
     
@@ -7182,6 +7545,9 @@ function switchPage(page) {
         case 'groups':
             loadGroups();
             break;
+        case 'calls':
+    loadCalls();
+    break;
         case 'requests':
             loadChatRequests();
             break;
@@ -11767,22 +12133,22 @@ async function initiateCall(isVideo) {
     currentCallId = callId;
 
     // Create Firestore call document with additional metadata
-    await firestore.collection('calls').doc(callId).set({
-      callerUid: currentUser.uid,
-      callerId: currentUser.userId,
-      callerName: currentUser.name,
-      callerAvatar: currentUser.profilePicture || '',
-      receiverUid,
-      receiverId,
-      receiverName: currentChat.userName,
-      receiverAvatar: currentChat.userAvatar || '',
-      isVideo,
-      chatId: currentChat.id,                    // for call log message
-      callType: isVideo ? 'video' : 'audio',      // for call log message
-      wasConnected: false,
-      status: 'ringing',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+   await firestore.collection('calls').doc(callId).set({
+    callerUid: currentUser.uid,
+    callerId: currentUser.userId,
+    callerName: currentUser.name,
+    callerAvatar: currentUser.profilePicture || '',
+    receiverUid,
+    receiverId: currentChat.userId,
+    receiverName: currentChat.userName,
+    receiverAvatar: currentChat.userAvatar || '',
+    isVideo,
+    chatId: currentChat.id,
+    callType: isVideo ? 'video' : 'audio',
+    wasConnected: false,
+    status: 'ringing',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+});
 
     peerConnection = new RTCPeerConnection(iceServers);
 
@@ -12213,4 +12579,5 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
