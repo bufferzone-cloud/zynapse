@@ -11407,49 +11407,34 @@ window.viewUserProfile = async function(userId) {
             return;
         }
         const user = userSnapshot.val();
-        user.uid = userId;   // store UID for later use
+        user.uid = userId;
 
         // 2. Fetch online status (contains lastSeen)
         const onlineSnapshot = await onlineRef.child(userId).once('value');
         const onlineData = onlineSnapshot.val() || {};
 
-        // 3. Populate the modal with basic profile information
+        // 3. Merge lastSeen into the user object
+        user.lastSeen = onlineData.lastSeen || user.lastSeen;
+
+        // 4. Set basic profile fields (avatar, name, ID)
         document.getElementById('viewProfileAvatar').src = user.profilePicture || 'https://via.placeholder.com/150';
         document.getElementById('viewProfileName').textContent = user.name || 'Unnamed';
         document.getElementById('viewProfileId').textContent = user.userId || 'ZYN-????';
 
-        // Phone and email – fallback to 'Not provided' if missing
-        document.getElementById('viewProfilePhone').textContent = user.phone || 'Not provided';
-        document.getElementById('viewProfileEmail').textContent = user.email || 'Not provided';
+        // 5. Render the entire profile info section (basic + extended) using the user object
+        renderExtendedProfileInView(user);
 
-        // Last seen – use onlineData.lastSeen, fallback to user.lastSeen (if stored), else 'Never'
-        const lastSeen = onlineData.lastSeen || user.lastSeen;
-        document.getElementById('viewProfileLastSeen').textContent = formatLastSeen(lastSeen);
-
-        // Member since – use createdAt from user node (must be stored during registration)
-        // If missing, try to get from Firebase Auth metadata (if available) or show 'Unknown'
-        let memberSince = 'Unknown';
-        if (user.createdAt) {
-            memberSince = formatDate(user.createdAt);
-        } else {
-            // Optional: fetch from Firebase Auth (requires additional call, may be slower)
-            // For production, ensure createdAt is always stored during signup.
-            console.warn('User missing createdAt');
-        }
-        document.getElementById('viewProfileCreatedAt').textContent = memberSince;
-
-        // 4. Determine relationship with current user
+        // 6. Determine relationship with current user
         const isBlocked = blockedUsers.some(b => b.uid === userId);
         const isContact = contacts.some(c => c.uid === userId);
         const isFavorite = favorites.some(f => f.uid === userId);
 
-        // Show/hide chat button (only if contact and not blocked)
+        // 7. Update action buttons
         const chatBtn = document.getElementById('viewProfileChatBtn');
         if (chatBtn) {
             chatBtn.style.display = (isContact && !isBlocked) ? 'flex' : 'none';
         }
 
-        // Update block/unblock button text
         const blockBtn = document.getElementById('viewProfileBlockBtn');
         if (blockBtn) {
             blockBtn.innerHTML = isBlocked
@@ -11457,7 +11442,6 @@ window.viewUserProfile = async function(userId) {
                 : '<i class="fas fa-ban"></i> Block';
         }
 
-        // Update favorite button text
         const favBtn = document.getElementById('viewProfileFavoriteBtn');
         if (favBtn) {
             favBtn.innerHTML = isFavorite
@@ -11465,13 +11449,13 @@ window.viewUserProfile = async function(userId) {
                 : '<i class="far fa-star"></i> Favorite';
         }
 
-        // 5. Store the viewed user's UID in the modal for later use (e.g., starting chat, toggling favorite)
+        // 8. Store the viewed user's UID for later actions
         document.getElementById('viewProfileModal').dataset.userId = userId;
 
-        // 6. Open the modal
+        // 9. Open the modal
         openModal('viewProfileModal');
 
-        // 7. Close the search results if they are open
+        // 10. Close any open search results
         document.getElementById('searchResults').classList.remove('show');
 
     } catch (error) {
@@ -12496,38 +12480,52 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-function renderExtendedProfileInView(profile, visibility) {
+function renderExtendedProfileInView(user) {
     const container = document.querySelector('.profile-info-section');
-    // Clear previous extended entries (but keep basic ones like phone, email etc. – we'll rebuild the whole section)
-    // Better to create a new container for extended info after the basic ones.
-    // Let's insert a new div after the basic info items.
+    if (!container) return;
 
-    let basicInfoHTML = `
+    const profile = user.profile || {};
+    const visibility = user.profileVisibility || {};
+
+    // ----- Basic info (always visible) -----
+    let html = `
         <div class="info-item">
             <div class="info-icon"><i class="fas fa-phone"></i></div>
-            <div class="info-content"><div class="info-label">Phone</div><div class="info-value" id="viewProfilePhone">${profile.phone || 'Not provided'}</div></div>
+            <div class="info-content">
+                <div class="info-label">Phone</div>
+                <div class="info-value">${user.phone || 'Not provided'}</div>
+            </div>
         </div>
         <div class="info-item">
             <div class="info-icon"><i class="fas fa-envelope"></i></div>
-            <div class="info-content"><div class="info-label">Email</div><div class="info-value" id="viewProfileEmail">${profile.email || 'Not provided'}</div></div>
+            <div class="info-content">
+                <div class="info-label">Email</div>
+                <div class="info-value">${user.email || 'Not provided'}</div>
+            </div>
         </div>
         <div class="info-item">
             <div class="info-icon"><i class="fas fa-clock"></i></div>
-            <div class="info-content"><div class="info-label">Last Seen</div><div class="info-value" id="viewProfileLastSeen">${formatLastSeen(profile.lastSeen)}</div></div>
+            <div class="info-content">
+                <div class="info-label">Last Seen</div>
+                <div class="info-value">${formatLastSeen(user.lastSeen)}</div>
+            </div>
         </div>
         <div class="info-item">
             <div class="info-icon"><i class="fas fa-calendar"></i></div>
-            <div class="info-content"><div class="info-label">Member Since</div><div class="info-value" id="viewProfileCreatedAt">${formatDate(profile.createdAt)}</div></div>
+            <div class="info-content">
+                <div class="info-label">Member Since</div>
+                <div class="info-value">${user.createdAt ? formatDate(user.createdAt) : 'Unknown'}</div>
+            </div>
         </div>
     `;
 
-    // Extended fields
-    let extendedHTML = '';
+    // ----- Extended fields (only if visible) -----
+    const extended = [];
 
     // Helper to add a field if visible and not empty
     const addField = (icon, label, value) => {
         if (value && value !== '') {
-            extendedHTML += `
+            extended.push(`
                 <div class="info-item">
                     <div class="info-icon"><i class="fas ${icon}"></i></div>
                     <div class="info-content">
@@ -12535,10 +12533,11 @@ function renderExtendedProfileInView(profile, visibility) {
                         <div class="info-value">${escapeHtml(value)}</div>
                     </div>
                 </div>
-            `;
+            `);
         }
     };
 
+    // Personal Expression
     if (visibility.bio !== false && profile.bio) addField('fa-quote-right', 'Bio', profile.bio);
     if (visibility.pronouns !== false && profile.pronouns) addField('fa-user-tag', 'Pronouns', profile.pronouns);
     if (visibility.mood !== false && profile.mood) {
@@ -12549,16 +12548,21 @@ function renderExtendedProfileInView(profile, visibility) {
     }
     if (visibility.quote !== false && profile.quote) addField('fa-star', 'Favorite Quote', profile.quote);
     if (visibility.themeColor !== false && profile.themeColor) {
-        extendedHTML += `
+        extended.push(`
             <div class="info-item">
                 <div class="info-icon"><i class="fas fa-palette"></i></div>
                 <div class="info-content">
                     <div class="info-label">Theme Color</div>
-                    <div class="info-value"><span style="display:inline-block; width:20px; height:20px; background:${profile.themeColor}; border-radius:4px;"></span> ${profile.themeColor}</div>
+                    <div class="info-value">
+                        <span style="display:inline-block; width:20px; height:20px; background:${profile.themeColor}; border-radius:4px;"></span>
+                        ${profile.themeColor}
+                    </div>
                 </div>
             </div>
-        `;
+        `);
     }
+
+    // Interests & Lifestyle
     if (visibility.interests !== false && profile.interests && profile.interests.length) {
         addField('fa-heart', 'Interests', profile.interests.join(', '));
     }
@@ -12568,13 +12572,15 @@ function renderExtendedProfileInView(profile, visibility) {
     if (visibility.languages !== false && profile.languages && profile.languages.length) {
         addField('fa-language', 'Languages', profile.languages.join(', '));
     }
+
+    // Professional
     if (visibility.occupation !== false && profile.occupation) addField('fa-briefcase', 'Occupation', profile.occupation);
     if (visibility.skills !== false && profile.skills && profile.skills.length) {
         addField('fa-code', 'Skills', profile.skills.join(', '));
     }
     if (visibility.company !== false && profile.company) addField('fa-building', 'Company', profile.company);
     if (visibility.website !== false && profile.website) {
-        extendedHTML += `
+        extended.push(`
             <div class="info-item">
                 <div class="info-icon"><i class="fas fa-globe"></i></div>
                 <div class="info-content">
@@ -12582,36 +12588,29 @@ function renderExtendedProfileInView(profile, visibility) {
                     <div class="info-value"><a href="${escapeHtml(profile.website)}" target="_blank">${escapeHtml(profile.website)}</a></div>
                 </div>
             </div>
-        `;
+        `);
     }
     if (visibility.businessContact !== false && profile.businessContact) {
-        extendedHTML += `
-            <div class="info-item">
-                <div class="info-icon"><i class="fas fa-briefcase"></i></div>
-                <div class="info-content">
-                    <div class="info-label">Business Contact</div>
-                    <div class="info-value">Available</div>
-                </div>
-            </div>
-        `;
-    }
-    // Social links
-    if (visibility.instagram !== false && profile.instagram) {
-        extendedHTML += `<div class="info-item"><div class="info-icon"><i class="fab fa-instagram"></i></div><div class="info-content"><div class="info-label">Instagram</div><div class="info-value"><a href="${escapeHtml(profile.instagram)}" target="_blank">${escapeHtml(profile.instagram)}</a></div></div></div>`;
-    }
-    if (visibility.twitter !== false && profile.twitter) {
-        extendedHTML += `<div class="info-item"><div class="info-icon"><i class="fab fa-twitter"></i></div><div class="info-content"><div class="info-label">X (Twitter)</div><div class="info-value"><a href="${escapeHtml(profile.twitter)}" target="_blank">${escapeHtml(profile.twitter)}</a></div></div></div>`;
-    }
-    if (visibility.tiktok !== false && profile.tiktok) {
-        extendedHTML += `<div class="info-item"><div class="info-icon"><i class="fab fa-tiktok"></i></div><div class="info-content"><div class="info-label">TikTok</div><div class="info-value"><a href="${escapeHtml(profile.tiktok)}" target="_blank">${escapeHtml(profile.tiktok)}</a></div></div></div>`;
-    }
-    if (visibility.youtube !== false && profile.youtube) {
-        extendedHTML += `<div class="info-item"><div class="info-icon"><i class="fab fa-youtube"></i></div><div class="info-content"><div class="info-label">YouTube</div><div class="info-value"><a href="${escapeHtml(profile.youtube)}" target="_blank">${escapeHtml(profile.youtube)}</a></div></div></div>`;
+        addField('fa-briefcase', 'Business Contact', 'Available');
     }
 
-    // Media highlights
+    // Social Links
+    if (visibility.instagram !== false && profile.instagram) {
+        extended.push(`<div class="info-item"><div class="info-icon"><i class="fab fa-instagram"></i></div><div class="info-content"><div class="info-label">Instagram</div><div class="info-value"><a href="${escapeHtml(profile.instagram)}" target="_blank">${escapeHtml(profile.instagram)}</a></div></div></div>`);
+    }
+    if (visibility.twitter !== false && profile.twitter) {
+        extended.push(`<div class="info-item"><div class="info-icon"><i class="fab fa-twitter"></i></div><div class="info-content"><div class="info-label">X (Twitter)</div><div class="info-value"><a href="${escapeHtml(profile.twitter)}" target="_blank">${escapeHtml(profile.twitter)}</a></div></div></div>`);
+    }
+    if (visibility.tiktok !== false && profile.tiktok) {
+        extended.push(`<div class="info-item"><div class="info-icon"><i class="fab fa-tiktok"></i></div><div class="info-content"><div class="info-label">TikTok</div><div class="info-value"><a href="${escapeHtml(profile.tiktok)}" target="_blank">${escapeHtml(profile.tiktok)}</a></div></div></div>`);
+    }
+    if (visibility.youtube !== false && profile.youtube) {
+        extended.push(`<div class="info-item"><div class="info-icon"><i class="fab fa-youtube"></i></div><div class="info-content"><div class="info-label">YouTube</div><div class="info-value"><a href="${escapeHtml(profile.youtube)}" target="_blank">${escapeHtml(profile.youtube)}</a></div></div></div>`);
+    }
+
+    // Media Highlights
     if (visibility.coverPhoto !== false && profile.coverPhoto) {
-        extendedHTML += `
+        extended.push(`
             <div class="info-item">
                 <div class="info-icon"><i class="fas fa-image"></i></div>
                 <div class="info-content">
@@ -12619,14 +12618,14 @@ function renderExtendedProfileInView(profile, visibility) {
                     <div class="info-value"><img src="${profile.coverPhoto}" style="max-width:100%; max-height:100px; border-radius:8px;"></div>
                 </div>
             </div>
-        `;
+        `);
     }
     if (visibility.highlights !== false && profile.highlights && profile.highlights.length) {
         let highlightsHTML = '';
         profile.highlights.forEach(url => {
             highlightsHTML += `<img src="${url}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; margin-right:4px;">`;
         });
-        extendedHTML += `
+        extended.push(`
             <div class="info-item">
                 <div class="info-icon"><i class="fas fa-images"></i></div>
                 <div class="info-content">
@@ -12634,10 +12633,10 @@ function renderExtendedProfileInView(profile, visibility) {
                     <div class="info-value">${highlightsHTML}</div>
                 </div>
             </div>
-        `;
+        `);
     }
     if (visibility.introVideo !== false && profile.introVideo) {
-        extendedHTML += `
+        extended.push(`
             <div class="info-item">
                 <div class="info-icon"><i class="fas fa-video"></i></div>
                 <div class="info-content">
@@ -12645,10 +12644,10 @@ function renderExtendedProfileInView(profile, visibility) {
                     <div class="info-value"><video src="${profile.introVideo}" controls style="max-width:100%; max-height:100px;"></video></div>
                 </div>
             </div>
-        `;
+        `);
     }
     if (visibility.voiceIntro !== false && profile.voiceIntro) {
-        extendedHTML += `
+        extended.push(`
             <div class="info-item">
                 <div class="info-icon"><i class="fas fa-microphone"></i></div>
                 <div class="info-content">
@@ -12656,8 +12655,10 @@ function renderExtendedProfileInView(profile, visibility) {
                     <div class="info-value"><audio src="${profile.voiceIntro}" controls style="max-width:100%;"></audio></div>
                 </div>
             </div>
-        `;
+        `);
     }
+
+    // Relationship & Social Context
     if (visibility.relationship !== false && profile.relationship) {
         addField('fa-heart', 'Relationship', profile.relationship);
     }
@@ -12666,8 +12667,13 @@ function renderExtendedProfileInView(profile, visibility) {
         addField('fa-comments', 'Open to new chats', openText);
     }
 
-    // Combine basic and extended
-    container.innerHTML = basicInfoHTML + (extendedHTML ? `<div style="border-top:1px solid var(--gray-150); margin:12px 0;"></div>${extendedHTML}` : '');
+    // Combine basic and extended (separated by a divider if extended exists)
+    if (extended.length) {
+        html += `<div style="border-top:1px solid var(--gray-150); margin:12px 0;"></div>`;
+        html += extended.join('');
+    }
+
+    container.innerHTML = html;
 }
 
 function formatDuration(seconds) {
@@ -13358,4 +13364,5 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
