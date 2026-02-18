@@ -6668,9 +6668,9 @@ ${zyne.mediaUrl ? `
             </div>
             <div class="zyne-stats">
     <div class="zyne-stat">
-        <i class="fas fa-heart"></i>
-        <span>${zyne.likes ? Object.keys(zyne.likes).length : 0}</span>
-    </div>
+    <i class="fas fa-heart"></i>
+    <span>${zyne.reactions ? Object.keys(zyne.reactions).length : 0}</span>
+</div>
     <div class="zyne-stat">
         <i class="fas fa-comment"></i>
         <span>${zyne.comments ? Object.keys(zyne.comments).length : 0}</span>
@@ -6779,6 +6779,7 @@ async function toggleZyneReaction(zyneId, ownerId, emoji) {
         await reactionRef.set(reactionData);
         await zynesRef.child(`${ownerId}/${zyneId}/reactions/${reactionKey}`).set(reactionData);
     }
+    await loadZynes(); // <-- ADD THIS LINE
 }
 
 // Show reaction picker above the React button
@@ -11854,4 +11855,5 @@ window.toggleSpeaker = toggleSpeaker;
 </html>
 
 Step by step and full functions including where to put them exactly
+
 
