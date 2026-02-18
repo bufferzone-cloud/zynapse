@@ -6665,34 +6665,34 @@ function renderZynes() {
             </div>
             <div class="zyne-content">
                 ${zyne.text ? `<div class="zyne-text">${escapeHtml(zyne.text)}</div>` : ''}
-${zyne.mediaUrl ? `
-    <div class="zyne-media-container">
-        ${zyne.mediaType === 'image' ? 
-            `<img src="${zyne.mediaUrl}" alt="Zyne media" class="zyne-media" onclick="viewMedia('${zyne.mediaUrl}')">` :
-            `<video src="${zyne.mediaUrl}" controls class="zyne-media"></video>`
-        }
-    </div>
-` : ''}
+                ${zyne.mediaUrl ? `
+                    <div class="zyne-media-container">
+                        ${zyne.mediaType === 'image' ? 
+                            `<img src="${zyne.mediaUrl}" alt="Zyne media" class="zyne-media" onclick="viewMedia('${zyne.mediaUrl}')">` :
+                            `<video src="${zyne.mediaUrl}" controls class="zyne-media"></video>`
+                        }
+                    </div>
+                ` : ''}
             </div>
             <div class="zyne-stats">
-    <div class="zyne-stat">
-        <i class="fas fa-heart"></i>
-        <span>${zyne.likes ? Object.keys(zyne.likes).length : 0}</span>
-    </div>
-    <div class="zyne-stat">
-        <i class="fas fa-comment"></i>
-        <span>${zyne.comments ? Object.keys(zyne.comments).length : 0}</span>
-    </div>
-    <div class="zyne-stat">
-        <i class="fas fa-share"></i>
-        <span>${zyne.shares || 0}</span>
-    </div>
-    <!-- NEW: View count -->
-    <div class="zyne-stat">
-        <i class="fas fa-eye"></i>
-        <span>${zyne.views ? Object.keys(zyne.views).length : 0}</span>
-    </div>
-</div>
+                <div class="zyne-stat">
+                    <i class="fas fa-heart"></i>
+                    <span>${zyne.likes ? Object.keys(zyne.likes).length : 0}</span>
+                </div>
+                <div class="zyne-stat">
+                    <i class="fas fa-comment"></i>
+                    <span>${zyne.comments ? Object.keys(zyne.comments).length : 0}</span>
+                </div>
+                <div class="zyne-stat">
+                    <i class="fas fa-share"></i>
+                    <span>${zyne.shares || 0}</span>
+                </div>
+                <!-- View count (NEW) -->
+                <div class="zyne-stat">
+                    <i class="fas fa-eye"></i>
+                    <span>${zyne.views ? Object.keys(zyne.views).length : 0}</span>
+                </div>
+            </div>
             <div class="zyne-actions">
                 <button class="zyne-action-btn ${zyne.likes && zyne.likes[currentUser.uid] ? 'liked' : ''}" 
                         onclick="toggleZyneLike('${zyne.id}', '${zyne.userId}')">
@@ -6709,21 +6709,21 @@ ${zyne.mediaUrl ? `
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 ` : ''}
-                <!-- NEW: Reaction buttons -->
-<div class="zyne-reactions" style="display: flex; gap: 8px; padding: 0 12px 8px;">
-    <button class="zyne-action-btn ${getReactionCount(zyne, '❤️') > 0 ? 'liked' : ''}" 
-            onclick="toggleZyneReaction('${zyne.id}', '${zyne.userId}', '❤️')">
-        ❤️ <span>${getReactionCount(zyne, '❤️')}</span>
-    </button>
-    <button class="zyne-action-btn ${getReactionCount(zyne, '😂') > 0 ? 'liked' : ''}" 
-            onclick="toggleZyneReaction('${zyne.id}', '${zyne.userId}', '😂')">
-        😂 <span>${getReactionCount(zyne, '😂')}</span>
-    </button>
-    <button class="zyne-action-btn ${getReactionCount(zyne, '😮') > 0 ? 'liked' : ''}" 
-            onclick="toggleZyneReaction('${zyne.id}', '${zyne.userId}', '😮')">
-        😮 <span>${getReactionCount(zyne, '😮')}</span>
-    </button>
-</div>
+                <!-- Reaction buttons -->
+                <div class="zyne-reactions" style="display: flex; gap: 8px; padding: 0 12px 8px;">
+                    <button class="zyne-action-btn ${getReactionCount(zyne, '❤️') > 0 ? 'liked' : ''}" 
+                            onclick="toggleZyneReaction('${zyne.id}', '${zyne.userId}', '❤️')">
+                        ❤️ <span>${getReactionCount(zyne, '❤️')}</span>
+                    </button>
+                    <button class="zyne-action-btn ${getReactionCount(zyne, '😂') > 0 ? 'liked' : ''}" 
+                            onclick="toggleZyneReaction('${zyne.id}', '${zyne.userId}', '😂')">
+                        😂 <span>${getReactionCount(zyne, '😂')}</span>
+                    </button>
+                    <button class="zyne-action-btn ${getReactionCount(zyne, '😮') > 0 ? 'liked' : ''}" 
+                            onclick="toggleZyneReaction('${zyne.id}', '${zyne.userId}', '😮')">
+                        😮 <span>${getReactionCount(zyne, '😮')}</span>
+                    </button>
+                </div>
             </div>
             <div class="zyne-comments-section" id="comments-${zyne.id}">
                 <div class="comment-input-container">
@@ -6780,25 +6780,6 @@ ${zyne.mediaUrl ? `
             </div>
         </div>
     `).join('');
-    <div class="zyne-stats">
-    <div class="zyne-stat">
-        <i class="fas fa-heart"></i>
-        <span>${zyne.likes ? Object.keys(zyne.likes).length : 0}</span>
-    </div>
-    <div class="zyne-stat">
-        <i class="fas fa-comment"></i>
-        <span>${zyne.comments ? Object.keys(zyne.comments).length : 0}</span>
-    </div>
-    <div class="zyne-stat">
-        <i class="fas fa-share"></i>
-        <span>${zyne.shares || 0}</span>
-    </div>
-    <!-- NEW: View count -->
-    <div class="zyne-stat">
-        <i class="fas fa-eye"></i>
-        <span>${zyne.views ? Object.keys(zyne.views).length : 0}</span>
-    </div>
-</div>
 }
 
 function renderGroups() {
@@ -11856,6 +11837,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
