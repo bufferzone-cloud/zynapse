@@ -1,4 +1,10 @@
-<!DOCTYPE html>
+1. User Experience & Polish
+
+Read receipts details – Show who has read a message in group chats.
+
+custom chat them per chat only choose from these three themes (normal (the existing one), love (red and blue with faint love icons in the chat background) custom (where the user can choose what color bubble for sent messages recieved messages and a custom wallpaper either uploaded which transparency custome adjusted or just a custom color and. like whatsapp
+
+(<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -4781,133 +4787,31 @@
     background: var(--gray-200);
 }
 
-.search-highlight {
-    background-color: rgba(255, 255, 0, 0.4);
-    border-radius: 2px;
-    padding: 0 2px;
+/* Theme variables */
+:root {
+    --chat-sent-bg: #007aff;
+    --chat-received-bg: #e9e9ed;
 }
 
-.message-edited {
-    font-size: 10px;
-    opacity: 0.6;
-    margin-right: 4px;
-}
-
-.pinned-messages-container {
-    background: var(--gray-50);
-    border-bottom: 1px solid var(--gray-200);
-    padding: 8px 12px;
-    max-height: 120px;
-    overflow-y: auto;
-    display: none; /* hidden by default, shown when there are pins */
-}
-.pinned-message-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
-    background: var(--white);
-    border-radius: var(--radius-md);
-    margin-bottom: 4px;
-    box-shadow: var(--shadow-subtle);
-}
-.pinned-message-item i.fa-thumbtack {
-    color: var(--blue);
-    font-size: 12px;
-}
-.pinned-message-content {
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 12px;
-}
-.pinned-message-sender {
-    font-weight: 600;
-    margin-right: 4px;
-}
-.unpin-btn {
-    background: none;
-    border: none;
-    color: var(--gray-500);
-    cursor: pointer;
-    font-size: 12px;
-    padding: 2px 4px;
-}
-.unpin-btn:hover {
-    color: var(--red);
-}
-.theme-options {
-    display: flex;
-    gap: 12px;
-    justify-content: space-around;
-    margin-bottom: 16px;
-}
-.theme-option {
-    text-align: center;
-    cursor: pointer;
-    transition: transform 0.1s;
-}
-.theme-option:hover {
-    transform: scale(1.05);
-}
-.theme-preview {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    border: 2px solid var(--gray-200);
-    margin-bottom: 6px;
-}
-.theme-preview.normal {
-    background: var(--white);
-    position: relative;
-}
-.theme-preview.normal::before {
-    content: "💬";
-    font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-}
-.theme-preview.love {
-    background: linear-gradient(135deg, #ff4d4d, #0066ff);
-    position: relative;
-}
-.theme-preview.love::after {
-    content: "❤️";
-    font-size: 24px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0.3;
-}
-.theme-preview.custom {
-    background: conic-gradient(from 90deg at 50% 50%, red, yellow, lime, aqua, blue, magenta, red);
-}
-
-.chat-page {
-    --sent-bubble-bg: #007aff;
-    --received-bubble-bg: #e9e9ed;
-    --chat-wallpaper: none;
-    --wallpaper-opacity: 1;
-    background-image: var(--chat-wallpaper);
-    background-size: cover;
-    background-position: center;
-    background-blend-mode: overlay;
-}
-.chat-page.theme-love .chat-messages {
-    background-color: rgba(255, 240, 245, 0.9);
-}
-.chat-page.theme-custom .chat-messages {
-    background-color: rgba(255,255,255,0.9); /* adjust */
-}
 .message-container.sent .message-bubble {
-    background: var(--sent-bubble-bg) !important;
+    background: var(--chat-sent-bg) !important;
 }
+
 .message-container.received .message-bubble {
-    background: var(--received-bubble-bg) !important;
+    background: var(--chat-received-bg) !important;
+}
+
+/* Love theme background */
+.theme-love .chat-messages-container {
+    background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'%23ff3b30\' opacity=\'0.1\'%3E%3Cpath d=\'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z\'/%3E%3C/svg%3E');
+    background-repeat: repeat;
+    background-size: 40px 40px;
+}
+
+/* Remove border from bubbles for media messages as originally intended */
+.message-container.sent .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice) {
+    background: transparent !important;
+    box-shadow: none !important;
 }
     </style>
 </head>
@@ -5763,52 +5667,7 @@
             </div>
         </div>
     </div>
-<!-- Chat Theme Modal -->
-<div class="modal-overlay" id="chatThemeModal">
-    <div class="modal-content modal-small">
-        <div class="modal-header">
-            <h3>Choose Theme</h3>
-            <button class="modal-close" onclick="closeModal('chatThemeModal')"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <div class="theme-options">
-                <div class="theme-option" onclick="selectTheme('normal')">
-                    <div class="theme-preview normal"></div>
-                    <span>Normal</span>
-                </div>
-                <div class="theme-option" onclick="selectTheme('love')">
-                    <div class="theme-preview love"></div>
-                    <span>Love</span>
-                </div>
-                <div class="theme-option" onclick="selectTheme('custom')">
-                    <div class="theme-preview custom"></div>
-                    <span>Custom</span>
-                </div>
-            </div>
-            <div id="customThemeSettings" style="display: none; margin-top: 16px;">
-                <h4>Customize</h4>
-                <div class="form-group">
-                    <label class="form-label">Sent Bubble Color</label>
-                    <input type="color" id="sentBubbleColor" value="#007aff">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Received Bubble Color</label>
-                    <input type="color" id="receivedBubbleColor" value="#e9e9ed">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Wallpaper</label>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="avatar-upload-btn" onclick="uploadWallpaper()">Upload Image</button>
-                        <button class="avatar-upload-btn" onclick="setWallpaperColor()">Color</button>
-                    </div>
-                    <div id="wallpaperPreview" style="margin-top: 8px; width: 100%; height: 60px; background-size: cover; background-position: center; border-radius: var(--radius-sm);"></div>
-                    <input type="range" id="wallpaperTransparency" min="0" max="1" step="0.1" value="0.5" style="width: 100%; margin-top: 8px;">
-                </div>
-                <button class="modal-btn modal-btn-primary" onclick="saveCustomTheme()" style="margin-top: 12px;">Apply Custom</button>
-            </div>
-        </div>
-    </div>
-</div>
+
     <!-- Report Modal -->
     <div class="modal-overlay" id="reportModal">
         <div class="modal-content modal-small">
@@ -5880,7 +5739,6 @@ const storage = firebase.storage();
 // Global variables
 let currentUser = null;
 let currentChat = null;
-let currentChatTheme = null;
 let currentChatId = null;
 let contacts = [];
 let favorites = [];
@@ -5894,6 +5752,9 @@ let cloudinaryWidget = null;
 let currentUploadType = null;
 let currentZyneMedia = [];
 let currentGroupMembers = [];
+let currentWallpaperUrl = '';
+let currentWallpaperColor = '';
+let selectedTheme = 'normal';
 let selectedGroupMembers = [];
 let currentGroupAvatar = '';
 let currentEditAvatar = '';
@@ -5907,7 +5768,6 @@ let chatListeners = [];
 let typingTimeout = null;
 let isTyping = false;
 let nicknames = {};
-let currentChatSearchQuery = '';
 let pinnedChats = [];
 let messageReactions = {};
 let onlineStatus = true;
@@ -6804,6 +6664,161 @@ function getMessagePreview(type, message) {
     }
 }
 
+
+function openChatThemeModal() {
+    // Load current theme from currentChat
+    if (currentChat && currentChat.theme) {
+        selectedTheme = currentChat.theme.type || 'normal';
+        if (selectedTheme === 'custom') {
+            document.getElementById('customThemeOptions').style.display = 'block';
+            document.getElementById('sentColor').value = currentChat.theme.sentColor || '#007aff';
+            document.getElementById('receivedColor').value = currentChat.theme.receivedColor || '#e9e9ed';
+            currentWallpaperUrl = currentChat.theme.wallpaper || '';
+            currentWallpaperColor = currentChat.theme.wallpaperColor || '';
+            if (currentWallpaperUrl) {
+                document.getElementById('wallpaperPreview').src = currentWallpaperUrl;
+                document.getElementById('wallpaperPreviewContainer').style.display = 'block';
+            }
+            document.getElementById('wallpaperTransparency').value = currentChat.theme.wallpaperTransparency || 0.5;
+        } else {
+            document.getElementById('customThemeOptions').style.display = 'none';
+        }
+    } else {
+        selectedTheme = 'normal';
+        document.getElementById('customThemeOptions').style.display = 'none';
+    }
+    
+    // Highlight the selected theme button
+    document.querySelectorAll('.theme-option').forEach(btn => {
+        btn.style.background = btn.dataset.theme === selectedTheme ? 'var(--blue-light)' : 'var(--white)';
+    });
+    
+    openModal('chatThemeModal');
+}
+
+function selectTheme(theme) {
+    selectedTheme = theme;
+    document.querySelectorAll('.theme-option').forEach(btn => {
+        btn.style.background = btn.dataset.theme === theme ? 'var(--blue-light)' : 'var(--white)';
+    });
+    if (theme === 'custom') {
+        document.getElementById('customThemeOptions').style.display = 'block';
+    } else {
+        document.getElementById('customThemeOptions').style.display = 'none';
+    }
+}
+
+function uploadWallpaper() {
+    if (!cloudinaryWidget) {
+        cloudinaryWidget = cloudinary.createUploadWidget({
+            cloudName: CLOUDINARY_CONFIG.cloudName,
+            uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+            sources: ['local', 'url'],
+            multiple: false,
+            maxFileSize: 50000000,
+            folder: 'zynapse/wallpapers',
+            cropping: true,
+            showAdvancedOptions: false
+        }, (error, result) => {
+            if (!error && result && result.event === "success") {
+                currentWallpaperUrl = result.info.secure_url;
+                document.getElementById('wallpaperPreview').src = currentWallpaperUrl;
+                document.getElementById('wallpaperPreviewContainer').style.display = 'block';
+                currentWallpaperColor = ''; // clear solid color
+            }
+        });
+    }
+    cloudinaryWidget.open();
+}
+
+function setSolidColorWallpaper() {
+    // Simple color picker prompt
+    const color = prompt('Enter color (e.g., #ffffff, lightblue):', '#f0f0f0');
+    if (color) {
+        currentWallpaperColor = color;
+        currentWallpaperUrl = ''; // clear image
+        document.getElementById('wallpaperPreviewContainer').style.display = 'none';
+    }
+}
+
+async function saveChatTheme() {
+    if (!currentChat) return;
+    
+    let themeData = { type: selectedTheme };
+    
+    if (selectedTheme === 'custom') {
+        themeData.sentColor = document.getElementById('sentColor').value;
+        themeData.receivedColor = document.getElementById('receivedColor').value;
+        themeData.wallpaper = currentWallpaperUrl;
+        themeData.wallpaperColor = currentWallpaperColor;
+        themeData.wallpaperTransparency = parseFloat(document.getElementById('wallpaperTransparency').value);
+    }
+    
+    try {
+        await database.ref(`users/${currentUser.uid}/chats/${currentChat.id}/theme`).set(themeData);
+        // Update currentChat object
+        currentChat.theme = themeData;
+        // Apply theme immediately
+        applyChatTheme(themeData);
+        showToast('Theme applied', 'success');
+        closeModal('chatThemeModal');
+    } catch (error) {
+        console.error('Error saving theme:', error);
+        showToast('Failed to save theme', 'error');
+    }
+}
+
+function applyChatTheme(theme) {
+    const chatMessages = document.querySelector('.chat-messages-container');
+    const sentBubbles = document.querySelectorAll('.message-container.sent .message-bubble');
+    const receivedBubbles = document.querySelectorAll('.message-container.received .message-bubble');
+    
+    // Remove any previous theme classes
+    chatMessages.classList.remove('theme-love', 'theme-custom');
+    
+    if (theme.type === 'love') {
+        chatMessages.classList.add('theme-love');
+        // Set bubble colors via CSS (we'll define in <style>)
+        // For love theme, we'll use CSS variables
+        document.documentElement.style.setProperty('--chat-sent-bg', '#ff3b30'); // red
+        document.documentElement.style.setProperty('--chat-received-bg', '#007aff'); // blue
+        // Add love icons background
+        chatMessages.style.backgroundImage = 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'40\' viewBox=\'0 0 24 24\' fill=\'%23ff3b30\' opacity=\'0.1\'%3E%3Cpath d=\'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z\'/%3E%3C/svg%3E")';
+        chatMessages.style.backgroundRepeat = 'repeat';
+        chatMessages.style.backgroundSize = '40px 40px';
+    } else if (theme.type === 'custom') {
+        chatMessages.classList.add('theme-custom');
+        // Apply custom colors
+        document.documentElement.style.setProperty('--chat-sent-bg', theme.sentColor);
+        document.documentElement.style.setProperty('--chat-received-bg', theme.receivedColor);
+        // Apply wallpaper
+        if (theme.wallpaper) {
+            chatMessages.style.backgroundImage = `url('${theme.wallpaper}')`;
+            chatMessages.style.backgroundSize = 'cover';
+            chatMessages.style.backgroundRepeat = 'no-repeat';
+            chatMessages.style.backgroundPosition = 'center';
+            if (theme.wallpaperTransparency !== undefined) {
+                chatMessages.style.opacity = theme.wallpaperTransparency;
+            }
+        } else if (theme.wallpaperColor) {
+            chatMessages.style.backgroundColor = theme.wallpaperColor;
+            chatMessages.style.backgroundImage = 'none';
+        } else {
+            chatMessages.style.backgroundImage = 'none';
+            chatMessages.style.backgroundColor = '';
+        }
+    } else { // normal
+        // Reset to defaults
+        document.documentElement.style.setProperty('--chat-sent-bg', '#007aff');
+        document.documentElement.style.setProperty('--chat-received-bg', '#e9e9ed');
+        chatMessages.style.backgroundImage = 'none';
+        chatMessages.style.backgroundColor = '';
+    }
+    
+    // Force update existing bubbles (they will inherit CSS variables)
+    // If you want to update already rendered bubbles, you can loop and set inline styles, but CSS variables handle it.
+}
+    
 function renderZynes() {
     const zynesFeed = document.getElementById('zynesFeed');
     
@@ -7702,6 +7717,12 @@ async function openChat(chatId, chatType) {
                 isAdmin: group.admin === currentUser.uid
             };
         }
+
+        // Load theme for this chat
+const themeSnapshot = await database.ref(`users/${currentUser.uid}/chats/${chatId}/theme`).once('value');
+if (themeSnapshot.exists()) {
+    currentChat.theme = themeSnapshot.val();
+}
         
         renderChatInterface();
         await loadMessages();
@@ -7804,7 +7825,6 @@ function renderChatInterface() {
             </div>
             <div class="chat-messages-container">
                 <div class="chat-messages" id="chatMessages">
-                
                     <!-- Messages will be loaded here -->
                 </div>
                 <div class="typing-indicator" id="typingIndicator">
@@ -7865,7 +7885,6 @@ function renderChatInterface() {
             </div>
             <div class="chat-messages-container">
                 <div class="chat-messages" id="chatMessages">
-                <div id="pinnedMessagesContainer" class="pinned-messages-container"></div>
                     <!-- Messages will be loaded here -->
                 </div>
             </div>
@@ -7885,7 +7904,10 @@ function renderChatInterface() {
             </div>
         `;
     }
-    
+
+if (currentChat.theme) {
+    applyChatTheme(currentChat.theme);
+}
     // Setup chat input listeners
     const chatInput = document.getElementById('chatInput');
     const chatSendBtn = document.getElementById('chatSendBtn');
@@ -8101,6 +8123,10 @@ async function loadMessages() {
                 chatMessages.appendChild(messageElement);
             });
         }
+
+       if (currentChat.type === 'group') {
+    setTimeout(() => markUnreadGroupMessages(), 500); // slight delay to ensure DOM is ready
+}
         
         setTimeout(() => {
             scrollToBottom();
@@ -8185,7 +8211,6 @@ if (currentChat.type === 'group' && !isSent) {
 }
 messageDiv.className = className;
 messageDiv.dataset.messageId = message.id;
-messageDiv.__message = message;
 
     // Avatar (only for group received)
     let avatarHtml = '';
@@ -8193,7 +8218,13 @@ messageDiv.__message = message;
         const avatarUrl = message.senderAvatar || 'https://via.placeholder.com/32';
         avatarHtml = `<div class="message-avatar"><img src="${avatarUrl}" alt="${message.senderName}"></div>`;
     }
-
+if (currentChat.type === 'group' && message.readBy && message.readBy.length > 0) {
+    bubbleContent += `
+        <span class="read-receipts-icon" onclick="showReadReceipts('${message.id}', event)">
+            <i class="fas fa-check-double" style="font-size: 12px; margin-left: 4px;"></i>
+        </span>
+    `;
+}
     // Bubble content depends on message type
     let bubbleContent = '';
     switch (message.type) {
@@ -8333,65 +8364,6 @@ function getReplyHtml(replyTo) {
     `;
 }
 
-async function markMessageAsRead(messageId) {
-    if (!currentChat || currentChat.type !== 'group') return;
-    const messageRef = messagesRef.child(currentChat.id).child(messageId);
-    const snapshot = await messageRef.once('value');
-    const message = snapshot.val();
-    if (!message || message.senderUid === currentUser.uid) return;
-    
-    const readBy = message.readBy || {};
-    if (!readBy[currentUser.uid]) {
-        readBy[currentUser.uid] = {
-            userId: currentUser.userId,
-            userName: currentUser.name,
-            readAt: new Date().toISOString()
-        };
-        await messageRef.update({ readBy });
-    }
-}
-
-function showReadReceipts(messageId) {
-    const messageElement = document.querySelector(`.message-container[data-message-id="${messageId}"]`);
-    if (!messageElement) return;
-    
-    const readBy = messageElement.__message?.readBy;
-    messageDiv.__message.readBy// We need to store message data on element
-    if (!readBy) return;
-    
-    // Build modal content
-    let html = '<div style="padding: 8px;">';
-    for (const uid in readBy) {
-        const user = readBy[uid];
-        html += `
-            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--gray-100);">
-                <img src="${user.avatar || 'https://via.placeholder.com/30'}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
-                <div style="flex:1;">
-                    <div style="font-weight: 600;">${escapeHtml(user.userName)}</div>
-                    <div style="font-size: 11px; color: var(--gray-600);">${formatTime(user.readAt)}</div>
-                </div>
-            </div>
-        `;
-    }
-    html += '</div>';
-    
-    // Show modal
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay active';
-    modal.innerHTML = `
-        <div class="modal-content modal-small">
-            <div class="modal-header">
-                <h3>Read Receipts</h3>
-                <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                ${html}
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
-
 // ==================== UPDATED MESSAGE CREATION FUNCTIONS ====================
 
 function createTextMessage(message, isSent, isGroup) {
@@ -8404,7 +8376,7 @@ function createTextMessage(message, isSent, isGroup) {
         <div class="message-bubble">
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
             ${replyHtml}
-            <div class="message-text">${highlightText(message.text, currentChatSearchQuery)}</div>
+            <div class="message-text">${escapeHtml(message.text)}</div>
             <span class="message-time">
                 ${formatTime(message.timestamp)}
                 ${isSent && privacySettings.readReceipts ? `
@@ -8428,9 +8400,8 @@ function createImageMessage(message, isSent, isGroup) {
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
             ${replyHtml}
             <img src="${message.mediaUrl}" alt="Photo" class="message-media" onclick="viewMedia('${message.mediaUrl}')" data-downloadable>
-            ${message.text ? `<div class="message-text">${highlightText(message.text, currentChatSearchQuery)}</div>` : ''}
+            ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
             <span class="message-time">
-            ${message.edited ? '<span class="message-edited">(edited)</span>' : ''}
                 ${formatTime(message.timestamp)}
                 ${isSent && privacySettings.readReceipts ? `
                     <span class="message-status">
@@ -8453,7 +8424,7 @@ function createVideoMessage(message, isSent, isGroup) {
             ${showSenderName ? `<div class="message-sender-name">${escapeHtml(message.senderName)}</div>` : ''}
             ${replyHtml}
             <video src="${message.mediaUrl}" controls class="message-media" data-downloadable></video>
-            ${message.text ? `<div class="message-text">${highlightText(message.text, currentChatSearchQuery)}</div>` : ''}
+            ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
             <span class="message-time">
                 ${formatTime(message.timestamp)}
                 ${isSent && privacySettings.readReceipts ? `
@@ -8485,7 +8456,7 @@ function createDocumentMessage(message, isSent, isGroup) {
                     <div class="message-document-size">${formatFileSize(message.fileSize)}</div>
                 </div>
             </div>
-            ${message.text ? `<div class="message-text">${highlightText(message.text, currentChatSearchQuery)}</div>` : ''}
+            ${message.text ? `<div class="message-text">${escapeHtml(message.text)}</div>` : ''}
             <span class="message-time">
                 ${formatTime(message.timestamp)}
                 ${isSent && privacySettings.readReceipts ? `
@@ -8497,141 +8468,6 @@ function createDocumentMessage(message, isSent, isGroup) {
         </div>
     `;
 }
-
-function openChatThemeModal() {
-    // Load current theme for this chat from database
-    loadChatTheme().then(() => {
-        openModal('chatThemeModal');
-        // Update UI to reflect current theme
-        if (currentChatTheme && currentChatTheme.type === 'custom') {
-            document.getElementById('customThemeSettings').style.display = 'block';
-            document.getElementById('sentBubbleColor').value = currentChatTheme.sentColor || '#007aff';
-            document.getElementById('receivedBubbleColor').value = currentChatTheme.receivedColor || '#e9e9ed';
-            if (currentChatTheme.wallpaper) {
-                document.getElementById('wallpaperPreview').style.backgroundImage = `url(${currentChatTheme.wallpaper})`;
-            }
-            document.getElementById('wallpaperTransparency').value = currentChatTheme.wallpaperTransparency || 0.5;
-        }
-    });
-}
-
-function selectTheme(type) {
-    if (type === 'normal') {
-        currentChatTheme = { type: 'normal' };
-        saveChatTheme();
-        closeModal('chatThemeModal');
-    } else if (type === 'love') {
-        currentChatTheme = { type: 'love' };
-        saveChatTheme();
-        closeModal('chatThemeModal');
-    } else if (type === 'custom') {
-        document.getElementById('customThemeSettings').style.display = 'block';
-        currentChatTheme = { type: 'custom', sentColor: '#007aff', receivedColor: '#e9e9ed', wallpaper: null, wallpaperTransparency: 0.5 };
-    }
-}
-
-function saveCustomTheme() {
-    currentChatTheme.sentColor = document.getElementById('sentBubbleColor').value;
-    currentChatTheme.receivedColor = document.getElementById('receivedBubbleColor').value;
-    currentChatTheme.wallpaperTransparency = parseFloat(document.getElementById('wallpaperTransparency').value);
-    // wallpaper URL is set via uploadWallpaper or setWallpaperColor
-    saveChatTheme();
-    closeModal('chatThemeModal');
-}
-
-async function saveChatTheme() {
-    if (!currentChat) return;
-    const userId = currentUser.uid;
-    const chatId = currentChat.id;
-    await database.ref(`userChatThemes/${userId}/${chatId}`).set(currentChatTheme);
-    applyChatTheme();
-    showToast('Theme applied', 'success');
-}
-
-function uploadWallpaper() {
-    if (!cloudinaryWidget) {
-        cloudinaryWidget = cloudinary.createUploadWidget({
-            cloudName: CLOUDINARY_CONFIG.cloudName,
-            uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
-            sources: ['local', 'url'],
-            multiple: false,
-            maxFileSize: 10000000,
-            folder: 'zynapse/wallpapers',
-            cropping: false
-        }, (error, result) => {
-            if (!error && result && result.event === "success") {
-                const url = result.info.secure_url;
-                document.getElementById('wallpaperPreview').style.backgroundImage = `url(${url})`;
-                currentChatTheme.wallpaper = url;
-            }
-        });
-    }
-    cloudinaryWidget.open();
-}
-
-function setWallpaperColor() {
-    // Simple color picker or just set a solid color
-    const color = prompt('Enter a color (hex, rgb, or name):', '#ffffff');
-    if (color) {
-        document.getElementById('wallpaperPreview').style.backgroundImage = 'none';
-        document.getElementById('wallpaperPreview').style.backgroundColor = color;
-        currentChatTheme.wallpaper = color; // store as color string
-    }
-}
-
-    
-async function loadChatTheme() {
-    if (!currentChat) return;
-    const userId = currentUser.uid;
-    const chatId = currentChat.id;
-    const snapshot = await database.ref(`userChatThemes/${userId}/${chatId}`).once('value');
-    if (snapshot.exists()) {
-        currentChatTheme = snapshot.val();
-    } else {
-        currentChatTheme = { type: 'normal' };
-    }
-    applyChatTheme();
-}
-
-function applyChatTheme() {
-    if (!currentChat || !currentChatTheme) return;
-    const chatPage = document.getElementById('chatPage');
-    const root = chatPage.style;
-    
-    // Remove any previous theme classes
-    chatPage.classList.remove('theme-normal', 'theme-love', 'theme-custom');
-    
-    switch (currentChatTheme.type) {
-        case 'normal':
-            chatPage.classList.add('theme-normal');
-            // Reset to default CSS variables
-            root.setProperty('--sent-bubble-bg', '');
-            root.setProperty('--received-bubble-bg', '');
-            root.setProperty('--chat-wallpaper', '');
-            break;
-        case 'love':
-            chatPage.classList.add('theme-love');
-            // Set love background with faint hearts
-            root.setProperty('--chat-wallpaper', 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' opacity=\'0.1\'%3E%3Ctext x=\'10\' y=\'20\' font-size=\'20\' fill=\'%23ff0000\'%3E❤️%3C/text%3E%3Ctext x=\'50\' y=\'70\' font-size=\'20\' fill=\'%230000ff\'%3E❤️%3C/text%3E%3C/svg%3E")');
-            root.setProperty('--sent-bubble-bg', '#ff4d4d');
-            root.setProperty('--received-bubble-bg', '#0066ff');
-            break;
-        case 'custom':
-            chatPage.classList.add('theme-custom');
-            root.setProperty('--sent-bubble-bg', currentChatTheme.sentColor || '#007aff');
-            root.setProperty('--received-bubble-bg', currentChatTheme.receivedColor || '#e9e9ed');
-            if (currentChatTheme.wallpaper) {
-                root.setProperty('--chat-wallpaper', `url(${currentChatTheme.wallpaper})`);
-            } else {
-                root.setProperty('--chat-wallpaper', '');
-            }
-            if (currentChatTheme.wallpaperTransparency) {
-                root.setProperty('--wallpaper-opacity', currentChatTheme.wallpaperTransparency);
-            }
-            break;
-    }
-}
-
 
 function createLocationMessage(message, isSent, isGroup) {
     const showSenderName = isGroup && !isSent;
@@ -9006,24 +8842,21 @@ function showMessageOptions(e, messageId, isSent) {
     messageOptions.style.left = rect.left + 'px';
     messageOptions.style.top = (rect.bottom + window.scrollY + 50) + 'px'; // below picker
     messageOptions.innerHTML = `
-    <button class="dropdown-item" onclick="copyMessageText('${messageId}')">
-        <i class="fas fa-copy"></i> Copy
-    </button>
-    <button class="dropdown-item" onclick="forwardMessage('${messageId}')">
-        <i class="fas fa-share"></i> Forward
-    </button>
-    <button class="dropdown-item" onclick="togglePinMessage('${messageId}')">
-        <i class="fas fa-thumbtack"></i> Pin / Unpin
-    </button>
-    ${isSent ? `
-        <button class="dropdown-item" onclick="deleteMessage('${messageId}')">
-            <i class="fas fa-trash"></i> Delete
+        <button class="dropdown-item" onclick="copyMessageText('${messageId}')">
+            <i class="fas fa-copy"></i> Copy
         </button>
-    ` : ''}
-    <button class="dropdown-item" onclick="reportMessage('${messageId}')">
-        <i class="fas fa-flag"></i> Report
-    </button>
-`;
+        <button class="dropdown-item" onclick="forwardMessage('${messageId}')">
+            <i class="fas fa-share"></i> Forward
+        </button>
+        ${isSent ? `
+            <button class="dropdown-item" onclick="deleteMessage('${messageId}')">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        ` : ''}
+        <button class="dropdown-item" onclick="reportMessage('${messageId}')">
+            <i class="fas fa-flag"></i> Report
+        </button>
+    `;
 
     document.getElementById('chatPage').appendChild(messageOptions);
 
@@ -9039,68 +8872,36 @@ function showMessageOptions(e, messageId, isSent) {
     }, 10);
 }
 
-async function togglePinMessage(messageId) {
-    const chatId = currentChat.id;
-    const pinRef = database.ref(`chatPins/${chatId}/${messageId}`);
-    const snapshot = await pinRef.once('value');
+async function markUnreadGroupMessages() {
+    if (currentChat.type !== 'group') return;
     
-    if (snapshot.exists()) {
-        // Unpin
-        await pinRef.remove();
-        showToast('Message unpinned', 'info');
-    } else {
-        // Pin: fetch the full message and store
-        const messageSnapshot = await messagesRef.child(chatId).child(messageId).once('value');
-        const message = messageSnapshot.val();
-        if (!message) return;
-        
-        // Store the message along with who pinned and when
-        await pinRef.set({
-            ...message,
-            pinnedBy: currentUser.uid,
-            pinnedByName: currentUser.name,
-            pinnedAt: new Date().toISOString()
-        });
-        showToast('Message pinned', 'success');
-    }
+    const messages = document.querySelectorAll('.message-container[data-read="false"]');
+    if (messages.length === 0) return;
     
-    // Refresh pinned display
-    renderPinnedMessages();
-}
+    const updates = {};
+    messages.forEach(msgEl => {
+        const msgId = msgEl.dataset.messageId;
+        // get current readBy array from data attribute
+        const readByStr = msgEl.dataset.readBy;
+        const readBy = readByStr ? JSON.parse(readByStr) : [];
+        if (!readBy.includes(currentUser.uid)) {
+            readBy.push(currentUser.uid);
+            updates[`${currentChat.id}/${msgId}/readBy`] = readBy;
+            // mark as read in DOM immediately to avoid duplicate updates
+            msgEl.dataset.read = 'true';
+            msgEl.dataset.readBy = JSON.stringify(readBy);
+        }
+    });
     
-async function editMessage(messageId) {
-    const messageRef = messagesRef.child(currentChat.id).child(messageId);
-    const snapshot = await messageRef.once('value');
-    const message = snapshot.val();
-    
-    if (!message) return;
-    
-    // Check time limit (15 minutes)
-    const messageTime = new Date(message.timestamp).getTime();
-    const now = Date.now();
-    const fifteenMinutes = 15 * 60 * 1000;
-    if (now - messageTime > fifteenMinutes) {
-        showToast('Editing time limit (15 minutes) expired', 'error');
-        return;
-    }
-    
-    // Prompt for new text
-    const newText = prompt('Edit your message:', message.text);
-    if (newText === null || newText.trim() === '') return;
-    
-    try {
-        await messageRef.update({
-            text: newText.trim(),
-            edited: true,
-            editTimestamp: new Date().toISOString()
-        });
-        showToast('Message edited', 'success');
-    } catch (error) {
-        console.error('Error editing message:', error);
-        showToast('Failed to edit', 'error');
+    if (Object.keys(updates).length > 0) {
+        try {
+            await messagesRef.update(updates);
+        } catch (error) {
+            console.error('Error marking messages as read:', error);
+        }
     }
 }
-    
+
 async function sendMessage() {
     const chatInput = document.getElementById('chatInput');
     const chatSendBtn = document.getElementById('chatSendBtn');
@@ -9123,6 +8924,12 @@ async function sendMessage() {
             timestamp: new Date().toISOString(),
             status: 'sent'
         };
+
+        if (currentChat.type === 'group') {
+    messageData.readBy = [currentUser.uid]; // sender has read it
+} else {
+    messageData.status = 'sent';
+}
 
         // Add reply information if replying
         if (replyMessage) {
@@ -9152,6 +8959,42 @@ async function sendMessage() {
         console.error('Error sending message:', error);
         showToast('Failed to send message', 'error');
         chatSendBtn.disabled = false;
+    }
+}
+
+async function showReadReceipts(messageId, event) {
+    event.stopPropagation();
+    try {
+        const snapshot = await messagesRef.child(currentChat.id).child(messageId).once('value');
+        const message = snapshot.val();
+        if (!message || !message.readBy) {
+            showToast('No read receipts', 'info');
+            return;
+        }
+        
+        // fetch user details for each reader
+        const readers = await Promise.all(message.readBy.map(async (uid) => {
+            const userSnap = await usersRef.child(uid).once('value');
+            const user = userSnap.val();
+            return {
+                uid,
+                name: user.name,
+                avatar: user.profilePicture || 'https://via.placeholder.com/40'
+            };
+        }));
+        
+        const listDiv = document.getElementById('readReceiptsList');
+        listDiv.innerHTML = readers.map(r => `
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--gray-100);">
+                <img src="${r.avatar}" alt="${r.name}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                <span style="font-size: 14px;">${r.name}</span>
+            </div>
+        `).join('');
+        
+        openModal('readReceiptsModal');
+    } catch (error) {
+        console.error('Error fetching read receipts:', error);
+        showToast('Failed to load read receipts', 'error');
     }
 }
 
@@ -9770,54 +9613,6 @@ async function sendVoiceMessage(audioUrl, duration) {
         console.error('Error sending voice message:', error);
         showToast('Failed to send voice', 'error');
     }
-}
-
-async function renderPinnedMessages() {
-    if (!currentChat) return;
-    const chatId = currentChat.id;
-    const container = document.getElementById('pinnedMessagesContainer');
-    if (!container) return;
-    
-    const snapshot = await database.ref(`chatPins/${chatId}`).once('value');
-    if (!snapshot.exists()) {
-        container.style.display = 'none';
-        container.innerHTML = '';
-        return;
-    }
-    
-    const pins = snapshot.val();
-    let html = '';
-    for (const [msgId, msg] of Object.entries(pins)) {
-        const preview = msg.text || (msg.type === 'image' ? '📷 Photo' : msg.type === 'video' ? '🎥 Video' : '📎 Document');
-        html += `
-            <div class="pinned-message-item" data-message-id="${msgId}">
-                <i class="fas fa-thumbtack"></i>
-                <div class="pinned-message-content">
-                    <span class="pinned-message-sender">${escapeHtml(msg.senderName)}</span>
-                    <span>${escapeHtml(preview)}</span>
-                </div>
-                <button class="unpin-btn" onclick="togglePinMessage('${msgId}')" title="Unpin">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-    }
-    container.innerHTML = html;
-    container.style.display = 'block';
-    
-    // Also attach click to scroll to original message
-    container.querySelectorAll('.pinned-message-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            if (e.target.closest('.unpin-btn')) return;
-            const msgId = item.dataset.messageId;
-            const msgElement = document.querySelector(`.message-container[data-message-id="${msgId}"]`);
-            if (msgElement) {
-                msgElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                msgElement.style.backgroundColor = 'var(--blue-light)';
-                setTimeout(() => msgElement.style.backgroundColor = '', 2000);
-            }
-        });
-    });
 }
 function playVoiceMessage(voiceId, url) {
     const audio = new Audio(url);
@@ -11139,19 +10934,12 @@ function openChatSearch() {
 }
 
 function closeChatSearch() {
-function closeChatSearch() {
     document.getElementById('chatSearchContainer').classList.remove('show');
     document.getElementById('chatSearchResults').classList.remove('show');
     document.getElementById('chatSearchInput').value = '';
-    currentChatSearchQuery = ''; // ← add this
-    // Remove all highlight classes from messages
-    document.querySelectorAll('.search-highlight').forEach(el => {
-        el.outerHTML = el.innerHTML; // unwrap
-    });
 }
 
 async function searchChatMessages() {
-    currentChatSearchQuery = query; // ← add this
     const query = document.getElementById('chatSearchInput').value.trim();
     if (!query) {
         document.getElementById('chatSearchResults').classList.remove('show');
@@ -11809,7 +11597,7 @@ async function forwardToContact(contactId, messageStr) {
     }
 }
 
-async function deleteMessageForEveryone(messageId) {
+async function deleteMessage(messageId) {
     if (!confirm('Delete this message?')) return;
     
     try {
@@ -12302,6 +12090,80 @@ window.toggleSpeaker = toggleSpeaker;
   </div>
 </div>
 
+<!-- ========== READ RECEIPTS MODAL ========== -->
+<div class="modal-overlay" id="readReceiptsModal">
+  <div class="modal-content modal-small">
+    <div class="modal-header">
+      <h3>Read by</h3>
+      <button class="modal-close" onclick="closeModal('readReceiptsModal')">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="readReceiptsList" style="max-height: 300px; overflow-y: auto;">
+      <!-- Readers will be listed here -->
+    </div>
+  </div>
+</div>
+
+<!-- ========== CHAT THEME MODAL ========== -->
+<div class="modal-overlay" id="chatThemeModal">
+  <div class="modal-content modal-small">
+    <div class="modal-header">
+      <h3>Chat Theme</h3>
+      <button class="modal-close" onclick="closeModal('chatThemeModal')">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-section">
+        <h4>Select Theme</h4>
+        <div style="display: flex; gap: 10px; justify-content: space-around; margin-bottom: 20px;">
+          <button class="theme-option" data-theme="normal" onclick="selectTheme('normal')" style="padding: 8px 16px; border: 1px solid var(--gray-200); border-radius: var(--radius-pill); background: var(--white);">Normal</button>
+          <button class="theme-option" data-theme="love" onclick="selectTheme('love')" style="padding: 8px 16px; border: 1px solid var(--gray-200); border-radius: var(--radius-pill); background: var(--white);">Love</button>
+          <button class="theme-option" data-theme="custom" onclick="selectTheme('custom')" style="padding: 8px 16px; border: 1px solid var(--gray-200); border-radius: var(--radius-pill); background: var(--white);">Custom</button>
+        </div>
+      </div>
+      
+      <div id="customThemeOptions" style="display: none;">
+        <div class="settings-section">
+          <h4>Bubble Colors</h4>
+          <div style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Sent</label>
+            <input type="color" id="sentColor" value="#007aff">
+          </div>
+          <div style="margin-bottom: 12px;">
+            <label style="display: block; font-size: 12px; margin-bottom: 4px;">Received</label>
+            <input type="color" id="receivedColor" value="#e9e9ed">
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <h4>Wallpaper</h4>
+          <div style="margin-bottom: 8px;">
+            <button class="avatar-upload-btn" onclick="uploadWallpaper()">
+              <i class="fas fa-upload"></i> Upload Image
+            </button>
+            <button class="avatar-upload-btn" onclick="setSolidColorWallpaper()" style="margin-left: 8px;">
+              <i class="fas fa-palette"></i> Solid Color
+            </button>
+          </div>
+          <div style="margin-bottom: 8px; display: none;" id="wallpaperPreviewContainer">
+            <img id="wallpaperPreview" src="" style="max-width: 100%; max-height: 100px; border-radius: var(--radius-sm);">
+          </div>
+          <div style="margin-bottom: 8px;">
+            <label style="font-size: 12px;">Transparency</label>
+            <input type="range" id="wallpaperTransparency" min="0" max="1" step="0.1" value="0.5">
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeModal('chatThemeModal')">Cancel</button>
+        <button class="modal-btn modal-btn-primary" onclick="saveChatTheme()">Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- ========== ACTIVE CALL OVERLAY ========== -->
 <div class="modal-overlay" id="activeCallModal">
   <div class="modal-content" style="background: #000; color: white;">
@@ -12350,8 +12212,3 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
-
-Step by step and full functions including where to put them exactly
-
-
-
