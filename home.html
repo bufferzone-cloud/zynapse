@@ -6878,33 +6878,31 @@ async function loadCalls() {
 
     try {
         const callsRef = firestore.collection('calls');
-        const snapshot = await callsRef
-            .where('callerUid', '==', currentUser.uid)
-            .get();
-        
-        const snapshot2 = await callsRef
-            .where('receiverUid', '==', currentUser.uid)
-            .get();
-        
-        const missedCount = calls.filter(c => 
-    c.receiverUid === currentUser.uid && 
-    c.status === 'missed' && 
-    !c.wasConnected
-).length;
-updateBadge('calls', missedCount);
+        const snapshot = await callsRef.where('callerUid', '==', currentUser.uid).get();
+        const snapshot2 = await callsRef.where('receiverUid', '==', currentUser.uid).get();
 
+        // 1. Gather all calls
         let calls = [];
         snapshot.forEach(doc => calls.push({ id: doc.id, ...doc.data() }));
         snapshot2.forEach(doc => calls.push({ id: doc.id, ...doc.data() }));
 
-        // Remove duplicates (if both caller and receiver conditions matched the same doc)
+        // 2. Remove duplicates (if the same call appears in both queries)
         calls = calls.filter((call, index, self) => 
             index === self.findIndex(c => c.id === call.id)
         );
 
-        // Sort by createdAt descending
-        calls.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds || 0);
+        // 3. Calculate missed calls count (now calls is defined)
+        const missedCount = calls.filter(c => 
+            c.receiverUid === currentUser.uid && 
+            c.status === 'missed' && 
+            !c.wasConnected
+        ).length;
+        updateBadge('calls', missedCount);
 
+        // 4. Sort by createdAt descending (handle missing timestamps)
+        calls.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        // 5. Render the list
         renderCalls(calls);
     } catch (error) {
         console.error('Error loading calls:', error);
@@ -12579,5 +12577,6 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
