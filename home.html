@@ -11397,55 +11397,88 @@ async function toggleFavorite(userId) {
         showToast('Failed to update favorite', 'error');
     }
 }
-
+    
 window.viewUserProfile = async function(userId) {
     try {
+        // 1. Fetch user data from the main users node
         const userSnapshot = await usersRef.child(userId).once('value');
         if (!userSnapshot.exists()) {
             showToast('User not found', 'error');
             return;
         }
-
         const user = userSnapshot.val();
-        user.uid = userId;
+        user.uid = userId;   // store UID for later use
 
-        // Also fetch extended profile and visibility for this user
-        const profile = user.profile || {};
-        const visibility = user.profileVisibility || {};
+        // 2. Fetch online status (contains lastSeen)
+        const onlineSnapshot = await onlineRef.child(userId).once('value');
+        const onlineData = onlineSnapshot.val() || {};
 
+        // 3. Populate the modal with basic profile information
         document.getElementById('viewProfileAvatar').src = user.profilePicture || 'https://via.placeholder.com/150';
-        document.getElementById('viewProfileName').textContent = user.name;
-        document.getElementById('viewProfileId').textContent = user.userId;
+        document.getElementById('viewProfileName').textContent = user.name || 'Unnamed';
+        document.getElementById('viewProfileId').textContent = user.userId || 'ZYN-????';
+
+        // Phone and email – fallback to 'Not provided' if missing
         document.getElementById('viewProfilePhone').textContent = user.phone || 'Not provided';
         document.getElementById('viewProfileEmail').textContent = user.email || 'Not provided';
-        document.getElementById('viewProfileLastSeen').textContent = formatLastSeen(user.lastSeen);
-        document.getElementById('viewProfileCreatedAt').textContent = formatDate(user.createdAt);
 
+        // Last seen – use onlineData.lastSeen, fallback to user.lastSeen (if stored), else 'Never'
+        const lastSeen = onlineData.lastSeen || user.lastSeen;
+        document.getElementById('viewProfileLastSeen').textContent = formatLastSeen(lastSeen);
+
+        // Member since – use createdAt from user node (must be stored during registration)
+        // If missing, try to get from Firebase Auth metadata (if available) or show 'Unknown'
+        let memberSince = 'Unknown';
+        if (user.createdAt) {
+            memberSince = formatDate(user.createdAt);
+        } else {
+            // Optional: fetch from Firebase Auth (requires additional call, may be slower)
+            // For production, ensure createdAt is always stored during signup.
+            console.warn('User missing createdAt');
+        }
+        document.getElementById('viewProfileCreatedAt').textContent = memberSince;
+
+        // 4. Determine relationship with current user
         const isBlocked = blockedUsers.some(b => b.uid === userId);
         const isContact = contacts.some(c => c.uid === userId);
         const isFavorite = favorites.some(f => f.uid === userId);
 
-        document.getElementById('viewProfileChatBtn').style.display = isContact && !isBlocked ? 'block' : 'none';
-        document.getElementById('viewProfileBlockBtn').innerHTML = isBlocked ? 
-            `<i class="fas fa-unlock"></i> Unblock` : 
-            `<i class="fas fa-ban"></i> Block`;
-        document.getElementById('viewProfileFavoriteBtn').innerHTML = isFavorite ? 
-            `<i class="fas fa-star"></i> Favorited` : 
-            `<i class="far fa-star"></i> Favorite`;
+        // Show/hide chat button (only if contact and not blocked)
+        const chatBtn = document.getElementById('viewProfileChatBtn');
+        if (chatBtn) {
+            chatBtn.style.display = (isContact && !isBlocked) ? 'flex' : 'none';
+        }
 
-        // Render extended profile fields
-        renderExtendedProfileInView(profile, visibility);
+        // Update block/unblock button text
+        const blockBtn = document.getElementById('viewProfileBlockBtn');
+        if (blockBtn) {
+            blockBtn.innerHTML = isBlocked
+                ? '<i class="fas fa-unlock"></i> Unblock'
+                : '<i class="fas fa-ban"></i> Block';
+        }
 
+        // Update favorite button text
+        const favBtn = document.getElementById('viewProfileFavoriteBtn');
+        if (favBtn) {
+            favBtn.innerHTML = isFavorite
+                ? '<i class="fas fa-star"></i> Favorited'
+                : '<i class="far fa-star"></i> Favorite';
+        }
+
+        // 5. Store the viewed user's UID in the modal for later use (e.g., starting chat, toggling favorite)
         document.getElementById('viewProfileModal').dataset.userId = userId;
 
+        // 6. Open the modal
         openModal('viewProfileModal');
+
+        // 7. Close the search results if they are open
         document.getElementById('searchResults').classList.remove('show');
 
     } catch (error) {
         console.error('Error viewing user profile:', error);
         showToast('Failed to load profile', 'error');
     }
-}
+};
 
 function viewContactProfile(userId) {
     viewUserProfile(userId);
@@ -13325,3 +13358,4 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
