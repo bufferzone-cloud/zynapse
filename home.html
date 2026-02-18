@@ -6675,19 +6675,24 @@ ${zyne.mediaUrl ? `
 ` : ''}
             </div>
             <div class="zyne-stats">
-                <div class="zyne-stat">
-                    <i class="fas fa-heart"></i>
-                    <span>${zyne.likes ? Object.keys(zyne.likes).length : 0}</span>
-                </div>
-                <div class="zyne-stat">
-                    <i class="fas fa-comment"></i>
-                    <span>${zyne.comments ? Object.keys(zyne.comments).length : 0}</span>
-                </div>
-                <div class="zyne-stat">
-                    <i class="fas fa-share"></i>
-                    <span>${zyne.shares || 0}</span>
-                </div>
-            </div>
+    <div class="zyne-stat">
+        <i class="fas fa-heart"></i>
+        <span>${zyne.likes ? Object.keys(zyne.likes).length : 0}</span>
+    </div>
+    <div class="zyne-stat">
+        <i class="fas fa-comment"></i>
+        <span>${zyne.comments ? Object.keys(zyne.comments).length : 0}</span>
+    </div>
+    <div class="zyne-stat">
+        <i class="fas fa-share"></i>
+        <span>${zyne.shares || 0}</span>
+    </div>
+    <!-- NEW: View count -->
+    <div class="zyne-stat">
+        <i class="fas fa-eye"></i>
+        <span>${zyne.views ? Object.keys(zyne.views).length : 0}</span>
+    </div>
+</div>
             <div class="zyne-actions">
                 <button class="zyne-action-btn ${zyne.likes && zyne.likes[currentUser.uid] ? 'liked' : ''}" 
                         onclick="toggleZyneLike('${zyne.id}', '${zyne.userId}')">
@@ -11851,6 +11856,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
