@@ -5176,6 +5176,48 @@ html, body {
     top: calc(50% + 60px);
   }
 }
+
+/* Force white background for the entire chat message area */
+.chat-messages-container,
+.chat-messages {
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;  /* remove inner padding so messages touch edges */
+}
+
+/* Hide scrollbar but keep scrolling */
+.chat-messages {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE/Edge */
+}
+.chat-messages::-webkit-scrollbar {
+  display: none;                  /* Chrome/Safari */
+}
+
+/* Remove outer boundaries of the chat page so it fills the whole screen */
+.chat-page {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Optional: remove any separator lines between header/input and messages */
+.chat-header,
+.chat-input-container {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.chat-action-btn[onclick*="initiateCall(false)"] {
+    background: var(--blue) !important;
+    color: white !important;
+}
+.chat-action-btn[onclick*="initiateCall(true)"] {
+    background: var(--red) !important;
+    color: white !important;
+}
     </style>
 </head>
 <body>
@@ -13505,6 +13547,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
