@@ -5218,6 +5218,33 @@ html, body {
     background: var(--red) !important;
     color: white !important;
 }
+
+/* Voice note button (replaces emoji picker) */
+.chat-voice-btn {
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+.chat-voice-btn:hover {
+    background: rgba(255,59,48,0.1);
+    color: var(--red);
+}
+.chat-voice-btn i {
+    transition: transform 0.2s;
+}
+.chat-voice-btn:hover i {
+    transform: scale(1.1);
+}
     </style>
 </head>
 <body>
@@ -8590,9 +8617,9 @@ function renderChatInterface() {
                 <div class="chat-input-wrapper">
                     <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1"></textarea>
                 </div>
-                <button class="chat-emoji-btn" onclick="toggleEmojiPicker()">
-                    <i class="far fa-smile"></i>
-                </button>
+<button class="chat-voice-btn" onclick="attachVoiceNote()" title="Voice Note">
+    <i class="fas fa-microphone"></i>
+</button>
                 <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -8640,9 +8667,9 @@ function renderChatInterface() {
                 <div class="chat-input-wrapper">
                     <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1"></textarea>
                 </div>
-                <button class="chat-emoji-btn" onclick="toggleEmojiPicker()">
-                    <i class="far fa-smile"></i>
-                </button>
+                <button class="chat-voice-btn" onclick="attachVoiceNote()" title="Voice Note">
+    <i class="fas fa-microphone"></i>
+</button>
                 <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -13547,6 +13574,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
