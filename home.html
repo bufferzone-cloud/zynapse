@@ -555,7 +555,12 @@ html, body {
 }
 
 /* ==================== BOTTOM NAVIGATION ==================== */
+/* ==================== FIXED BOTTOM NAVIGATION ==================== */
 .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     background: rgba(255,255,255,0.92);
     border-top: 1px solid var(--gray-150);
     backdrop-filter: blur(20px);
@@ -565,7 +570,7 @@ html, body {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    flex-shrink: 0;
+    z-index: var(--z-sticky);
     min-height: 56px;
     height: auto;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -642,6 +647,7 @@ html, body {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
 }
 
 .page-content {
@@ -2124,6 +2130,7 @@ html, body {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-deep);
     margin: 8px;
+     padding-bottom: 0;
 }
 
 .chat-page.active {
@@ -2956,6 +2963,7 @@ html, body {
     flex-shrink: 0;
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     box-shadow: var(--shadow-light);
+    margin-bottom: 0;
 }
 
 .chat-attach-btn {
@@ -13382,6 +13390,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
