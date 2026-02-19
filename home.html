@@ -5053,6 +5053,129 @@ html, body {
 .zyne-reaction:hover {
     background: var(--gray-200);
 }
+/* ========== INCOMING CALL FULLSCREEN ========== */
+.incoming-call-fullscreen {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+.incoming-call-fullscreen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+.incoming-call-fullscreen .incoming-call-header,
+.incoming-call-fullscreen .incoming-call-name,
+.incoming-call-fullscreen .incoming-call-id,
+.incoming-call-fullscreen .incoming-call-buttons {
+  position: relative;
+  z-index: 2;
+  color: white;
+}
+.incoming-call-fullscreen .incoming-call-header {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top));
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.incoming-call-fullscreen .call-type {
+  font-size: 18px;
+  font-weight: 600;
+  background: rgba(0,0,0,0.3);
+  padding: 8px 16px;
+  border-radius: 30px;
+  backdrop-filter: blur(5px);
+}
+.incoming-call-fullscreen .close-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  backdrop-filter: blur(5px);
+}
+.incoming-call-fullscreen .incoming-call-name {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(32px, 8vw, 56px);
+  font-weight: 700;
+  text-align: center;
+  width: 100%;
+  padding: 0 20px;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.incoming-call-fullscreen .incoming-call-id {
+  position: absolute;
+  top: calc(50% + 70px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(16px, 4vw, 22px);
+  opacity: 0.9;
+  text-align: center;
+  width: 100%;
+  padding: 0 20px;
+}
+.incoming-call-fullscreen .incoming-call-buttons {
+  position: absolute;
+  bottom: max(40px, env(safe-area-inset-bottom));
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+.incoming-call-fullscreen .answer-btn,
+.incoming-call-fullscreen .reject-btn {
+  flex: 1;
+  max-width: 200px;
+  padding: 16px 0;
+  border: none;
+  border-radius: 50px;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  transition: transform 0.1s ease;
+}
+.incoming-call-fullscreen .answer-btn {
+  background: linear-gradient(135deg, #34c759, #28a745);
+  color: white;
+}
+.incoming-call-fullscreen .reject-btn {
+  background: linear-gradient(135deg, #ff3b30, #dc3545);
+  color: white;
+  margin-left: auto;
+}
+.incoming-call-fullscreen .answer-btn:active,
+.incoming-call-fullscreen .reject-btn:active {
+  transform: scale(0.97);
+}
+@media (max-width: 480px) {
+  .incoming-call-fullscreen .answer-btn,
+  .incoming-call-fullscreen .reject-btn {
+    max-width: 150px;
+    padding: 14px 0;
+    font-size: 18px;
+  }
+  .incoming-call-fullscreen .incoming-call-id {
+    top: calc(50% + 60px);
+  }
+}
     </style>
 </head>
 <body>
@@ -6697,24 +6820,25 @@ firestore.collection('calls')
 }
 
 function showIncomingCallUI(callData) {
-  document.getElementById('callerAvatar').src = callData.callerAvatar || 'https://via.placeholder.com/80';
+  const modal = document.getElementById('incomingCallModal');
+  modal.style.backgroundImage = `url('${callData.callerAvatar || 'https://via.placeholder.com/150'}')`;
   document.getElementById('callerName').textContent = callData.callerName;
   document.getElementById('callerId').textContent = callData.callerId;
   document.getElementById('incomingCallType').innerHTML = 
     `<i class="fas fa-${callData.isVideo ? 'video' : 'phone'}"></i> Incoming ${callData.isVideo ? 'Video' : 'Voice'} Call`;
 
-  // Start ringing sound (loop)
   ringingSound = new Audio('notification.mp3');
   ringingSound.loop = true;
   ringingSound.play().catch(e => console.log('Ring sound error:', e));
 
   openModal('incomingCallModal');
 
+  // Auto‑miss after 45 seconds
   setTimeout(() => {
-  if (document.getElementById('incomingCallModal').classList.contains('active')) {
-    missCall();   // <-- new function
-  }
-}, 45000);
+    if (modal.classList.contains('active')) {
+      missCall();
+    }
+  }, 45000);
 }
 
 async function missCall() {
@@ -13319,26 +13443,17 @@ window.toggleMute = toggleMute;
 window.toggleVideo = toggleVideo;
 window.toggleSpeaker = toggleSpeaker;
 </script>
-    <!-- ========== INCOMING CALL OVERLAY ========== -->
-<div class="modal-overlay" id="incomingCallModal">
-  <div class="modal-content" style="max-width: 300px; text-align: center;">
-    <div class="modal-header">
-      <h3 id="incomingCallType">Incoming Video Call</h3>
-      <button class="modal-close" onclick="rejectCall()"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="modal-body">
-      <img id="callerAvatar" src="https://via.placeholder.com/80" class="profile-avatar-large" style="margin-bottom: 10px;">
-      <div class="profile-name" id="callerName">Caller Name</div>
-      <div class="profile-user-id" id="callerId">ZYN-XXXX</div>
-      <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;">
-        <button class="request-action-btn accept-btn" onclick="acceptCall()" style="width: auto; padding: 10px 20px;">
-          <i class="fas fa-phone-alt"></i> Accept
-        </button>
-        <button class="request-action-btn reject-btn" onclick="rejectCall()" style="width: auto; padding: 10px 20px;">
-          <i class="fas fa-phone-slash"></i> Decline
-        </button>
-      </div>
-    </div>
+   <!-- ========== INCOMING CALL OVERLAY (FULL SCREEN) ========== -->
+<div class="modal-overlay incoming-call-fullscreen" id="incomingCallModal">
+  <div class="incoming-call-header">
+    <span class="call-type" id="incomingCallType">Incoming Video Call</span>
+    <button class="close-btn" onclick="rejectCall()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="incoming-call-name" id="callerName">Caller Name</div>
+  <div class="incoming-call-id" id="callerId">ZYN-XXXX</div>
+  <div class="incoming-call-buttons">
+    <button class="answer-btn" onclick="acceptCall()"><i class="fas fa-phone-alt"></i> Answer</button>
+    <button class="reject-btn" onclick="rejectCall()"><i class="fas fa-phone-slash"></i> Decline</button>
   </div>
 </div>
 
@@ -13390,6 +13505,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
