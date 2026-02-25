@@ -4,16 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
+    <!-- Apple touch icon (optional but recommended) -->
     <link rel="apple-touch-icon" href="zynaps.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Zynapse - Secure Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="zynaps.png">
+    <!-- Cloudinary Upload Widget -->
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
     <style>
         /* ==================== ZYNAPSE iOS THEMED CHAT APP - PRODUCTION CSS ==================== */
-        /* (all existing styles remain exactly the same – only new overlay added at the end) */
+        /* Reset & Base Styles - Compact iOS Style - SCALED 125% GLOBAL, LOGO 187.5% */
         * {
             margin: 0;
             padding: 0;
@@ -24,6 +26,7 @@
         }
 
         :root {
+            /* Color Palette - Pure White iOS Theme (unchanged) */
             --white: #ffffff;
             --white-98: #fafafa;
             --white-95: #f2f2f2;
@@ -39,6 +42,8 @@
             --gray-800: #3a3a3c;
             --gray-900: #2c2c2e;
             --black: #000000;
+            
+            /* Message Colors */
             --blue: #007aff;
             --blue-light: rgba(0, 122, 255, 0.1);
             --blue-msg: #007aff;
@@ -53,11 +58,15 @@
             --purple: #af52de;
             --yellow: #ffcc00;
             --zyne-red: #ff3b30;
+            
+            /* Shadows - scaled by 1.25 */
             --shadow-subtle: 0 1.25px 3.75px rgba(0, 0, 0, 0.05);
             --shadow-light: 0 2.5px 10px rgba(0, 0, 0, 0.04);
             --shadow-medium: 0 5px 15px rgba(0, 0, 0, 0.05);
             --shadow-heavy: 0 10px 30px rgba(0, 0, 0, 0.06);
             --shadow-float: 0 15px 40px rgba(0, 0, 0, 0.08);
+            
+            /* Border Radius - scaled by 1.25 */
             --radius-xs: 5px;
             --radius-sm: 10px;
             --radius-md: 15px;
@@ -65,8 +74,12 @@
             --radius-xl: 25px;
             --radius-2xl: 30px;
             --radius-circle: 50%;
+            
+            /* Typography - Compact */
             --font-sf: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
             --font-mono: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+            
+            /* Spacing - Compact - scaled by 1.25 */
             --space-1: 5px;
             --space-2: 10px;
             --space-3: 15px;
@@ -75,14 +88,17 @@
             --space-6: 30px;
             --space-8: 40px;
             --space-10: 50px;
+            
+            /* Transitions (unchanged) */
             --transition-fast: 150ms ease;
             --transition-normal: 250ms ease;
             --transition-slow: 350ms ease;
             --transition-spring: 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        /* Base Styles - scaled root font */
         html {
-            font-size: 18.75px;
+            font-size: 18.75px; /* 15px * 1.25 */
             height: 100%;
             overflow: hidden;
         }
@@ -101,6 +117,7 @@
             touch-action: manipulation;
         }
 
+        /* Safe Area Insets for Notch Devices (unchanged) */
         .safe-area-top {
             padding-top: env(safe-area-inset-top);
             padding-top: constant(safe-area-inset-top);
@@ -111,6 +128,7 @@
             padding-bottom: constant(safe-area-inset-bottom);
         }
 
+        /* Layout Containers */
         .app-container {
             height: 100vh;
             height: 100dvh;
@@ -128,6 +146,7 @@
             flex-direction: column;
         }
 
+        /* ==================== LOADING & AUTH STYLES ==================== */
         .loading-screen {
             position: fixed;
             inset: 0;
@@ -150,8 +169,9 @@
             padding: var(--space-6);
         }
 
+        /* LOGO: scaled extra 50% (1.875x) */
         .loading-logo {
-            width: 135px;
+            width: 135px; /* 72px * 1.875 */
             height: 135px;
             margin-bottom: var(--space-6);
             border-radius: var(--radius-lg);
@@ -160,9 +180,9 @@
         }
 
         .spinner-large {
-            width: 45px;
+            width: 45px; /* 36px * 1.25 */
             height: 45px;
-            border: 3.75px solid rgba(0, 122, 255, 0.08);
+            border: 3.75px solid rgba(0, 122, 255, 0.08); /* 3px * 1.25 */
             border-top-color: var(--blue);
             border-radius: var(--radius-circle);
             margin: 0 auto var(--space-4);
@@ -171,11 +191,12 @@
 
         .loading-content p {
             color: var(--gray-600);
-            font-size: 16.25px;
+            font-size: 16.25px; /* 13px * 1.25 */
             font-weight: 500;
-            letter-spacing: 0.375px;
+            letter-spacing: 0.375px; /* 0.3px * 1.25 */
         }
 
+        /* Authentication Pages */
         .auth-page {
             height: 100vh;
             height: 100dvh;
@@ -194,7 +215,7 @@
             align-items: center;
             justify-content: center;
             padding: var(--space-6);
-            max-width: 500px;
+            max-width: 500px; /* 400px * 1.25 */
             margin: 0 auto;
             width: 100%;
         }
@@ -205,8 +226,9 @@
             animation: fadeInUp 0.5s var(--transition-spring);
         }
 
+        /* LOGO: scaled extra 50% (1.875x) */
         .logo-large {
-            width: 165px;
+            width: 165px; /* 88px * 1.875 */
             height: 165px;
             margin: 0 auto var(--space-4);
             border-radius: var(--radius-lg);
@@ -215,15 +237,15 @@
         }
 
         .welcome-screen h1 {
-            font-size: 40px;
+            font-size: 40px; /* 32px * 1.25 */
             font-weight: 800;
             color: var(--black);
             margin-bottom: var(--space-2);
-            letter-spacing: -0.625px;
+            letter-spacing: -0.625px; /* -0.5px * 1.25 */
         }
 
         .tagline {
-            font-size: 18.75px;
+            font-size: 18.75px; /* 15px * 1.25 */
             color: var(--gray-600);
             margin-bottom: var(--space-2);
             line-height: 1.4;
@@ -231,11 +253,11 @@
         }
 
         .powered-by {
-            font-size: 15px;
+            font-size: 15px; /* 12px * 1.25 */
             color: var(--gray-500);
             margin-bottom: var(--space-8);
             font-weight: 500;
-            letter-spacing: 0.625px;
+            letter-spacing: 0.625px; /* 0.5px * 1.25 */
         }
 
         .welcome-actions {
@@ -248,8 +270,8 @@
 
         .welcome-footer {
             padding-top: var(--space-4);
-            border-top: 1.25px solid var(--gray-150);
-            font-size: 15px;
+            border-top: 1.25px solid var(--gray-150); /* 1px * 1.25 */
+            font-size: 15px; /* 12px * 1.25 */
             color: var(--gray-500);
         }
 
@@ -259,6 +281,7 @@
             font-weight: 600;
         }
 
+        /* Auth Forms */
         .auth-form {
             background: var(--white);
             border-radius: var(--radius-xl);
@@ -280,20 +303,21 @@
             background: none;
             border: none;
             color: var(--gray-500);
-            font-size: 22.5px;
+            font-size: 22.5px; /* 18px * 1.25 */
             cursor: pointer;
             padding: var(--space-2);
             border-radius: var(--radius-circle);
             transition: all var(--transition-normal);
-            width: 40px;
+            width: 40px; /* 32px * 1.25 */
             height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
+        /* LOGO: scaled extra 50% (1.875x) */
         .logo-small {
-            width: 97.5px;
+            width: 97.5px; /* 52px * 1.875 */
             height: 97.5px;
             border-radius: var(--radius-md);
             margin-bottom: var(--space-4);
@@ -301,14 +325,14 @@
         }
 
         .auth-header h2 {
-            font-size: 27.5px;
+            font-size: 27.5px; /* 22px * 1.25 */
             font-weight: 700;
             color: var(--black);
             margin-bottom: var(--space-1);
         }
 
         .auth-header p {
-            font-size: 17.5px;
+            font-size: 17.5px; /* 14px * 1.25 */
             color: var(--gray-600);
         }
 
@@ -324,20 +348,20 @@
 
         .input-group i {
             position: absolute;
-            left: 17.5px;
+            left: 17.5px; /* 14px * 1.25 */
             top: 50%;
             transform: translateY(-50%);
             color: var(--gray-500);
-            font-size: 20px;
+            font-size: 20px; /* 16px * 1.25 */
             z-index: 1;
             pointer-events: none;
         }
 
         .input-group input {
             width: 100%;
-            padding: 17.5px 17.5px 17.5px 50px;
-            font-size: 18.75px;
-            border: 1.875px solid var(--gray-200);
+            padding: 17.5px 17.5px 17.5px 50px; /* 14px * 1.25, 40px * 1.25 */
+            font-size: 18.75px; /* 15px * 1.25 */
+            border: 1.875px solid var(--gray-200); /* 1.5px * 1.25 */
             border-radius: var(--radius-md);
             background: var(--white);
             color: var(--black);
@@ -350,7 +374,7 @@
         .input-group input:focus {
             outline: none;
             border-color: var(--blue);
-            box-shadow: 0 0 0 3.75px rgba(0, 122, 255, 0.08);
+            box-shadow: 0 0 0 3.75px rgba(0, 122, 255, 0.08); /* 3px * 1.25 */
         }
 
         .input-group input::placeholder {
@@ -360,11 +384,12 @@
 
         .toggle-password {
             left: auto !important;
-            right: 17.5px;
+            right: 17.5px; /* 14px * 1.25 */
             cursor: pointer;
             pointer-events: auto;
         }
 
+        /* Profile Upload - Compact */
         .profile-upload-section {
             margin: var(--space-4) 0;
         }
@@ -372,7 +397,7 @@
         .upload-label {
             display: block;
             margin-bottom: var(--space-3);
-            font-size: 17.5px;
+            font-size: 17.5px; /* 14px * 1.25 */
             font-weight: 600;
             color: var(--gray-800);
         }
@@ -385,7 +410,7 @@
         }
 
         .upload-preview {
-            width: 90px;
+            width: 90px; /* 72px * 1.25 */
             height: 90px;
             border-radius: var(--radius-circle);
             background: var(--gray-50);
@@ -393,7 +418,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border: 1.875px dashed var(--gray-300);
+            border: 1.875px dashed var(--gray-300); /* 1.5px * 1.25 */
             transition: all var(--transition-normal);
             flex-shrink: 0;
         }
@@ -412,35 +437,35 @@
         }
 
         .preview-placeholder i {
-            font-size: 27.5px;
+            font-size: 27.5px; /* 22px * 1.25 */
             color: var(--gray-400);
-            margin-bottom: 5px;
+            margin-bottom: 5px; /* 4px * 1.25 */
         }
 
         .preview-placeholder span {
-            font-size: 13.75px;
+            font-size: 13.75px; /* 11px * 1.25 */
             color: var(--gray-500);
         }
 
         .upload-buttons {
             display: flex;
             flex-direction: column;
-            gap: 7.5px;
+            gap: 7.5px; /* 6px * 1.25 */
             flex: 1;
         }
 
         .btn-upload, .btn-remove {
-            padding: 12.5px 17.5px;
+            padding: 12.5px 17.5px; /* 10px * 1.25, 14px * 1.25 */
             border-radius: var(--radius-md);
-            font-size: 16.25px;
+            font-size: 16.25px; /* 13px * 1.25 */
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition-normal);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 7.5px;
-            border: 1.875px solid;
+            gap: 7.5px; /* 6px * 1.25 */
+            border: 1.875px solid; /* 1.5px * 1.25 */
         }
 
         .btn-upload {
@@ -466,30 +491,32 @@
         }
 
         .upload-hint {
-            font-size: 13.75px;
+            font-size: 13.75px; /* 11px * 1.25 */
             color: var(--gray-500);
-            margin-top: 2.5px;
+            margin-top: 2.5px; /* 2px * 1.25 */
         }
 
+        /* Terms */
         .terms-agreement {
             margin: var(--space-3) 0;
-            font-size: 15px;
+            font-size: 15px; /* 12px * 1.25 */
             color: var(--gray-600);
         }
 
+        /* Divider */
         .auth-divider {
             display: flex;
             align-items: center;
             margin: var(--space-4) 0;
             color: var(--gray-400);
-            font-size: 15px;
+            font-size: 15px; /* 12px * 1.25 */
         }
 
         .auth-divider::before,
         .auth-divider::after {
             content: "";
             flex: 1;
-            height: 1.25px;
+            height: 1.25px; /* 1px * 1.25 */
             background: var(--gray-200);
         }
 
@@ -497,17 +524,18 @@
             padding: 0 var(--space-3);
         }
 
+        /* Buttons */
         .btn-primary, .btn-secondary, .btn-danger {
-            padding: 17.5px;
+            padding: 17.5px; /* 14px * 1.25 */
             border-radius: var(--radius-md);
-            font-size: 18.75px;
+            font-size: 18.75px; /* 15px * 1.25 */
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition-normal);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 10px; /* 8px * 1.25 */
             border: none;
             width: 100%;
         }
@@ -519,14 +547,14 @@
 
         .btn-primary:hover:not(:disabled) {
             background: #0066d6;
-            transform: translateY(-1.25px);
+            transform: translateY(-1.25px); /* -1px * 1.25 */
             box-shadow: var(--shadow-light);
         }
 
         .btn-secondary {
             background: var(--white);
             color: var(--blue);
-            border: 1.875px solid var(--blue);
+            border: 1.875px solid var(--blue); /* 1.5px * 1.25 */
         }
 
         .btn-secondary:hover:not(:disabled) {
@@ -546,17 +574,17 @@
         .btn-google {
             background: var(--white);
             color: var(--gray-800);
-            border: 1.875px solid var(--gray-200);
-            padding: 15px;
+            border: 1.875px solid var(--gray-200); /* 1.5px * 1.25 */
+            padding: 15px; /* 12px * 1.25 */
             border-radius: var(--radius-md);
-            font-size: 17.5px;
+            font-size: 17.5px; /* 14px * 1.25 */
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition-normal);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 10px; /* 8px * 1.25 */
             width: 100%;
         }
 
@@ -565,12 +593,13 @@
             border-color: var(--gray-300);
         }
 
+        /* Auth Switch */
         .auth-switch {
             text-align: center;
             margin-top: var(--space-4);
             padding-top: var(--space-4);
-            border-top: 1.25px solid var(--gray-150);
-            font-size: 17.5px;
+            border-top: 1.25px solid var(--gray-150); /* 1px * 1.25 */
+            font-size: 17.5px; /* 14px * 1.25 */
             color: var(--gray-600);
         }
 
@@ -580,57 +609,8 @@
             text-decoration: none;
         }
 
-        /* Verification Overlay (new) */
-        .verification-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(5px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity var(--transition-normal);
-        }
-
-        .verification-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .verification-content {
-            text-align: center;
-            padding: var(--space-6);
-            background: var(--white);
-            border-radius: var(--radius-2xl);
-            box-shadow: var(--shadow-heavy);
-            max-width: 350px;
-            width: 90%;
-        }
-
-        .verification-content .spinner-large {
-            width: 60px;
-            height: 60px;
-            border-width: 4px;
-            margin: 0 auto var(--space-4);
-        }
-
-        .verification-content p {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--gray-800);
-            margin-bottom: var(--space-2);
-        }
-
-        .verification-content .sub-text {
-            font-size: 16.25px;
-            color: var(--gray-500);
-            font-weight: 400;
-        }
-
-        /* All existing animations */
+        /* ==================== ANIMATIONS ==================== */
+        /* All animations unchanged except where px values appear */
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -639,7 +619,7 @@
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(18.75px);
+                transform: translateY(18.75px); /* 15px * 1.25 */
             }
             to {
                 opacity: 1;
@@ -650,7 +630,7 @@
         @keyframes modalSlideUp {
             from {
                 opacity: 0;
-                transform: translateY(37.5px) scale(0.95);
+                transform: translateY(37.5px) scale(0.95); /* 30px * 1.25 */
             }
             to {
                 opacity: 1;
@@ -661,7 +641,7 @@
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(12.5px);
+                transform: translateY(12.5px); /* 10px * 1.25 */
             }
             to {
                 opacity: 1;
@@ -703,13 +683,13 @@
 
         @keyframes typing {
             0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-            30% { transform: translateY(-5px); opacity: 1; }
+            30% { transform: translateY(-5px); opacity: 1; } /* -4px * 1.25 */
         }
 
         @keyframes messageSlide {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(10px); /* 8px * 1.25 */
             }
             to {
                 opacity: 1;
@@ -720,7 +700,7 @@
         @keyframes dropdownFade {
             from {
                 opacity: 0;
-                transform: translateY(-6.25px);
+                transform: translateY(-6.25px); /* -5px * 1.25 */
             }
             to {
                 opacity: 1;
@@ -733,13 +713,16 @@
             50% { transform: scale(1.1); }
         }
 
+        /* ==================== RESPONSIVE DESIGN ==================== */
         @media (max-width: 768px) {
             html {
-                font-size: 17.5px;
+                font-size: 17.5px; /* 14px * 1.25 */
             }
+            
             .auth-container {
                 padding: var(--space-4);
             }
+            
             .auth-form {
                 padding: var(--space-5);
             }
@@ -747,16 +730,19 @@
 
         @media (max-width: 480px) {
             html {
-                font-size: 16.875px;
+                font-size: 16.875px; /* 13.5px * 1.25 */
             }
+            
             .auth-container {
                 padding: var(--space-4);
             }
+            
             .auth-form {
                 padding: var(--space-5);
             }
         }
 
+        /* High Contrast & Reduced Motion */
         @media (prefers-contrast: high) {
             :root {
                 --gray-200: #000000;
@@ -776,12 +762,14 @@
             }
         }
 
+        /* Print Styles */
         @media print {
             .auth-page {
                 display: none !important;
             }
         }
 
+        /* Loading States */
         .loading {
             opacity: 0.6;
             pointer-events: none;
@@ -795,19 +783,20 @@
             background: rgba(255, 255, 255, 0.7);
             z-index: 10;
             border-radius: inherit;
-            backdrop-filter: blur(2.5px);
+            backdrop-filter: blur(2.5px); /* 2px * 1.25 */
         }
 
+        /* Utility Classes */
         .hidden {
             display: none !important;
         }
 
         .visually-hidden {
             position: absolute;
-            width: 1.25px;
+            width: 1.25px; /* 1px * 1.25 */
             height: 1.25px;
             padding: 0;
-            margin: -1.25px;
+            margin: -1.25px; /* -1px * 1.25 */
             overflow: hidden;
             clip: rect(0, 0, 0, 0);
             white-space: nowrap;
@@ -857,9 +846,9 @@
         .p-3 { padding: var(--space-3); }
         .p-4 { padding: var(--space-4); }
 
-        .text-sm { font-size: 15px; }
-        .text-base { font-size: 17.5px; }
-        .text-lg { font-size: 20px; }
+        .text-sm { font-size: 15px; } /* 12px * 1.25 */
+        .text-base { font-size: 17.5px; } /* 14px * 1.25 */
+        .text-lg { font-size: 20px; } /* 16px * 1.25 */
 
         .font-normal { font-weight: 400; }
         .font-medium { font-weight: 500; }
@@ -887,27 +876,28 @@
         .shadow-md { box-shadow: var(--shadow-light); }
         .shadow-lg { box-shadow: var(--shadow-medium); }
 
+        /* Toast Notifications */
         .toast-container {
             position: fixed;
-            top: 25px;
-            right: 20px;
+            top: 25px; /* 20px * 1.25 */
+            right: 20px; /* 16px * 1.25 */
             z-index: 99999;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            max-width: 375px;
+            gap: 10px; /* 8px * 1.25 */
+            max-width: 375px; /* 300px * 1.25 */
         }
 
         .toast {
             background: var(--gray-900);
             color: var(--white);
-            padding: 15px 20px;
+            padding: 15px 20px; /* 12px * 1.25, 16px * 1.25 */
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-heavy);
             animation: slideInRight 0.3s var(--transition-spring), fadeOut 0.3s ease 2.7s forwards;
             display: flex;
             align-items: center;
-            gap: 12.5px;
+            gap: 12.5px; /* 10px * 1.25 */
             position: relative;
             overflow: hidden;
             max-width: 100%;
@@ -919,7 +909,7 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 2.5px;
+            height: 2.5px; /* 2px * 1.25 */
             background: rgba(255, 255, 255, 0.2);
             animation: toastProgress 3s linear forwards;
         }
@@ -941,23 +931,25 @@
         }
 
         .toast i {
-            font-size: 20px;
+            font-size: 20px; /* 16px * 1.25 */
             flex-shrink: 0;
         }
 
         .toast span {
             flex: 1;
-            font-size: 17.5px;
+            font-size: 17.5px; /* 14px * 1.25 */
             line-height: 1.3;
         }
 
+        /* iOS Safari specific */
         @supports (-webkit-touch-callout: none) {
             body {
                 -webkit-font-smoothing: antialiased;
                 -moz-osx-font-smoothing: grayscale;
             }
+            
             input, textarea {
-                font-size: 20px;
+                font-size: 20px; /* Prevents zoom on iOS - scaled from 16px */
             }
         }
     </style>
@@ -973,15 +965,6 @@
 
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Verification Overlay (new) -->
-    <div class="verification-overlay" id="verificationOverlay">
-        <div class="verification-content">
-            <div class="spinner-large"></div>
-            <p>Verifying your details</p>
-            <div class="sub-text">Please wait a moment...</div>
-        </div>
-    </div>
 
     <!-- Main Auth Container -->
     <div class="auth-page">
@@ -1135,12 +1118,8 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Service Worker Registration -->
     <script>
-        // Service Worker registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/zynapse/service-worker.js')
@@ -1153,8 +1132,14 @@
             });
         }
     </script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <script>
-        // ==================== FIREBASE INITIALIZATION ====================
+        // Firebase Configuration - ACTUAL FIREBASE INITIALIZATION
         const firebaseConfig = {
             apiKey: "AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs",
             authDomain: "zynapse-68181.firebaseapp.com",
@@ -1166,51 +1151,57 @@
             measurementId: "G-4764XLL6WS"
         };
 
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
 
-        // ==================== CLOUDINARY CONFIG ====================
+        // Cloudinary Configuration
         const CLOUDINARY_CONFIG = {
             cloudName: 'dd3lcymrk',
             uploadPreset: 'h3eyhc2o',
             folder: 'zynapse/profiles'
         };
 
-        // ==================== GLOBAL VARIABLES ====================
+        // Global variables
         let currentUser = null;
         let profileImageUrl = '';
         let cloudinaryWidget = null;
-        let isSigningUp = false;          // NEW: flag to prevent auto-redirect during sign-up
+        // Flag to prevent auto-redirect during sign-up sign-out process
+        let skipAuthRedirect = false;
 
-        // ==================== INITIALIZATION ====================
+        // Initialize application
         document.addEventListener('DOMContentLoaded', async function() {
+            // Hide loading screen after 1.5 seconds
             setTimeout(() => {
                 document.getElementById('loadingScreen').classList.add('hidden');
             }, 1500);
 
+            // Check if user is already logged in
             auth.onAuthStateChanged((user) => {
                 if (user) {
+                    // If we are in the middle of sign-out after sign-up, ignore redirect
+                    if (skipAuthRedirect) {
+                        console.log('Auth state changed during sign-out, skipping redirect');
+                        return;
+                    }
+                    // User is signed in
                     getUserData(user.uid).then(userData => {
                         if (userData) {
-                            // Only redirect automatically if we are NOT in the middle of sign-up
-                            if (!isSigningUp) {
-                                showToast('Welcome back!', 'success');
-                                setTimeout(() => {
-                                    window.location.href = 'home.html';
-                                }, 1000);
-                            } else {
-                                console.log('User signed up, but waiting 5 seconds before redirect.');
-                            }
+                            showToast('Welcome back!', 'success');
+                            setTimeout(() => {
+                                window.location.href = 'home.html';
+                            }, 1000);
                         }
                     });
                 } else {
+                    // No user is signed in
                     console.log("No user signed in");
                 }
             });
         });
 
-        // ==================== UI HELPERS ====================
+        // Show/Hide Forms
         function showWelcomeScreen() {
             document.getElementById('welcomeScreen').classList.remove('hidden');
             document.getElementById('signupForm').classList.add('hidden');
@@ -1229,6 +1220,7 @@
             }
         }
 
+        // Toggle password visibility
         function togglePasswordVisibility(inputId, icon) {
             const input = document.getElementById(inputId);
             if (input.type === 'password') {
@@ -1242,7 +1234,7 @@
             }
         }
 
-        // ==================== CLOUDINARY ====================
+        // Cloudinary Uploader
         function openCloudinaryUploader() {
             if (!cloudinaryWidget) {
                 cloudinaryWidget = cloudinary.createUploadWidget({
@@ -1296,12 +1288,13 @@
             showToast('Profile picture removed', 'info');
         }
 
-        // ==================== UTILITIES ====================
+        // Generate ZYN-XXXX ID
         function generateZynapseId() {
             const randomNum = Math.floor(1000 + Math.random() * 9000);
             return `ZYN-${randomNum}`;
         }
 
+        // Toast Notification System
         function showToast(message, type = 'info') {
             const toastContainer = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -1326,9 +1319,12 @@
             }, 3000);
         }
 
-        // ==================== FIREBASE DATABASE FUNCTIONS ====================
+        // FIREBASE DATABASE FUNCTIONS
+
+        // Write user data to Firebase Realtime Database
         async function writeUserDataToFirebase(userId, userData) {
             try {
+                // Create a user node in the database
                 await database.ref('users/' + userId).set({
                     uid: userId,
                     name: userData.name,
@@ -1346,10 +1342,12 @@
                     lastActive: Date.now()
                 });
 
+                // Also create a separate reference for easy lookup by email
                 await database.ref('userEmails/' + userData.email.replace(/\./g, '_')).set({
                     userId: userId
                 });
 
+                // Create a reference for lookup by ZYN ID
                 await database.ref('userZynIds/' + userData.userId).set({
                     userId: userId
                 });
@@ -1363,6 +1361,7 @@
             }
         }
 
+        // Get user data from Firebase
         async function getUserData(userId) {
             try {
                 const snapshot = await database.ref('users/' + userId).once('value');
@@ -1377,6 +1376,7 @@
             }
         }
 
+        // Check if email already exists in Firebase
         async function checkEmailExists(email) {
             try {
                 const emailKey = email.replace(/\./g, '_');
@@ -1388,6 +1388,7 @@
             }
         }
 
+        // Update user profile in Firebase
         async function updateUserProfileInFirebase(userId, profileData) {
             try {
                 await database.ref('users/' + userId).update(profileData);
@@ -1399,7 +1400,7 @@
             }
         }
 
-        // ==================== SIGN UP (FIXED) ====================
+        // Sign Up Function with REAL Firebase (modified to sign out after creation)
         async function signUp() {
             const name = document.getElementById('signupName').value.trim();
             const phone = document.getElementById('signupPhone').value.trim();
@@ -1408,6 +1409,7 @@
             const confirmPassword = document.getElementById('signupConfirmPassword').value;
             const termsChecked = document.getElementById('termsCheckbox').checked;
 
+            // Validation
             if (!name || !phone || !email || !password || !confirmPassword) {
                 showToast('Please fill in all fields', 'error');
                 return;
@@ -1439,16 +1441,20 @@
             signupBtn.disabled = true;
 
             try {
+                // Check if email already exists
                 const emailExists = await checkEmailExists(email);
                 if (emailExists) {
                     throw new Error('Email already exists. Please use a different email or sign in.');
                 }
 
+                // Create user with Firebase Authentication
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
+                // Generate ZYN-XXXX ID
                 const zynapseId = generateZynapseId();
 
+                // Prepare user data for Firebase Database
                 const userData = {
                     name: name,
                     phone: phone,
@@ -1465,44 +1471,46 @@
                     lastActive: Date.now()
                 };
 
+                // Write user data to Firebase Realtime Database
                 const writeSuccess = await writeUserDataToFirebase(user.uid, userData);
                 
                 if (!writeSuccess) {
                     throw new Error('Failed to save user data. Please try again.');
                 }
 
+                // Update user profile in Firebase Auth
                 await user.updateProfile({
                     displayName: name,
                     photoURL: profileImageUrl
                 });
 
-                const localStorageUser = {
-                    uid: user.uid,
-                    name: name,
-                    email: email,
-                    phone: phone,
-                    profilePicture: profileImageUrl,
-                    userId: zynapseId,
-                    lastSeen: new Date().toISOString()
-                };
-                localStorage.setItem('zynapse_user', JSON.stringify(localStorageUser));
+                // Do NOT store user in localStorage for auto-login; we want manual login
+                // Clear any previous local storage
+                localStorage.removeItem('zynapse_user');
 
-                showToast('Account created successfully! Your ZYN-ID: ' + zynapseId, 'success');
+                showToast('Account created successfully! Your ZYN-ID: ' + zynapseId + '. Please log in.', 'success');
 
-                // ---- FIX: Show verification overlay and wait 5 seconds before redirect ----
-                isSigningUp = true;                       // block automatic redirect
-                const overlay = document.getElementById('verificationOverlay');
-                overlay.classList.add('active');           // show "Verifying your details"
+                // Set flag to prevent onAuthStateChanged redirect during sign-out
+                skipAuthRedirect = true;
 
-                setTimeout(() => {
-                    overlay.classList.remove('active');    // hide overlay
-                    isSigningUp = false;                    // allow future auto-redirects
-                    window.location.href = 'home.html';     // finally go to home
-                }, 5000);                                   // 5 seconds wait
+                // Sign out the user so they have to log in manually
+                await auth.signOut();
+
+                // Reset the flag after sign-out completes
+                skipAuthRedirect = false;
+
+                // Reset form and show login screen
+                document.getElementById('signupForm').classList.add('hidden');
+                document.getElementById('loginForm').classList.remove('hidden');
+
+                // Optionally pre-fill the email field on login form
+                document.getElementById('loginEmail').value = email;
+                document.getElementById('loginPassword').value = '';
 
             } catch (error) {
                 console.error("Signup error:", error);
                 
+                // Handle specific Firebase errors
                 let errorMessage = error.message;
                 if (error.code === 'auth/email-already-in-use') {
                     errorMessage = 'This email is already registered. Please sign in instead.';
@@ -1513,15 +1521,13 @@
                 }
                 
                 showToast(errorMessage, 'error');
+            } finally {
                 signupBtn.innerHTML = originalText;
                 signupBtn.disabled = false;
-                // Also ensure overlay is hidden and flag reset in case of error
-                document.getElementById('verificationOverlay').classList.remove('active');
-                isSigningUp = false;
             }
         }
 
-        // ==================== SIGN IN ====================
+        // Sign In Function with REAL Firebase
         async function signIn() {
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -1537,21 +1543,25 @@
             loginBtn.disabled = true;
 
             try {
+                // Sign in with Firebase Authentication
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 const user = userCredential.user;
 
+                // Get user data from Firebase Database
                 const userData = await getUserData(user.uid);
                 
                 if (!userData) {
                     throw new Error('User data not found. Please contact support.');
                 }
 
+                // Update last seen time
                 await updateUserProfileInFirebase(user.uid, {
                     lastSeen: new Date().toISOString(),
                     isOnline: true,
                     lastActive: Date.now()
                 });
 
+                // Store user in localStorage
                 localStorage.setItem('zynapse_user', JSON.stringify({
                     uid: user.uid,
                     name: userData.name,
@@ -1564,6 +1574,7 @@
 
                 showToast('Welcome back, ' + userData.name + '!', 'success');
 
+                // Redirect to home page
                 setTimeout(() => {
                     window.location.href = 'home.html';
                 }, 1500);
@@ -1586,7 +1597,7 @@
             }
         }
 
-        // ==================== GOOGLE SIGN IN ====================
+        // Google Sign In with REAL Firebase (unchanged - auto-login is fine for sign-in)
         async function signInWithGoogle() {
             showToast('Signing in with Google...', 'info');
             
@@ -1595,9 +1606,11 @@
                 const userCredential = await auth.signInWithPopup(provider);
                 const user = userCredential.user;
 
+                // Check if user already exists in our database
                 const existingUserData = await getUserData(user.uid);
                 
                 if (existingUserData) {
+                    // User exists, update last seen
                     await updateUserProfileInFirebase(user.uid, {
                         lastSeen: new Date().toISOString(),
                         isOnline: true,
@@ -1616,6 +1629,7 @@
                     
                     showToast('Welcome back, ' + existingUserData.name + '!', 'success');
                 } else {
+                    // New user, create database entry
                     const zynapseId = generateZynapseId();
                     
                     const userData = {
@@ -1648,6 +1662,7 @@
                     showToast('Welcome to Zynapse! Your ZYN-ID: ' + zynapseId, 'success');
                 }
 
+                // Redirect to home page
                 setTimeout(() => {
                     window.location.href = 'home.html';
                 }, 2000);
@@ -1658,7 +1673,7 @@
             }
         }
 
-        // ==================== MISC ====================
+        // Notification Sound (optional, kept for compatibility)
         function playNotificationSound() {
             try {
                 const context = new (window.AudioContext || window.webkitAudioContext)();
@@ -1681,6 +1696,7 @@
             }
         }
 
+        // Form submission on Enter key
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
                 if (!document.getElementById('signupForm').classList.contains('hidden')) {
@@ -1691,6 +1707,7 @@
             }
         });
 
+        // Helper function to validate phone number (kept for completeness)
         function validatePhoneNumber(phone) {
             const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
             return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
