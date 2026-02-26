@@ -6675,45 +6675,64 @@ const onlineRef = database.ref('online');
 const presenceRef = database.ref('presence');
 
 // Initialize application
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', function() {
     const savedUser = localStorage.getItem('zynapse_user');
     if (!savedUser) {
         window.location.href = 'index.html';
         return;
     }
 
-    try {
-        currentUser = JSON.parse(savedUser);
-        
-        try {
-            await auth.signInWithEmailAndPassword(currentUser.email, currentUser.password);
-        } catch (authError) {
-            console.log('Using stored user data');
+    // Wait for Firebase Auth to be ready
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+        if (firebaseUser) {
+            // Already signed in – load user data from Realtime Database
+            await loadUserFromFirebase(firebaseUser.uid);
+        } else {
+            // No active session – try to sign in with stored credentials
+            const stored = JSON.parse(savedUser);
+            try {
+                const userCred = await auth.signInWithEmailAndPassword(stored.email, stored.password);
+                await loadUserFromFirebase(userCred.user.uid);
+            } catch (authError) {
+                console.error('Auto sign-in failed:', authError);
+                localStorage.removeItem('zynapse_user');
+                window.location.href = 'index.html';
+                return;
+            }
         }
-        
-        updateUserUI();
-        
+
+        // Stop listening for auth changes (we now have a user)
+        unsubscribe();
+
+        // Hide loading screen and start the app
         setTimeout(() => {
             document.getElementById('loadingScreen').classList.add('hidden');
         }, 800);
 
+        // Now load all data and set up listeners (Firestore calls will be authenticated)
         await loadInitialData();
         setupRealtimeListeners();
         showToast('Welcome back!', 'success');
         playNotificationSound();
         setupEventListeners();
-        
-        // Set online status
         await setOnlineStatus(true);
-        
-    } catch (error) {
-        console.error('Error loading user data:', error);
-        showToast('Error loading data', 'error');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1500);
-    }
+    });
 });
+
+// Helper: load user data from Realtime Database and update localStorage
+async function loadUserFromFirebase(uid) {
+    const snapshot = await usersRef.child(uid).once('value');
+    if (snapshot.exists()) {
+        currentUser = { uid, ...snapshot.val() };
+    } else {
+        // Fallback to stored data (should not happen, but just in case)
+        currentUser = JSON.parse(localStorage.getItem('zynapse_user'));
+        currentUser.uid = uid;
+    }
+    // Ensure localStorage is up to date
+    localStorage.setItem('zynapse_user', JSON.stringify(currentUser));
+    updateUserUI();
+}
 
 function updateUserUI() {
     document.getElementById('userNameHeader').textContent = currentUser.name || 'User';
@@ -13537,11 +13556,13 @@ function startCallTimer() {
 }
 
 // ========== ZYN-AI CHAT FUNCTIONS ==========
-
-const GEMINI_API_KEY = 'AIzaSyDXnVZWR49j6e3WuK_aEgdzQ2hpTF1Npf4';
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const AI_SERVER_URL = 'https://ai-server-jyts.onrender.com'; // Your secure backend
 
 async function openAIChat() {
+    if (!auth.currentUser) {
+        showToast('Please wait, reconnecting...', 'warning');
+        return;
+    }
     openModal('aiChatModal');
     await loadAIChatHistory();
 }
@@ -13604,7 +13625,7 @@ async function sendAIMessage() {
     displayAIMessage('user', text, userTimestamp);
     scrollAIChatToBottom();
 
-    // 2. Save user message to Firestore
+    // 2. Save user message to Firestore (authenticated now)
     try {
         await firestore
             .collection('ai_chats')
@@ -13619,24 +13640,23 @@ async function sendAIMessage() {
         console.error('Error saving user message:', error);
     }
 
-    // 3. Call Gemini API
+    // 3. Call your Render backend (key hidden on server)
     try {
-        const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+        const response = await fetch(`${AI_SERVER_URL}/ask-ai`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: text }]
-                }]
-            })
+            body: JSON.stringify({ prompt: text })
         });
 
         if (!response.ok) {
-            throw new Error(`Gemini API error: ${response.status}`);
+            throw new Error(`Server error: ${response.status}`);
         }
 
         const data = await response.json();
-        const aiText = data.candidates[0].content.parts[0].text;
+
+        // Adjust this parsing to match your backend's response format
+        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text 
+            || 'No response from AI';
 
         // 4. Display AI response
         displayAIMessage('ai', aiText, new Date().toISOString());
@@ -13654,7 +13674,7 @@ async function sendAIMessage() {
             });
 
     } catch (error) {
-        console.error('Gemini API error:', error);
+        console.error('AI server error:', error);
         displayAIMessage('ai', 'Sorry, I encountered an error. Please try again.', new Date().toISOString());
     } finally {
         sendBtn.disabled = false;
@@ -13852,3 +13872,4 @@ window.toggleSpeaker = toggleSpeaker;
 
 
 \
+
