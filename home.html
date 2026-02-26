@@ -13562,6 +13562,10 @@ function startCallTimer() {
 const AI_SERVER_URL = 'https://ai-server-jyts.onrender.com';
 
 async function openAIChat() {
+    if (!auth.currentUser) {
+        showToast('Please wait, reconnecting...', 'warning');
+        return;
+    }
     openModal('aiChatModal');
     await loadAIChatHistory();
 }
@@ -13869,6 +13873,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
