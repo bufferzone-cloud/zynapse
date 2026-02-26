@@ -13538,7 +13538,7 @@ function startCallTimer() {
 
 // ========== ZYN-AI CHAT FUNCTIONS ==========
 
-const GEMINI_API_KEY = 'AIzaSyCcy9LtqhnF3UWYIEN9MuUoIWcEZhxo9ZY';
+const GEMINI_API_KEY = 'AIzaSyBrVtSAOckpj8_fRA3-0kI7vAzOpXDUqxs';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 async function openAIChat() {
@@ -13590,11 +13590,6 @@ function displayAIMessage(role, text, timestamp) {
     messagesDiv.appendChild(msgDiv);
 }
 
-// Make sure these constants are defined at the top of your script
-// Replace 'YOUR_NEW_GEMINI_KEY' with the actual key from Google AI Studio
-const GEMINI_API_KEY = 'AIzaSyCcy9LtqhnF3UWYIEN9MuUoIWcEZhxo9ZY'; // ⚠️ Get from https://aistudio.google.com/
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
-
 async function sendAIMessage() {
     const input = document.getElementById('aiMessageInput');
     const text = input.value.trim();
@@ -13609,7 +13604,7 @@ async function sendAIMessage() {
     displayAIMessage('user', text, userTimestamp);
     scrollAIChatToBottom();
 
-    // 2. Save user message to Firestore (optional)
+    // 2. Save user message to Firestore
     try {
         await firestore
             .collection('ai_chats')
@@ -13624,7 +13619,7 @@ async function sendAIMessage() {
         console.error('Error saving user message:', error);
     }
 
-    // 3. Call Gemini API with the correct endpoint and authentication
+    // 3. Call Gemini API
     try {
         const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
             method: 'POST',
@@ -13637,8 +13632,7 @@ async function sendAIMessage() {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Gemini API error: ${errorData.error?.message || response.status}`);
+            throw new Error(`Gemini API error: ${response.status}`);
         }
 
         const data = await response.json();
@@ -13648,7 +13642,7 @@ async function sendAIMessage() {
         displayAIMessage('ai', aiText, new Date().toISOString());
         scrollAIChatToBottom();
 
-        // 5. Save AI response to Firestore (optional)
+        // 5. Save AI response to Firestore
         await firestore
             .collection('ai_chats')
             .doc(currentUser.uid)
@@ -13855,18 +13849,4 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
