@@ -13590,50 +13590,83 @@ function displayAIMessage(role, text, timestamp) {
     messagesDiv.appendChild(msgDiv);
 }
 
-const GEMINI_API_KEY = 'AIzaSyCcy9LtqhnF3UWYIEN9MuUoIWcEZhxo9ZY';   // Get from Google AI Studio
+// Make sure these constants are defined at the top of your script
+// Replace 'YOUR_NEW_GEMINI_KEY' with the actual key from Google AI Studio
+const GEMINI_API_KEY = 'AIzaSyCcy9LtqhnF3UWYIEN9MuUoIWcEZhxo9ZY'; // ⚠️ Get from https://aistudio.google.com/
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
 
-async function sendToGemini(userMessage) {
-    const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
+async function sendAIMessage() {
+    const input = document.getElementById('aiMessageInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    const sendBtn = document.querySelector('#aiChatModal .chat-send-btn');
+    sendBtn.disabled = true;
+
+    // 1. Display user message immediately
+    const userTimestamp = new Date().toISOString();
+    displayAIMessage('user', text, userTimestamp);
+    scrollAIChatToBottom();
+
+    // 2. Save user message to Firestore (optional)
+    try {
+        await firestore
+            .collection('ai_chats')
+            .doc(currentUser.uid)
+            .collection('messages')
+            .add({
+                role: 'user',
+                text: text,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+    } catch (error) {
+        console.error('Error saving user message:', error);
+    }
+
+    // 3. Call Gemini API with the correct endpoint and authentication
+    try {
+        const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{
-                    parts: [{ text: userMessage }]
+                    parts: [{ text: text }]
                 }]
             })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Gemini API error: ${errorData.error?.message || response.status}`);
         }
-    );
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Gemini API error: ${error.error?.message || response.status}`);
-    }
+        const data = await response.json();
+        const aiText = data.candidates[0].content.parts[0].text;
 
-    const data = await response.json();
-    // Extract the AI response text
-    return data.candidates[0].content.parts[0].text;
-}
+        // 4. Display AI response
+        displayAIMessage('ai', aiText, new Date().toISOString());
+        scrollAIChatToBottom();
 
-// Example usage inside your existing ZYN‑AI chat modal
-document.getElementById('sendBtn').addEventListener('click', async () => {
-    const userMessage = document.getElementById('userInput').value;
-    if (!userMessage) return;
+        // 5. Save AI response to Firestore (optional)
+        await firestore
+            .collection('ai_chats')
+            .doc(currentUser.uid)
+            .collection('messages')
+            .add({
+                role: 'ai',
+                text: aiText,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
 
-    // Display user message
-    displayMessage('user', userMessage);
-
-    try {
-        const aiReply = await sendToGemini(userMessage);
-        displayMessage('ai', aiReply);
     } catch (error) {
-        console.error(error);
-        displayMessage('ai', 'Sorry, I encountered an error. Please try again.');
+        console.error('Gemini API error:', error);
+        displayAIMessage('ai', 'Sorry, I encountered an error. Please try again.', new Date().toISOString());
+    } finally {
+        sendBtn.disabled = false;
+        input.focus();
     }
-});
+}
 
 function scrollAIChatToBottom() {
     const container = document.getElementById('aiMessages');
@@ -13822,6 +13855,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
