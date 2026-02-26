@@ -6675,45 +6675,65 @@ const onlineRef = database.ref('online');
 const presenceRef = database.ref('presence');
 
 // Initialize application
-document.addEventListener('DOMContentLoaded', async function() {
+// Initialize application
+document.addEventListener('DOMContentLoaded', function() {
     const savedUser = localStorage.getItem('zynapse_user');
     if (!savedUser) {
         window.location.href = 'index.html';
         return;
     }
 
-    try {
-        currentUser = JSON.parse(savedUser);
-        
-        try {
-            await auth.signInWithEmailAndPassword(currentUser.email, currentUser.password);
-        } catch (authError) {
-            console.log('Using stored user data');
+    // Wait for Firebase Auth to be ready
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+        if (firebaseUser) {
+            // Already signed in – load user data from Realtime Database
+            await loadUserFromFirebase(firebaseUser.uid);
+        } else {
+            // No active session – try to sign in with stored credentials
+            const stored = JSON.parse(savedUser);
+            try {
+                const userCred = await auth.signInWithEmailAndPassword(stored.email, stored.password);
+                await loadUserFromFirebase(userCred.user.uid);
+            } catch (authError) {
+                console.error('Auto sign-in failed:', authError);
+                localStorage.removeItem('zynapse_user');
+                window.location.href = 'index.html';
+                return;
+            }
         }
-        
-        updateUserUI();
-        
+
+        // Stop listening for auth changes (we now have a user)
+        unsubscribe();
+
+        // Hide loading screen and start the app
         setTimeout(() => {
             document.getElementById('loadingScreen').classList.add('hidden');
         }, 800);
 
+        // Now load all data and set up listeners (Firestore calls will be authenticated)
         await loadInitialData();
         setupRealtimeListeners();
         showToast('Welcome back!', 'success');
         playNotificationSound();
         setupEventListeners();
-        
-        // Set online status
         await setOnlineStatus(true);
-        
-    } catch (error) {
-        console.error('Error loading user data:', error);
-        showToast('Error loading data', 'error');
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1500);
-    }
+    });
 });
+
+// Helper: load user data from Realtime Database and update localStorage
+async function loadUserFromFirebase(uid) {
+    const snapshot = await usersRef.child(uid).once('value');
+    if (snapshot.exists()) {
+        currentUser = { uid, ...snapshot.val() };
+    } else {
+        // Fallback to stored data (should not happen, but just in case)
+        currentUser = JSON.parse(localStorage.getItem('zynapse_user'));
+        currentUser.uid = uid;
+    }
+    // Ensure localStorage is up to date
+    localStorage.setItem('zynapse_user', JSON.stringify(currentUser));
+    updateUserUI();
+}
 
 function updateUserUI() {
     document.getElementById('userNameHeader').textContent = currentUser.name || 'User';
@@ -13849,6 +13869,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
