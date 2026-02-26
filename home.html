@@ -13620,12 +13620,12 @@ async function sendAIMessage() {
     const sendBtn = document.querySelector('#aiChatModal .chat-send-btn');
     sendBtn.disabled = true;
 
-    // 1️⃣ Display user message immediately
+    // 1. Display user message immediately
     const userTimestamp = new Date().toISOString();
     displayAIMessage('user', text, userTimestamp);
     scrollAIChatToBottom();
 
-    // 2️⃣ Save user message to Firestore
+    // 2. Save user message to Firestore (authenticated now)
     try {
         await firestore
             .collection('ai_chats')
@@ -13640,64 +13640,42 @@ async function sendAIMessage() {
         console.error('Error saving user message:', error);
     }
 
-    // 3️⃣ Call your Render backend (AI server)
+    // 3. Call your Render backend (key hidden on server)
     try {
-        console.log('Sending prompt to AI server:', text);
-
         const response = await fetch(`${AI_SERVER_URL}/ask-ai`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ prompt: text })
         });
 
-        console.log('Fetch response status:', response.status, response.statusText);
-
         if (!response.ok) {
             throw new Error(`Server error: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('AI server raw response:', data);
 
-        // 4️⃣ Parse AI response safely
-        let aiText = 'No response from AI';
+        // Adjust this parsing to match your backend's response format
+        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text 
+            || 'No response from AI';
 
-        if (data.candidates?.length) {
-            aiText = data.candidates[0].content?.[0]?.text || aiText;
-        } else if (data.output?.length) {
-            aiText = data.output[0].content?.[0]?.text || aiText;
-        } else if (typeof data.text === 'string') {
-            aiText = data.text;
-        }
-
-        console.log('Parsed AI text:', aiText);
-
-        // 5️⃣ Display AI response in chat
+        // 4. Display AI response
         displayAIMessage('ai', aiText, new Date().toISOString());
         scrollAIChatToBottom();
 
-        // 6️⃣ Save AI response to Firestore
-        try {
-            await firestore
-                .collection('ai_chats')
-                .doc(currentUser.uid)
-                .collection('messages')
-                .add({
-                    role: 'ai',
-                    text: aiText,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-        } catch (err) {
-            console.error('Error saving AI message:', err);
-        }
+        // 5. Save AI response to Firestore
+        await firestore
+            .collection('ai_chats')
+            .doc(currentUser.uid)
+            .collection('messages')
+            .add({
+                role: 'ai',
+                text: aiText,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
 
     } catch (error) {
         console.error('AI server error:', error);
-        displayAIMessage(
-            'ai',
-            'Sorry, I encountered an error. Please try again.',
-            new Date().toISOString()
-        );
+        displayAIMessage('ai', 'Sorry, I encountered an error. Please try again.', new Date().toISOString());
     } finally {
         sendBtn.disabled = false;
         input.focus();
@@ -13708,7 +13686,6 @@ function scrollAIChatToBottom() {
     const container = document.getElementById('aiMessages');
     if (container) container.scrollTop = container.scrollHeight;
 }
-
 // Also ensure closeModal is already defined (it is)
 // Export functions to global scope
 window.switchPage = switchPage;
@@ -13894,5 +13871,6 @@ window.toggleSpeaker = toggleSpeaker;
 
 
 \
+
 
 
