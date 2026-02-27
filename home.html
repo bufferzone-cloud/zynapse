@@ -5361,6 +5361,44 @@ html, body {
     margin-top: 4px;
     text-align: right;
 }
+
+.ai-message .copy-btn {
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    margin-left: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+.ai-message .copy-btn:hover {
+    background: var(--gray-200);
+    color: var(--red);
+}
+.ai-typing {
+    align-self: flex-start;
+    background: var(--gray-100);
+    border-radius: 18px;
+    padding: 10px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.ai-typing .dot {
+    width: 6px;
+    height: 6px;
+    background: var(--gray-600);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out;
+}
+.ai-typing .dot:nth-child(2) { animation-delay: 0.2s; }
+.ai-typing .dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+}
     </style>
 </head>
 <body>
@@ -13555,38 +13593,166 @@ function startCallTimer() {
   }, 1000);
 }
 
-// ========== UPDATED ZYN‑AI CHAT FUNCTIONS (NO FIRESTORE) ==========
-// Set your Cloudflare Worker URL here
-const AI_SERVER_URL = 'https://zynapse-ai-worker.jubelmobz19.workers.dev';
+// ==================== ZYN‑AI CHAT WITH HISTORY, COPY & TYPING ANIMATION ====================
 
+/**
+ * Opens the AI chat modal, loads the last 50 messages from Firebase,
+ * and focuses the input field.
+ */
 async function openAIChat() {
-    // No authentication needed; just open the modal
     openModal('aiChatModal');
-    // Clear previous messages and show a welcome message
-    const messagesDiv = document.getElementById('aiMessages');
-    messagesDiv.innerHTML = `
-        <div class="ai-message ai" style="align-self: flex-start;">
-            <div>Hello! I'm ZYN‑AI. How can I help you today?</div>
-            <div class="timestamp">Just now</div>
-        </div>
-    `;
+    await loadAIChatHistory();
+    // Short delay to allow modal animation to finish
+    setTimeout(() => {
+        document.getElementById('aiMessageInput')?.focus();
+    }, 200);
 }
 
-function displayAIMessage(role, text, timestamp) {
+/**
+ * Loads the user's AI chat history from Firebase and displays it.
+ * If no history exists, shows a welcome message (which will be stored later).
+ */
+async function loadAIChatHistory() {
     const messagesDiv = document.getElementById('aiMessages');
+    if (!messagesDiv) return;
+    messagesDiv.innerHTML = ''; // Clear previous content
+
+    if (!currentUser) {
+        console.warn('No current user, cannot load AI history');
+        return;
+    }
+
+    const snapshot = await database.ref(`users/${currentUser.uid}/aiChats/messages`)
+        .orderByChild('timestamp')
+        .limitToLast(50)
+        .once('value');
+
+    if (snapshot.exists()) {
+        const messages = [];
+        snapshot.forEach(child => messages.push(child.val()));
+        // Sort ascending (oldest first) for correct display order
+        messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        messages.forEach(msg => {
+            displayAIMessage(msg.role, msg.text, msg.timestamp, false); // false = don't store again
+        });
+    } else {
+        // No history – show a welcome message (will be stored when first user message arrives)
+        displayAIMessage('ai', 'Hello! I\'m ZYN‑AI. How can I help you today?', new Date().toISOString(), false);
+    }
+}
+
+/**
+ * Stores a single AI chat message in Firebase under the current user.
+ * @param {string} role - 'user' or 'ai'
+ * @param {string} text - Message content
+ */
+async function storeAIMessage(role, text) {
+    if (!currentUser) return;
+    const messageId = database.ref(`users/${currentUser.uid}/aiChats/messages`).push().key;
+    const messageData = {
+        role: role,
+        text: text,
+        timestamp: new Date().toISOString()
+    };
+    await database.ref(`users/${currentUser.uid}/aiChats/messages/${messageId}`).set(messageData);
+}
+
+/**
+ * Displays a message in the AI chat container.
+ * @param {string} role - 'user' or 'ai'
+ * @param {string} text - Message text
+ * @param {string} timestamp - ISO timestamp
+ * @param {boolean} store - Whether to store this message in Firebase (default true)
+ */
+function displayAIMessage(role, text, timestamp, store = true) {
+    const messagesDiv = document.getElementById('aiMessages');
+    if (!messagesDiv) return;
+
     const date = timestamp ? new Date(timestamp) : new Date();
     const timeStr = formatTime(date.toISOString());
 
     const msgDiv = document.createElement('div');
     msgDiv.className = `ai-message ${role}`;
+
+    // Add a copy button only for AI messages
+    let copyButton = '';
+    if (role === 'ai') {
+        // Escape text for safe use in onclick attribute
+        const escapedText = text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        copyButton = `<button class="copy-btn" onclick="copyAIMessage('${escapedText}')"><i class="fas fa-copy"></i></button>`;
+    }
+
     msgDiv.innerHTML = `
         <div>${escapeHtml(text)}</div>
-        <div class="timestamp">${timeStr}</div>
+        <div class="timestamp">${timeStr} ${copyButton}</div>
     `;
+
     messagesDiv.appendChild(msgDiv);
+    scrollAIChatToBottom();
+
+    // Store in Firebase if requested
+    if (store && currentUser) {
+        storeAIMessage(role, text);
+    }
+}
+
+/**
+ * Copies the given text to the clipboard and shows a toast.
+ * @param {string} text - The text to copy
+ */
+function copyAIMessage(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Message copied', 'success');
+    }).catch(() => {
+        showToast('Copy failed', 'error');
+    });
+}
+
+// Typing indicator elements
+let aiTypingElement = null;
+
+/**
+ * Shows a typing indicator (three bouncing dots) in the AI chat.
+ */
+function showAITypingIndicator() {
+    const messagesDiv = document.getElementById('aiMessages');
+    if (!messagesDiv) return;
+    hideAITypingIndicator(); // remove any existing indicator
+
+    aiTypingElement = document.createElement('div');
+    aiTypingElement.className = 'ai-message ai ai-typing';
+    aiTypingElement.id = 'aiTypingIndicator';
+    aiTypingElement.innerHTML = `
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    `;
+    messagesDiv.appendChild(aiTypingElement);
     scrollAIChatToBottom();
 }
 
+/**
+ * Hides the typing indicator.
+ */
+function hideAITypingIndicator() {
+    if (aiTypingElement && aiTypingElement.parentNode) {
+        aiTypingElement.remove();
+        aiTypingElement = null;
+    }
+}
+
+/**
+ * Scrolls the AI chat to the bottom.
+ */
+function scrollAIChatToBottom() {
+    const container = document.getElementById('aiMessages');
+    if (container) container.scrollTop = container.scrollHeight;
+}
+
+/**
+ * Sends a user message to the AI backend, stores both sides of the conversation,
+ * and shows a typing indicator while waiting for a response.
+ */
 async function sendAIMessage() {
     const input = document.getElementById('aiMessageInput');
     const text = input.value.trim();
@@ -13596,11 +13762,14 @@ async function sendAIMessage() {
     const sendBtn = document.querySelector('#aiChatModal .chat-send-btn');
     sendBtn.disabled = true;
 
-    // 1. Display user message immediately
-    displayAIMessage('user', text, new Date().toISOString());
+    // 1. Display and store the user message
+    displayAIMessage('user', text, new Date().toISOString(), true);
 
-    // 2. Call the Cloudflare Worker
+    // 2. Show typing indicator
+    showAITypingIndicator();
+
     try {
+        // 3. Call the Cloudflare Worker (AI backend) – make sure AI_SERVER_URL is defined globally
         const response = await fetch(`${AI_SERVER_URL}/ask-ai`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -13613,24 +13782,20 @@ async function sendAIMessage() {
         }
 
         const data = await response.json();
-        // The worker returns { text: "..." }
         const aiText = data.text || 'No response from AI';
 
-        // 3. Display AI response
-        displayAIMessage('ai', aiText, new Date().toISOString());
+        // 4. Remove typing indicator and display AI response
+        hideAITypingIndicator();
+        displayAIMessage('ai', aiText, new Date().toISOString(), true);
 
     } catch (error) {
         console.error('AI server error:', error);
-        displayAIMessage('ai', 'Sorry, I encountered an error. Please try again.', new Date().toISOString());
+        hideAITypingIndicator();
+        displayAIMessage('ai', 'Sorry, I encountered an error. Please try again.', new Date().toISOString(), true);
     } finally {
         sendBtn.disabled = false;
         input.focus();
     }
-}
-
-function scrollAIChatToBottom() {
-    const container = document.getElementById('aiMessages');
-    if (container) container.scrollTop = container.scrollHeight;
 }
 // Also ensure closeModal is already defined (it is)
 // Export functions to global scope
@@ -13814,6 +13979,7 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
 
 
