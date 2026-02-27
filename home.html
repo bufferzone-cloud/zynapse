@@ -13061,6 +13061,17 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Convert markdown bold syntax (***text*** or **text**) into <b>text</b>
+function formatMessageText(text) {
+    // First escape any HTML to prevent XSS
+    let escaped = escapeHtml(text);
+    // Replace ***text*** with <b>text</b>
+    escaped = escaped.replace(/\*\*\*(.*?)\*\*\*/g, '<b>$1</b>');
+    // Also replace **text** with <b>text</b> as fallback
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    return escaped;
+}
+
 function cleanupListeners() {
     listeners.forEach(({ ref, listener }) => {
         ref.off('value', listener);
@@ -13607,8 +13618,9 @@ function displayAIMessage(role, text, timestamp, messageId) {
         copyButtonHtml = `<button class="copy-btn" onclick="copyAIText('${messageId}')" title="Copy response"><i class="fas fa-copy"></i></button>`;
     }
 
+    // Use the new formatter for the message content
     msgDiv.innerHTML = `
-        <div class="message-content">${escapeHtml(text)}</div>
+        <div class="message-content">${formatMessageText(text)}</div>
         <div class="timestamp" style="display: flex; justify-content: space-between; align-items: center;">
             <span>${timeStr}</span>
             ${copyButtonHtml}
@@ -13618,7 +13630,6 @@ function displayAIMessage(role, text, timestamp, messageId) {
     messagesDiv.appendChild(msgDiv);
     scrollAIChatToBottom();
 }
-
 async function sendAIMessage() {
     const input = document.getElementById('aiMessageInput');
     const text = input.value.trim();
@@ -13899,4 +13910,5 @@ window.toggleSpeaker = toggleSpeaker;
 </div>
 </body>
 </html>
+
 
