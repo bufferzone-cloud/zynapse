@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#f2f4f7" />
-<title>DONBOSCO PHARMACY · POS v3.0</title>
+<title>DONBOSCO PHARMACY · POS v3.1</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
 <!-- PDF + Charts -->
@@ -83,7 +83,7 @@ body{
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   2. PRIMITIVES — buttons, fields, segmented, pills
+   2. PRIMITIVES
    ═══════════════════════════════════════════════════════════════ */
 .btn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
@@ -199,6 +199,15 @@ body{
 .field input:not(:placeholder-shown):not(:focus) + label,
 .field textarea:not(:placeholder-shown):not(:focus) + label{ color:var(--muted); }
 
+/* Date inputs always show the "filled" label state */
+.field input[type="date"] + label{
+  top:9px; transform:translateY(0);
+  font-size:10.5px; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase;
+  color:var(--muted);
+}
+.field input[type="date"]:focus + label{ color:var(--brand-2); }
+
 .field.icon-left input{ padding-left:42px; }
 .field.icon-left > i.fa-solid,
 .field.icon-left > i.fas{
@@ -254,8 +263,6 @@ body{
   font-size:11px; font-weight:800;
   font-variant-numeric:tabular-nums;
 }
-.pill.warn{ background:var(--warn); }
-.pill.danger{ background:var(--danger); }
 
 /* ── Status messages ── */
 .status-msg{
@@ -285,7 +292,178 @@ body{
 .chip.danger{ background:#fdeaea; color:#a83232; border-color:#f3c9c9; }
 
 /* ═══════════════════════════════════════════════════════════════
-   3. AUTH SCREEN
+   3. TOASTS
+   ═══════════════════════════════════════════════════════════════ */
+.toast-wrap{
+  position:fixed; right:16px; bottom:16px; z-index:2600;
+  display:flex; flex-direction:column; gap:9px;
+  pointer-events:none;
+  max-width:min(92vw, 380px);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.toast{
+  pointer-events:auto;
+  background:#0f1a14; color:#fff;
+  padding:12px 18px; border-radius:14px;
+  font-size:13.5px; font-weight:600; line-height:1.4;
+  box-shadow:var(--sh-lg);
+  border-left:4px solid var(--brand-2);
+  animation:toastIn .25s var(--ease);
+  word-break:break-word;
+}
+.toast.success{ border-left-color:#22c55e; }
+.toast.error{ border-left-color:#ef4444; }
+.toast.info{ border-left-color:#3b82f6; }
+.toast.warn{ border-left-color:#f59e0b; }
+.toast.out{ animation:toastOut .22s var(--ease) forwards; }
+@keyframes toastIn{ from{ opacity:0; transform:translateY(14px) scale(.96); } to{ opacity:1; transform:translateY(0) scale(1); } }
+@keyframes toastOut{ to{ opacity:0; transform:translateX(26px); } }
+
+/* ═══════════════════════════════════════════════════════════════
+   4. MODAL
+   ═══════════════════════════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed; inset:0; z-index:2000;
+  background:rgba(8,20,14,.55);
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center; justify-content:center;
+  padding:18px;
+}
+.modal-overlay.show{ display:flex; animation:fadeIn .16s var(--ease); }
+
+.modal{
+  width:100%; max-width:580px;
+  max-height:92vh;
+  background:var(--surface);
+  border-radius:var(--r-xl);
+  box-shadow:var(--sh-lg);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  animation:riseIn .3s var(--ease);
+}
+
+.modal-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:16px 22px;
+  background:linear-gradient(135deg,#0b4f2e,#1a7a4a);
+  color:#fff;
+  flex-shrink:0;
+}
+.modal-head h3{
+  font-size:16px; font-weight:750;
+  display:flex; align-items:center; gap:9px;
+  letter-spacing:.2px;
+}
+.modal-head h3 i{ color:var(--gold); }
+.modal-close{
+  border:0; cursor:pointer;
+  width:34px; height:34px; border-radius:50%;
+  background:rgba(255,255,255,.16); color:#fff;
+  font-size:15px;
+  display:grid; place-items:center;
+  transition:.16s;
+  -webkit-tap-highlight-color:transparent;
+  flex:0 0 auto;
+}
+.modal-close:hover{ background:rgba(255,255,255,.3); }
+.modal-close:active{ transform:scale(.92); }
+
+.modal-body{
+  padding:20px 22px;
+  overflow-y:auto;
+  flex:1;
+  scrollbar-width:thin;
+}
+.modal-body::-webkit-scrollbar{ width:7px; }
+.modal-body::-webkit-scrollbar-thumb{ background:rgba(120,140,130,.35); border-radius:8px; }
+
+.modal-foot{
+  display:flex; gap:9px; justify-content:flex-end;
+  flex-wrap:wrap;
+  padding:14px 22px;
+  border-top:1px solid var(--line);
+  background:var(--surface-3);
+  flex-shrink:0;
+}
+
+.modal-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.modal-grid .span-2{ grid-column:1 / -1; }
+
+.pm-banner{
+  display:flex; align-items:center; gap:14px;
+  background:var(--brand-soft);
+  border:1px solid #c8e0d2;
+  border-radius:var(--r-md);
+  padding:12px 16px;
+  margin-bottom:16px;
+}
+.pm-banner .pm-emoji{ font-size:30px; line-height:1; flex:0 0 auto; }
+.pm-banner .pm-info{ flex:1; min-width:0; }
+.pm-banner .pm-name{
+  font-weight:750; font-size:15px; color:var(--brand);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.pm-banner .pm-sub{ font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+.pm-banner .pm-stockbox{ text-align:right; flex:0 0 auto; }
+.pm-banner .pm-stock{
+  font-size:22px; font-weight:780; color:var(--brand);
+  font-variant-numeric:tabular-nums; line-height:1.1;
+}
+.pm-banner .pm-stocklabel{
+  font-size:10px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--muted);
+}
+
+.pm-preview{
+  margin-top:14px;
+  padding:11px 16px;
+  border-radius:var(--r-md);
+  background:var(--surface-2);
+  border:1px dashed var(--line-2);
+  font-size:13.5px;
+  color:var(--ink-2);
+  font-weight:600;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.pm-preview b{
+  color:var(--brand); font-size:16px;
+  font-variant-numeric:tabular-nums;
+}
+
+.pm-divider{
+  grid-column:1/-1;
+  height:1px; background:var(--line);
+  margin:4px 0 2px;
+}
+.pm-section-label{
+  grid-column:1/-1;
+  font-size:10.5px; font-weight:800; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--muted);
+  margin-top:4px;
+}
+
+@media (max-width:560px){
+  .modal-overlay{ padding:0; align-items:flex-end; }
+  .modal{
+    max-width:none;
+    max-height:94vh;
+    border-radius:var(--r-xl) var(--r-xl) 0 0;
+    animation:sheetIn .3s var(--ease);
+  }
+  @keyframes sheetIn{ from{ transform:translateY(40px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+  .modal-grid{ grid-template-columns:1fr; }
+  .modal-foot{ padding-bottom:calc(14px + env(safe-area-inset-bottom)); }
+  .modal-foot .btn{ flex:1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   5. AUTH SCREEN
    ═══════════════════════════════════════════════════════════════ */
 #loginScreen{
   display:flex; justify-content:center; align-items:center;
@@ -307,6 +485,7 @@ body{
   from{ opacity:0; transform:translateY(22px); }
   to  { opacity:1; transform:translateY(0); }
 }
+@keyframes fadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
 
 .auth-head{
   display:flex; align-items:center; gap:13px;
@@ -329,7 +508,6 @@ body{
 
 .auth-pane{ display:none; animation:fadeIn .22s var(--ease); }
 .auth-pane.active{ display:block; }
-@keyframes fadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
 
 #pane-signin form,
 #pane-register form{ display:grid; gap:13px; margin-top:16px; }
@@ -355,7 +533,7 @@ body{
 .hint b{ color:var(--ink-2); }
 
 /* ═══════════════════════════════════════════════════════════════
-   4. APP SHELL
+   6. APP SHELL
    ═══════════════════════════════════════════════════════════════ */
 #posContainer,
 #adminContainer{
@@ -374,7 +552,6 @@ body{
 #posContainer.active,
 #adminContainer.active{ display:flex; }
 
-/* ── Header ── */
 .app-header{
   flex-shrink:0;
   display:flex; align-items:center; justify-content:space-between;
@@ -476,11 +653,10 @@ body{
   display:flex; gap:8px; flex-shrink:0;
 }
 
-/* ── Mobile tabs ── */
 .mobile-tabs{ display:none; }
 
 /* ═══════════════════════════════════════════════════════════════
-   5. POS LAYOUT
+   7. POS LAYOUT
    ═══════════════════════════════════════════════════════════════ */
 .pos-body{
   display:flex;
@@ -488,7 +664,6 @@ body{
   min-height:0;
 }
 
-/* ── Left rail ── */
 .rail{
   width:110px; flex-shrink:0;
   background:var(--surface-3);
@@ -534,7 +709,6 @@ body{
   text-align:center; margin-top:2px;
 }
 
-/* ── Products panel ── */
 .products-panel{
   flex:1 1 50%;
   min-width:0;
@@ -578,7 +752,6 @@ body{
 }
 .search-box .clear-btn:hover{ background:var(--surface-2); color:var(--ink); }
 
-/* Category chips */
 .cat-strip{
   display:flex; gap:6px; margin-bottom:10px;
   overflow-x:auto; padding:2px 2px 4px;
@@ -825,7 +998,6 @@ body{
 .del-btn:hover{ background:#fbe0e0; color:var(--danger); }
 .del-btn:active{ transform:scale(.9); }
 
-/* ── Totals & pay ── */
 .cart-footer{ flex-shrink:0; }
 
 .totals{
@@ -903,7 +1075,7 @@ body{
 .pay-actions .btn{ padding:12px 10px; font-size:13.5px; }
 
 /* ═══════════════════════════════════════════════════════════════
-   6. ADMIN LAYOUT
+   8. ADMIN LAYOUT
    ═══════════════════════════════════════════════════════════════ */
 .admin-body{
   display:flex; flex:1; min-height:0;
@@ -967,7 +1139,6 @@ body{
 .panel-head h2 i{ color:var(--brand-2); font-size:18px; }
 .panel-sub{ font-size:13.5px; color:var(--ink-2); margin-bottom:14px; }
 
-/* ── Cards ── */
 .card{
   background:#fff;
   border:1px solid var(--line);
@@ -982,7 +1153,6 @@ body{
   margin-bottom:14px;
 }
 
-/* ── Inline forms ── */
 .inline-form{
   display:grid;
   grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
@@ -992,7 +1162,6 @@ body{
 .inline-form .span-all{ grid-column:1 / -1; }
 .inline-form .btn{ height:52px; padding:0 22px; }
 
-/* ── Stats ── */
 .stats{
   display:grid;
   grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));
@@ -1029,9 +1198,7 @@ body{
   text-transform:uppercase; color:var(--muted);
   margin-top:6px;
 }
-.stat-sub{ font-size:12.5px; color:var(--ink-2); margin-top:3px; }
 
-/* ── Charts ── */
 .charts-grid{
   display:grid;
   grid-template-columns:2fr 1fr;
@@ -1055,7 +1222,6 @@ body{
 .chart-box h3 i{ color:var(--brand-2); margin-right:6px; }
 .chart-canvas-wrap{ position:relative; height:230px; }
 
-/* ── Tables ── */
 .table-wrap{
   background:#fff;
   border:1px solid var(--line);
@@ -1123,7 +1289,6 @@ table.data tbody tr:hover{ background:var(--surface-3); }
   box-shadow:0 0 0 4px rgba(26,122,74,.12);
 }
 
-/* ── Teller cards ── */
 .teller-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill, minmax(215px, 1fr));
@@ -1143,7 +1308,6 @@ table.data tbody tr:hover{ background:var(--surface-3); }
 .teller-card .t-meta{ font-size:12.5px; color:var(--muted); word-break:break-word; }
 .teller-card .btn{ align-self:flex-start; margin-top:9px; }
 
-/* ── Re-auth box ── */
 .reauth-box{
   display:none;
   background:var(--warn-soft);
@@ -1157,7 +1321,6 @@ table.data tbody tr:hover{ background:var(--surface-3); }
 .reauth-box .row{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
 .reauth-box .field{ flex:1; min-width:180px; }
 
-/* ── Activity list ── */
 .activity-row{
   display:flex; align-items:center; justify-content:space-between;
   gap:12px;
@@ -1174,7 +1337,6 @@ table.data tbody tr:hover{ background:var(--surface-3); }
 }
 .activity-row .a-time{ font-size:12px; color:var(--muted); white-space:nowrap; }
 
-/* ── Filters bar ── */
 .filter-bar{
   display:flex;
   flex-wrap:wrap;
@@ -1190,26 +1352,8 @@ table.data tbody tr:hover{ background:var(--surface-3); }
 .filter-bar .field{ flex:1; min-width:150px; }
 .filter-bar .btn{ height:48px; }
 
-/* ── Held sales drawer ── */
-.held-list{
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
-  gap:10px;
-}
-.held-card{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:var(--r-md);
-  padding:13px 15px;
-  box-shadow:var(--sh-sm);
-  display:flex; flex-direction:column; gap:4px;
-}
-.held-card .h-name{ font-weight:750; color:var(--ink); font-size:14px; }
-.held-card .h-meta{ font-size:12px; color:var(--muted); }
-.held-card .h-actions{ display:flex; gap:6px; margin-top:8px; }
-
 /* ═══════════════════════════════════════════════════════════════
-   7. RECEIPT (print only)
+   9. RECEIPT (print only)
    ═══════════════════════════════════════════════════════════════ */
 .receipt-print{ display:none; }
 
@@ -1244,7 +1388,7 @@ table.data tbody tr:hover{ background:var(--surface-3); }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   8. RESPONSIVE
+   10. RESPONSIVE
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 1180px){
   .admin-rail{ width:190px; }
@@ -1299,7 +1443,6 @@ table.data tbody tr:hover{ background:var(--surface-3); }
   .confirm-bar .cb-actions{ order:3; width:100%; }
   .confirm-bar .cb-actions .btn{ flex:1; }
 
-  /* Rail becomes horizontal scroller */
   .rail{
     width:100%;
     flex-direction:row;
@@ -1326,7 +1469,6 @@ table.data tbody tr:hover{ background:var(--surface-3); }
   .rail .sb-btn .badge-num{ top:-4px; right:-4px; }
   .rail .sb-divider, .rail .sb-label{ display:none; }
 
-  /* Mobile tabs */
   .mobile-tabs{
     display:flex;
     gap:6px;
@@ -1372,7 +1514,6 @@ table.data tbody tr:hover{ background:var(--surface-3); }
   .products-panel{ border-bottom:0; }
   .cart-panel{ background:#fff; }
 
-  /* Admin rail horizontal */
   .admin-rail{
     width:100%;
     flex-direction:row;
@@ -1411,12 +1552,13 @@ table.data tbody tr:hover{ background:var(--surface-3); }
 
   .card{ padding:16px 16px; border-radius:var(--r-md); }
 
-  /* Bottom safe area for cart */
   .cart-panel.mobile-active{ padding-bottom:calc(16px + env(safe-area-inset-bottom)); }
 
   .filter-bar{ flex-direction:column; align-items:stretch; }
   .filter-bar .field{ min-width:unset; }
   .filter-bar .btn{ width:100%; }
+
+  .toast-wrap{ left:14px; right:14px; bottom:14px; max-width:none; }
 }
 
 @media (max-width: 520px){
@@ -1461,6 +1603,110 @@ table.data tbody tr:hover{ background:var(--surface-3); }
 <body>
 
 <!-- ══════════════════════════════════════════════════════════════
+     TOASTS
+     ══════════════════════════════════════════════════════════════ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PRODUCT MODAL (Add / Restock / Edit)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="productModalOverlay" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+  <div class="modal" role="document">
+    <div class="modal-head">
+      <h3><i class="fas fa-boxes-packing"></i> <span id="pmTitle">Add product</span></h3>
+      <button type="button" class="modal-close" id="pmCloseBtn" aria-label="Close">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="pm-banner" id="pmBanner" style="display:none;">
+        <div class="pm-emoji" id="pmEmojiBig">📦</div>
+        <div class="pm-info">
+          <div class="pm-name" id="pmNameBig">—</div>
+          <div class="pm-sub" id="pmSubBig">—</div>
+        </div>
+        <div class="pm-stockbox">
+          <div class="pm-stock" id="pmStockBig">0</div>
+          <div class="pm-stocklabel">in stock</div>
+        </div>
+      </div>
+
+      <div class="modal-grid">
+        <div class="pm-section-label">Product details</div>
+
+        <div class="field span-2">
+          <input type="text" id="pmName" placeholder=" " autocomplete="off" />
+          <label for="pmName">Item name *</label>
+        </div>
+
+        <div class="field">
+          <input type="text" id="pmEmoji" placeholder=" " maxlength="2" autocomplete="off" />
+          <label for="pmEmoji">Emoji</label>
+        </div>
+
+        <div class="field">
+          <input type="text" id="pmCategory" placeholder=" " list="catList" autocomplete="off" />
+          <label for="pmCategory">Category</label>
+        </div>
+
+        <div class="field">
+          <input type="number" id="pmPrice" placeholder=" " step="0.01" min="0" inputmode="decimal" />
+          <label for="pmPrice">Price (K) *</label>
+        </div>
+
+        <div class="field">
+          <input type="number" id="pmReorder" placeholder=" " min="0" inputmode="numeric" />
+          <label for="pmReorder">Reorder level</label>
+        </div>
+
+        <div class="field span-2">
+          <input type="date" id="pmExpiry" placeholder=" " />
+          <label for="pmExpiry">Expiry date</label>
+        </div>
+
+        <div class="pm-divider"></div>
+        <div class="pm-section-label">Stock</div>
+
+        <div class="field span-2">
+          <input type="number" id="pmAddQty" placeholder=" " min="0" inputmode="numeric" />
+          <label for="pmAddQty" id="pmAddQtyLabel">Quantity to add</label>
+        </div>
+      </div>
+
+      <div class="pm-preview" id="pmPreview">
+        <span>New stock level</span>
+        <b>0 units</b>
+      </div>
+
+      <div class="status-msg" id="pmStatus"></div>
+    </div>
+
+    <div class="modal-foot">
+      <button type="button" class="btn btn-danger btn-sm" id="pmDeleteBtn" style="display:none;margin-right:auto;">
+        <i class="fas fa-trash-can"></i> Delete
+      </button>
+      <button type="button" class="btn btn-ghost" id="pmCancelBtn">Cancel</button>
+      <button type="button" class="btn btn-primary" id="pmSaveBtn">
+        <i class="fas fa-floppy-disk"></i> Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<datalist id="catList">
+  <option value="Tablets"></option>
+  <option value="Capsules"></option>
+  <option value="Syrups"></option>
+  <option value="Injections"></option>
+  <option value="Ointments"></option>
+  <option value="Drops"></option>
+  <option value="Supplements"></option>
+  <option value="First Aid"></option>
+  <option value="Other"></option>
+</datalist>
+
+<!-- ══════════════════════════════════════════════════════════════
      AUTH
      ══════════════════════════════════════════════════════════════ -->
 <div id="loginScreen">
@@ -1470,7 +1716,7 @@ table.data tbody tr:hover{ background:var(--surface-3); }
         <div class="brand-mark"><i class="fas fa-prescription-bottle-medical"></i></div>
         <div>
           <h1>DONBOSCO <span>PHARMACY</span></h1>
-          <p>Point of Sale · v3.0</p>
+          <p>Point of Sale · v3.1</p>
         </div>
       </div>
 
@@ -1790,57 +2036,18 @@ table.data tbody tr:hover{ background:var(--surface-3); }
       <div class="admin-panel" id="panel-products">
         <div class="panel-head">
           <h2><i class="fas fa-boxes-stacked"></i> Products</h2>
-          <span class="chip" id="productsCountChip">0 items</span>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Add a new product</div>
-          <div class="inline-form" id="addProductForm">
-            <div class="field">
-              <input type="text" id="prodName" placeholder=" " />
-              <label for="prodName">Item name</label>
-            </div>
-            <div class="field">
-              <input type="number" id="prodPrice" placeholder=" " step="0.01" min="0" inputmode="decimal" />
-              <label for="prodPrice">Price (K)</label>
-            </div>
-            <div class="field">
-              <input type="number" id="prodQty" placeholder=" " min="0" inputmode="numeric" />
-              <label for="prodQty">Quantity</label>
-            </div>
-            <div class="field">
-              <input type="text" id="prodEmoji" placeholder=" " maxlength="2" />
-              <label for="prodEmoji">Emoji</label>
-            </div>
-            <div class="field">
-              <input type="text" id="prodCategory" placeholder=" " list="catList" />
-              <label for="prodCategory">Category</label>
-              <datalist id="catList">
-                <option value="Tablets"></option>
-                <option value="Capsules"></option>
-                <option value="Syrups"></option>
-                <option value="Injections"></option>
-                <option value="Ointments"></option>
-                <option value="Drops"></option>
-                <option value="Supplements"></option>
-                <option value="First Aid"></option>
-                <option value="Other"></option>
-              </datalist>
-            </div>
-            <div class="field">
-              <input type="date" id="prodExpiry" placeholder=" " />
-              <label for="prodExpiry">Expiry date</label>
-            </div>
-            <div class="field">
-              <input type="number" id="prodReorder" placeholder=" " min="0" inputmode="numeric" />
-              <label for="prodReorder">Reorder level</label>
-            </div>
-            <button class="btn btn-primary" id="addProductBtn" type="button">
-              <i class="fas fa-plus"></i> Add Product
+          <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;">
+            <span class="chip" id="productsCountChip">0 items</span>
+            <button class="btn btn-primary btn-sm" id="openAddProductBtn" type="button">
+              <i class="fas fa-plus"></i> New Product
             </button>
           </div>
-          <div id="productStatus" class="status-msg"></div>
         </div>
+
+        <p class="panel-sub">
+          Click <b>Restock</b> on any row to open the restock form, or use
+          <b>New Product</b> to add a brand-new item.
+        </p>
 
         <div class="table-wrap">
           <table class="data">
@@ -1982,15 +2189,20 @@ table.data tbody tr:hover{ background:var(--surface-3); }
       <div class="admin-panel" id="panel-restock">
         <div class="panel-head">
           <h2><i class="fas fa-arrow-up-from-bracket"></i> Restock</h2>
+          <button class="btn btn-primary btn-sm" id="openAddProductBtn2" type="button">
+            <i class="fas fa-plus"></i> New Product
+          </button>
         </div>
-        <p class="panel-sub">Add quantity to products that are running low or out of stock.</p>
+        <p class="panel-sub">
+          Use the quick <b>Add</b> box, or press <b>Open form</b> for the full restock window.
+        </p>
 
         <div class="table-wrap">
           <table class="data">
             <thead>
               <tr>
                 <th>Item</th><th>Name</th><th>In Stock</th><th>Reorder Lvl</th>
-                <th>Status</th><th>Add Qty</th><th>Action</th>
+                <th>Status</th><th>Quick Add</th><th>Action</th>
               </tr>
             </thead>
             <tbody id="restockTableBody"></tbody>
@@ -2153,17 +2365,10 @@ const adminConfirmBar    = $('adminConfirmBar');
 const adminSidebarBtns   = document.querySelectorAll('.as-btn');
 const adminPanels        = document.querySelectorAll('.admin-panel');
 
-const prodName      = $('prodName');
-const prodPrice     = $('prodPrice');
-const prodQty       = $('prodQty');
-const prodEmoji     = $('prodEmoji');
-const prodCategory  = $('prodCategory');
-const prodExpiry    = $('prodExpiry');
-const prodReorder   = $('prodReorder');
-const addProductBtn = $('addProductBtn');
-const productStatus = $('productStatus');
 const productTableBody = $('productTableBody');
 const productsCountChip = $('productsCountChip');
+const openAddProductBtn  = $('openAddProductBtn');
+const openAddProductBtn2 = $('openAddProductBtn2');
 
 const tellerName     = $('tellerName');
 const tellerEmail    = $('tellerEmail');
@@ -2206,6 +2411,31 @@ const alertLow      = $('alertLow');
 const alertExpiring = $('alertExpiring');
 const alertExpired  = $('alertExpired');
 
+/* Modal refs */
+const pmOverlay   = $('productModalOverlay');
+const pmTitle     = $('pmTitle');
+const pmCloseBtn  = $('pmCloseBtn');
+const pmCancelBtn = $('pmCancelBtn');
+const pmSaveBtn   = $('pmSaveBtn');
+const pmDeleteBtn = $('pmDeleteBtn');
+const pmBanner    = $('pmBanner');
+const pmEmojiBig  = $('pmEmojiBig');
+const pmNameBig   = $('pmNameBig');
+const pmSubBig    = $('pmSubBig');
+const pmStockBig  = $('pmStockBig');
+const pmName      = $('pmName');
+const pmEmoji     = $('pmEmoji');
+const pmCategory  = $('pmCategory');
+const pmPrice     = $('pmPrice');
+const pmReorder   = $('pmReorder');
+const pmExpiry    = $('pmExpiry');
+const pmAddQty    = $('pmAddQty');
+const pmAddQtyLabel = $('pmAddQtyLabel');
+const pmPreview   = $('pmPreview');
+const pmStatus    = $('pmStatus');
+
+const toastWrap   = $('toastWrap');
+
 /* ═══════════════════════════════════════════════════════════════
    STATE
    ═══════════════════════════════════════════════════════════════ */
@@ -2223,6 +2453,13 @@ let activeCategory = 'All';
 let currentFilter = { from: null, to: null, teller: '' };
 let chart7 = null;
 let chartTop = null;
+let pendingAdminEmail = null;
+let pmState = { productId: null };
+
+/* subscription handles (prevents duplicate listeners) */
+let unsubProducts = null;
+let unsubSales    = null;
+let unsubUsers    = null;
 
 /* ═══════════════════════════════════════════════════════════════
    HELPERS
@@ -2280,7 +2517,20 @@ function statusMsg(el, text, type = 'info', ms = 4000) {
   el._t = setTimeout(() => { el.className = 'status-msg'; }, ms);
 }
 
-/* ── Clock + date display ── */
+/* ── Toast ── */
+function toast(message, type = 'info', ms = 3200) {
+  if (!toastWrap) return;
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = message;
+  toastWrap.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 240);
+  }, ms);
+}
+
+/* ── Clock ── */
 function updateClock() {
   const now = new Date();
   const t = now.toLocaleTimeString('en-ZM', { hour: '2-digit', minute: '2-digit' });
@@ -2331,7 +2581,8 @@ function showConfirm(opts = {}) {
   };
   const icon = iconMap[type] || iconMap.default;
 
-  bar.className = 'confirm-bar show' + (type === 'danger' ? ' danger' : type === 'info' ? ' info' : type === 'success' ? ' success' : '');
+  bar.className = 'confirm-bar show' +
+    (type === 'danger' ? ' danger' : type === 'info' ? ' info' : type === 'success' ? ' success' : '');
 
   bar.innerHTML = `
     <div class="cb-icon"><i class="fas ${icon}"></i></div>
@@ -2353,9 +2604,151 @@ function showConfirm(opts = {}) {
   if (cancel) cancel.onclick = () => { hideConfirm(); if (onCancel) onCancel(); };
 }
 
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') hideConfirm();
+/* ═══════════════════════════════════════════════════════════════
+   PRODUCT MODAL
+   ═══════════════════════════════════════════════════════════════ */
+function updatePmPreview() {
+  const isEdit = !!pmState.productId;
+  const current = isEdit ? (allProducts[pmState.productId]?.quantity || 0) : 0;
+  const add = parseInt(pmAddQty.value, 10) || 0;
+  const next = isEdit ? current + add : add;
+  pmPreview.innerHTML =
+    `<span>${isEdit ? 'New stock level' : 'Initial stock'}</span>` +
+    `<b>${next} unit${next === 1 ? '' : 's'}</b>`;
+}
+
+function openProductModal(productId = null) {
+  pmState.productId = productId;
+  const isEdit = !!productId;
+  const p = isEdit ? (allProducts[productId] || {}) : {};
+
+  pmTitle.textContent = isEdit ? 'Restock / Edit product' : 'Add new product';
+  pmSaveBtn.innerHTML = isEdit
+    ? '<i class="fas fa-plus"></i> Add Stock &amp; Save'
+    : '<i class="fas fa-plus"></i> Create Product';
+  pmAddQtyLabel.textContent = isEdit ? 'Quantity to add' : 'Initial quantity';
+  pmDeleteBtn.style.display = isEdit ? 'inline-flex' : 'none';
+
+  pmBanner.style.display = isEdit ? 'flex' : 'none';
+  if (isEdit) {
+    pmEmojiBig.textContent = p.emoji || '📦';
+    pmNameBig.textContent  = p.name || 'Unknown';
+    pmSubBig.textContent   = `${p.category || 'Uncategorised'} · ${K(p.price)}`;
+    pmStockBig.textContent = p.quantity || 0;
+  }
+
+  pmName.value     = p.name || '';
+  pmEmoji.value    = p.emoji || '';
+  pmCategory.value = p.category || '';
+  pmPrice.value    = (p.price === 0 || p.price) ? p.price : '';
+  pmReorder.value  = (p.reorder === 0 || p.reorder) ? p.reorder : '';
+  pmExpiry.value   = p.expiry || '';
+  pmAddQty.value   = isEdit ? '' : '';
+
+  pmStatus.className = 'status-msg';
+  pmStatus.textContent = '';
+
+  updatePmPreview();
+  pmOverlay.classList.add('show');
+  setTimeout(() => pmAddQty.focus(), 130);
+}
+
+function closeProductModal() {
+  pmOverlay.classList.remove('show');
+  pmState.productId = null;
+}
+
+async function saveProductModal() {
+  const id       = pmState.productId;
+  const isEdit   = !!id;
+  const name     = pmName.value.trim();
+  const price    = parseFloat(pmPrice.value);
+  const emoji    = pmEmoji.value.trim() || '📦';
+  const category = pmCategory.value.trim() || 'Other';
+  const expiry   = pmExpiry.value || '';
+  const reorder  = parseInt(pmReorder.value, 10) || 0;
+  const addQty   = Math.max(0, parseInt(pmAddQty.value, 10) || 0);
+
+  if (!name) {
+    statusMsg(pmStatus, '⚠️ Item name is required.', 'error');
+    pmName.focus();
+    return;
+  }
+  if (isNaN(price) || price < 0) {
+    statusMsg(pmStatus, '⚠️ Enter a valid price.', 'error');
+    pmPrice.focus();
+    return;
+  }
+
+  pmSaveBtn.disabled = true;
+  const original = pmSaveBtn.innerHTML;
+  pmSaveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+
+  try {
+    if (isEdit) {
+      const current = allProducts[id]?.quantity || 0;
+      await update(ref(db, `products/${id}`), {
+        name, price, emoji, category, expiry, reorder,
+        quantity: current + addQty,
+        updatedAt: new Date().toISOString()
+      });
+      toast(`✅ <b>${esc(name)}</b> saved · +${addQty} unit(s) → ${current + addQty} in stock`, 'success');
+    } else {
+      await set(push(ref(db, 'products')), {
+        name, price, emoji, category, expiry, reorder,
+        quantity: addQty,
+        createdAt: new Date().toISOString()
+      });
+      toast(`✅ <b>${esc(name)}</b> created with ${addQty} unit(s)`, 'success');
+    }
+    closeProductModal();
+  } catch (err) {
+    console.error('Save product error:', err);
+    statusMsg(pmStatus, `❌ ${err.message}`, 'error', 6000);
+    toast(`❌ ${esc(err.message)}`, 'error', 5000);
+  } finally {
+    pmSaveBtn.disabled = false;
+    pmSaveBtn.innerHTML = original;
+  }
+}
+
+async function deleteProductFromModal() {
+  const id = pmState.productId;
+  if (!id) return;
+  const p = allProducts[id] || {};
+  const name = p.name || 'this product';
+
+  closeProductModal();
+  showConfirm({
+    title: 'Delete product',
+    message: `Delete <b>${esc(name)}</b>? This cannot be undone.`,
+    confirmText: 'Delete',
+    type: 'danger',
+    onConfirm: async () => {
+      try {
+        await remove(ref(db, `products/${id}`));
+        toast(`🗑️ <b>${esc(name)}</b> deleted`, 'success');
+      } catch (err) {
+        toast(`❌ ${esc(err.message)}`, 'error', 5000);
+      }
+    }
+  });
+}
+
+/* Modal listeners */
+pmCloseBtn.addEventListener('click', closeProductModal);
+pmCancelBtn.addEventListener('click', closeProductModal);
+pmSaveBtn.addEventListener('click', saveProductModal);
+pmDeleteBtn.addEventListener('click', deleteProductFromModal);
+pmOverlay.addEventListener('mousedown', (e) => {
+  if (e.target === pmOverlay) closeProductModal();
 });
+pmAddQty.addEventListener('input', updatePmPreview);
+pmPrice.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveProductModal(); });
+pmAddQty.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveProductModal(); });
+
+openAddProductBtn.addEventListener('click', () => openProductModal(null));
+openAddProductBtn2.addEventListener('click', () => openProductModal(null));
 
 /* ═══════════════════════════════════════════════════════════════
    AUTH TABS + ROLE TABS
@@ -2467,6 +2860,48 @@ registerForm.addEventListener('submit', async (e) => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
+   DATA SUBSCRIPTIONS (single set, no leaks)
+   ═══════════════════════════════════════════════════════════════ */
+function startDataSubscriptions() {
+  if (!unsubProducts) {
+    unsubProducts = onValue(ref(db, 'products'), (snap) => {
+      allProducts = snap.val() || {};
+      renderCategoryStrip();
+      renderProductList();
+      renderAdminProductTable(allProducts);
+      renderRestockTable(allProducts);
+      renderAlerts(allProducts);
+    }, (err) => console.warn('products listener:', err.message));
+  }
+
+  if (!unsubSales) {
+    unsubSales = onValue(ref(db, 'sales'), (snap) => {
+      allSales = snap.val() || {};
+      applySalesFilters();
+      updateDashboardStats();
+      renderDashboardCharts();
+      renderRecentActivity();
+    }, (err) => console.warn('sales listener:', err.message));
+  }
+
+  if (!unsubUsers) {
+    unsubUsers = onValue(ref(db, 'users'), (snap) => {
+      allTellers = snap.val() || {};
+      renderTellerGrid(allTellers);
+    }, (err) => console.warn('users listener:', err.message));
+  }
+}
+
+function stopDataSubscriptions() {
+  if (unsubProducts) { unsubProducts(); unsubProducts = null; }
+  if (unsubSales)    { unsubSales();    unsubSales = null; }
+  if (unsubUsers)    { unsubUsers();    unsubUsers = null; }
+  allProducts = {};
+  allSales = {};
+  allTellers = {};
+}
+
+/* ═══════════════════════════════════════════════════════════════
    AUTH STATE
    ═══════════════════════════════════════════════════════════════ */
 onAuthStateChanged(auth, async (user) => {
@@ -2488,6 +2923,8 @@ onAuthStateChanged(auth, async (user) => {
       }
     } catch (err) { console.warn('User sync:', err); }
 
+    startDataSubscriptions();
+
     if (prefix.startsWith('admin')) {
       showAdminInterface(user);
     } else if (prefix.startsWith('teller')) {
@@ -2500,6 +2937,7 @@ onAuthStateChanged(auth, async (user) => {
     }
   } else {
     currentUser = null;
+    stopDataSubscriptions();
     showLoginInterface();
     loginBtn.disabled = false;
     loginBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Sign In';
@@ -2511,6 +2949,7 @@ function showLoginInterface() {
   posContainer.classList.remove('active');
   adminContainer.classList.remove('active');
   hideConfirm();
+  closeProductModal();
 }
 
 function showPosInterface(user) {
@@ -2518,9 +2957,8 @@ function showPosInterface(user) {
   posContainer.classList.add('active');
   adminContainer.classList.remove('active');
   tellerNameDisplay.textContent = user.displayName || user.email || 'Teller';
-  loadPosProducts();
-  loadPosSales();
   loadHeldSales();
+  renderCart();
   if (window.innerWidth > 860) setTimeout(() => searchInput.focus(), 120);
 }
 
@@ -2529,8 +2967,8 @@ function showAdminInterface(user) {
   posContainer.classList.remove('active');
   adminContainer.classList.add('active');
   adminNameDisplay.textContent = user.displayName || user.email || 'Admin';
-  loadAdminData();
   switchAdminPanel('dashboard');
+  setTimeout(renderDashboardCharts, 60);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2543,9 +2981,8 @@ posLogoutBtn.addEventListener('click', () => {
     confirmText: 'Log out',
     type: 'danger',
     onConfirm: async () => {
-      await signOut(auth);
       resetPosState();
-      showLoginInterface();
+      await signOut(auth);
     }
   });
 });
@@ -2558,7 +2995,6 @@ adminLogoutBtn.addEventListener('click', () => {
     type: 'danger',
     onConfirm: async () => {
       await signOut(auth);
-      showLoginInterface();
     }
   });
 });
@@ -2568,30 +3004,28 @@ function resetPosState() {
   transactionComplete = false;
   lastTransaction = null;
   amountReceived.value = '';
+  amountReceived.disabled = false;
   discountInput.value = '';
   customerName.value = '';
   prescriptionNo.value = '';
+  payBtn.innerHTML = '<i class="fas fa-circle-check"></i> Pay';
+  payBtn.style.background = '';
+  printReceiptBtn.disabled = true;
   renderCart();
 }
 
 /* ═══════════════════════════════════════════════════════════════
    POS — PRODUCTS
    ═══════════════════════════════════════════════════════════════ */
-function loadPosProducts() {
-  onValue(ref(db, 'products'), (snapshot) => {
-    allProducts = snapshot.val() || {};
-    renderCategoryStrip();
-    renderProductList();
-  });
-}
-
 function renderCategoryStrip() {
   const cats = new Set(['All']);
   Object.values(allProducts).forEach(p => {
-    if (p.category) cats.add(p.category);
+    if (p && p.category) cats.add(p.category);
   });
 
   if (cats.size <= 1) { catStrip.innerHTML = ''; return; }
+
+  if (!cats.has(activeCategory)) activeCategory = 'All';
 
   catStrip.innerHTML = [...cats].map(c => `
     <button type="button" class="cat ${c === activeCategory ? 'active' : ''}" data-cat="${esc(c)}">${esc(c)}</button>
@@ -2619,17 +3053,18 @@ function renderProductList() {
   let entries = Object.entries(allProducts);
 
   if (activeCategory !== 'All') {
-    entries = entries.filter(([, p]) => p.category === activeCategory);
+    entries = entries.filter(([, p]) => p && p.category === activeCategory);
   }
 
   if (filter) {
     entries = entries.filter(([id, p]) =>
       (p.name || '').toLowerCase().includes(filter) ||
-      (p.emoji || '').includes(filter) ||
       (p.category || '').toLowerCase().includes(filter) ||
       id.toLowerCase().includes(filter)
     );
   }
+
+  entries.sort((a, b) => String(a[1].name || '').localeCompare(String(b[1].name || '')));
 
   if (entries.length === 0) {
     productListContainer.innerHTML = `
@@ -2652,7 +3087,7 @@ function renderProductList() {
     const meta = [
       p.category ? `<span>${esc(p.category)}</span>` : '',
       `<span>Stock: ${qty}</span>`,
-      exp ? `<span class="${expBad ? 'exp-badge' : ''}">Exp: ${exp.date.toLocaleDateString('en-GB')}</span>` : ''
+      exp ? `<span>Exp: ${exp.date.toLocaleDateString('en-GB')}</span>` : ''
     ].filter(Boolean).join(' · ');
 
     return `
@@ -2705,7 +3140,10 @@ function addToCart(id, name, price, emoji) {
   const existing = cart.find(i => i.id === id);
 
   if (existing) {
-    if (existing.quantity >= stock) return;
+    if (existing.quantity >= stock) {
+      toast('⚠️ No more stock available for this item.', 'warn', 2200);
+      return;
+    }
     existing.quantity += 1;
   } else {
     if (stock <= 0) return;
@@ -2722,11 +3160,13 @@ function addToCart(id, name, price, emoji) {
   }
 
   renderCart();
+  updateChange();
 }
 
 function removeItem(id) {
   cart = cart.filter(i => i.id !== id);
   renderCart();
+  updateChange();
 }
 
 function changeQty(id, delta) {
@@ -2736,9 +3176,13 @@ function changeQty(id, delta) {
   const max = product ? (product.quantity || 0) : 999;
   const next = item.quantity + delta;
   if (next <= 0) { removeItem(id); return; }
-  if (next > max) return;
+  if (next > max) {
+    toast('⚠️ Reached available stock for this item.', 'warn', 2000);
+    return;
+  }
   item.quantity = next;
   renderCart();
+  updateChange();
 }
 
 function clearCart() {
@@ -2753,7 +3197,9 @@ function clearCart() {
   payBtn.innerHTML = '<i class="fas fa-circle-check"></i> Pay';
   payBtn.style.background = '';
   printReceiptBtn.disabled = true;
+  changeLine.classList.remove('negative', 'paid');
   renderCart();
+  updateChange();
 }
 
 function getCartTotals() {
@@ -2814,13 +3260,11 @@ function renderCart() {
     discountRow.style.display = 'none';
   }
 
-  payBtn.disabled = cart.length === 0;
   if (cart.length === 0) {
+    payBtn.disabled = true;
     printReceiptBtn.disabled = true;
-    transactionComplete = false;
-    lastTransaction = null;
-    amountReceived.value = '';
-    updateChange();
+  } else {
+    payBtn.disabled = true; /* re-enabled by updateChange when enough received */
   }
 }
 
@@ -2836,7 +3280,7 @@ function updateChange() {
   changeLine.classList.toggle('negative', change < -0.005 && received > 0);
 
   const enough = received >= grandTotal && received > 0 && cart.length > 0;
-  payBtn.disabled = !enough;
+  payBtn.disabled = !enough || transactionComplete;
   return { received, change, grandTotal, enough };
 }
 
@@ -2938,7 +3382,7 @@ payBtn.addEventListener('click', async () => {
     changeLine.classList.add('paid');
     changeDisplay.textContent = K(received - grandTotal);
 
-    loadPosProducts();
+    toast(`✅ Payment received · Change ${K(received - grandTotal)}`, 'success', 4000);
   } catch (err) {
     console.error('Payment error:', err);
     showConfirm({
@@ -2954,7 +3398,7 @@ payBtn.addEventListener('click', async () => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   POS — PRINT + PDF RECEIPT
+   POS — PRINT RECEIPT
    ═══════════════════════════════════════════════════════════════ */
 printReceiptBtn.addEventListener('click', () => {
   if (!lastTransaction || !transactionComplete) return;
@@ -2994,7 +3438,7 @@ function buildReceiptHTML(txn, receiptId) {
     <div class="rp-footer">
       <div class="thanks">Thank you for your patronage!</div>
       <p style="margin-top:4px;">Items sold are non-returnable unless defective.</p>
-      <p style="font-size:11px;color:#666;margin-top:6px;">DONBOSCO POS v3.0</p>
+      <p style="font-size:11px;color:#666;margin-top:6px;">DONBOSCO POS v3.1</p>
     </div>`;
 }
 
@@ -3042,20 +3486,9 @@ holdSaleBtn.addEventListener('click', () => {
   persistHeldSales();
   updateHeldBadge();
 
-  cart = [];
-  discountInput.value = '';
-  customerName.value = '';
-  prescriptionNo.value = '';
-  amountReceived.value = '';
-  renderCart();
+  clearCart();
 
-  showConfirm({
-    title: 'Sale held',
-    message: `Held for ${held.customer || 'walk-in customer'}. Total ${K(grandTotal)}.`,
-    confirmText: 'OK',
-    hideCancel: true,
-    type: 'success'
-  });
+  toast(`⏸️ Sale held · ${K(grandTotal)}`, 'info', 3200);
 });
 
 heldSalesBtn.addEventListener('click', () => {
@@ -3083,18 +3516,24 @@ heldSalesBtn.addEventListener('click', () => {
       <button type="button" class="btn btn-danger btn-sm" data-cb="clear">Clear all</button>
     </div>
   `;
-  bar.querySelector('[data-cb="cancel"]').onclick = hideConfirm;
+  bar.querySelector('[data-cb="cancel"]').onclick = () => {
+    const tray = document.getElementById('heldTray');
+    if (tray) tray.remove();
+    hideConfirm();
+  };
   bar.querySelector('[data-cb="clear"]').onclick = () => {
     heldSales = [];
     persistHeldSales();
     updateHeldBadge();
+    const tray = document.getElementById('heldTray');
+    if (tray) tray.remove();
     hideConfirm();
+    toast('🗑️ Held sales cleared', 'info', 2200);
   };
 
-  /* Show held cards below in a temporary tray using the products list area */
   const tray = document.createElement('div');
   tray.className = 'card';
-  tray.style.marginBottom = '16px';
+  tray.style.margin = '0 0 14px';
   tray.innerHTML = `
     <div class="card-title">Held sales</div>
     <div class="held-list">
@@ -3139,42 +3578,34 @@ function resumeHeld(idx) {
   const h = heldSales[idx];
   if (!h) return;
 
+  const doResume = () => {
+    cart = h.items.map(i => ({ ...i }));
+    customerName.value = h.customer || '';
+    prescriptionNo.value = h.prescription || '';
+    discountInput.value = h.discount || '';
+    heldSales.splice(idx, 1);
+    persistHeldSales();
+    updateHeldBadge();
+    renderCart();
+    updateChange();
+    const tray = document.getElementById('heldTray');
+    if (tray) tray.remove();
+    hideConfirm();
+    toast('▶️ Held sale resumed', 'success', 2400);
+  };
+
   if (cart.length > 0) {
     showConfirm({
       title: 'Cart not empty',
       message: 'Clear the current cart before resuming a held sale?',
       confirmText: 'Yes, clear & resume',
       type: 'warning',
-      onConfirm: () => {
-        cart = h.items.map(i => ({ ...i }));
-        customerName.value = h.customer || '';
-        prescriptionNo.value = h.prescription || '';
-        discountInput.value = h.discount || '';
-        heldSales.splice(idx, 1);
-        persistHeldSales();
-        updateHeldBadge();
-        renderCart();
-        updateChange();
-        const tray = document.getElementById('heldTray');
-        if (tray) tray.remove();
-        hideConfirm();
-      }
+      onConfirm: doResume
     });
     return;
   }
 
-  cart = h.items.map(i => ({ ...i }));
-  customerName.value = h.customer || '';
-  prescriptionNo.value = h.prescription || '';
-  discountInput.value = h.discount || '';
-  heldSales.splice(idx, 1);
-  persistHeldSales();
-  updateHeldBadge();
-  renderCart();
-  updateChange();
-  const tray = document.getElementById('heldTray');
-  if (tray) tray.remove();
-  hideConfirm();
+  doResume();
 }
 
 function persistHeldSales() {
@@ -3200,7 +3631,7 @@ function updateHeldBadge() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   POS — CLEAR / SEARCH / TODAY
+   POS — CLEAR / SEARCH / TODAY / RESET
    ═══════════════════════════════════════════════════════════════ */
 clearCartBtn.addEventListener('click', () => {
   if (cart.length === 0) { clearCart(); return; }
@@ -3253,15 +3684,10 @@ resetSystemBtn.addEventListener('click', () => {
       payBtn.disabled = true;
       amountReceived.disabled = false;
       printReceiptBtn.disabled = true;
+      toast('↩️ Sale reset', 'info', 2200);
     }
   });
 });
-
-function loadPosSales() {
-  onValue(ref(db, 'sales'), (snapshot) => {
-    allSales = snapshot.val() || {};
-  });
-}
 
 /* ═══════════════════════════════════════════════════════════════
    MOBILE TABS
@@ -3277,25 +3703,8 @@ posMobileTabs.addEventListener('click', (e) => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   ADMIN — DATA LOADING
+   ADMIN — PRODUCTS TABLE
    ═══════════════════════════════════════════════════════════════ */
-function loadAdminData() {
-  loadAdminProducts();
-  loadAdminTellers();
-  loadAdminSales();
-  loadDashboard();
-  loadRestockTable();
-  loadAlerts();
-}
-
-/* ── Products ── */
-function loadAdminProducts() {
-  onValue(ref(db, 'products'), (snapshot) => {
-    allProducts = snapshot.val() || {};
-    renderAdminProductTable(allProducts);
-  });
-}
-
 function renderAdminProductTable(products) {
   const entries = Object.entries(products);
   productsCountChip.textContent = `${entries.length} item${entries.length === 1 ? '' : 's'}`;
@@ -3303,10 +3712,12 @@ function renderAdminProductTable(products) {
   if (entries.length === 0) {
     productTableBody.innerHTML =
       `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:26px;">
-        No products yet — add your first product above.
+        No products yet — click <b>New Product</b> to add one.
       </td></tr>`;
     return;
   }
+
+  entries.sort((a, b) => String(a[1].name || '').localeCompare(String(b[1].name || '')));
 
   productTableBody.innerHTML = entries.map(([id, p]) => {
     const qty = p.quantity || 0;
@@ -3326,7 +3737,7 @@ function renderAdminProductTable(products) {
         <td><strong>${esc(p.name || 'Unknown')}</strong></td>
         <td>${esc(p.category || '—')}</td>
         <td style="font-variant-numeric:tabular-nums;">${K(p.price)}</td>
-        <td style="font-variant-numeric:tabular-nums;">${qty}</td>
+        <td style="font-variant-numeric:tabular-nums;font-weight:700;">${qty}</td>
         <td style="font-size:12px;">
           ${p.expiry
             ? `<span style="color:${expBad ? '#a83232' : expSoon ? '#c8861d' : 'var(--ink-2)'};">${new Date(p.expiry).toLocaleDateString('en-GB')}</span>`
@@ -3334,9 +3745,9 @@ function renderAdminProductTable(products) {
         </td>
         <td>${badge}</td>
         <td>
-          <div style="display:flex;gap:6px;align-items:center;">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
             <button type="button" class="btn btn-gold btn-xs" data-restock="${esc(id)}">
-              <i class="fas fa-plus"></i>
+              <i class="fas fa-plus"></i> Restock
             </button>
             <button type="button" class="del-btn" data-del="${esc(id)}" aria-label="Delete">
               <i class="fas fa-trash-can"></i>
@@ -3347,16 +3758,7 @@ function renderAdminProductTable(products) {
   }).join('');
 
   productTableBody.querySelectorAll('[data-restock]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      adminSidebarBtns.forEach(b => b.classList.remove('active'));
-      const restockBtn = [...adminSidebarBtns].find(b => b.dataset.panel === 'restock');
-      if (restockBtn) restockBtn.classList.add('active');
-      switchAdminPanel('restock');
-      setTimeout(() => {
-        const input = restockTableBody.querySelector(`.restock-input[data-id="${btn.dataset.restock}"]`);
-        if (input) { input.focus(); input.select(); }
-      }, 80);
-    });
+    btn.addEventListener('click', () => openProductModal(btn.dataset.restock));
   });
 
   productTableBody.querySelectorAll('[data-del]').forEach(btn => {
@@ -3372,9 +3774,9 @@ function renderAdminProductTable(products) {
         onConfirm: async () => {
           try {
             await remove(ref(db, `products/${id}`));
-            statusMsg(productStatus, '✅ Product deleted.', 'success');
+            toast(`🗑️ <b>${esc(product.name)}</b> deleted`, 'success');
           } catch (err) {
-            statusMsg(productStatus, `❌ ${err.message}`, 'error');
+            toast(`❌ ${esc(err.message)}`, 'error', 5000);
           }
         }
       });
@@ -3382,52 +3784,11 @@ function renderAdminProductTable(products) {
   });
 }
 
-addProductBtn.addEventListener('click', async () => {
-  const name     = prodName.value.trim();
-  const price    = parseFloat(prodPrice.value);
-  const qty      = parseInt(prodQty.value, 10) || 0;
-  const emoji    = prodEmoji.value.trim() || '📦';
-  const category = prodCategory.value.trim() || 'Other';
-  const expiry   = prodExpiry.value || null;
-  const reorder  = parseInt(prodReorder.value, 10) || 0;
-
-  if (!name || isNaN(price) || price < 0) {
-    statusMsg(productStatus, '⚠️ Enter a valid name and price.', 'error');
-    return;
-  }
-
-  addProductBtn.disabled = true;
-  try {
-    await set(push(ref(db, 'products')), {
-      name, price, quantity: qty, emoji, category, expiry, reorder,
-      createdAt: new Date().toISOString()
-    });
-    statusMsg(productStatus, `✅ “${name}” added.`, 'success');
-    prodName.value = '';
-    prodPrice.value = '';
-    prodQty.value = '';
-    prodEmoji.value = '';
-    prodCategory.value = '';
-    prodExpiry.value = '';
-    prodReorder.value = '';
-    prodName.focus();
-  } catch (err) {
-    statusMsg(productStatus, `❌ ${err.message}`, 'error');
-  } finally {
-    addProductBtn.disabled = false;
-  }
-});
-
-/* ── Tellers ── */
-function loadAdminTellers() {
-  onValue(ref(db, 'users'), (snapshot) => {
-    allTellers = snapshot.val() || {};
-    renderTellerGrid(allTellers);
-  });
-}
-
+/* ═══════════════════════════════════════════════════════════════
+   ADMIN — TELLERS
+   ═══════════════════════════════════════════════════════════════ */
 function renderTellerGrid(users) {
-  const list = Object.entries(users).filter(([, u]) => u.role === 'teller');
+  const list = Object.entries(users).filter(([, u]) => u && u.role === 'teller');
 
   if (list.length === 0) {
     tellerGrid.innerHTML = `
@@ -3460,17 +3821,15 @@ function renderTellerGrid(users) {
         onConfirm: async () => {
           try {
             await remove(ref(db, `users/${id}`));
-            statusMsg(tellerStatus, '✅ Teller removed.', 'success');
+            toast('✅ Teller removed', 'success');
           } catch (err) {
-            statusMsg(tellerStatus, `❌ ${err.message}`, 'error');
+            toast(`❌ ${esc(err.message)}`, 'error', 5000);
           }
         }
       });
     });
   });
 }
-
-let pendingAdminEmail = null;
 
 addTellerBtn.addEventListener('click', async () => {
   const name = tellerName.value.trim();
@@ -3547,21 +3906,12 @@ reauthBtn.addEventListener('click', async () => {
 /* ═══════════════════════════════════════════════════════════════
    ADMIN — SALES (filters, PDF, CSV)
    ═══════════════════════════════════════════════════════════════ */
-function loadAdminSales() {
-  onValue(ref(db, 'sales'), (snapshot) => {
-    allSales = snapshot.val() || {};
-    applySalesFilters();
-    renderDashboardCharts();
-    updateDashboardStats();
-    renderRecentActivity();
-  });
-}
-
 function filteredSalesEntries() {
   const { from, to, teller } = currentFilter;
   const tellerQuery = (teller || '').toLowerCase().trim();
 
   return Object.entries(allSales).filter(([id, s]) => {
+    if (!s) return false;
     if (from && s.date && s.date < from) return false;
     if (to && s.date && s.date > to) return false;
     if (tellerQuery && !(s.tellerName || '').toLowerCase().includes(tellerQuery)) return false;
@@ -3573,7 +3923,6 @@ function applySalesFilters() {
   const entries = filteredSalesEntries();
   entries.sort((a, b) => String(b[1].timestamp || '').localeCompare(String(a[1].timestamp || '')));
 
-  /* Stats */
   let total = 0, units = 0;
   entries.forEach(([, s]) => {
     total += s.grandTotal || 0;
@@ -3586,7 +3935,6 @@ function applySalesFilters() {
   salesItems.textContent = units;
   salesAvg.textContent = K(avg);
 
-  /* Table */
   if (entries.length === 0) {
     salesTableBody.innerHTML =
       `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:26px;">
@@ -3622,7 +3970,7 @@ applyFiltersBtn.addEventListener('click', () => {
     teller: filterTeller.value || ''
   };
   applySalesFilters();
-  statusMsg(productStatus, '✅ Filters applied.', 'info', 2000);
+  toast('✅ Filters applied', 'info', 2000);
 });
 
 clearFiltersBtn.addEventListener('click', () => {
@@ -3631,11 +3979,15 @@ clearFiltersBtn.addEventListener('click', () => {
   filterTeller.value = '';
   currentFilter = { from: null, to: null, teller: '' };
   applySalesFilters();
+  toast('↩️ Filters cleared', 'info', 2000);
 });
 
 refreshSalesBtn.addEventListener('click', () => {
-  loadAdminSales();
-  statusMsg(productStatus, '✅ Sales refreshed.', 'info', 2000);
+  applySalesFilters();
+  updateDashboardStats();
+  renderDashboardCharts();
+  renderRecentActivity();
+  toast('🔄 Sales refreshed', 'info', 2000);
 });
 
 /* ── CSV ── */
@@ -3679,6 +4031,7 @@ downloadCsvBtn.addEventListener('click', () => {
   a.download = `donbosco_sales_${localDateKey()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+  toast('📥 CSV downloaded', 'success', 2400);
 });
 
 /* ── PDF ── */
@@ -3697,10 +4050,10 @@ downloadPdfBtn.addEventListener('click', () => {
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
 
-  /* Header */
   doc.setFillColor(11, 79, 46);
-  doc.rect(0, 0, doc.internal.pageSize.getWidth(), 70, 'F');
+  doc.rect(0, 0, pageW, 70, 'F');
 
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
@@ -3713,11 +4066,9 @@ downloadPdfBtn.addEventListener('click', () => {
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  const pageW = doc.internal.pageSize.getWidth();
   doc.text('Generated: ' + new Date().toLocaleString('en-ZM'), pageW - 40, 32, { align: 'right' });
   doc.text('Report ID: RPT-' + Date.now().toString().slice(-8), pageW - 40, 52, { align: 'right' });
 
-  /* Filter summary */
   doc.setTextColor(70, 80, 90);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
@@ -3728,14 +4079,12 @@ downloadPdfBtn.addEventListener('click', () => {
   ].join('   ·   ');
   doc.text(filterLine, 40, 90);
 
-  /* Compute totals */
   let total = 0, units = 0;
   entries.forEach(([, s]) => {
     total += s.grandTotal || 0;
     if (Array.isArray(s.items)) units += s.items.reduce((a, i) => a + (i.quantity || 0), 0);
   });
 
-  /* Summary boxes */
   const boxY = 105;
   const boxH = 50;
   const boxW = (pageW - 80 - 30) / 4;
@@ -3763,7 +4112,6 @@ downloadPdfBtn.addEventListener('click', () => {
     doc.text(item.value, x + 12, boxY + 38);
   });
 
-  /* Sales table */
   entries.sort((a, b) => String(a[1].timestamp || '').localeCompare(String(b[1].timestamp || '')));
 
   const rows = entries.map(([, s]) => {
@@ -3803,39 +4151,35 @@ downloadPdfBtn.addEventListener('click', () => {
       5: { halign: 'right' },
       7: { halign: 'right', fontStyle: 'bold', textColor: [11, 79, 46] }
     },
-    didDrawPage: (data) => {
+    didDrawPage: () => {
       const pageH = doc.internal.pageSize.getHeight();
       doc.setFontSize(8);
       doc.setTextColor(150, 160, 170);
       doc.text(
-        'Page ' + doc.internal.getNumberOfPages() + '  ·  DONBOSCO PHARMACY POS v3.0',
+        'Page ' + doc.internal.getNumberOfPages() + '  ·  DONBOSCO PHARMACY POS v3.1',
         pageW / 2, pageH - 20, { align: 'center' }
       );
     }
   });
 
   doc.save(`donbosco_sales_${localDateKey()}.pdf`);
-  statusMsg(productStatus, '✅ PDF downloaded.', 'success', 2500);
+  toast('📄 PDF downloaded', 'success', 2400);
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   ADMIN — RESTOCK
+   ADMIN — RESTOCK TABLE (quick add + open form)
    ═══════════════════════════════════════════════════════════════ */
-function loadRestockTable() {
-  onValue(ref(db, 'products'), (snapshot) => {
-    renderRestockTable(snapshot.val() || {});
-  });
-}
-
 function renderRestockTable(products) {
   const entries = Object.entries(products);
   if (entries.length === 0) {
     restockTableBody.innerHTML =
       `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px;">
-        No products yet.
+        No products yet — click <b>New Product</b> above.
       </td></tr>`;
     return;
   }
+
+  entries.sort((a, b) => String(a[1].name || '').localeCompare(String(b[1].name || '')));
 
   restockTableBody.innerHTML = entries.map(([id, p]) => {
     const qty = p.quantity || 0;
@@ -3849,35 +4193,61 @@ function renderRestockTable(products) {
       <tr>
         <td style="font-size:20px;">${esc(p.emoji || '📦')}</td>
         <td><strong>${esc(p.name || 'Unknown')}</strong></td>
-        <td style="font-variant-numeric:tabular-nums;">${qty}</td>
+        <td style="font-variant-numeric:tabular-nums;font-weight:700;">${qty}</td>
         <td style="font-variant-numeric:tabular-nums;">${p.reorder || 0}</td>
         <td>${badge}</td>
         <td><input type="number" class="restock-input" data-id="${esc(id)}" value="${oos ? 50 : 10}" min="1" /></td>
         <td>
-          <button type="button" class="btn btn-primary btn-xs" data-restock-go="${esc(id)}">
-            <i class="fas fa-plus"></i> Add
-          </button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-xs" data-restock-go="${esc(id)}">
+              <i class="fas fa-plus"></i> Add
+            </button>
+            <button type="button" class="btn btn-gold btn-xs" data-restock-form="${esc(id)}">
+              <i class="fas fa-pen-to-square"></i> Form
+            </button>
+          </div>
         </td>
       </tr>`;
   }).join('');
 
+  /* Quick add */
   restockTableBody.querySelectorAll('[data-restock-go]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.restockGo;
       const input = restockTableBody.querySelector(`.restock-input[data-id="${id}"]`);
       const add = parseInt(input ? input.value : '0', 10) || 0;
-      if (add <= 0) return;
+      if (add <= 0) {
+        toast('⚠️ Enter a quantity greater than 0', 'warn', 2200);
+        if (input) input.focus();
+        return;
+      }
 
       const product = allProducts[id] || {};
       const current = product.quantity || 0;
 
+      btn.disabled = true;
+      const original = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
       try {
-        await update(ref(db), { [`products/${id}/quantity`]: current + add });
-        statusMsg(productStatus, `✅ Added ${add} unit(s) to ${product.name || 'product'}.`, 'success');
+        await update(ref(db, `products/${id}`), {
+          quantity: current + add,
+          updatedAt: new Date().toISOString()
+        });
+        toast(`✅ Added <b>${add}</b> unit(s) to <b>${esc(product.name || 'product')}</b> · now ${current + add}`, 'success', 3400);
       } catch (err) {
-        statusMsg(productStatus, `❌ ${err.message}`, 'error');
+        console.error('Quick restock error:', err);
+        toast(`❌ ${esc(err.message)}`, 'error', 5000);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
       }
     });
+  });
+
+  /* Open full modal form */
+  restockTableBody.querySelectorAll('[data-restock-form]').forEach(btn => {
+    btn.addEventListener('click', () => openProductModal(btn.dataset.restockForm));
   });
 }
 
@@ -3900,7 +4270,6 @@ function updateDashboardStats() {
   dashTotalItems.textContent = todayUnits;
   dashTodayChip.innerHTML = `<i class="fas fa-calendar-day"></i> ${prettyDate(new Date())}`;
 
-  /* Last 7 days total */
   const d = new Date(); d.setHours(0,0,0,0);
   d.setDate(d.getDate() - 6);
   const weekFrom = localDateKey(d);
@@ -3912,9 +4281,9 @@ function updateDashboardStats() {
 }
 
 function renderDashboardCharts() {
-  /* Last 7 days bar chart */
+  if (typeof Chart === 'undefined') return;
+
   const today = new Date(); today.setHours(0,0,0,0);
-  const dayKeys = [];
   const dayLabels = [];
   const dayValues = [];
   const salesList = Object.values(allSales);
@@ -3923,14 +4292,13 @@ function renderDashboardCharts() {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
     const key = localDateKey(d);
-    dayKeys.push(key);
     dayLabels.push(WEEKDAYS[d.getDay()].slice(0,3) + ' ' + d.getDate());
     let total = 0;
     salesList.forEach(s => { if (s.date === key) total += s.grandTotal || 0; });
     dayValues.push(total);
   }
 
-  if (chart7) chart7.destroy();
+  if (chart7) { chart7.destroy(); chart7 = null; }
   const ctx7 = document.getElementById('chart7days');
   if (ctx7) {
     chart7 = new Chart(ctx7, {
@@ -3950,9 +4318,7 @@ function renderDashboardCharts() {
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: {
-            callbacks: { label: (c) => K(c.parsed.y) }
-          }
+          tooltip: { callbacks: { label: (c) => K(c.parsed.y) } }
         },
         scales: {
           y: {
@@ -3966,7 +4332,6 @@ function renderDashboardCharts() {
     });
   }
 
-  /* Top products doughnut */
   const productCount = {};
   salesList.forEach(s => {
     if (Array.isArray(s.items)) {
@@ -3977,7 +4342,7 @@ function renderDashboardCharts() {
   });
   const top = Object.entries(productCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-  if (chartTop) chartTop.destroy();
+  if (chartTop) { chartTop.destroy(); chartTop = null; }
   const ctxTop = document.getElementById('chartTopProducts');
   if (ctxTop) {
     chartTop = new Chart(ctxTop, {
@@ -4035,12 +4400,6 @@ function renderRecentActivity() {
 /* ═══════════════════════════════════════════════════════════════
    ADMIN — ALERTS
    ═══════════════════════════════════════════════════════════════ */
-function loadAlerts() {
-  onValue(ref(db, 'products'), (snapshot) => {
-    renderAlerts(snapshot.val() || {});
-  });
-}
-
 function renderAlerts(products) {
   const entries = Object.entries(products);
   let oos = 0, low = 0, expiring = 0, expired = 0;
@@ -4056,7 +4415,6 @@ function renderAlerts(products) {
         id, p,
         issue: '<span class="badge-oos">Out of stock</span>',
         detail: 'Stock: 0',
-        type: 'oos'
       });
     } else if (p.reorder && qty <= p.reorder) {
       low++;
@@ -4064,7 +4422,6 @@ function renderAlerts(products) {
         id, p,
         issue: '<span class="badge-low">Low stock</span>',
         detail: `Stock: ${qty} (reorder at ${p.reorder})`,
-        type: 'low'
       });
     }
 
@@ -4075,7 +4432,6 @@ function renderAlerts(products) {
           id, p,
           issue: '<span class="badge-oos">Expired</span>',
           detail: `Expired ${exp.date.toLocaleDateString('en-GB')} (${Math.abs(exp.diffDays)} days ago)`,
-          type: 'expired'
         });
       } else if (exp.diffDays <= 90) {
         expiring++;
@@ -4083,7 +4439,6 @@ function renderAlerts(products) {
           id, p,
           issue: '<span class="badge-low">Expiring soon</span>',
           detail: `Expires ${exp.date.toLocaleDateString('en-GB')} (in ${exp.diffDays} days)`,
-          type: 'expiring'
         });
       }
     }
@@ -4119,16 +4474,7 @@ function renderAlerts(products) {
   `).join('');
 
   alertsTableBody.querySelectorAll('[data-alert-restock]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      adminSidebarBtns.forEach(b => b.classList.remove('active'));
-      const restockBtn = [...adminSidebarBtns].find(b => b.dataset.panel === 'restock');
-      if (restockBtn) restockBtn.classList.add('active');
-      switchAdminPanel('restock');
-      setTimeout(() => {
-        const input = restockTableBody.querySelector(`.restock-input[data-id="${btn.dataset.alertRestock}"]`);
-        if (input) { input.focus(); input.select(); }
-      }, 80);
-    });
+    btn.addEventListener('click', () => openProductModal(btn.dataset.alertRestock));
   });
 }
 
@@ -4149,7 +4495,7 @@ function switchAdminPanel(panelId) {
   if (target) target.classList.add('active');
 
   if (panelId === 'dashboard') {
-    setTimeout(renderDashboardCharts, 50);
+    setTimeout(renderDashboardCharts, 60);
   }
 }
 
@@ -4157,9 +4503,15 @@ function switchAdminPanel(panelId) {
    KEYBOARD SHORTCUTS
    ═══════════════════════════════════════════════════════════════ */
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    hideConfirm();
+    if (pmOverlay.classList.contains('show')) closeProductModal();
+  }
+
   if (e.key === 'Enter' && document.activeElement === amountReceived) {
     if (!payBtn.disabled) payBtn.click();
   }
+
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f' && posContainer.classList.contains('active')) {
     e.preventDefault();
     if (window.innerWidth <= 860) {
@@ -4167,6 +4519,7 @@ document.addEventListener('keydown', (e) => {
     }
     searchInput.focus();
   }
+
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h' && posContainer.classList.contains('active')) {
     e.preventDefault();
     holdSaleBtn.click();
@@ -4176,12 +4529,12 @@ document.addEventListener('keydown', (e) => {
 /* ═══════════════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════════════ */
-console.log('%c DONBOSCO PHARMACY POS v3.0 ',
+console.log('%c DONBOSCO PHARMACY POS v3.1 ',
   'background:linear-gradient(90deg,#0b4f2e,#1a7a4a);color:#fff;padding:4px 12px;border-radius:6px;font-weight:700;');
-console.log('Firebase · No VAT · Inline UI · PDF/CSV export · Charts · Day tracking');
+console.log('Firebase · Restock modal · Toast feedback · PDF/CSV export · Charts');
 
-/* Seed today's chart if admin already logged in */
-setTimeout(() => { if (adminContainer.classList.contains('active')) renderDashboardCharts(); }, 300);
+/* Make sure the initial empty product list renders sensibly before login */
+renderProductList();
 </script>
 </body>
 </html>
