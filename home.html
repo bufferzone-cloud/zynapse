@@ -4795,6 +4795,249 @@ html, body {
 .ai-loading i {
     animation: spin 1s linear infinite;
 }
+
+/* ==========================================================
+   iMESSAGE-STYLE UI + COLOR SWAP + 20% SMALLER
+   Append at the END of the existing <style> tag
+   ========================================================== */
+
+/* ---- 1. Scale down another 20% (80% → 64%) ---- */
+html { font-size: 64% !important; }
+body { zoom: 0.64 !important; }
+
+/* ---- 2. Received = BLACK, Sent = WHITE ---- */
+.message-container.received .message-bubble {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+.message-container.received .message-time {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+.message-container.received .message-sender-name {
+    color: #ffffff !important;
+}
+
+.message-container.sent .message-bubble {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+}
+.message-container.sent .message-time {
+    color: rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Status checkmarks – dark on the new WHITE sent bubble */
+.message-container.sent .status-sent      { color: rgba(0, 0, 0, 0.35) !important; }
+.message-container.sent .status-delivered { color: rgba(0, 0, 0, 0.55) !important; }
+.message-container.sent .status-read      { color: rgba(0, 0, 0, 0.85) !important; }
+
+/* Reply previews inside bubbles */
+.message-container.received .message-reply {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-left-color: #ffffff !important;
+}
+.message-container.received .message-reply .message-reply-header { color: #ffffff !important; }
+.message-container.received .message-reply .message-reply-text   { color: rgba(255,255,255,0.85) !important; }
+
+.message-container.sent .message-reply {
+    background: rgba(0, 0, 0, 0.05) !important;
+    border-left-color: #000000 !important;
+}
+.message-container.sent .message-reply .message-reply-header { color: #000000 !important; }
+.message-container.sent .message-reply .message-reply-text   { color: var(--gray-800) !important; }
+
+/* Location / voice text on the black received bubble */
+.message-container.received .message-location-address { color: #ffffff !important; }
+.message-container.received .message-location-details { color: rgba(255,255,255,0.7) !important; }
+.message-container.received .message-voice-duration   { color: rgba(255,255,255,0.8) !important; }
+
+/* Preserve the light view-once card on the received side */
+.message-container.received .message-bubble.message-view-once {
+    background: linear-gradient(145deg, #f5f5f5, #e8e8e8) !important;
+    color: #000000 !important;
+}
+.message-container.received .message-bubble.message-view-once .message-time {
+    color: var(--gray-600) !important;
+}
+
+/* Media messages have transparent bubbles — keep text readable in both themes */
+.message-container.received .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice),
+.message-container.sent     .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice) {
+    color: var(--gray-800) !important;
+}
+
+/* ---- 3. iMessage-style bubble shapes + grouping ---- */
+.message-container.received .message-bubble,
+.message-container.sent .message-bubble {
+    position: relative;
+    padding: 8px 14px !important;
+    font-size: 16px;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    animation: bubbleIn 0.18s ease-out;
+    max-width: 75% !important;
+    border-radius: 18px !important;
+}
+
+/* Kill the old CSS triangle tails */
+.message-container.sent .message-bubble::after,
+.message-container.received .message-bubble::after {
+    display: none !important;
+}
+
+/* Group corner radii – SENT (right side) */
+.message-container.sent.group-first  .message-bubble { border-radius: 18px 18px 4px 18px !important; }
+.message-container.sent.group-middle .message-bubble { border-radius: 18px 4px 4px 18px !important; }
+.message-container.sent.group-last   .message-bubble { border-radius: 18px 4px 18px 18px !important; }
+
+/* Group corner radii – RECEIVED (left side) */
+.message-container.received.group-first  .message-bubble { border-radius: 18px 18px 18px 4px !important; }
+.message-container.received.group-middle .message-bubble { border-radius: 4px 18px 18px 4px !important; }
+.message-container.received.group-last   .message-bubble { border-radius: 4px 18px 18px 18px !important; }
+
+/* Tail on the LAST bubble of a group only */
+.message-container.sent.group-last .message-bubble::before,
+.message-container.received.group-last .message-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 12px;
+    height: 14px;
+    z-index: -1;
+}
+.message-container.sent.group-last .message-bubble::before {
+    right: -5px;
+    border-bottom-left-radius: 14px;
+    background: #ffffff;
+}
+.message-container.received.group-last .message-bubble::before {
+    left: -5px;
+    border-bottom-right-radius: 14px;
+    background: #000000;
+}
+
+/* Exclude media + view-once from the tail */
+.message-container.sent.group-last .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice)::before,
+.message-container.received.group-last .message-bubble:has(> .message-media, > .message-document, > .message-location, > .message-voice)::before,
+.message-container.sent.group-last .message-bubble.message-view-once::before,
+.message-container.received.group-last .message-bubble.message-view-once::before {
+    display: none !important;
+}
+
+/* Tight spacing within a group, roomier between groups */
+.message-container { margin-bottom: 10px !important; }
+.message-container.group-first,
+.message-container.group-middle { margin-bottom: 2px !important; }
+.message-container.group-last   { margin-bottom: 10px !important; }
+
+@keyframes bubbleIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+}
+
+/* ---- 4. iMessage-style input bar ---- */
+.chat-input-container {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-top: 0.5px solid rgba(0, 0, 0, 0.08) !important;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom)) 10px !important;
+    gap: 8px !important;
+    box-shadow: none !important;
+}
+.chat-input-wrapper {
+    background: #f2f2f7 !important;
+    border: 1px solid #e5e5ea !important;
+    border-radius: 20px !important;
+    padding: 0 14px !important;
+    min-height: 34px !important;
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.04) !important;
+}
+.chat-input-wrapper:focus-within {
+    border-color: #c7c7cc !important;
+    box-shadow: none !important;
+}
+.chat-input { font-size: 16px !important; }
+.chat-send-btn {
+    width: 32px !important;
+    height: 32px !important;
+    background: #000000 !important;
+    border-radius: 50% !important;
+    box-shadow: none !important;
+}
+.chat-send-btn:disabled { background: #c7c7cc !important; }
+.chat-send-btn i { font-size: 14px !important; }
+
+/* ---- 5. iMessage-style typing dots ---- */
+.typing-bubble {
+    background: #000000 !important;
+    border-radius: 18px !important;
+    padding: 10px 14px !important;
+    box-shadow: none !important;
+}
+.typing-dot {
+    width: 8px !important;
+    height: 8px !important;
+    background: #ffffff !important;
+    animation: typingDot 1.2s infinite ease-in-out !important;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s !important; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s !important; }
+.typing-text { display: none !important; }
+@keyframes typingDot {
+    0%, 60%, 100% { transform: translateY(0);    opacity: 0.4; }
+    30%           { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ---- 6. Cleaner chrome (iOS-style hairlines, no shadows) ---- */
+.app-header,
+.search-container,
+.groups-header,
+.requests-header,
+.contacts-header,
+.calls-header {
+    box-shadow: none !important;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 0 !important;
+}
+.bottom-nav {
+    border-top: 0.5px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: none !important;
+    background: rgba(249, 249, 249, 0.94) !important;
+    border-radius: 0 !important;
+}
+.chat-list-item,
+.contact-item,
+.group-card,
+.request-card {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.06) !important;
+}
+.chat-list-item:hover,
+.contact-item:hover,
+.group-card:hover {
+    background: #f2f2f7 !important;
+    transform: none !important;
+}
+
+/* ---- 7. Chats scroll all the way to the nav buttons ---- */
+.main-content { padding-bottom: 0 !important; }
+.chats-container,
+.contacts-list,
+.groups-list,
+.requests-list,
+.zynes-feed,
+.calls-list {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+}
+
+/* ---- 8. Hide AI floating button when a chat is open ---- */
+.ai-float-btn.hidden-while-chatting { display: none !important; }
 </style>
 </head>
 <body>
@@ -13219,6 +13462,157 @@ function copyAIText(messageId) {
 function scrollAIChatToBottom() {
     const container = document.getElementById('aiMessages');
     if (container) container.scrollTop = container.scrollHeight;
+}
+
+
+/* ==========================================================
+   iMESSAGE-STYLE UI OVERRIDES — JS
+   Append at the END of the existing <script> tag.
+   Function declarations hoist, so these override the originals.
+   ========================================================== */
+
+// ---- New: message grouping helpers ----
+function applyGrouping(chatMessagesEl) {
+    if (!chatMessagesEl) return;
+    const containers = [...chatMessagesEl.querySelectorAll('.message-container')];
+    containers.forEach((el, i) => {
+        el.classList.remove('group-first', 'group-middle', 'group-last');
+        const prev = containers[i - 1];
+        const next = containers[i + 1];
+        const samePrev = sameGroup(prev, el);
+        const sameNext = sameGroup(el, next);
+        if (!samePrev && !sameNext) return;
+        if (!samePrev) el.classList.add('group-first');
+        else if (!sameNext) el.classList.add('group-last');
+        else el.classList.add('group-middle');
+    });
+}
+
+function sameGroup(a, b) {
+    if (!a || !b) return false;
+    // Must be immediate DOM siblings (no date divider between)
+    if (a.nextElementSibling !== b) return false;
+    // Same direction (sent vs received)
+    if (a.classList.contains('sent') !== b.classList.contains('sent')) return false;
+    // View-once messages stay standalone
+    if (a.querySelector('.message-bubble.message-view-once') ||
+        b.querySelector('.message-bubble.message-view-once')) return false;
+    // Same sender (group chats use the sender-name element)
+    const aName = a.querySelector('.message-sender-name')?.textContent || '';
+    const bName = b.querySelector('.message-sender-name')?.textContent || '';
+    return aName === bName;
+}
+
+// ---- Override: addMessageToChat (adds grouping pass) ----
+function addMessageToChat(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+    const existingMessage = document.querySelector(`.message-container[data-message-id="${message.id}"]`);
+    if (existingMessage) return;
+
+    const emptyState = chatMessages.querySelector('.chat-messages-empty');
+    if (emptyState) emptyState.remove();
+
+    const messageDate = new Date(message.timestamp).toDateString();
+    const lastDateDivider = chatMessages.querySelector('.message-date-divider:last-child');
+    if (!lastDateDivider || lastDateDivider.querySelector('.date-divider-text').textContent !== formatDate(messageDate)) {
+        const dateDivider = document.createElement('div');
+        dateDivider.className = 'message-date-divider';
+        dateDivider.innerHTML = `<span class="date-divider-text">${formatDate(messageDate)}</span>`;
+        chatMessages.appendChild(dateDivider);
+    }
+
+    const messageElement = createMessageElement(message);
+    chatMessages.appendChild(messageElement);
+
+    // NEW: recompute grouping classes
+    applyGrouping(chatMessages);
+
+    setTimeout(() => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 100);
+
+    if (message.senderId !== currentUser.userId) {
+        playNotificationSound();
+    }
+}
+
+// ---- Override: loadMessages (adds grouping pass) ----
+async function loadMessages() {
+    try {
+        const snapshot = await messagesRef
+            .child(currentChat.id)
+            .orderByChild('timestamp')
+            .limitToLast(50)
+            .once('value');
+
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = '';
+
+        if (!snapshot.exists()) {
+            chatMessages.innerHTML = `
+                <div class="chat-messages-empty">
+                    <i class="fas fa-comments chat-messages-empty-icon"></i>
+                    <div class="chat-messages-empty-text">No messages yet</div>
+                    <div class="chat-messages-empty-subtext">Start the conversation</div>
+                </div>
+            `;
+            return;
+        }
+
+        const messages = [];
+        const messageIds = new Set();
+        snapshot.forEach((childSnapshot) => {
+            const message = childSnapshot.val();
+            message.id = childSnapshot.key;
+            if (!messageIds.has(message.id)) {
+                messageIds.add(message.id);
+                if (message.type === 'view-once' && message.viewedBy && message.viewedBy.includes(currentUser.uid)) return;
+                messages.push(message);
+            }
+        });
+
+        const groupedMessages = groupMessagesByDate(messages);
+        for (const date in groupedMessages) {
+            chatMessages.innerHTML += `
+                <div class="message-date-divider">
+                    <span class="date-divider-text">${formatDate(date)}</span>
+                </div>
+            `;
+            groupedMessages[date].forEach(message => {
+                const messageElement = createMessageElement(message);
+                chatMessages.appendChild(messageElement);
+            });
+        }
+
+        // NEW: apply grouping before scroll
+        applyGrouping(chatMessages);
+
+        setTimeout(() => {
+            scrollToBottom();
+        }, 50);
+    } catch (error) {
+        console.error('Error loading messages:', error);
+    }
+}
+
+// ---- Override: showChatPage (hide AI floating button) ----
+function showChatPage() {
+    document.getElementById('chatPage').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    const aiBtn = document.querySelector('.ai-float-btn');
+    if (aiBtn) aiBtn.classList.add('hidden-while-chatting');
+}
+
+// ---- Override: closeChat (show AI floating button) ----
+function closeChat() {
+    document.getElementById('chatPage').classList.remove('active');
+    document.body.style.overflow = 'auto';
+    cleanupChatListeners();
+    currentChat = null;
+    currentChatId = null;
+    const aiBtn = document.querySelector('.ai-float-btn');
+    if (aiBtn) aiBtn.classList.remove('hidden-while-chatting');
 }
 // Also ensure closeModal is already defined (it is)
 // Export functions to global scope
